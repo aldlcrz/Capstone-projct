@@ -37,10 +37,17 @@
     getRecordImage(record) {
         if (!record || !record.metadata) return null;
         const meta = record.metadata;
-        if (record.item_type === 'product' && meta.image) {
+        if (record.item_type === 'product') {
             let img = meta.image;
-            let path = Array.isArray(img) ? (img[0] ? (img[0].url || img[0]) : '') : img;
-            if (!path) return '/uploads/products/default.jpg';
+            let path = Array.isArray(img) ? (img[0] ? (img[0].url || img[0]) : '') : (img || '');
+            if (!path || path.includes('451e9610-2077-437e-a314-670d576e233c')) {
+                // Try variation fallback if primary is missing or references deleted photo
+                const vars = Array.isArray(meta.variations) ? meta.variations : (typeof meta.variations === 'string' ? JSON.parse(meta.variations || '[]') : []);
+                if (vars.length > 0 && vars[0]) {
+                    path = vars[0].image || (vars[0].images && vars[0].images[0]) || '';
+                }
+            }
+            if (!path || path.includes('451e9610-2077-437e-a314-670d576e233c')) return '/uploads/products/default.jpg';
             if (path.startsWith('http') || path.startsWith('data:')) return path;
             if (path.startsWith('/storage/') || path.startsWith('/uploads/')) return path;
             if (path.startsWith('storage/') || path.startsWith('uploads/')) return '/' + path;

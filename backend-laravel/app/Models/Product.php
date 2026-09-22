@@ -274,15 +274,15 @@ class Product extends Model
             $img = $img[0] ?? null;
         }
 
-        if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg') {
-            // If primary image is missing or default, try falling back to the first variation's photo
-            if (is_null($image)) {
+        if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg' || str_contains((string)$img, '451e9610-2077-437e-a314-670d576e233c')) {
+            // If primary image is missing, default, or references deleted photo, try falling back to the first variation's photo
+            if (is_null($image) || str_contains((string)$image, '451e9610-2077-437e-a314-670d576e233c')) {
                 $vars = is_array($this->variations) ? $this->variations : json_decode($this->variations ?? '[]', true);
                 if (is_array($vars) && !empty($vars)) {
                     $firstVar = $vars[0] ?? null;
                     if (is_array($firstVar)) {
                         $fallbackImg = !empty($firstVar['image']) ? $firstVar['image'] : (!empty($firstVar['images'][0]) ? $firstVar['images'][0] : null);
-                        if (!empty($fallbackImg) && !in_array($fallbackImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                        if (!empty($fallbackImg) && !in_array($fallbackImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true) && !str_contains((string)$fallbackImg, '451e9610-2077-437e-a314-670d576e233c')) {
                             return $this->getImageUrl($fallbackImg);
                         }
                     }

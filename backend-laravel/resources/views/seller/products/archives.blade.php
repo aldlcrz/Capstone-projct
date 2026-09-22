@@ -112,7 +112,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($archives as $record)
                 @php
-                    $meta   = $record->metadata ?? [];
+                    $meta = $record->metadata ?? [];
+                    $vars = $meta['variations'] ?? [];
+                    if (is_string($vars)) {
+                        $vars = json_decode($vars, true) ?? [];
+                    }
+
                     $rawImg = $meta['image'] ?? null;
                     if (is_array($rawImg)) {
                         $image = !empty($rawImg) ? reset($rawImg) : null;
@@ -123,13 +128,37 @@
                         $image = null;
                     }
 
-                    $imageUrl = null;
-                    if (!empty($image) && is_string($image)) {
-                        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://') || str_starts_with($image, '/')) {
-                            $imageUrl = $image;
-                        } else {
-                            $imageUrl = asset($image);
+                    // If image is missing, default, or points to removed deleted files, attempt variation fallback
+                    $isDefaultOrRemoved = empty($image)
+                        || in_array($image, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)
+                        || str_contains((string)$image, '451e9610-2077-437e-a314-670d576e233c');
+
+                    if ($isDefaultOrRemoved && !empty($vars) && is_array($vars)) {
+                        $firstVar = reset($vars);
+                        if (is_array($firstVar)) {
+                            $varImg = !empty($firstVar['image']) ? $firstVar['image'] : (!empty($firstVar['images'][0]) ? $firstVar['images'][0] : null);
+                            if (!empty($varImg) && !in_array($varImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true) && !str_contains((string)$varImg, '451e9610-2077-437e-a314-670d576e233c')) {
+                                $image = $varImg;
+                                $isDefaultOrRemoved = false;
+                            }
                         }
+                    }
+
+                    $imageUrl = null;
+                    if (!$isDefaultOrRemoved && !empty($image) && is_string($image)) {
+                        $cleanedImg = str_replace('\\', '/', trim($image));
+                        $cleanedImg = ltrim($cleanedImg, '/');
+                        if (str_starts_with($cleanedImg, 'http://') || str_starts_with($cleanedImg, 'https://')) {
+                            $imageUrl = $cleanedImg;
+                        } elseif (str_starts_with($cleanedImg, 'storage/') || str_starts_with($cleanedImg, 'products/') || str_starts_with($cleanedImg, 'payments/')) {
+                            $imageUrl = str_starts_with($cleanedImg, 'storage/') ? '/' . $cleanedImg : '/storage/' . $cleanedImg;
+                        } elseif (str_starts_with($cleanedImg, 'uploads/')) {
+                            $imageUrl = '/' . $cleanedImg;
+                        } else {
+                            $imageUrl = '/uploads/products/' . $cleanedImg;
+                        }
+                    } else {
+                        $imageUrl = '/uploads/products/default.jpg';
                     }
 
                     $price = $meta['price'] ?? 0;
