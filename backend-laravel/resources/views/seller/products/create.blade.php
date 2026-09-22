@@ -786,7 +786,7 @@
                         <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
                             <span style="width:8px;height:8px;border-radius:50%;background-color:#C49520;flex-shrink:0;display:inline-block;"></span>
                             <div style="display:flex;align-items:baseline;gap:4px 6px;flex-wrap:wrap;min-width:0;">
-                                <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;">Lumbarong Seller Sales</span>
+                                <span style="font-size:12px;font-weight:700;color:#7A5505;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;">Lumbarong Specials &amp; Promo</span>
                                 <span style="font-size:10px;color:#78716C;font-weight:600;text-transform:uppercase;line-height:1.2;">(Optional)</span>
                             </div>
                         </div>

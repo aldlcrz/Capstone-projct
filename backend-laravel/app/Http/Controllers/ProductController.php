@@ -18,9 +18,9 @@ class ProductController extends Controller
      * Serialize a product to match frontend expectations.
      *
      * @param Request $request
-     * @param \App\Models\Product|array $product
+     * @param Product|object|array $product
      */
-    private function serializeProduct(Request $request, Product|array $product)
+    private function serializeProduct(Request $request, object|array $product)
     {
         $data = is_array($product) ? $product : $product->toArray();
 

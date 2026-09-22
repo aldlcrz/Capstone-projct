@@ -368,7 +368,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-[#C49520]"></span>
-                            <span class="text-xs font-black text-[#C49520] uppercase tracking-widest">Lumbarong Seller Sales</span>
+                            <span class="text-xs font-black text-[#C49520] uppercase tracking-widest">Lumbarong Specials &amp; Promo</span>
                             <span class="text-[10px] text-gray-500 font-semibold uppercase">(Optional)</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">

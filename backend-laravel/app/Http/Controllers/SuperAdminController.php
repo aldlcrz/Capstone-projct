@@ -40,7 +40,7 @@ class SuperAdminController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
             if ($user->role !== 'superadmin') {
                 Auth::logout();
