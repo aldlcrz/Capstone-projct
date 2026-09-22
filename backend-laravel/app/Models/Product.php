@@ -275,6 +275,19 @@ class Product extends Model
         }
 
         if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg') {
+            // If primary image is missing or default, try falling back to the first variation's photo
+            if (is_null($image)) {
+                $vars = is_array($this->variations) ? $this->variations : json_decode($this->variations ?? '[]', true);
+                if (is_array($vars) && !empty($vars)) {
+                    $firstVar = $vars[0] ?? null;
+                    if (is_array($firstVar)) {
+                        $fallbackImg = !empty($firstVar['image']) ? $firstVar['image'] : (!empty($firstVar['images'][0]) ? $firstVar['images'][0] : null);
+                        if (!empty($fallbackImg) && !in_array($fallbackImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                            return $this->getImageUrl($fallbackImg);
+                        }
+                    }
+                }
+            }
             return '/uploads/products/default.jpg';
         }
 

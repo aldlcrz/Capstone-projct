@@ -426,10 +426,11 @@
                 </div>
 
                 @php
-                    $images = is_array($product->image) ? $product->image : (json_decode($product->image ?? '[]', true) ?? []);
+                    $rawImages = is_array($product->image) ? $product->image : (json_decode($product->image ?? '[]', true) ?? []);
                     if (is_string($product->image) && !str_starts_with($product->image, '[')) {
-                        $images = [$product->image];
+                        $rawImages = [$product->image];
                     }
+                    $images = array_values(array_filter($rawImages, fn($im) => !empty($im) && !in_array($im, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg'], true)));
                 @endphp
                 @if(count($images) > 0)
                 <div class="space-y-2">

@@ -380,8 +380,13 @@ class ProductManagementController extends Controller
                 }
             }
 
-            $product->status = $isDraft ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
-            $product->image = !empty($images) ? array_values(array_unique($images)) : ['products/default.jpg'];
+            $cleanStoreImages = array_values(array_unique(array_filter($images, fn($im) => !in_array($im, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg'], true))));
+            if (empty($cleanStoreImages) && !empty($savedVariations[0]['image'])) {
+                $cleanStoreImages = [$savedVariations[0]['image']];
+            } elseif (empty($cleanStoreImages) && !empty($savedVariations[0]['images'][0])) {
+                $cleanStoreImages = [$savedVariations[0]['images'][0]];
+            }
+            $product->image = !empty($cleanStoreImages) ? $cleanStoreImages : ['products/default.jpg'];
             $product->has_variants = count($savedVariations) > 1;
             $product->variations = !empty($savedVariations) ? $savedVariations : null;
 
@@ -781,7 +786,12 @@ class ProductManagementController extends Controller
             $product->has_variants = count($updatedVariations) > 1;
         }
 
-        $cleanImages = array_values(array_unique($currentImages));
+        $cleanImages = array_values(array_unique(array_filter($currentImages, fn($im) => !in_array($im, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg'], true))));
+        if (empty($cleanImages) && !empty($updatedVariations[0]['image'])) {
+            $cleanImages = [$updatedVariations[0]['image']];
+        } elseif (empty($cleanImages) && !empty($updatedVariations[0]['images'][0])) {
+            $cleanImages = [$updatedVariations[0]['images'][0]];
+        }
         $product->image = !empty($cleanImages) ? $cleanImages : ['products/default.jpg'];
 
         \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Update]', [
