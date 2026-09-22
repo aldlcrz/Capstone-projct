@@ -96,17 +96,17 @@ class ProductUploadAndManagementTest extends TestCase
         // Verify canonical file storage paths
         $this->assertNotNull($product->gcash_qr_code);
         $this->assertStringStartsWith('payments/qrcodes/', $product->gcash_qr_code);
-        Storage::disk('public')->assertExists($product->gcash_qr_code);
+        $this->assertTrue(Storage::disk('public')->exists($product->gcash_qr_code));
 
         $this->assertNotNull($product->size_guide_image);
         $this->assertStringStartsWith('products/sizeguides/', $product->size_guide_image);
-        Storage::disk('public')->assertExists($product->size_guide_image);
+        $this->assertTrue(Storage::disk('public')->exists($product->size_guide_image));
 
         // Verify product images array
         $images = is_array($product->image) ? $product->image : json_decode($product->image, true);
         $this->assertNotEmpty($images);
         $this->assertStringStartsWith('products/cover/', $images[0]);
-        Storage::disk('public')->assertExists($images[0]);
+        $this->assertTrue(Storage::disk('public')->exists($images[0]));
 
         // Verify variants
         $variations = is_array($product->variations) ? $product->variations : json_decode($product->variations, true);
@@ -115,7 +115,7 @@ class ProductUploadAndManagementTest extends TestCase
         $this->assertStringStartsWith('products/cover/', $variations[0]['image']);
         $this->assertEquals('Ivory White', $variations[1]['name']);
         $this->assertStringStartsWith('products/variants/', $variations[1]['image']);
-        Storage::disk('public')->assertExists($variations[1]['image']);
+        $this->assertTrue(Storage::disk('public')->exists($variations[1]['image']));
 
         // Verify URL accessors resolve to canonical /storage/... paths
         $this->assertEquals('/storage/' . $images[0], $product->getImageUrl());
