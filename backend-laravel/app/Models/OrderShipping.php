@@ -61,6 +61,33 @@ class OrderShipping extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+
+        static::updating(function ($model) {
+            $immutableFields = [
+                'pricing_provider_id',
+                'pricing_provider_name',
+                'shipping_rate_id',
+                'origin_zone_id',
+                'origin_zone_name',
+                'destination_zone_id',
+                'destination_zone_name',
+                'actual_weight',
+                'volumetric_weight',
+                'chargeable_weight',
+                'shipping_fee',
+                'estimated_days_min',
+                'estimated_days_max',
+                'rate_base_snapshot',
+                'additional_weight_rate_snapshot',
+                'volumetric_divisor_snapshot',
+            ];
+
+            foreach ($immutableFields as $field) {
+                if ($model->isDirty($field)) {
+                    throw new \DomainException("Order shipping pricing snapshot field '{$field}' is immutable and cannot be modified after checkout creation.");
+                }
+            }
+        });
     }
 
     public function order()

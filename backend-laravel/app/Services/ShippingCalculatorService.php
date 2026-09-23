@@ -212,10 +212,12 @@ class ShippingCalculatorService
         $itemsHash = $this->hashCartItems($cartItems);
         $payload = [
             'seller_ids'     => $normalizedSellerIds,
-            'address_target' => $addressIdOrHash,
+            'address_id'     => (string) $addressIdOrHash,
+            'address_target' => (string) $addressIdOrHash,
+            'cart_hash'      => $itemsHash,
             'items_hash'     => $itemsHash,
-            'issued_at'      => now()->timestamp,
-            'expires_at'     => now()->addMinutes(15)->timestamp,
+            'issued_at'      => (int) now()->timestamp,
+            'expires_at'     => (int) now()->addMinutes(15)->timestamp,
         ];
 
         return Crypt::encryptString(json_encode($payload));
@@ -254,12 +256,14 @@ class ShippingCalculatorService
                 return false;
             }
 
-            if (($payload['address_target'] ?? null) !== $addressIdOrHash) {
+            $targetAddress = (string) ($payload['address_id'] ?? ($payload['address_target'] ?? ''));
+            if (!hash_equals($targetAddress, (string) $addressIdOrHash)) {
                 return false;
             }
 
             $currentHash = $this->hashCartItems($cartItems);
-            if (($payload['items_hash'] ?? null) !== $currentHash) {
+            $tokenHash = (string) ($payload['cart_hash'] ?? ($payload['items_hash'] ?? ''));
+            if (!hash_equals($tokenHash, $currentHash)) {
                 return false;
             }
 
@@ -278,15 +282,16 @@ class ShippingCalculatorService
             $normalized[] = "{$pId}:{$qty}";
         }
         sort($normalized);
-        return md5(implode('|', $normalized));
+        return hash('sha256', implode('|', $normalized));
     }
 
     /**
      * Resolves the seller's preferred pricing provider.
-     * Hierarchy:
-     * 1. Seller-enabled provider marked as default/preferred (if is_default column exists)
-     * 2. First seller-enabled provider
-     * 3. Database-driven platform default active provider (is_default = true or first active)
+     * Strict Validation & Deterministic Resolution Hierarchy:
+     * 1. Seller-enabled provider marked as default/preferred (provider exists, is_active = true, is_enabled = true)
+     * 2. First valid seller-enabled provider
+     * 3. Explicit platform default active provider (is_platform_default = true)
+     * 4. Returns null (actionable error: no silent arbitrary fallbacks or hardcoded couriers)
      *
      * @param User $seller
      * @return ShippingProvider|null
@@ -305,9 +310,9 @@ class ShippingCalculatorService
                 $query->orderBy('created_at', 'asc');
             }
 
-            $sellerPref = $query->first();
+            $sellerProviders = $query->get();
 
-            if ($sellerPref) {
+            foreach ($sellerProviders as $sellerPref) {
                 $provider = ShippingProvider::where('id', $sellerPref->provider_id)
                     ->where('is_active', true)
                     ->first();
@@ -317,12 +322,16 @@ class ShippingCalculatorService
             }
         }
 
-        // Database-driven platform default provider (zero hardcoded courier strings)
-        $platformQuery = ShippingProvider::where('is_active', true);
-        if (\Illuminate\Support\Facades\Schema::hasColumn('shipping_providers', 'is_default')) {
-            $platformQuery->orderByDesc('is_default');
+        // Explicit platform default provider from database configuration
+        if (\Illuminate\Support\Facades\Schema::hasColumn('shipping_providers', 'is_platform_default')) {
+            $platformDefault = ShippingProvider::where('is_active', true)
+                ->where('is_platform_default', true)
+                ->first();
+            if ($platformDefault) {
+                return $platformDefault;
+            }
         }
 
-        return $platformQuery->orderBy('id', 'asc')->first();
+        return null;
     }
 }

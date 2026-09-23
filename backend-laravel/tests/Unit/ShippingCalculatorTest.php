@@ -443,4 +443,141 @@ class ShippingCalculatorTest extends TestCase
         $this->assertEquals(4 + $matchingRate->estimated_days_min, $firstQuote['estimated_days_min']);
         $this->assertEquals(4 + $matchingRate->estimated_days_max, $firstQuote['estimated_days_max']);
     }
+
+    public function test_order_shipping_immutability_blocks_modifications_to_pricing_snapshot()
+    {
+        $customer = User::create([
+            'name' => 'Snap Customer',
+            'email' => 'snap_cust_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'customer',
+        ]);
+
+        $seller = User::create([
+            'name' => 'Snap Seller',
+            'email' => 'snap_seller_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+        ]);
+
+        $order = \App\Models\Order::create([
+            'id' => (string) Str::uuid(),
+            'customerId' => $customer->id,
+            'sellerId' => $seller->id,
+            'totalAmount' => 500.00,
+            'status' => 'Pending',
+            'shippingAddress' => json_encode(['province' => 'Laguna', 'city' => 'Lumban']),
+        ]);
+
+        $provider = ShippingProvider::where('code', 'jnt')->first() ?: ShippingProvider::first();
+
+        $shipping = \App\Models\OrderShipping::create([
+            'order_id' => $order->id,
+            'provider_id' => $provider->id,
+            'provider_name' => $provider->name,
+            'pricing_provider_id' => $provider->id,
+            'pricing_provider_name' => $provider->name,
+            'actual_weight' => 0.50,
+            'volumetric_weight' => 0.40,
+            'chargeable_weight' => 1.00,
+            'rate_base_snapshot' => 85.00,
+            'additional_weight_rate_snapshot' => 0.00,
+            'volumetric_divisor_snapshot' => 3500,
+            'shipping_fee' => 85.00,
+            'estimated_days_min' => 2,
+            'estimated_days_max' => 4,
+            'origin_zone_name' => 'South Luzon',
+            'destination_zone_name' => 'NCR',
+            'shipping_status' => 'Pending',
+        ]);
+
+        // Mutable fulfillment fields CAN be updated
+        $shipping->update([
+            'fulfillment_provider_name' => 'Flash Express',
+            'tracking_number' => 'FLASH-123456',
+            'shipping_status' => 'Shipped',
+        ]);
+        $shipping->refresh();
+        $this->assertEquals('Flash Express', $shipping->fulfillment_provider_name);
+        $this->assertEquals('FLASH-123456', $shipping->tracking_number);
+
+        // Attempting to mutate pricing snapshot field MUST throw DomainException
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('immutable');
+        $shipping->update(['shipping_fee' => 10.00]);
+    }
+
+    public function test_seller_preferred_provider_strict_validation_falls_back_when_deactivated()
+    {
+        $seller = User::create([
+            'name' => 'Strict Seller',
+            'email' => 'strict_seller_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Metro Manila',
+            'shopPostalCode' => '1000',
+        ]);
+
+        // Create a custom inactive provider and set it as preferred
+        $customInactiveProvider = ShippingProvider::create([
+            'name' => 'Disabled Logistics',
+            'code' => 'disabled_log_' . Str::random(4),
+            'is_active' => false,
+        ]);
+
+        SellerShippingProvider::create([
+            'seller_id' => $seller->id,
+            'provider_id' => $customInactiveProvider->id,
+            'is_enabled' => true,
+            'is_default' => true,
+        ]);
+
+        // Set platform default provider
+        $platformProvider = ShippingProvider::where('code', 'jnt')->first();
+        if ($platformProvider) {
+            $platformProvider->update(['is_platform_default' => true, 'is_active' => true]);
+        }
+
+        // Resolving preferred provider must bypass inactive provider and resolve active platform default
+        $resolved = $this->calculator->getSellerPreferredProvider($seller);
+        $this->assertNotNull($resolved);
+        $this->assertTrue($resolved->is_active);
+        $this->assertNotEquals($customInactiveProvider->id, $resolved->id);
+    }
+
+    public function test_calculator_strictly_ignores_legacy_products_shipping_fee()
+    {
+        $seller = User::create([
+            'name' => 'Legacy Fee Seller',
+            'email' => 'legacy_seller_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Metro Manila',
+            'shopPostalCode' => '1000',
+        ]);
+
+        // Product has legacy shippingFee = 999.00
+        $product = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Product With Legacy Fee',
+            'price' => 200,
+            'stock' => 5,
+            'shippingFee' => 999.00, // Legacy fee that must be ignored
+            'package_weight_per_unit' => 0.50,
+            'package_length_per_unit' => 10.00,
+            'package_width_per_unit' => 10.00,
+            'package_height_per_unit' => 10.00,
+            'handling_days' => 1,
+        ]);
+
+        $quotes = $this->calculator->calculateQuotes($seller, ['province' => 'Metro Manila'], [
+            ['id' => $product->id, 'quantity' => 1],
+        ]);
+
+        $this->assertNotEmpty($quotes);
+        foreach ($quotes as $quote) {
+            // Calculated fee is database rate matrix bracket (e.g. ₱50-₱85), never the legacy ₱999
+            $this->assertNotEquals(999.00, (float) $quote['shipping_fee']);
+        }
+    }
 }

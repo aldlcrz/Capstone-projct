@@ -91,8 +91,14 @@ class AdminShippingController extends Controller
     public function destroyRate($id)
     {
         $rate = ShippingRate::findOrFail($id);
-        $rate->delete();
+        $isReferenced = \App\Models\OrderShipping::where('shipping_rate_id', $id)->exists();
+        if ($isReferenced) {
+            $rate->is_active = false;
+            $rate->save();
+            return redirect()->route('admin.shipping.index')->with('success', 'Rate bracket is associated with historical orders and has been deactivated instead of deleted.');
+        }
 
+        $rate->delete();
         return redirect()->route('admin.shipping.index')->with('success', 'Rate bracket deleted successfully.');
     }
 

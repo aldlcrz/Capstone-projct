@@ -21,11 +21,13 @@ class ShippingProvider extends Model
         'logo_path',
         'default_volumetric_divisor',
         'is_active',
+        'is_platform_default',
     ];
 
     protected $casts = [
         'default_volumetric_divisor' => 'integer',
         'is_active' => 'boolean',
+        'is_platform_default' => 'boolean',
     ];
 
     protected static function boot()

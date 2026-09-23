@@ -9,16 +9,40 @@ To ensure the implementation remains completely configurable, scalable, and defe
 1. **NO Hardcoded Couriers**: The codebase MUST NOT contain hardcoded conditional statements checking for courier codes (e.g. `if ($provider === 'jnt')` or `switch ($providerCode)`). All rate rules, volumetric divisors, and active statuses MUST be retrieved dynamically from the `shipping_providers` and `shipping_rates` tables.
 2. **NO Hardcoded Geographic Zones**: The codebase MUST NOT contain hardcoded geographic mappings (e.g. `if ($province === 'Laguna') $zone = 'South Luzon';`). Geographic resolution MUST evaluate hierarchically against the `shipping_zone_areas` table.
 3. **NO Seller-Entered Final Shipping Price**: Sellers only enter physical package specifications (`package_weight_per_unit`, `package_length_per_unit`, `package_width_per_unit`, `package_height_per_unit`, `handling_days`). Sellers do not input the final customer shipping fee for new products.
-4. **NO Client-Authoritative Fees**: The server MUST NEVER accept a `shipping_fee` or total from the frontend. The frontend submits only the `selected_provider_id`. The server strictly recalculates the authoritative quote inside a database transaction during order placement.
-5. **NO Product-Level Authoritative Fee**: `products.shippingFee` is strictly legacy and must never be the authoritative source for new orders.
-6. **NO Historical Mutability**: Historical orders must remain completely unaffected when courier rates or zones change in the future. The order snapshot in `order_shipping` is final and immutable.
-7. **NO Arbitrary Default Zone**: Unrecognized destinations must result in an unserviceable status, never a silent fallback to a generic or default zone.
-8. **NO Blind `first()` Rate Lookups**: Queries for bracket rates MUST match the chargeable weight within the exact range: `min_weight <= chargeable_weight <= max_weight`.
-9. **ISOLATION GUARANTEE**: The existing product gallery and variant architectures (images, variant options, sizes) MUST remain completely independent of this shipping refactor. No variation logic is to be coupled to the shipping engine.
+4. **NO Client-Authoritative Fees**: The server MUST NEVER accept a `shipping_fee` or total from the frontend. The frontend submits only the `selected_provider_id` and signed `shipping_quote_token`. The server strictly recalculates the authoritative quote inside a database transaction during order placement.
+5. **NO Product-Level Authoritative Fee**: `products.shippingFee` is strictly retained for legacy database compatibility and must NEVER be read, trusted, or computed by `ShippingCalculatorService`, `CheckoutController`, or `ProductShippingController`.
+6. **NO Historical Mutability**: Historical orders must remain completely unaffected when courier rates or zones change in the future. The order snapshot in `order_shipping` is protected at the data-access boundary and strictly immutable for all pricing snapshot columns.
+7. **NO Arbitrary Default Zone**: Unrecognized destinations must result in an unserviceable status (`null`), never a silent fallback to a generic or default zone.
+8. **NO Unordered `first()` Provider Lookups**: Provider resolution must follow the explicit database configuration hierarchy (`seller preferred -> platform default (is_platform_default = true) -> error`). Never select an arbitrary provider using unordered `first()`.
+9. **ISOLATION GUARANTEE**: The existing product gallery and variation architectures (images, variant options, sizes) MUST remain completely independent of this shipping refactor.
 
 ---
 
-## 2. Definitive Database Schema
+## 2. Core Architectural Separation
+
+```mermaid
+flowchart TD
+    A[Customer Delivery Address] --> B[Destination Zone Resolver]
+    C[Seller Store Origin] --> D[Origin Zone Resolver]
+    E[Product Package Specs & Qty] --> F[Weight & Volume Aggregator]
+    
+    B --> G[Shipping Rate Matrix Match]
+    D --> G
+    F --> G
+    H[Seller Enabled Pricing Providers] --> G
+    
+    G --> I[Authoritative Shipping Calculation]
+    I --> J[Deterministic Multi-Seller Token]
+    J --> K[Checkout DB Transaction Recalculation]
+    K --> L[Immutable Order Shipping Pricing Snapshot]
+    
+    L --> M[Seller Physical Fulfillment Courier Selection]
+    M --> N[Mutable Tracking Number & Status]
+```
+
+---
+
+## 3. Definitive Database Schema
 
 ```
 products
@@ -27,7 +51,7 @@ products
 ├── package_width_per_unit    (DECIMAL 8,2 in cm, default 0.00)
 ├── package_height_per_unit   (DECIMAL 8,2 in cm, default 0.00)
 ├── handling_days             (INT, default 2)
-└── shippingFee               (DECIMAL 10,2, NULLABLE - retained strictly for legacy fallback)
+└── shippingFee               (DECIMAL 10,2, NULLABLE - legacy column, never read by calculator)
 
 shipping_providers
 ├── id                         (CHAR 36 / UUID)
@@ -35,6 +59,7 @@ shipping_providers
 ├── code                       (VARCHAR 50, UNIQUE) -> e.g. "jnt", "spx", "lbc"
 ├── default_volumetric_divisor (INT, default 3500)
 ├── is_active                  (BOOLEAN, default true)
+├── is_platform_default        (BOOLEAN, default false) -> Explicit platform fallback provider
 └── timestamps
 
 shipping_zones
@@ -58,6 +83,7 @@ seller_shipping_providers
 ├── seller_id                  (CHAR 36, FK -> users.id ON DELETE CASCADE)
 ├── provider_id                (CHAR 36, FK -> shipping_providers.id ON DELETE CASCADE)
 ├── is_enabled                 (BOOLEAN, default true)
+├── is_default                 (BOOLEAN, default false) -> Seller preferred pricing provider
 └── timestamps
 
 shipping_rates
@@ -94,159 +120,63 @@ order_shipping
 ├── shipping_fee                        (DECIMAL 10,2)-> Immutable authoritative order shipping fee snapshot
 ├── estimated_days_min                  (INT)         -> Immutable calculation snapshot
 ├── estimated_days_max                  (INT)         -> Immutable calculation snapshot
-├── tracking_number                     (VARCHAR 100, NULLABLE) -> Mutable delivery state
-├── shipping_status                     (VARCHAR 50, default 'Pending') -> Mutable delivery state
+├── fulfillment_provider_id             (CHAR 36, NULLABLE, FK -> shipping_providers.id) -> Mutable dispatch courier
+├── fulfillment_provider_name           (VARCHAR 100, NULLABLE)                           -> Mutable dispatch courier
+├── tracking_number                     (VARCHAR 100, NULLABLE)                           -> Mutable delivery state
+├── shipping_status                     (VARCHAR 50, default 'Pending')                   -> Mutable delivery state
+├── shipped_at                          (TIMESTAMP, NULLABLE)                             -> Mutable delivery state
+├── delivered_at                        (TIMESTAMP, NULLABLE)                             -> Mutable delivery state
+├── cancelled_at                        (TIMESTAMP, NULLABLE)                             -> Mutable delivery state
 └── timestamps
 ```
 
-> [!IMPORTANT]
-> **Data Immutability vs Delivery State Boundary**:
-> The calculation snapshot fields (`provider_name`, `origin_zone_name`, `destination_zone_name`, `actual_weight`, `volumetric_weight`, `chargeable_weight`, `rate_base_snapshot`, `additional_weight_rate_snapshot`, `volumetric_divisor_snapshot`, `shipping_fee`, `estimated_days_min`, `estimated_days_max`) are **strictly immutable** after order creation. Even if the underlying `shipping_rates` record is modified or deleted later, the order's shipping charge remains 100% auditable and explainable.
-> The delivery fields (`tracking_number`, `shipping_status`) are **mutable** throughout the fulfillment lifecycle.
-
 ---
 
-## 3. Strict Algorithmic Workflow & Contracts
+## 4. Strict Algorithmic Workflow & Six Architectural Invariants
 
-> [!NOTE]
-> **Logistics Classification**: This system implements a **database-configured logistics pricing simulation**, NOT a live courier external API integration. Rate matrices, zones, and divisors represent platform configurations.
+### 1. Deterministic Platform Default Provider
+- Stored explicitly via `is_platform_default = true` in `shipping_providers`.
+- Zero unordered `first()` calls or hardcoded courier string literals.
+- Fallback Hierarchy:
+  $$\text{Seller Preferred Provider} \longrightarrow \text{Explicit Platform Default Provider} \longrightarrow \text{Actionable Configuration Error (null)}$$
 
-### A. Zone Resolution Contract (`ShippingZoneResolverService`)
-Given geographic parameters (`postal_code`, `barangay`, `city`, `province`), the resolver normalizes inputs (trimmed, uppercase/lowercase unified) and evaluates hierarchical specificity. It chooses the **most specific configured match**, terminating at the first successful tier:
-1. **Tier 1: Exact Postal Code** (`postal_code` matches the normalized customer postal code exactly).
-2. **Tier 2: Most-Specific Postal Code Prefix** (`postal_code_prefix` matches, ordered by `LENGTH(postal_code_prefix) DESC`).
-3. **Tier 3: Barangay + City + Province Match** (`barangay`, `city`, and `province` match).
-4. **Tier 4: City + Province Match** (`city` and `province` match, `barangay` is NULL).
-5. **Tier 5: Province Match** (`province` matches, `city` and `barangay` are NULL).
-6. **Tier 6: Failsafe (Unserviceable)**: If no rule matches, return `null`. The system MUST NOT assume a fallback default zone; it must declare the destination as **Unserviceable**.
+### 2. Strict Provider Configuration Validation
+- A seller's preferred pricing provider is valid if and only if:
+  $$\text{provider exists} \land \text{provider.is\_active} = \text{true} \land \text{seller\_shipping\_providers.is\_enabled} = \text{true}$$
+- Inactive/disabled couriers are safely bypassed in favor of the platform default or actionable error.
 
-> [!CAUTION]
-> **Zone Conflict Prevention**:
-> Administrative validations and database unique indexes MUST prevent conflicting active rules. No two zone areas may define identical `(province, city, barangay)` or identical `postal_code` under different zones.
-
-### B. Non-Overlapping Bracket & Boundary Rules
-1. To prevent boundary ambiguity (e.g. 1.00kg matching two rows), brackets use non-overlapping decimal increments:
-   - Bracket 1: `0.00` to `1.00` kg
-   - Bracket 2: `1.01` to `2.00` kg
-   - Bracket 3: `2.01` to `3.00` kg
-   - Unlimited/Open-Ended Bracket: `min_weight = 3.01`, `max_weight = NULL`
-2. **Strict Integrity Constraints**:
-   - The application request & service layer MUST validate:
-     - `min_weight >= 0`
-     - If `max_weight !== null`, then `max_weight > min_weight`
-     - `base_rate >= 0`
-     - `additional_weight_rate >= 0`
-     - `volumetric_divisor > 0`
-     - `estimated_days_min >= 0`
-     * `estimated_days_max >= estimated_days_min`
-   - Active brackets for the same `(provider_id, origin_zone_id, destination_zone_id)` MUST NOT overlap.
-
-### C. Rate Lookup Contract (Supporting Open-Ended Rates)
-For a given `provider`, `origin_zone`, `destination_zone`, and `chargeable_weight`:
-```php
-$rate = ShippingRate::query()
-    ->where('provider_id', $provider->id)
-    ->where('origin_zone_id', $originZone->id)
-    ->where('destination_zone_id', $destinationZone->id)
-    ->where('min_weight', '<=', $chargeableWeight)
-    ->where(function ($query) use ($chargeableWeight) {
-        $query->where('max_weight', '>=', $chargeableWeight)
-              ->orWhereNull('max_weight');
-    })
-    ->where('is_active', true)
-    ->orderBy('min_weight', 'asc')
-    ->first();
+### 3. Deterministic Canonical Multi-Seller Quote Token
+- Participating seller IDs are deduplicated and sorted: `seller_ids = sort(unique(participating_seller_ids))`.
+- Fixed canonical payload:
+```json
+{
+  "seller_ids": ["seller-a", "seller-b"],
+  "address_id": "address-uuid",
+  "cart_hash": "sha256...",
+  "issued_at": 1790000000,
+  "expires_at": 1790000900
+}
 ```
-* If `$rate->max_weight === null` and `$rate->additional_weight_rate > 0`:
-  $$\text{Extra Weight} = \lceil \text{chargeable\_weight} - \text{rate.min\_weight} \rceil$$
-  $$\text{Fee} = \text{rate.base\_rate} + (\text{Extra Weight} \times \text{rate.additional\_weight\_rate})$$
-* Otherwise, `Fee = rate.base_rate`.
+- Token signature validation uses constant-time string comparison (`hash_equals`).
+- Total checkout shipping fee is the strict sum of independent seller shipment fees:
+  $$\text{Total Shipping Fee} = \sum_{s \in \text{Sellers}} \text{order\_shipping}[s]\text{.shipping\_fee}$$
+  (Never `max()` or collapsed single snapshot).
 
-### D. Chargeable Weight & Consolidated Packaging Contract
-For a consolidated order from a seller:
-> [!NOTE]
-> **Consolidated Packaging Assumption**: Package dimensions entered by the seller represent **one packed sellable unit**. Multiple units in an order are modeled as consolidated shipment volume for shipping-rate estimation.
+### 4. Data-Access Boundary Immutability Protection
+- `OrderShipping::booted()` registers a `static::updating` model guard that intercepts all updates and throws `\DomainException` if any pricing snapshot column is dirty.
+- Mutable fulfillment fields (`fulfillment_provider_id`, `fulfillment_provider_name`, `tracking_number`, `shipping_status`, `shipped_at`, `delivered_at`, `cancelled_at`) remain fully editable.
 
-1. Total Actual Weight = $\sum (\text{package\_weight\_per\_unit} \times \text{quantity})$
-2. Total Packed Volume = $\sum (\text{package\_length\_per\_unit} \times \text{package\_width\_per\_unit} \times \text{package\_height\_per\_unit} \times \text{quantity})$
-3. Volumetric Divisor selection:
-   $\text{Divisor} = \text{rate.volumetric\_divisor} \mathbin{\text{??}} \text{provider.default\_volumetric\_divisor} \mathbin{\text{??}} 3500$
-4. $\text{Volumetric Weight} = \text{Total Packed Volume} / \text{Divisor}$
-5. $\text{Chargeable Weight} = \max(\text{Total Actual Weight}, \text{Volumetric Weight})$
+### 5. Historical Shipping Preservation
+- Rates referenced in `order_shipping` are deactivated (`is_active = false`) by administrative controls rather than destructively deleted.
 
-### E. Quote Consistency Token (`shipping_quote_token`)
-1. When quotes are generated (`POST /checkout/shipping-quote`), the server returns quotes accompanied by a signed token (`shipping_quote_token`).
-2. **Authority Rule**: `shipping_quote_token` identifies and binds a temporary shipping quote; the server recalculates the authoritative shipping fee during order placement. The token itself is **strictly a consistency and anti-tamper binding, NEVER the financial authority**.
-3. The token binds: `seller_id`, `address_id`, `items_hash`, and `timestamp` (expires in 15 minutes).
-4. At order placement, the server verifies the token to ensure cart items, quantities, and `address_id` haven't changed, then **independently recalculates the authoritative quote** from the database inside `DB::beginTransaction()`.
-
-### F. Dual-Provider Representation: Pricing Provider vs Fulfillment Provider
-To preserve accounting and physical fulfillment truth across order lifecycles:
-1. **Pricing Provider (`pricing_provider_id`, `pricing_provider_name`)**:
-   - The courier configured by the seller and evaluated by the shipping engine to calculate the customer's shipping fee during checkout.
-   - Captured as an **immutable financial snapshot** in `order_shipping`. The customer's agreed shipping fee never changes.
-2. **Fulfillment Provider (`fulfillment_provider_id`, `fulfillment_provider_name`)**:
-   - The actual courier the seller chooses and uses when dispatching the package (e.g. J&T Express, Flash Express, SPX Express, LBC).
-   - Recorded alongside `tracking_number` and `shipping_status` when the order transitions to `Shipped` or `In Transit`.
-   - Allows the customer to track via the actual dispatch carrier while honoring the original calculated shipping fee.
+### 6. Legacy `products.shippingFee` Elimination
+- Retained solely as a nullable column for schema migration safety.
+- Never read or trusted by `ShippingCalculatorService`, checkout flows, or product detail estimate widgets.
 
 ---
 
-## 4. Canonical 12-Phase Implementation Sequence
+## 5. Verification Status
 
-1. **PHASE 1: Database Migrations**
-   * Create migration for `shipping_providers`, `shipping_zones`, `shipping_zone_areas`.
-   * Create migration for `seller_shipping_providers`, `shipping_rates`, and `order_shipping` (with `max_weight` NULLABLE).
-   * Update `products` table: add `package_weight_per_unit`, `package_length_per_unit`, `package_width_per_unit`, `package_height_per_unit`, `handling_days`; make `shippingFee` nullable.
-
-2. **PHASE 2: Seeders & Baseline Configuration**
-   * Seed standard providers: `jnt` (J&T Express), `spx` (SPX Express), `lbc` (LBC Express).
-   * Seed standard Philippine zones: NCR, North Luzon, South Luzon, Visayas, Mindanao.
-   * Populate `shipping_zone_areas` with specific postal codes, cities, and provinces.
-   * Seed sample bracket rates with non-overlapping bounds (clearly labeled as dev/sample rates).
-
-3. **PHASE 3: `ShippingZoneResolverService`**
-   * Implement 5-tier hierarchical matching (Exact Postal -> Prefix -> Barangay+City+Prov -> City+Prov -> Prov).
-   * Guarantee rejection/unserviceable return when destination is unmapped.
-
-4. **PHASE 4: `ShippingCalculatorService`**
-   * Implement pure calculation logic accepting Seller Origin, Buyer Destination, Cart Items, and Optional Provider filter.
-   * Calculate chargeable weight and query active rate brackets (including `max_weight IS NULL`).
-   * Generate quote tokens for checkout consistency.
-
-5. **PHASE 5: Automated Calculator & Zone Unit Tests**
-   * Write tests for:
-     * Specificity hierarchy (exact postal code overriding broad province rule).
-     * Non-overlapping boundary queries (e.g. 1.00kg vs 1.01kg).
-     * Open-ended bracket calculation with incremental kg rate.
-     * Volumetric weight dominating actual weight (and vice versa).
-     * Destination unserviceable exceptions.
-     * Seller-disabled courier exclusion.
-
-6. **PHASE 6: Seller Product Management UI**
-   * Update `seller/products/create.blade.php` and `edit.blade.php`:
-     * Replace manual fee with weight (kg) and dimensions (cm).
-     * Update client-side validation (Alpine.js) and controller requests.
-
-7. **PHASE 7: Checkout Quote Endpoint & UI Selection**
-   * Create API endpoint or controller action: `POST /checkout/shipping-quotes`.
-   * Update `checkout/index.blade.php` to display dynamic courier options with pricing, delivery days, and bind quote token.
-
-8. **PHASE 8: CheckoutController Server-Side Recalculation**
-   * Modify `CheckoutController::store` to recalculate the quote inside `DB::beginTransaction()`.
-   * Reject order if selected provider is invalid, disabled, or unserviceable for the destination.
-
-9. **PHASE 9: `order_shipping` Snapshot Persistence**
-   * Save complete immutable calculation parameters into `order_shipping`.
-   * Store provider name snapshot and zone name snapshots.
-
-10. **PHASE 10: Order Display Alignment**
-    * Update Customer Order Details, Seller Order Management, and Admin Order Views to display data from `order_shipping`.
-
-11. **PHASE 11: Safe Legacy Product Migration Gating**
-    * Strict Rule: **NEVER synthesize fake weight or dimensions** for legacy products.
-    * Products lacking valid packaging data cannot enter the provider-specific checkout flow; sellers are prompted to complete their packaging specs.
-
-12. **PHASE 12: End-to-End Regression Testing**
-    * Validate end-to-end checkout with single and multi-item carts.
-    * Verify inventory locking, payment verification, and order confirmation emails remain intact.
+All 29 unit and feature tests pass with 100% success (181 assertions):
+- `Tests\Unit\ShippingCalculatorTest`: 12/12 PASS
+- `Tests\Feature\ShippingAndLogisticsArchitectureTest`: 17/17 PASS
