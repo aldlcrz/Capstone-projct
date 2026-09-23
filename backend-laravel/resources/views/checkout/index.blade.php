@@ -269,6 +269,7 @@
                     <div class="mb-6">
                         <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
                         <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
+                    </div>
                     @php
                         $resolveQrUrl = function ($qrPath) {
                             if (empty($qrPath)) return null;
