@@ -195,21 +195,26 @@ class ShippingCalculatorService
 
     /**
      * Generates a 15-minute quote consistency token.
-     * The token binds seller, destination, item hash, and timestamp.
+     * The token binds a deterministic list of seller IDs, destination, item hash, and timestamps.
      * Purity rule: The token is strictly a consistency mechanism, NEVER a trusted price.
      *
-     * @param string $sellerId
+     * @param array|string $sellerIds
      * @param string $addressIdOrHash
      * @param array $cartItems
      * @return string
      */
-    public function generateQuoteToken(string $sellerId, string $addressIdOrHash, array $cartItems): string
+    public function generateQuoteToken(array|string $sellerIds, string $addressIdOrHash, array $cartItems): string
     {
+        $normalizedSellerIds = is_array($sellerIds) ? $sellerIds : [$sellerIds];
+        $normalizedSellerIds = array_values(array_unique(array_map('strval', $normalizedSellerIds)));
+        sort($normalizedSellerIds);
+
         $itemsHash = $this->hashCartItems($cartItems);
         $payload = [
-            'seller_id'      => $sellerId,
+            'seller_ids'     => $normalizedSellerIds,
             'address_target' => $addressIdOrHash,
             'items_hash'     => $itemsHash,
+            'issued_at'      => now()->timestamp,
             'expires_at'     => now()->addMinutes(15)->timestamp,
         ];
 
@@ -220,12 +225,12 @@ class ShippingCalculatorService
      * Validates that the quote token payload matches the current checkout state and is unexpired.
      *
      * @param string|null $token
-     * @param string $sellerId
+     * @param array|string $sellerIds
      * @param string $addressIdOrHash
      * @param array $cartItems
      * @return bool
      */
-    public function validateQuoteToken(?string $token, string $sellerId, string $addressIdOrHash, array $cartItems): bool
+    public function validateQuoteToken(?string $token, array|string $sellerIds, string $addressIdOrHash, array $cartItems): bool
     {
         if (empty($token)) return false;
 
@@ -237,7 +242,15 @@ class ShippingCalculatorService
                 return false;
             }
 
-            if (($payload['seller_id'] ?? null) !== $sellerId) {
+            $normalizedSellerIds = is_array($sellerIds) ? $sellerIds : [$sellerIds];
+            $normalizedSellerIds = array_values(array_unique(array_map('strval', $normalizedSellerIds)));
+            sort($normalizedSellerIds);
+
+            $payloadSellerIds = $payload['seller_ids'] ?? (isset($payload['seller_id']) ? [$payload['seller_id']] : []);
+            $payloadSellerIds = array_values(array_unique(array_map('strval', $payloadSellerIds)));
+            sort($payloadSellerIds);
+
+            if ($payloadSellerIds !== $normalizedSellerIds) {
                 return false;
             }
 
@@ -273,7 +286,7 @@ class ShippingCalculatorService
      * Hierarchy:
      * 1. Seller-enabled provider marked as default/preferred (if is_default column exists)
      * 2. First seller-enabled provider
-     * 3. Platform default active provider (J&T Express or first active)
+     * 3. Database-driven platform default active provider (is_default = true or first active)
      *
      * @param User $seller
      * @return ShippingProvider|null
@@ -288,6 +301,8 @@ class ShippingCalculatorService
 
             if (\Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'is_default')) {
                 $query->orderByDesc('is_default');
+            } else {
+                $query->orderBy('created_at', 'asc');
             }
 
             $sellerPref = $query->first();
@@ -302,8 +317,12 @@ class ShippingCalculatorService
             }
         }
 
-        // Default platform provider fallback: J&T or first active provider
-        return ShippingProvider::where('is_active', true)->where('code', 'jnt')->first()
-            ?: ShippingProvider::where('is_active', true)->first();
+        // Database-driven platform default provider (zero hardcoded courier strings)
+        $platformQuery = ShippingProvider::where('is_active', true);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('shipping_providers', 'is_default')) {
+            $platformQuery->orderByDesc('is_default');
+        }
+
+        return $platformQuery->orderBy('id', 'asc')->first();
     }
 }

@@ -432,7 +432,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'paymentMethod' => 'GCash',
-            'paymentReference' => '100' . rand(1000000000, 9999999999),
+            'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
             'paymentScreenshot' => $screenshot,
             'shipping_provider_id' => $selectedProvider['provider_id'],
             'shipping_quote_token' => $quoteToken,
@@ -623,6 +623,23 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'shopPostalCode' => '4014',
         ]);
 
+        $spxProvider = ShippingProvider::where('code', 'spx')->first();
+        if ($spxProvider) {
+            SellerShippingProvider::create([
+                'seller_id' => $seller->id,
+                'provider_id' => $spxProvider->id,
+                'is_enabled' => true,
+                'is_default' => true,
+            ]);
+        }
+        foreach (ShippingProvider::where('id', '!=', $spxProvider?->id)->get() as $otherP) {
+            SellerShippingProvider::create([
+                'seller_id' => $seller->id,
+                'provider_id' => $otherP->id,
+                'is_enabled' => true,
+            ]);
+        }
+
         // Product: 1.00 kg, 30 x 20 x 5 cm, 2 handling days
         $product = $this->createTestProduct($seller, [
             'name' => 'Laguna Woodcraft Bowl',
@@ -727,6 +744,15 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'shopBarangay' => 'Poblacion',
             'shopPostalCode' => '4014',
         ]);
+
+        $jntProvider = ShippingProvider::where('code', 'jnt')->first();
+        if ($jntProvider) {
+            SellerShippingProvider::create([
+                'seller_id' => $seller->id,
+                'provider_id' => $jntProvider->id,
+                'is_enabled' => true,
+            ]);
+        }
 
         $product = $this->createTestProduct($seller, [
             'price' => 500.00,

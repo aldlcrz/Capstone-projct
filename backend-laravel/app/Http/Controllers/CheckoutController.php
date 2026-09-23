@@ -234,37 +234,61 @@ class CheckoutController extends Controller
             return response()->json(['success' => false, 'message' => 'Selected delivery address not found.'], 404);
         }
 
-        $firstItem = reset($cart);
-        $sellerId = $request->input('seller_id') ?: ($firstItem['sellerId'] ?? null);
-        if (!$sellerId && !empty($firstItem['id'])) {
-            $prod = Product::find($firstItem['id']);
-            $sellerId = $prod?->sellerId;
+        // Group items by seller
+        $itemsBySeller = [];
+        foreach ($cart as $item) {
+            $sId = $item['sellerId'] ?? null;
+            if (!$sId && !empty($item['id'])) {
+                $p = Product::find($item['id']);
+                $sId = $p?->sellerId;
+            }
+            if ($sId) {
+                $itemsBySeller[$sId][] = $item;
+            }
         }
 
-        $seller = User::find($sellerId);
-        if (!$seller) {
-            return response()->json(['success' => false, 'message' => 'Seller shop not found.'], 404);
+        if (empty($itemsBySeller)) {
+            return response()->json(['success' => false, 'message' => 'No valid items found in cart.'], 422);
         }
+
+        $allSellerIds = array_keys($itemsBySeller);
+        $sellerQuotes = [];
+        $allSellerQuotes = [];
 
         try {
-            $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($seller);
-            if (!$preferredProvider) {
-                return response()->json(['success' => false, 'message' => 'No active shipping provider configured for this seller.'], 422);
+            foreach ($itemsBySeller as $sellerId => $sellerItems) {
+                $seller = User::find($sellerId);
+                if (!$seller) {
+                    return response()->json(['success' => false, 'message' => 'Seller shop not found.'], 404);
+                }
+
+                $specificProviderId = $request->input('shipping_provider_id') ?: ($request->input('provider_id') ?: null);
+                if ($specificProviderId) {
+                    $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $sellerItems, $specificProviderId);
+                } else {
+                    $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $sellerItems);
+                }
+
+                if (empty($quotes)) {
+                    return response()->json(['success' => false, 'message' => 'Delivery is currently not available for this delivery area.'], 422);
+                }
+
+                $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($seller);
+                $primaryQuote = ($preferredProvider ? collect($quotes)->firstWhere('provider_id', $preferredProvider->id) : null)
+                    ?: ($quotes[0] ?? null);
+
+                $sellerQuotes[$sellerId] = $primaryQuote;
+                $allSellerQuotes = array_merge($allSellerQuotes, $quotes);
             }
 
-            $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $cart, $preferredProvider->id);
-            $quote = $quotes[0] ?? null;
-
-            if (!$quote) {
-                return response()->json(['success' => false, 'message' => 'Delivery is currently not available for this delivery area.'], 422);
-            }
-
-            $token = $this->shippingCalculator->generateQuoteToken($seller->id, $address->id, $cart);
+            $token = $this->shippingCalculator->generateQuoteToken($allSellerIds, $address->id, $cart);
+            $primaryQuote = reset($sellerQuotes);
 
             return response()->json([
                 'success'              => true,
-                'quote'                => $quote,
-                'quotes'               => [$quote],
+                'quote'                => $primaryQuote,
+                'quotes'               => $allSellerQuotes,
+                'seller_quotes'        => $sellerQuotes,
                 'shipping_quote_token' => $token,
             ]);
         } catch (\Throwable $e) {
@@ -389,6 +413,13 @@ class CheckoutController extends Controller
                 throw new \Exception('Cross-shop checkout in a single payment is not supported. Please checkout each shop separately to ensure direct payment to each artisan.');
             }
 
+            // Validate quote token across complete seller set if token provided
+            if ($quoteToken) {
+                if (!$this->shippingCalculator->validateQuoteToken($quoteToken, array_keys($itemsBySeller), $request->address_id, $cart)) {
+                    throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
+                }
+            }
+
             $sellerCalculatedQuotes = [];
             $totalExpectedAmount = 0;
 
@@ -401,13 +432,6 @@ class CheckoutController extends Controller
                     }
                     if ($sellerUser->status === 'frozen') {
                         throw new \Exception("The shop '{$shopName}' is currently frozen due to overdue monthly commission and cannot process orders at this time.");
-                    }
-                }
-
-                // Validate quote token if provided
-                if ($quoteToken) {
-                    if (!$this->shippingCalculator->validateQuoteToken($quoteToken, $sellerId, $request->address_id, $items)) {
-                        throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
                     }
                 }
 

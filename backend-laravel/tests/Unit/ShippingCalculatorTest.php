@@ -362,4 +362,85 @@ class ShippingCalculatorTest extends TestCase
             );
         }
     }
+
+    public function test_multi_seller_quote_token_deterministic_sorting_and_validation()
+    {
+        $sellerA = (string) Str::uuid();
+        $sellerB = (string) Str::uuid();
+        $sellerC = (string) Str::uuid();
+        $addrId = (string) Str::uuid();
+        $cart = [
+            ['id' => 'prod-1', 'quantity' => 2],
+            ['id' => 'prod-2', 'quantity' => 1],
+        ];
+
+        // Generate token with unsorted array
+        $token = $this->calculator->generateQuoteToken([$sellerC, $sellerA, $sellerB], $addrId, $cart);
+        $this->assertNotEmpty($token);
+
+        // Validation with different order should still succeed because normalized sorting is deterministic
+        $this->assertTrue($this->calculator->validateQuoteToken($token, [$sellerB, $sellerC, $sellerA], $addrId, $cart));
+
+        // Validation missing a seller must fail
+        $this->assertFalse($this->calculator->validateQuoteToken($token, [$sellerA, $sellerB], $addrId, $cart));
+
+        // Validation with extra seller must fail
+        $this->assertFalse($this->calculator->validateQuoteToken($token, [$sellerA, $sellerB, $sellerC, 'extra-seller'], $addrId, $cart));
+    }
+
+    public function test_deterministic_delivery_days_calculation_with_max_handling_days()
+    {
+        $seller = User::create([
+            'name' => 'ETA Seller',
+            'email' => 'eta_seller_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Metro Manila',
+            'shopPostalCode' => '1000',
+        ]);
+
+        $buyerAddress = [
+            'province' => 'Metro Manila',
+            'city' => 'Manila',
+            'postalCode' => '1000',
+        ];
+
+        // Item 1: 1 handling day
+        $prod1 = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Fast Craft',
+            'price' => 100,
+            'stock' => 5,
+            'package_weight_per_unit' => 0.5,
+            'package_length_per_unit' => 10,
+            'package_width_per_unit' => 10,
+            'package_height_per_unit' => 10,
+            'handling_days' => 1,
+        ]);
+
+        // Item 2: 4 handling days
+        $prod2 = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Custom Embroidery',
+            'price' => 500,
+            'stock' => 5,
+            'package_weight_per_unit' => 0.5,
+            'package_length_per_unit' => 10,
+            'package_width_per_unit' => 10,
+            'package_height_per_unit' => 10,
+            'handling_days' => 4,
+        ]);
+
+        $quotes = $this->calculator->calculateQuotes($seller, $buyerAddress, [
+            ['id' => $prod1->id, 'quantity' => 1],
+            ['id' => $prod2->id, 'quantity' => 1],
+        ]);
+
+        $firstQuote = $quotes[0];
+        // J&T NCR-NCR rate has estimated_days_min = 1, estimated_days_max = 2 (or standard 2-4)
+        // Max handling days = MAX(1, 4) = 4
+        $matchingRate = ShippingRate::find($firstQuote['shipping_rate_id']);
+        $this->assertEquals(4 + $matchingRate->estimated_days_min, $firstQuote['estimated_days_min']);
+        $this->assertEquals(4 + $matchingRate->estimated_days_max, $firstQuote['estimated_days_max']);
+    }
 }
