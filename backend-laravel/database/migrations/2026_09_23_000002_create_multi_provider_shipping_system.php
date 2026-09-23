@@ -141,7 +141,9 @@ return new class extends Migration
         });
 
         // Raw SQL to make shippingFee nullable — bypasses Doctrine/DBAL issues on shared host
-        DB::statement('ALTER TABLE products MODIFY COLUMN shippingFee DECIMAL(10,2) NULL DEFAULT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE products MODIFY COLUMN shippingFee DECIMAL(10,2) NULL DEFAULT NULL');
+        }
     }
 
     public function down(): void

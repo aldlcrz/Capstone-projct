@@ -937,7 +937,7 @@
 
                 <div class="bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl p-4 text-left space-y-2.5">
                     <p class="text-xs text-[#1E1915] font-bold leading-relaxed">
-                        You are about to export a secure ZIP archive of your account data:
+                        You are about to export a secure PDF document of your account data:
                     </p>
                     <ul class="text-[11.5px] text-[#78716C] space-y-1.5 list-disc pl-4 font-normal">
                         <li><strong>Profile &amp; Shop Details</strong>: Contact info, shop profile, and address records.</li>
@@ -948,7 +948,7 @@
 
                 <div class="text-[11px] text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-start gap-2">
                     <span class="text-amber-600 text-xs">ℹ️</span>
-                    <span>Your download will begin immediately once confirmed. The file will be delivered as a secure <code>.zip</code> file.</span>
+                    <span>Your download will begin immediately once confirmed. The file will be delivered as a secure <code>.pdf</code> document.</span>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">

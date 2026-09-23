@@ -54,7 +54,7 @@ class AccountDeletionLifecycleTest extends TestCase
 
         $response = $this->get(route('profile.download-information'));
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'application/zip');
+        $response->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_seller_can_download_shop_information_archive()
@@ -88,7 +88,7 @@ class AccountDeletionLifecycleTest extends TestCase
 
         $response = $this->get(route('profile.download-information'));
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'application/zip');
+        $response->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_unauthenticated_user_cannot_download_information()

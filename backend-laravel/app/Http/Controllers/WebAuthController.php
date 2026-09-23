@@ -2167,25 +2167,49 @@ class WebAuthController extends Controller
 
         $role = $user->role;
         $dateStr = now()->format('Y-m-d');
-        $zipFilename = "lumbarong-" . ($role === 'seller' ? 'seller' : 'customer') . "-export-{$dateStr}.zip";
-        $tempZipPath = tempnam(sys_get_temp_dir(), 'lum_export_');
+        $pdfFilename = "lumbarong-" . ($role === 'seller' ? 'seller' : 'customer') . "-information-{$dateStr}.pdf";
 
-        $zip = new \ZipArchive();
-        if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            return back()->with('error', 'Unable to create export archive. Please try again.');
-        }
+        $products = collect();
+        $orders = collect();
+        $commissions = collect();
+        $addresses = collect();
+        $reviews = collect();
 
         if ($role === 'seller') {
-            $this->exportSellerData($zip, $user);
+            $products = Product::where('sellerId', $user->id)->orderByDesc('id')->get();
+            $orders = Order::where('sellerId', $user->id)->with('items')->orderByDesc('id')->get();
+            $commissions = CommissionRecord::where('sellerId', $user->id)->orderByDesc('id')->get();
         } else {
-            $this->exportCustomerData($zip, $user);
+            $addresses = Address::where('userId', $user->id)->orderByDesc('isDefault')->get();
+            $orders = Order::where('customerId', $user->id)->with('items')->orderByDesc('id')->get();
+            $reviews = Review::where('customerId', $user->id)->with('product:id,name')->orderByDesc('id')->get();
         }
 
-        $zip->close();
+        $html = view('pdf.account-information', [
+            'user'        => $user,
+            'role'        => $role,
+            'generatedAt' => now()->format('F d, Y h:i A'),
+            'products'    => $products,
+            'orders'      => $orders,
+            'commissions' => $commissions,
+            'addresses'   => $addresses,
+            'reviews'     => $reviews,
+        ])->render();
 
-        return response()->download($tempZipPath, $zipFilename, [
-            'Content-Type' => 'application/zip',
-        ])->deleteFileAfterSend(true);
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$pdfFilename}\"",
+        ]);
     }
 
     /**
