@@ -547,8 +547,8 @@
 
             </div>
 
-            <!-- Order Summary Card (Desktop only, mobile uses the sticky place order bar) -->
-            <div class="hidden lg:block w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
+            <!-- Order Summary Card -->
+            <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
                         <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
@@ -583,19 +583,19 @@
                 </div>
 
                 <template x-if="step === 1">
-                    <div class="space-y-2 hidden lg:block">
+                    <div class="space-y-2">
                         <div x-show="addressStepError" x-cloak
                              class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                              x-text="addressStepError"></div>
-                        <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+                        <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
                             <span>Proceed to Payment</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </div>
                 </template>
                 <template x-if="step === 2">
-                    <div class="gap-3 hidden lg:flex">
-                        <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors">
+                    <div class="gap-3 flex">
+                        <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors cursor-pointer">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
                         <button type="button" 
