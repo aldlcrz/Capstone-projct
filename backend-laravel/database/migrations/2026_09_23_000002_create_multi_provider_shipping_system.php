@@ -32,11 +32,11 @@ return new class extends Migration
             });
         }
 
-        // 3. shipping_zone_areas
+        // 3. shipping_zone_areas — zone_id -> shipping_zones: both NEW tables, FK is safe
         if (!Schema::hasTable('shipping_zone_areas')) {
             Schema::create('shipping_zone_areas', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('zone_id');
+                $table->uuid('zone_id')->index();
                 $table->string('postal_code', 10)->nullable()->index();
                 $table->string('postal_code_prefix', 10)->nullable()->index();
                 $table->string('province', 100)->index();
@@ -49,13 +49,12 @@ return new class extends Migration
         }
 
         // 4. seller_shipping_providers
-        // NOTE: seller_id is intentionally NOT a FK to users.id to avoid MySQL
-        // errno 150 collation/charset mismatch on production. Integrity is
-        // enforced at the application layer and via the orders FK cascade.
+        // seller_id -> users: OLD pre-existing table, collation mismatch on production — plain index only
+        // provider_id -> shipping_providers: NEW in this migration — FK is safe
         if (!Schema::hasTable('seller_shipping_providers')) {
             Schema::create('seller_shipping_providers', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->char('seller_id', 36)->index();   // plain index, no FK
+                $table->char('seller_id', 36)->index();
                 $table->uuid('provider_id');
                 $table->boolean('is_enabled')->default(true);
                 $table->timestamps();
@@ -65,7 +64,7 @@ return new class extends Migration
             });
         }
 
-        // 5. shipping_rates
+        // 5. shipping_rates — all FK targets are NEW tables in this migration: safe
         if (!Schema::hasTable('shipping_rates')) {
             Schema::create('shipping_rates', function (Blueprint $table) {
                 $table->uuid('id')->primary();
@@ -90,10 +89,13 @@ return new class extends Migration
         }
 
         // 6. order_shipping
+        // order_id -> orders: OLD pre-existing table, collation mismatch on production — plain char(36)+unique index
+        // provider_id -> shipping_providers: NEW — FK safe
+        // shipping_rate_id -> shipping_rates: NEW — FK safe
         if (!Schema::hasTable('order_shipping')) {
             Schema::create('order_shipping', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('order_id')->unique();
+                $table->char('order_id', 36)->unique();
                 $table->uuid('provider_id');
                 $table->string('provider_name', 100);
                 $table->uuid('shipping_rate_id')->nullable();
@@ -114,7 +116,6 @@ return new class extends Migration
                 $table->string('shipping_status', 50)->default('Pending');
                 $table->timestamps();
 
-                $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
                 $table->foreign('provider_id')->references('id')->on('shipping_providers');
                 $table->foreign('shipping_rate_id')->references('id')->on('shipping_rates')->nullOnDelete();
             });
@@ -139,7 +140,7 @@ return new class extends Migration
             }
         });
 
-        // Make shippingFee nullable separately to avoid doctrine/dbal issues
+        // Raw SQL to make shippingFee nullable — bypasses Doctrine/DBAL issues on shared host
         DB::statement('ALTER TABLE products MODIFY COLUMN shippingFee DECIMAL(10,2) NULL DEFAULT NULL');
     }
 
@@ -167,4 +168,3 @@ return new class extends Migration
         Schema::dropIfExists('shipping_providers');
     }
 };
-
