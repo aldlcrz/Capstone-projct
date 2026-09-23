@@ -940,7 +940,7 @@
                     </div>
                 </template>
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="button" @click="openEditAddress(null)" class="flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-dashed border-[#D4AF37]/50 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#8C6D1F] hover:bg-[#FAF5E6]/50 transition-all">
+                    <button type="button" @click="openAddAddress()" class="flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-dashed border-[#D4AF37]/50 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#8C6D1F] hover:bg-[#FAF5E6]/50 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         Add New Address
                     </button>
@@ -1547,7 +1547,29 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.address = addr;
             this.showAddressModal = false;
         },
-        openEditAddress(addr) {
+        openAddAddress() {
+            this.editForm = {
+                id: null,
+                recipientName: "{{ addslashes(auth()->user()->name ?? '') }}",
+                phone: "{{ addslashes(auth()->user()->mobileNumber ?? '') }}",
+                houseNo: '',
+                street: '',
+                barangay: '',
+                city: '',
+                province: '',
+                postalCode: ''
+            };
+            this.selectedRegion = null;
+            this.selectedProvince = null;
+            this.selectedCity = null;
+            this.selectedBarangay = null;
+            this.activeTab = 'region';
+            this.locationSearch = '';
+            this.addressError = '';
+            this.showEditAddressModal = true;
+        },
+
+        openEditAddress(addr = null) {
             const target = addr || this.address || {};
             this.editForm = {
                 id: target.id || null,
