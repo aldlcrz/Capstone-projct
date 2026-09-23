@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 12px sm:32px 16px;"
      x-data="checkoutApp(
     @js($addresses->first() ?? [
@@ -968,6 +970,62 @@
 
             <div x-show="addressError" x-cloak x-text="addressError" class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold"></div>
 
+            {{-- Real-Time Interactive Map Location Pinpointer --}}
+            <div class="space-y-2 pb-3 border-b border-[#ECE3D2]">
+                <div class="flex items-center justify-between gap-2">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#996515;margin:0;">
+                        Pin Exact Delivery Location
+                    </label>
+                    <button type="button"
+                            @click="locateUserGps()"
+                            :disabled="isLocatingGps"
+                            style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#8C6212;padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+                            class="hover:bg-[#EAE2D2] disabled:opacity-50 shadow-xs">
+                        <template x-if="isLocatingGps">
+                            <svg class="w-3.5 h-3.5 animate-spin text-[#8C6212]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="!isLocatingGps">
+                            <svg class="w-3.5 h-3.5 text-[#8C6212]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </template>
+                        <span x-text="isLocatingGps ? 'Locating GPS...' : 'Use Current Location'"></span>
+                    </button>
+                </div>
+
+                {{-- Map Search Input --}}
+                <div style="position:relative;display:flex;align-items:center;width:100%;">
+                    <div style="position:absolute;left:11px;display:flex;align-items:center;pointer-events:none;color:#8C827A;z-index:5;">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text"
+                           x-model="mapSearchQuery"
+                           @keydown.enter.prevent="searchMapLocation()"
+                           placeholder="Search street, barangay, or landmark to drop pin..."
+                           style="width:100%;height:38px;padding-left:36px;padding-right:80px;background-color:#FFFFFF;border:1px solid #D8CEBE;border-radius:12px;font-size:12px;color:#1E1915;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);transition:border-color 0.2s;"
+                           class="focus:border-[#996515]">
+                    <button type="button"
+                            @click="searchMapLocation()"
+                            :disabled="pinSearching"
+                            style="position:absolute;right:4px;height:30px;padding:0 12px;background-color:#1E1915;color:#DFC97A;border:none;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;z-index:5;"
+                            class="hover:bg-black disabled:opacity-50">
+                        <span x-text="pinSearching ? '...' : 'Search'"></span>
+                    </button>
+                </div>
+
+                {{-- Leaflet Map Container --}}
+                <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
+                     x-ref="addressMapContainer"></div>
+
+                {{-- Detected Location Bar --}}
+                <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+                        <span class="text-[#78716C] font-medium truncate" x-text="detectedLocationName || 'Drag pin or tap on map to lock coordinates'"></span>
+                    </div>
+                    <span class="shrink-0 px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] text-[9px] font-black rounded-md uppercase tracking-wider"
+                          x-text="editForm.latitude && editForm.longitude ? 'Pin Locked' : 'Set Pin'"></span>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#8C6D1F]">*</span></label>
@@ -1209,8 +1267,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             barangay: '',
             city: '',
             province: '',
-            postalCode: ''
+            postalCode: '',
+            latitude: null,
+            longitude: null
         },
+        map: null,
+        marker: null,
+        mapSearchQuery: '',
+        pinSearching: false,
+        isLocatingGps: false,
+        detectedLocationName: '',
         fileName: '',
         filePreview: '',
         screenshotError: '',
@@ -1557,7 +1623,9 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 barangay: '',
                 city: '',
                 province: '',
-                postalCode: ''
+                postalCode: '',
+                latitude: null,
+                longitude: null
             };
             this.selectedRegion = null;
             this.selectedProvince = null;
@@ -1566,7 +1634,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.activeTab = 'region';
             this.locationSearch = '';
             this.addressError = '';
+            this.mapSearchQuery = '';
+            this.detectedLocationName = '';
             this.showEditAddressModal = true;
+            this.initAddressMap(14.2952, 121.4647);
         },
 
         openEditAddress(addr = null) {
@@ -1580,7 +1651,9 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 barangay: target.barangay || '',
                 city: target.city || '',
                 province: target.province || '',
-                postalCode: target.postalCode || ''
+                postalCode: target.postalCode || '',
+                latitude: target.latitude || null,
+                longitude: target.longitude || null
             };
 
             this.selectedRegion = target.province || target.city ? { name: target.province || 'Default Region' } : null;
@@ -1590,7 +1663,176 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.activeTab = 'region';
             this.locationSearch = '';
             this.addressError = '';
+            this.mapSearchQuery = '';
+            this.detectedLocationName = '';
             this.showEditAddressModal = true;
+
+            const lat = parseFloat(target.latitude) || 14.2952;
+            const lng = parseFloat(target.longitude) || 121.4647;
+            this.initAddressMap(lat, lng);
+        },
+
+        initAddressMap(lat = 14.2952, lng = 121.4647) {
+            this.$nextTick(() => {
+                if (!this.$refs.addressMapContainer) return;
+
+                if (this.map) {
+                    this.map.setView([lat, lng], 15);
+                    if (this.marker) {
+                        this.marker.setLatLng([lat, lng]);
+                    }
+                    setTimeout(() => {
+                        if (this.map) this.map.invalidateSize();
+                    }, 300);
+                    return;
+                }
+
+                if (typeof L === 'undefined') {
+                    console.warn('Leaflet library is still loading...');
+                    return;
+                }
+
+                this.map = L.map(this.$refs.addressMapContainer, {
+                    attributionControl: false
+                }).setView([lat, lng], 15);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(this.map);
+
+                const customPinIcon = L.divIcon({
+                    className: 'lumbarong-pin-icon',
+                    html: `
+                        <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:28px;height:28px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
+                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:11px;font-weight:900;">✦</span>
+                            </div>
+                            <div style="position:absolute;bottom:-6px;width:10px;height:4px;background:rgba(0,0,0,0.25);border-radius:50%;filter:blur(1px);"></div>
+                        </div>
+                    `,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+
+                this.marker = L.marker([lat, lng], {
+                    draggable: true,
+                    icon: customPinIcon
+                }).addTo(this.map);
+
+                this.map.on('click', (e) => {
+                    this.updatePinLocation(e.latlng.lat, e.latlng.lng);
+                });
+
+                this.marker.on('dragend', (e) => {
+                    const pos = e.target.getLatLng();
+                    this.updatePinLocation(pos.lat, pos.lng);
+                });
+
+                this.reverseGeocode(lat, lng);
+
+                setTimeout(() => {
+                    if (this.map) this.map.invalidateSize();
+                }, 350);
+            });
+        },
+
+        updatePinLocation(lat, lng, doReverseGeocode = true) {
+            this.editForm.latitude = lat;
+            this.editForm.longitude = lng;
+            if (this.marker) {
+                this.marker.setLatLng([lat, lng]);
+            }
+            if (this.map) {
+                this.map.panTo([lat, lng]);
+            }
+            if (doReverseGeocode) {
+                this.reverseGeocode(lat, lng);
+            }
+        },
+
+        async locateUserGps() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            this.isLocatingGps = true;
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    this.isLocatingGps = false;
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    this.updatePinLocation(lat, lng);
+                    if (this.map) {
+                        this.map.setView([lat, lng], 16);
+                    }
+                },
+                (err) => {
+                    this.isLocatingGps = false;
+                    alert('Unable to retrieve your location. Please check browser GPS permissions.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        },
+
+        async searchMapLocation() {
+            if (!this.mapSearchQuery.trim()) return;
+            this.pinSearching = true;
+            try {
+                const query = encodeURIComponent(this.mapSearchQuery.trim() + ', Philippines');
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const loc = data[0];
+                    const lat = parseFloat(loc.lat);
+                    const lng = parseFloat(loc.lon);
+                    this.updatePinLocation(lat, lng);
+                    if (this.map) {
+                        this.map.setView([lat, lng], 16);
+                    }
+                } else {
+                    alert('Location not found. Please try a different landmark or street.');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            this.pinSearching = false;
+        },
+
+        async reverseGeocode(lat, lon) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=en-US`);
+                const data = await res.json();
+                if (data) {
+                    this.detectedLocationName = data.display_name || '';
+                    if (data.address) {
+                        await this.autoFillFromGeocode(data.address);
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        },
+
+        async autoFillFromGeocode(addr) {
+            if (!addr) return;
+            const rawProvince = addr.province || (addr.state && addr.state.toLowerCase() !== (addr.region || '').toLowerCase() ? addr.state : '') || addr.state_district || addr.county || '';
+            const rawRegion = addr.region || addr.state || '';
+            const rawCity = addr.city || addr.town || addr.municipality || addr.city_district || addr.suburb || '';
+            const rawBarangay = addr.quarter || addr.village || addr.suburb || addr.neighbourhood || addr.residential || '';
+            const rawStreet = [addr.house_number, addr.road || addr.pedestrian || addr.highway].filter(Boolean).join(' ');
+            const rawPostal = addr.postcode || '';
+
+            if (rawStreet && !this.editForm.houseNo) {
+                this.editForm.houseNo = rawStreet;
+            }
+            if (rawPostal && /^\d{4}$/.test(rawPostal)) {
+                this.editForm.postalCode = rawPostal;
+            }
+            if (rawRegion) this.editForm.region = rawRegion;
+            if (rawProvince) this.editForm.province = rawProvince;
+            if (rawCity) this.editForm.city = rawCity;
+            if (rawBarangay) this.editForm.barangay = rawBarangay;
         },
 
         async toggleLocationDropdown() {
