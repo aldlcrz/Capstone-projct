@@ -545,7 +545,7 @@
                         </div>
                     </div>
                 </div>
-
+            </div>
             </div>
 
             <!-- Right Column: Order Summary (5 cols on lg, 4 cols on xl) - Sticky on Desktop! -->
