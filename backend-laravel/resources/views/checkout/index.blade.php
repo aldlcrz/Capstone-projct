@@ -839,8 +839,9 @@
                     </svg>
                 </div>
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Confirm Your Order</h3>
-                <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">
-                    Please ensure that your delivery address and payment receipt details are accurate before placing your order.
+                <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto"
+                   x-text="paymentMethod === 'COD' ? 'Please ensure that your delivery address and order details are accurate before placing your order.' : 'Please ensure that your delivery address and payment receipt details are accurate before placing your order.'">
+                    Please ensure that your delivery address and order details are accurate before placing your order.
                 </p>
             </div>
 
@@ -850,7 +851,7 @@
                     <span>Payment Method:</span>
                     <span class="font-bold text-gray-900" x-text="paymentMethod"></span>
                 </div>
-                <div class="flex justify-between items-center text-gray-600">
+                <div x-show="paymentMethod !== 'COD'" class="flex justify-between items-center text-gray-600">
                     <span>Reference Number:</span>
                     <span class="font-mono font-bold text-gray-900" x-text="paymentRef"></span>
                 </div>
@@ -897,7 +898,10 @@
             </div>
             <div>
                 <h4 class="font-serif text-lg font-bold text-gray-900">Placing Your Order</h4>
-                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Please wait while we secure your order and verify payment details. Do not refresh or close this page.</p>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed"
+                   x-text="paymentMethod === 'COD' ? 'Please wait while we process and secure your order. Do not refresh or close this page.' : 'Please wait while we secure your order and verify payment details. Do not refresh or close this page.'">
+                    Please wait while we process and secure your order. Do not refresh or close this page.
+                </p>
             </div>
         </div>
     </div>
