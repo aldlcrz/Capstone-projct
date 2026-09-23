@@ -209,7 +209,6 @@
                                                             <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
                                                         </template>
                                                     </div>
-                                                    <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" x-text="'Est. Delivery: ' + (q.delivery_estimate_display || '1 Day')"></div>
                                                 </div>
                                             </div>
                                             <div class="text-right">
@@ -252,13 +251,6 @@
                         {{-- Empty State (No address provided yet) --}}
                         <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
                             Please provide a valid delivery address above to calculate shipping.
-                        </div>
-
-                        <div class="bg-[#FDF9F4] rounded-xl border border-[#C0422A]/20 p-3 flex items-center justify-between text-[10px] lg:text-xs text-gray-600">
-                            <span class="flex items-center gap-1.5 font-medium">
-                                <svg class="w-4 h-4 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Shipping fee calculated based on: your delivery address, seller location, package weight, and package dimensions.
-                            </span>
                         </div>
                     </div>
 
@@ -568,7 +560,7 @@
                             <span class="text-sm text-gray-600 font-medium">Subtotal</span>
                             <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
                         </div>
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-center" x-show="shippingQuote?.provider_code !== 'store_pickup'" x-cloak>
                             <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
                             <span class="text-sm font-bold text-gray-900">
                                 <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
@@ -656,7 +648,7 @@
                     <span>Subtotal ({{ count($cart) }} item{{ count($cart) > 1 ? 's' : '' }})</span>
                     <span class="font-bold text-black">₱{{ number_format($subtotal) }}</span>
                 </div>
-                <div class="flex justify-between items-center text-gray-500">
+                <div class="flex justify-between items-center text-gray-500" x-show="shippingQuote?.provider_code !== 'store_pickup'" x-cloak>
                     <span>Estimated Shipping</span>
                     <span class="font-bold text-black">
                         <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
