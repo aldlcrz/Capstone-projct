@@ -377,7 +377,33 @@ class WebController extends Controller
                 ->get();
         }
 
-        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted', 'sellerTotalSold', 'sellerProductCount', 'sellerAvgRating', 'sameStoreProducts', 'similarProducts'));
+        // Live shipping estimate using the authoritative ShippingCalculatorService
+        $estimatedShipping = null;
+        $customerAddress = null;
+        if (Auth::check() && $product->seller && ((float)($product->package_weight_per_unit ?? 0) > 0)) {
+            $customerAddress = \App\Models\Address::where('userId', Auth::id())->where('isDefault', true)->first()
+                ?: \App\Models\Address::where('userId', Auth::id())->first();
+
+            if ($customerAddress) {
+                try {
+                    $calculator = app(\App\Services\ShippingCalculatorService::class);
+                    $prefProvider = $calculator->getSellerPreferredProvider($product->seller);
+                    if ($prefProvider) {
+                        $quotes = $calculator->calculateQuotes(
+                            $product->seller,
+                            $customerAddress,
+                            [['id' => $product->id, 'quantity' => 1]],
+                            $prefProvider->id
+                        );
+                        $estimatedShipping = $quotes[0] ?? null;
+                    }
+                } catch (\Throwable) {
+                    $estimatedShipping = null;
+                }
+            }
+        }
+
+        return view('products.show', compact('product', 'soldCount', 'recommended', 'isWishlisted', 'sellerTotalSold', 'sellerProductCount', 'sellerAvgRating', 'sameStoreProducts', 'similarProducts', 'estimatedShipping', 'customerAddress'));
     }
 
     /**

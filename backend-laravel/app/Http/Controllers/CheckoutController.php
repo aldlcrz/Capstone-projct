@@ -339,11 +339,11 @@ class CheckoutController extends Controller
                 },
             ],
             'paymentScreenshot' => 'required|image',
-            'shippingAddress' => 'required_without:addressId',
-            'addressId' => 'required_without:shippingAddress',
+            'shippingAddress' => 'required_without_all:address_id,addressId',
+            'address_id' => 'required_without_all:shippingAddress,addressId',
         ], [
             'paymentReference.required' => 'Please provide your payment reference number.',
-            'shippingAddress.required_without' => 'Please provide a valid shipping address.',
+            'shippingAddress.required_without_all' => 'Please provide a valid shipping address.',
         ]);
 
         try {
@@ -418,7 +418,7 @@ class CheckoutController extends Controller
 
                 // Validate quote token if provided
                 if ($quoteToken) {
-                    $addressIdForToken = $request->input('addressId') ?: ($addressData['id'] ?? null);
+                    $addressIdForToken = $request->input('address_id') ?: ($request->input('addressId') ?: ($addressData['id'] ?? null));
                     if (!$this->shippingCalculator->validateQuoteToken($quoteToken, $sellerId, $addressIdForToken, $items)) {
                         throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
                     }

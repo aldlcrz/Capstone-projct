@@ -1124,12 +1124,14 @@
             </div>
         </div>
 
-        <!-- Bottom Delivery Feature Bar (Realtime Seller Info) -->
+        <!-- Bottom Delivery Feature Bar (Authoritative Logistics Calculation) -->
         @php
-            $minDays = (int)($product->shippingDays ?? 3);
-            $maxDays = $minDays + 2;
             $locationParts = array_filter([$product->seller->shopCity ?? null, $product->seller->shopProvince ?? null]);
             $shipsFrom = !empty($locationParts) ? implode(', ', $locationParts) : ($product->seller->shopAddress ?? $product->artisan_region ?? 'Lumban, Laguna');
+            $hasAddress = Auth::check() && !empty($customerAddress);
+            $feeDisplay = $estimatedShipping ? '₱' . number_format($estimatedShipping['shipping_fee'], 2) : ($hasAddress ? 'Unavailable' : 'Calculated at checkout');
+            $daysDisplay = $estimatedShipping ? ($estimatedShipping['delivery_estimate_display'] ?? ($estimatedShipping['estimated_days_min'] . '–' . $estimatedShipping['estimated_days_max'] . ' days')) : '2–4 business days';
+            $courierDisplay = $estimatedShipping ? ($estimatedShipping['provider_name'] ?? 'Standard Courier') : 'Standard Courier';
         @endphp
         <div class="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
             <div class="flex items-center gap-3">
@@ -1138,7 +1140,10 @@
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Shipping Fee</div>
-                    <div class="font-extrabold text-gray-900">{{ ($product->shippingFee ?? 0) > 0 ? '₱' . number_format($product->shippingFee, 2) : 'Free Shipping' }}</div>
+                    <div class="font-extrabold text-gray-900">{{ $feeDisplay }}</div>
+                    @if($estimatedShipping)
+                        <div class="text-[10px] text-gray-400 font-medium">via {{ $courierDisplay }}</div>
+                    @endif
                 </div>
             </div>
 
@@ -1148,7 +1153,10 @@
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Estimated Delivery</div>
-                    <div class="font-extrabold text-gray-900">{{ $minDays }} - {{ $maxDays }} days</div>
+                    <div class="font-extrabold text-gray-900">{{ $daysDisplay }}</div>
+                    @if($hasAddress)
+                        <div class="text-[10px] text-gray-400 font-medium truncate max-w-40">To {{ $customerAddress->city }}, {{ $customerAddress->province }}</div>
+                    @endif
                 </div>
             </div>
 
