@@ -297,46 +297,16 @@
             
             // ─── Shopee-Style Hover Zoom Inspection State ───
             showZoomModal: false,
-            zoomOriginX: 50,
-            zoomOriginY: 50,
-            isZoomed: false,
-
             openZoomModal(idx) {
                 if (idx !== undefined) {
                     this.selectImage(idx);
                 }
-                this.isZoomed = false;
-                this.zoomOriginX = 50;
-                this.zoomOriginY = 50;
                 this.showZoomModal = true;
                 document.body.style.overflow = 'hidden';
             },
             closeZoomModal() {
                 this.showZoomModal = false;
-                this.isZoomed = false;
                 document.body.style.overflow = '';
-            },
-            handleModalMouseMove(e) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                this.zoomOriginX = Math.min(Math.max(x, 0), 100).toFixed(2);
-                this.zoomOriginY = Math.min(Math.max(y, 0), 100).toFixed(2);
-                this.isZoomed = true;
-            },
-            handleModalMouseLeave() {
-                this.isZoomed = false;
-            },
-            handleModalTouch(e) {
-                if (e.touches && e.touches.length > 0) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const touch = e.touches[0];
-                    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-                    const y = ((touch.clientY - rect.top) / rect.height) * 100;
-                    this.zoomOriginX = Math.min(Math.max(x, 0), 100).toFixed(2);
-                    this.zoomOriginY = Math.min(Math.max(y, 0), 100).toFixed(2);
-                    this.isZoomed = true;
-                }
             },
             selectedColorName: 'Off-White',
             isWishlisted: isWishlistedInitial,
@@ -1200,16 +1170,11 @@
 
         <!-- Center: Large Image Viewer with Left / Right Arrows -->
         <div 
-            class="relative flex-1 w-full flex items-center justify-center overflow-hidden cursor-crosshair px-2"
-            @mousemove="handleModalMouseMove($event)"
-            @mouseleave="handleModalMouseLeave()"
-            @touchstart="handleModalTouch($event)"
-            @touchmove.prevent="handleModalTouch($event)"
-            @touchend="handleModalMouseLeave()"
+            class="relative flex-1 w-full flex items-center justify-center overflow-hidden px-2"
         >
             <!-- Prev Image Arrow -->
             <button 
-                type="button"
+                type="button" 
                 x-show="galleryImages && galleryImages.length > 1 && activeImage > 0"
                 @click.stop="selectImage(activeImage - 1)"
                 class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
@@ -1221,7 +1186,7 @@
 
             <!-- Next Image Arrow -->
             <button 
-                type="button"
+                type="button" 
                 x-show="galleryImages && galleryImages.length > 1 && activeImage < galleryImages.length - 1"
                 @click.stop="selectImage(activeImage + 1)"
                 class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
@@ -1236,9 +1201,7 @@
                     x-show="activeImage === index"
                     :src="imageUrl(img.url)"
                     onerror="this.src='/uploads/products/default.jpg'"
-                    class="max-h-[78vh] max-w-[94vw] object-contain pointer-events-none transition-transform duration-75 ease-out"
-                    :class="isZoomed ? 'scale-[2.4]' : 'scale-100'"
-                    :style="isZoomed ? { transformOrigin: `${zoomOriginX}% ${zoomOriginY}%` } : {}"
+                    class="max-h-[82vh] max-w-[94vw] object-contain select-none"
                     alt="{{ $product->name }}"
                 >
             </template>
