@@ -165,7 +165,7 @@
             <td class="doc-badge" style="vertical-align: middle;">
                 <div><strong>OFFICIAL ACCOUNT DATA EXPORT</strong></div>
                 <div>Generated: {{ $generatedAt }}</div>
-                <div>Account ID: #{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</div>
+                <div>Account ID: #{{ substr($user->id, 0, 8) }}</div>
             </td>
         </tr>
     </table>
@@ -193,7 +193,7 @@
         </tr>
         <tr>
             <th>Member Since</th>
-            <td>{{ $user->createdAt ? $user->createdAt->format('F d, Y h:i A') : 'N/A' }}</td>
+            <td>{{ $user->createdAt ? \Carbon\Carbon::parse($user->createdAt)->format('F d, Y h:i A') : ($user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('F d, Y h:i A') : 'N/A') }}</td>
             <th>Verification</th>
             <td>{{ $user->isVerified ? 'Verified Account' : 'Unverified' }}</td>
         </tr>
@@ -244,18 +244,18 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 5%;">ID</th>
-                <th style="width: 35%;">Product Name &amp; Description</th>
-                <th style="width: 15%;">SKU / Fabric</th>
-                <th style="width: 15%;">Price (PHP)</th>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 32%;">Product Name &amp; Description</th>
+                <th style="width: 16%;">SKU / Fabric</th>
+                <th style="width: 14%;">Price (PHP)</th>
                 <th style="width: 10%;">Stock</th>
-                <th style="width: 20%;">Status / Date</th>
+                <th style="width: 18%;">Status / Date</th>
             </tr>
         </thead>
         <tbody>
             @foreach($products as $prod)
             <tr>
-                <td>#{{ $prod->id }}</td>
+                <td>#{{ substr($prod->id, 0, 8) }}</td>
                 <td>
                     <strong>{{ $prod->name }}</strong>
                     @if($prod->description)
@@ -270,7 +270,7 @@
                 <td>{{ $prod->stock }}</td>
                 <td>
                     <span class="badge {{ $prod->status === 'approved' ? 'badge-green' : 'badge-gray' }}">{{ ucfirst($prod->status ?? 'Draft') }}</span>
-                    <br><span style="color: #A8A29E; font-size: 8.5px;">{{ $prod->createdAt ? $prod->createdAt->format('M d, Y') : '' }}</span>
+                    <br><span style="color: #A8A29E; font-size: 8.5px;">{{ $prod->createdAt ? \Carbon\Carbon::parse($prod->createdAt)->format('M d, Y') : '' }}</span>
                 </td>
             </tr>
             @endforeach
@@ -286,21 +286,21 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 12%;">Order #</th>
+                <th style="width: 14%;">Order #</th>
                 <th style="width: 16%;">Date</th>
                 <th style="width: 36%;">Items Ordered</th>
-                <th style="width: 18%;">Payment</th>
+                <th style="width: 16%;">Payment</th>
                 <th style="width: 18%;">Total Amount</th>
             </tr>
         </thead>
         <tbody>
             @foreach($orders as $order)
             <tr>
-                <td><strong>#{{ $order->id }}</strong></td>
-                <td>{{ $order->createdAt ? $order->createdAt->format('M d, Y') : 'N/A' }}</td>
+                <td><strong>#{{ substr($order->id, 0, 8) }}</strong></td>
+                <td>{{ $order->createdAt ? \Carbon\Carbon::parse($order->createdAt)->format('M d, Y') : 'N/A' }}</td>
                 <td>
                     @foreach($order->items as $item)
-                        <div>• {{ $item->productName }} (x{{ $item->quantity }}) - PHP {{ number_format($item->subtotal ?: ($item->price * $item->quantity), 2) }}</div>
+                        <div>• {{ $item->full_display_name ?: $item->product_name }} (x{{ $item->quantity }}) - PHP {{ number_format($item->price * $item->quantity, 2) }}</div>
                     @endforeach
                 </td>
                 <td>
@@ -338,7 +338,7 @@
                 <td>{{ $comm->commissionRate }}%</td>
                 <td class="price-text">PHP {{ number_format($comm->commissionAmount, 2) }}</td>
                 <td><span class="badge {{ $comm->status === 'settled' || $comm->status === 'paid' ? 'badge-green' : 'badge-gray' }}">{{ ucfirst($comm->status) }}</span></td>
-                <td>{{ $comm->createdAt ? $comm->createdAt->format('M d, Y') : 'N/A' }}</td>
+                <td>{{ $comm->createdAt ? \Carbon\Carbon::parse($comm->createdAt)->format('M d, Y') : 'N/A' }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -397,21 +397,21 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 12%;">Order #</th>
+                <th style="width: 14%;">Order #</th>
                 <th style="width: 16%;">Order Date</th>
                 <th style="width: 36%;">Purchased Items</th>
-                <th style="width: 18%;">Payment &amp; Status</th>
+                <th style="width: 16%;">Payment &amp; Status</th>
                 <th style="width: 18%;">Total (PHP)</th>
             </tr>
         </thead>
         <tbody>
             @foreach($orders as $order)
             <tr>
-                <td><strong>#{{ $order->id }}</strong></td>
-                <td>{{ $order->createdAt ? $order->createdAt->format('M d, Y') : 'N/A' }}</td>
+                <td><strong>#{{ substr($order->id, 0, 8) }}</strong></td>
+                <td>{{ $order->createdAt ? \Carbon\Carbon::parse($order->createdAt)->format('M d, Y') : 'N/A' }}</td>
                 <td>
                     @foreach($order->items as $item)
-                        <div>• {{ $item->productName }} (x{{ $item->quantity }}) - PHP {{ number_format($item->subtotal ?: ($item->price * $item->quantity), 2) }}</div>
+                        <div>• {{ $item->full_display_name ?: $item->product_name }} (x{{ $item->quantity }}) - PHP {{ number_format($item->price * $item->quantity, 2) }}</div>
                     @endforeach
                 </td>
                 <td>
@@ -445,7 +445,7 @@
                 <td><strong>{{ $rev->product?->name ?? 'Product' }}</strong></td>
                 <td><strong style="color: #C49520;">{{ $rev->rating }} / 5 Stars</strong></td>
                 <td>{{ $rev->comment ?: 'No written comment' }}</td>
-                <td>{{ $rev->createdAt ? $rev->createdAt->format('M d, Y') : 'N/A' }}</td>
+                <td>{{ $rev->createdAt ? \Carbon\Carbon::parse($rev->createdAt)->format('M d, Y') : 'N/A' }}</td>
             </tr>
             @endforeach
         </tbody>

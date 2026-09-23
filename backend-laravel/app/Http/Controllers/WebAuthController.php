@@ -2165,51 +2165,68 @@ class WebAuthController extends Controller
             return redirect()->route('login');
         }
 
-        $role = $user->role;
-        $dateStr = now()->format('Y-m-d');
-        $pdfFilename = "lumbarong-" . ($role === 'seller' ? 'seller' : 'customer') . "-information-{$dateStr}.pdf";
+        try {
+            $role = $user->role;
+            $dateStr = now()->format('Y-m-d');
+            $pdfFilename = "lumbarong-" . ($role === 'seller' ? 'seller' : 'customer') . "-information-{$dateStr}.pdf";
 
-        $products = collect();
-        $orders = collect();
-        $commissions = collect();
-        $addresses = collect();
-        $reviews = collect();
+            $products = collect();
+            $orders = collect();
+            $commissions = collect();
+            $addresses = collect();
+            $reviews = collect();
 
-        if ($role === 'seller') {
-            $products = Product::where('sellerId', $user->id)->orderByDesc('id')->get();
-            $orders = Order::where('sellerId', $user->id)->with('items')->orderByDesc('id')->get();
-            $commissions = CommissionRecord::where('sellerId', $user->id)->orderByDesc('id')->get();
-        } else {
-            $addresses = Address::where('userId', $user->id)->orderByDesc('isDefault')->get();
-            $orders = Order::where('customerId', $user->id)->with('items')->orderByDesc('id')->get();
-            $reviews = Review::where('customerId', $user->id)->with('product:id,name')->orderByDesc('id')->get();
+            if ($role === 'seller') {
+                $products = Product::where('sellerId', $user->id)->orderByDesc('id')->get();
+                $orders = Order::where('sellerId', $user->id)->with('items')->orderByDesc('id')->get();
+                $commissions = CommissionRecord::where('sellerId', $user->id)->orderByDesc('id')->get();
+            } else {
+                $addresses = Address::where('userId', $user->id)->orderByDesc('isDefault')->get();
+                $orders = Order::where('customerId', $user->id)->with('items')->orderByDesc('id')->get();
+                $reviews = Review::where('customerId', $user->id)->with('product:id,name')->orderByDesc('id')->get();
+            }
+
+            $html = view('pdf.account-information', [
+                'user'        => $user,
+                'role'        => $role,
+                'generatedAt' => now()->format('F d, Y h:i A'),
+                'products'    => $products,
+                'orders'      => $orders,
+                'commissions' => $commissions,
+                'addresses'   => $addresses,
+                'reviews'     => $reviews,
+            ])->render();
+
+            if (!class_exists(\Dompdf\Dompdf::class)) {
+                \Log::error('Dompdf class not found. Please run composer install on the server.');
+                return response($html, 200, [
+                    'Content-Type'        => 'text/html; charset=UTF-8',
+                    'Content-Disposition' => "attachment; filename=\"lumbarong-information-{$dateStr}.html\"",
+                ]);
+            }
+
+            $options = new \Dompdf\Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isRemoteEnabled', true);
+            $options->set('defaultFont', 'Helvetica');
+
+            $dompdf = new \Dompdf\Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+
+            return response($dompdf->output(), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$pdfFilename}\"",
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to generate PDF account information: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Unable to generate account information PDF. Error: ' . $e->getMessage());
         }
-
-        $html = view('pdf.account-information', [
-            'user'        => $user,
-            'role'        => $role,
-            'generatedAt' => now()->format('F d, Y h:i A'),
-            'products'    => $products,
-            'orders'      => $orders,
-            'commissions' => $commissions,
-            'addresses'   => $addresses,
-            'reviews'     => $reviews,
-        ])->render();
-
-        $options = new \Dompdf\Options();
-        $options->set('isHtml5ParserEnabled', true);
-        $options->set('isRemoteEnabled', true);
-        $options->set('defaultFont', 'Helvetica');
-
-        $dompdf = new \Dompdf\Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        return response($dompdf->output(), 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"{$pdfFilename}\"",
-        ]);
     }
 
     /**
