@@ -3,7 +3,8 @@
 @section('content')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 12px sm:32px 16px;"
+<div class="py-6 px-3 sm:py-8 sm:px-4"
+     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;"
      x-data="checkoutApp(
     @js($addresses->first() ?? [
         'recipientName' => '',
@@ -18,8 +19,8 @@
     @js($addresses),
     '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}'
 )">
-    <div class="w-full max-w-6xl mx-auto transition-all duration-300"
-         style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:24px 16px sm:28px 24px;color:#1E1915;">
+    <div class="w-full max-w-6xl mx-auto transition-all duration-300 p-4 sm:p-6"
+         style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);color:#1E1915;">
 
         {{-- Top Header with Heraldic Laurel Wreath and Back Button on Right --}}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
