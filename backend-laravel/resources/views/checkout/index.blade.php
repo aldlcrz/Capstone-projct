@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 pt-2 pb-0 sm:py-6 lg:py-8" x-data="checkoutApp(
+<div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 12px sm:32px 16px;"
+     x-data="checkoutApp(
     @js($addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
@@ -15,29 +16,54 @@
     @js($addresses),
     '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}'
 )">
+    <div class="w-full max-w-6xl mx-auto transition-all duration-300"
+         style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);padding:24px 16px sm:28px 24px;color:#1E1915;">
 
-    {{-- Back Link & Page Title Header --}}
-    <div class="mb-5 lg:mb-7">
-        <button type="button" @click="if (step === 2) { step = 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href='/cart'; }" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#1E1915] transition-colors mb-2.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Back
-        </button>
-        <div class="flex items-center justify-between flex-wrap gap-4">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="w-5 h-[1.5px] bg-[#D4AF37]"></div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#8C6D1F]">Secure Checkout</span>
+        {{-- Top Header with Heraldic Laurel Wreath and Back Button on Right --}}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                        <!-- Central Medallion -->
+                        <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                        <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                        <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                        <!-- Laurel Wreath Left -->
+                        <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                        <!-- Laurel Wreath Right -->
+                        <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                        <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                        <!-- Base Ribbon -->
+                        <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
                 </div>
-                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Order Checkout</h1>
+                <div>
+                    <h1 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                        Order Checkout
+                    </h1>
+                    <p style="font-size:12.5px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                        Review delivery details, shipping logistics &amp; payment
+                    </p>
+                </div>
             </div>
-            
-            <div class="text-xs text-gray-400 font-bold uppercase tracking-widest lg:hidden" x-text="step === 1 ? 'Step 1 of 2: Shipping' : 'Step 2 of 2: Payment'"></div>
+
+            {{-- Back Button --}}
+            <button type="button"
+                    @click="if (step === 2) { step = 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href='/cart'; }"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] hover:border-[#1E1915] font-bold text-[11px] uppercase tracking-wider transition-all shadow-2xs no-underline shrink-0 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span x-text="step === 2 ? 'Back to Step 1' : 'Back to Cart'">Back to Cart</span>
+            </button>
         </div>
-    </div>
 
-
+        {{-- Star Divider --}}
+        <div style="position:relative;margin:18px 0 22px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
+        </div>
 
     <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" novalidate @submit="isSubmitting = true">
         @csrf
@@ -48,13 +74,13 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-24 lg:pb-10">
             <!-- Left Column: Checkout Steps & Forms -->
-            <div class="lg:col-span-7 xl:col-span-8 space-y-5">
+            <div class="lg:col-span-7 xl:col-span-8 space-y-4">
                 
                 <!-- STEP 1: SHIPPING INFORMATION -->
-                <div x-show="step === 1" x-transition class="space-y-5">
+                <div x-show="step === 1" x-transition class="space-y-4">
                     
                     {{-- Delivery Address Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs mb-5 relative overflow-hidden">
+                    <div class="bg-white rounded-2xl border border-[#ECE3D2] p-4 sm:p-5 shadow-xs mb-4 relative overflow-hidden">
                         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3.5">
                             <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FAF5E6] border border-[#D4AF37]/30 text-[#8C6D1F] flex items-center justify-center shrink-0 mt-0.5">
@@ -74,12 +100,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 justify-end">
-                                <button type="button" @click="openEditAddress()" class="inline-flex items-center gap-1 text-xs font-bold text-gray-700 hover:text-black px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 transition-colors">
-                                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#ECE3D2] justify-end">
+                                <button type="button" @click="openEditAddress()" class="inline-flex items-center gap-1 text-[11px] font-bold text-[#78716C] hover:text-[#1E1915] px-3 py-1.5 bg-[#FAF6EE] hover:bg-[#FAF6EE]/80 rounded-xl border border-[#E2D9C8] transition-colors shadow-2xs">
+                                    <svg class="w-3.5 h-3.5 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                     Edit
                                 </button>
-                                <button type="button" @click="showAddressModal = true" class="inline-flex items-center text-xs font-bold text-[#8C6D1F] hover:text-[#1E1915] px-2.5 py-1 bg-[#FAF5E6] hover:bg-[#FAF5E6]/80 rounded-lg border border-[#D4AF37]/30 transition-colors whitespace-nowrap">
+                                <button type="button" @click="showAddressModal = true" class="inline-flex items-center text-[11px] font-bold text-[#996515] hover:text-[#1E1915] px-3 py-1.5 bg-[#FAF5EA] hover:bg-[#FAF5EA]/80 rounded-xl border border-[#E6D8BA] transition-colors whitespace-nowrap shadow-2xs">
                                     Change Address
                                 </button>
                             </div>
@@ -102,19 +128,19 @@
     $mayaQrUrl  = $paymentSource && !empty($paymentSource->mayaQrCode) ? $resolveQrUrl($paymentSource->mayaQrCode) : null;
 @endphp
                     {{-- Store Items Preview Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs mb-5 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                    <div class="bg-white rounded-2xl border border-[#ECE3D2] p-4 sm:p-5 shadow-xs mb-4 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#ECE3D2]">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="bg-[#1E1915] text-[#D4AF37] text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap border border-[#D4AF37]/30">{{ $seller->shopName ?? ($seller->name ?? 'LumBarong Store') }}</span>
+                                <span class="bg-[#1E1915] text-[#DFC97A] text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap border border-[#D4AF37]/30">{{ $seller->shopName ?? ($seller->name ?? 'LumBarong Store') }}</span>
                                 <span class="text-xs sm:text-sm font-bold text-gray-900">{{ $seller ? ($seller->shopDescription ?? 'Official Heritage Artisan') : 'Official Heritage Store' }}</span>
                             </div>
-                            <span class="text-[10px] lg:text-xs font-bold text-[#8C6D1F] uppercase tracking-wider flex items-center gap-1 bg-[#FAF5E6] px-2.5 py-1 rounded-md border border-[#D4AF37]/40 w-fit">
-                                <svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-[10px] lg:text-xs font-extrabold text-[#996515] uppercase tracking-wider flex items-center gap-1 bg-[#FAF5EA] px-2.5 py-1 rounded-full border border-[#E6D8BA] w-fit">
+                                <svg class="w-3.5 h-3.5 text-[#C49520] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 100% Authentic Handcrafted
                             </span>
                         </div>
 
-                        <div class="divide-y divide-gray-100">
+                        <div class="divide-y divide-[#ECE3D2]">
                             @foreach($cart as $item)
                                 @php
                                     $itemProduct = !empty($item['id']) ? \App\Models\Product::find($item['id']) : null;
@@ -157,22 +183,22 @@
                     </div>
 
                     {{-- Calculated Shipping Result --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 shadow-xs mb-4 space-y-2.5">
-                        <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <div class="bg-white rounded-2xl border border-[#ECE3D2] p-3.5 sm:p-4 shadow-xs mb-4 space-y-2.5">
+                        <div class="flex items-center justify-between pb-2 border-b border-[#ECE3D2]">
                             <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-[#FAF5E6] text-[#8C6D1F] flex items-center justify-center shrink-0">
+                                <div class="w-7 h-7 rounded-lg bg-[#FAF6EE] border border-[#E2D9C8] text-[#996515] flex items-center justify-center shrink-0">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Shipping</h3>
-                                    <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Standard verified parcel logistics for your order destination.</p>
+                                    <h3 class="text-xs sm:text-sm font-bold text-[#1E1915]">Shipping</h3>
+                                    <p class="text-[10px] sm:text-xs text-[#78716C] font-medium">Standard verified parcel logistics for your order destination.</p>
                                 </div>
                             </div>
                             <template x-if="loadingQuotes">
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#8C6D1F] bg-[#FAF5E6] px-2 py-0.5 rounded-md border border-[#D4AF37]/30">
-                                    <svg class="w-3 h-3 animate-spin text-[#8C6D1F]" fill="none" viewBox="0 0 24 24">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#996515] bg-[#FAF5EA] px-2 py-0.5 rounded-full border border-[#E6D8BA]">
+                                    <svg class="w-3 h-3 animate-spin text-[#996515]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -194,14 +220,14 @@
                             {{-- Multiple Local Options (Store Pickup vs Local Direct Delivery) --}}
                             <template x-if="isLocalCluster && shippingQuotesList && shippingQuotesList.length > 1">
                                 <div class="space-y-1.5">
-                                    <div class="text-[10px] sm:text-xs font-bold text-[#8C6D1F] uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                                    <div class="text-[10px] sm:text-xs font-extrabold text-[#996515] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
                                         <span>Nearby Location — Local Fulfillment Options</span>
                                     </div>
                                     <template x-for="q in shippingQuotesList" :key="q.provider_id">
                                         <div @click="selectQuote(q)"
-                                             class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150"
-                                             :class="shippingQuote?.provider_id === q.provider_id ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                                             class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border cursor-pointer transition-all duration-150"
+                                             :class="shippingQuote?.provider_id === q.provider_id ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                                             <div class="flex items-center gap-2.5">
                                                 <input type="radio" :name="'local_shipping_option'" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#1E1915]">
                                                 <div>
@@ -224,9 +250,9 @@
 
                             {{-- Single Standard Delivery Option (Far away / NCR) --}}
                             <template x-if="!isLocalCluster || !shippingQuotesList || shippingQuotesList.length <= 1">
-                                <div class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border border-gray-100 bg-[#FAF5E6]/30">
+                                <div class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border border-[#ECE3D2] bg-[#FAF6EE]/50">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-[#FAF5E6] border border-[#D4AF37]/30 text-[#8C6D1F] flex items-center justify-center shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#996515] flex items-center justify-center shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
                                             </svg>
@@ -251,7 +277,7 @@
                         </div>
 
                         {{-- Empty State (No address provided yet) --}}
-                        <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
+                        <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-3 bg-[#FAF8F5] rounded-xl border border-[#ECE3D2] text-center text-xs text-[#78716C]">
                             Please provide a valid delivery address above to calculate shipping.
                         </div>
                     </div>
@@ -259,10 +285,10 @@
                 </div>
 
                 <!-- STEP 2: PAYMENT METHOD & PROOF UPLOAD -->
-                <div x-show="step === 2" x-transition class="space-y-5">
-                    <div class="mb-5">
-                        <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
-                        <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
+                <div x-show="step === 2" x-transition class="space-y-4">
+                    <div class="mb-4">
+                        <h2 class="font-serif text-xl lg:text-2xl font-bold text-[#1E1915] mb-1">Select Payment Channel</h2>
+                        <p class="text-xs lg:text-sm text-[#78716C] font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
                     </div>
                     @php
                         $resolveQrUrl = function ($qrPath) {
@@ -284,14 +310,14 @@
                         $mayaQrUrl  = $rawMayaQr ? $resolveQrUrl($rawMayaQr) : null;
                     @endphp
 
-                    <div class="space-y-3.5">
+                    <div class="space-y-3">
                         {{-- Cash on Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
                         <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
-                             class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200"
-                             :class="paymentMethod === 'COD' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                             class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                             :class="paymentMethod === 'COD' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
+                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery / Pay on Claim</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Pay in cash upon in-store pickup or local delivery arrival</div>
@@ -300,8 +326,8 @@
                                 <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
                             
-                            <div x-show="paymentMethod === 'COD'" class="mt-4 pt-4 border-t border-gray-100" x-transition>
-                                <div class="bg-[#FAF5E6] p-3.5 rounded-xl border border-[#D4AF37]/40 text-xs text-[#8C6D1F] font-medium flex items-start gap-2">
+                            <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
+                                <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
                                     <span class="text-base shrink-0">ℹ️</span>
                                     <span>You can pay with exact cash directly to the artisan upon claiming at the store or upon doorstep delivery. No online receipt screenshot required.</span>
                                 </div>
@@ -310,7 +336,7 @@
 
                         @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
                         <!-- GCash Option -->
-                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                        <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">GC</div>
@@ -322,8 +348,8 @@
                                 <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
                             
-                            <div x-show="paymentMethod === 'GCash'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
+                            <div x-show="paymentMethod === 'GCash'" class="mt-3 pt-3 border-t border-[#ECE3D2] flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
+                                <div class="w-full sm:w-1/3 bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
                                      @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
                                     @if($gcashQrUrl)
                                         <img src="{{ $gcashQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
@@ -332,11 +358,11 @@
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#8C6D1F] tracking-wider mt-1">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
                                 <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FAF5E6] p-3.5 sm:p-4 rounded-xl border border-[#D4AF37]/30">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-[#8C6D1F] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
+                                    <div class="bg-[#FAF6EE] p-3.5 sm:p-4 rounded-xl border border-[#E2D9C8]">
+                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
                                         <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
                                         <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
@@ -347,7 +373,7 @@
 
                         @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
                         <!-- Maya Option -->
-                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                        <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">MY</div>
@@ -359,8 +385,8 @@
                                 <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
 
-                            <div x-show="paymentMethod === 'Maya'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
+                            <div x-show="paymentMethod === 'Maya'" class="mt-3 pt-3 border-t border-[#ECE3D2] flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
+                                <div class="w-full sm:w-1/3 bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
                                      @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
                                     @if($mayaQrUrl)
                                         <img src="{{ $mayaQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
@@ -369,11 +395,11 @@
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#8C6D1F] tracking-wider mt-1">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
                                 <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FAF5E6] p-3.5 sm:p-4 rounded-xl border border-[#D4AF37]/30">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-[#8C6D1F] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
+                                    <div class="bg-[#FAF6EE] p-3.5 sm:p-4 rounded-xl border border-[#E2D9C8]">
+                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
                                         <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
                                         <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
@@ -384,17 +410,17 @@
                     </div>
 
                     <!-- Payment Proof Upload Inputs (Only for GCash / Maya) -->
-                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-5 shadow-xs space-y-4">
-                        <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
-                            <div class="w-2 h-2 rounded-full bg-[#D4AF37]"></div>
-                            <h3 class="text-xs lg:text-sm font-bold text-gray-900 uppercase tracking-wider">Upload Proof of Payment</h3>
+                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
+                        <div class="flex items-center gap-2 border-b border-[#ECE3D2] pb-2.5">
+                            <div class="w-2 h-2 rounded-full bg-[#C49520]"></div>
+                            <h3 class="text-xs font-extrabold text-[#1E1915] uppercase tracking-wider">Upload Proof of Payment</h3>
                         </div>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-3.5">
                             <div class="space-y-1.5">
                                 <div class="flex items-center justify-between flex-wrap gap-1">
                                     <div class="flex items-center gap-2">
-                                        <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#8C6D1F]">*</span></label>
+                                        <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">Payment Reference Number <span class="text-[#996515]">*</span></label>
                                         <template x-if="ocrExtracted">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
                                                 <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -415,7 +441,7 @@
                                        :required="paymentMethod !== 'COD'"
                                        :disabled="paymentMethod === 'COD'"
                                        :placeholder="paymentMethod === 'GCash' ? 'e.g. 1002345678901 (13-digit GCash Reference)' : 'e.g. 123456789012 (12-digit Maya Reference)'"
-                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#1E1915] focus:ring-[#D4AF37]/20 bg-gray-50/50'))"
+                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-[#ECE3D2] focus:border-[#1E1915] focus:ring-[#D4AF37]/20 bg-gray-50/50'))"
                                        class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
                                 <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-amber-700 font-bold px-1 mt-0.5 flex items-center gap-1">
@@ -429,7 +455,7 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#8C6D1F]">*</span></label>
+                                <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#996515]">*</span></label>
                                 
                                 <input type="file" 
                                        id="paymentScreenshotInput" 
@@ -442,13 +468,13 @@
                                 <!-- Upload Card Dropzone -->
                                 <div x-show="!fileName" 
                                      @click="document.getElementById('paymentScreenshotInput').click()" 
-                                     class="cursor-pointer py-6 px-4 bg-gray-50/70 border-2 border-dashed border-gray-200 rounded-2xl text-center hover:border-[#D4AF37] hover:bg-[#FAF5E6]/30 transition-all flex flex-col items-center justify-center gap-2 group">
-                                    <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 text-gray-400 group-hover:text-[#1E1915] group-hover:border-[#D4AF37]/40 flex items-center justify-center shadow-xs transition-all">
+                                     class="cursor-pointer py-6 px-4 bg-[#FAF8F5] border-2 border-dashed border-[#E2D9C8] rounded-2xl text-center hover:border-[#C49520] hover:bg-[#FAF6EE] transition-all flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-12 h-12 rounded-2xl bg-white border border-[#ECE3D2] text-[#78716C] group-hover:text-[#1E1915] group-hover:border-[#C49520]/40 flex items-center justify-center shadow-xs transition-all">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     </div>
                                     <div>
                                         <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#1E1915]">
-                                            <span class="px-3 py-1.5 bg-[#1E1915] text-[#D4AF37] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
+                                            <span class="px-3.5 py-1.5 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
                                             <span class="hidden sm:inline text-gray-500">or tap to select</span>
                                         </div>
                                         <p class="text-[10px] text-gray-400 mt-2">PNG, JPG, or JPEG (Clear receipt showing ref # & amount)</p>
@@ -457,7 +483,7 @@
 
                                 <!-- Active Attached File Display -->
                                 <div x-show="fileName" x-cloak class="space-y-2">
-                                    <div class="p-3.5 bg-[#FAF5E6] border-2 border-[#D4AF37]/40 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                                    <div class="p-3.5 bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl flex items-center justify-between gap-3 shadow-xs">
                                         <div class="flex items-center gap-3 min-w-0">
                                             <template x-if="filePreview">
                                                 <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
@@ -523,7 +549,7 @@
                                                             <button type="button" 
                                                                     @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
                                                                     x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
-                                                                    class="text-[10px] font-bold text-[#8C6D1F] hover:underline px-2.5 py-1 bg-[#FAF5E6] hover:bg-[#FAF5E6]/80 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1 border border-[#D4AF37]/30">
+                                                                    class="text-[10px] font-bold text-[#996515] hover:underline px-2.5 py-1 bg-[#FAF5EA] hover:bg-[#FAF5EA]/80 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1 border border-[#E6D8BA]">
                                                                 <span>Use Detected Ref</span>
                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                             </button>
@@ -543,35 +569,35 @@
             </div>
 
             <!-- Right Column: Order Summary (5 cols on lg, 4 cols on xl) - Sticky on Desktop! -->
-            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-5 w-full">
+            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-4 w-full">
                 <!-- Order Summary Card -->
-                <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-7 border border-gray-100 shadow-xs space-y-5 sm:space-y-6">
+                <div class="w-full bg-white rounded-2xl p-5 sm:p-6 border border-[#ECE3D2] shadow-xs space-y-4">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <div class="w-4 h-[1.5px] bg-[#D4AF37]"></div>
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#8C6D1F]">Order Overview</span>
+                            <div class="w-4 h-[1.5px] bg-[#C49520]"></div>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#996515]">Order Overview</span>
                         </div>
-                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-[#1E1915]">Order Summary</h2>
+                        <p class="text-xs text-[#78716C] font-bold uppercase tracking-wider mt-1">
                             {{ count($cart) }} item(s) selected
                         </p>
                     </div>
 
-                    <div class="space-y-3.5 border-t border-gray-100 pt-5 sm:pt-6">
+                    <div class="space-y-3 border-t border-[#ECE3D2] pt-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 font-medium">Subtotal</span>
-                            <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
+                            <span class="text-xs sm:text-sm text-[#78716C] font-medium">Subtotal</span>
+                            <span class="text-sm font-bold text-[#1E1915]">₱{{ number_format($subtotal) }}</span>
                         </div>
                         <div class="flex justify-between items-center" x-show="shippingQuote?.provider_code !== 'store_pickup'" x-cloak>
-                            <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
-                            <span class="text-sm font-bold text-gray-900">
+                            <span class="text-xs sm:text-sm text-[#78716C] font-medium">Estimated Delivery</span>
+                            <span class="text-sm font-bold text-[#1E1915]">
                                 <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
                                 <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Calculated at checkout</span>
                                 <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
                             </span>
                         </div>
-                        <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
-                            <span class="text-base font-bold text-gray-900">Total Payment</span>
+                        <div class="flex justify-between items-center pt-3 border-t border-dashed border-[#ECE3D2]">
+                            <span class="text-sm sm:text-base font-bold text-[#1E1915]">Total Payment</span>
                             <span class="text-2xl lg:text-3xl font-black text-[#1E1915]" 
                                   x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                                 ₱{{ number_format($subtotal) }}
@@ -585,35 +611,35 @@
                             <div x-show="addressStepError" x-cloak
                                  class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                                  x-text="addressStepError"></div>
-                            <button type="button" @click="validateStep1()" class="w-full bg-[#1E1915] text-white hover:bg-black py-4 rounded-xl text-sm font-bold shadow-md hover:shadow-black/20 border border-[#D4AF37]/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
+                            <button type="button" @click="validateStep1()" class="w-full bg-[#1E1915] text-[#DFC97A] hover:bg-black py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-black/20 border border-[#D4AF37]/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
                                 <span>Proceed to Payment</span>
-                                <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </button>
                         </div>
                     </template>
                     <template x-if="step === 2">
-                        <div class="gap-3 hidden lg:flex">
-                            <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors cursor-pointer">
+                        <div class="gap-2.5 hidden lg:flex">
+                            <button type="button" @click="step = 1" class="px-4 py-3.5 border border-[#E2D9C8] rounded-xl flex items-center justify-center text-[#78716C] bg-[#FAF6EE] hover:text-[#1E1915] hover:border-[#1E1915] transition-colors cursor-pointer">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
                             <button type="button" 
                                     @click="requestPlaceOrder()" 
                                     :disabled="aiChecking || isPlacingOrder"
                                     :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-[0.99] cursor-pointer shadow-md'"
-                                    class="flex-1 bg-[#1E1915] text-white border border-[#D4AF37]/30 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                    class="flex-1 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2">
                                 <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
                                     <span>Place Order</span>
-                                    <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </span>
                                 <span x-show="aiChecking && !isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                    <svg class="w-4 h-4 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 animate-spin text-[#DFC97A]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     <span>Scanning Receipt...</span>
                                 </span>
                                 <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                    <svg class="w-4 h-4 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 animate-spin text-[#DFC97A]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -623,9 +649,9 @@
                         </div>
                     </template>
 
-                    <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
-                        <div class="font-bold text-gray-700 flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <div class="bg-[#FAF6EE] rounded-2xl p-3.5 border border-[#E2D9C8] text-[11px] text-[#78716C] leading-relaxed space-y-1">
+                        <div class="font-bold text-[#1E1915] flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             LumBarong Buyer Protection
                         </div>
                         <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
@@ -634,6 +660,7 @@
             </div>
         </div>
     </form>
+    </div>
 
     <!-- Mobile Sticky Place Order / Proceed to Payment Bar (Mobile Only: lg:hidden) -->
     <div class="fixed inset-x-0 bottom-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-4 py-3 sm:py-4 lg:hidden"
