@@ -520,7 +520,7 @@
                         <span class="text-base font-bold text-gray-900">Total Payment</span>
                         <span class="text-2xl lg:text-3xl font-black text-[#C0422A]" 
                               x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
-                            ₱{{ number_format($subtotal + $shippingFee) }}
+                            ₱{{ number_format($subtotal) }}
                         </span>
                     </div>
                 </div>
@@ -614,7 +614,7 @@
                 </button>
                 <div class="text-lg font-black text-[#C0422A] leading-tight"
                      x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
-                    ₱{{ number_format($subtotal + $shippingFee) }}
+                    ₱{{ number_format($subtotal) }}
                 </div>
             </div>
 
@@ -779,7 +779,7 @@
                     <span class="font-bold text-gray-900">Total Payment:</span>
                     <span class="font-black text-[#C0422A] text-base"
                           x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
-                        ₱{{ number_format($subtotal + $shippingFee) }}
+                        ₱{{ number_format($subtotal) }}
                     </span>
                 </div>
             </div>
