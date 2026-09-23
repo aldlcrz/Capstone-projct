@@ -614,15 +614,12 @@
                         </div>
                     </template>
                     <template x-if="step === 2">
-                        <div class="gap-2.5 hidden lg:flex">
-                            <button type="button" @click="step = 1" class="px-4 py-3.5 border border-[#E2D9C8] rounded-xl flex items-center justify-center text-[#78716C] bg-[#FAF6EE] hover:text-[#1E1915] hover:border-[#1E1915] transition-colors cursor-pointer">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
+                        <div class="hidden lg:block">
                             <button type="button" 
                                     @click="requestPlaceOrder()" 
                                     :disabled="aiChecking || isPlacingOrder"
                                     :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-[0.99] cursor-pointer shadow-md'"
-                                    class="flex-1 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                    class="w-full bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2">
                                 <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
                                     <span>Place Order</span>
                                     <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
