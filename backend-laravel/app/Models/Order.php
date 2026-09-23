@@ -199,6 +199,19 @@ class Order extends Model
         return $this->belongsTo(User::class, 'sellerId');
     }
 
+    public function shipping()
+    {
+        return $this->hasOne(OrderShipping::class, 'order_id');
+    }
+
+    public function getShippingFeeAttribute(): float
+    {
+        if ($this->relationLoaded('shipping')) {
+            return (float) ($this->shipping?->shipping_fee ?? 0);
+        }
+        return (float) ($this->shipping()->value('shipping_fee') ?? 0);
+    }
+
     /**
      * Get the reviews for the order.
      */

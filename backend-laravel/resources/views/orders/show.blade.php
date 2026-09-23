@@ -356,10 +356,31 @@
                         </div>
                     </div>
 
-                    {{-- Total Divider --}}
+                    {{-- Total Divider & Shipping Breakdown --}}
                     <div>
                         <div class="border-t border-[#ECE3D2] my-3.5"></div>
-                        <div class="flex items-center justify-between pt-0.5">
+                        <div class="space-y-1.5 pb-2 text-xs">
+                            <div class="flex items-center justify-between text-[#78716C]">
+                                <span>Subtotal</span>
+                                <span class="font-bold text-[#1E1915]">
+                                    ₱{{ number_format(($order->totalAmount ?? 0) - ($order->shippingFee ?? ($order->shipping?->shipping_fee ?? 0)), 2) }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between text-[#78716C]">
+                                <span class="flex items-center gap-1.5">
+                                    <span>Shipping</span>
+                                    @if($order->shipping)
+                                        <span class="text-[9px] font-bold px-1.5 py-0.2 bg-[#FAF8F5] border border-[#ECE3D2] rounded text-[#1E1915]">
+                                            {{ $order->shipping->provider_name }} ({{ number_format($order->shipping->chargeable_weight, 2) }} kg)
+                                        </span>
+                                    @endif
+                                </span>
+                                <span class="font-bold text-[#1E1915]">
+                                    ₱{{ number_format($order->shipping?->shipping_fee ?? ($order->shippingFee ?? 0), 2) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-dashed border-[#ECE3D2]">
                             <span class="text-xs font-bold uppercase tracking-wider text-[#78716C]">Order Total</span>
                             <span class="text-base sm:text-xl font-black text-[#C0422A]">
                                 ₱{{ number_format($order->totalAmount ?? 0, 2) }}
@@ -602,10 +623,22 @@
                                 </div>
 
                                 <div class="space-y-2.5 pt-2">
-                                    @if($order->courierName)
+                                    @php
+                                        $displayCourier = $order->shipping?->provider_name ?? ($order->courierName ?? null);
+                                    @endphp
+                                    @if($displayCourier)
                                         <div class="flex justify-between items-center text-xs">
                                             <span class="text-[#8C827A] font-bold uppercase tracking-wider text-[9px]">Courier</span>
-                                            <span class="font-black text-[#1E1915]">{{ $order->courierName }}</span>
+                                            <span class="font-black text-[#1E1915]">{{ $displayCourier }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($order->shipping && $order->shipping->destination_zone_name)
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="text-[#8C827A] font-bold uppercase tracking-wider text-[9px]">Route</span>
+                                            <span class="font-bold text-[#1E1915] text-[11px]">
+                                                {{ $order->shipping->origin_zone_name ?? 'Origin' }} → {{ $order->shipping->destination_zone_name }}
+                                            </span>
                                         </div>
                                     @endif
 

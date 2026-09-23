@@ -751,9 +751,9 @@ function sellerOrdersManager() {
         openDetails(order) {
             this.detailsOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.courierName || 'J&T Express';
-            this.trackingNumber = order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || (order.courierName ? this.getCourierDefaultLink(order.courierName) : 'https://www.jtexpress.ph/track');
+            this.courierName = order.shipping?.provider_name || order.courierName || 'J&T Express';
+            this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
+            this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';
             this.packingPhotoFile = null;
             let proof = order.packingProofUrl || order.packingProof || null;
@@ -771,9 +771,9 @@ function sellerOrdersManager() {
         openStatus(order) {
             this.activeOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.courierName || 'J&T Express';
-            this.trackingNumber = order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || (order.courierName ? this.getCourierDefaultLink(order.courierName) : 'https://www.jtexpress.ph/track');
+            this.courierName = order.shipping?.provider_name || order.courierName || 'J&T Express';
+            this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
+            this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';
             this.statusModal = true;
         },
@@ -1720,9 +1720,25 @@ function sellerOrdersManager() {
                                 </template>
                             </div>
 
-                            <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Grand Total Amount</span>
-                                <span class="text-base font-black text-[#C0420A]" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                            <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-1.5 text-xs">
+                                <div class="flex items-center justify-between text-gray-500">
+                                    <span>Items Subtotal</span>
+                                    <span class="font-bold text-black" x-text="'₱' + (Number(detailsOrder.totalAmount) - Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0))).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                </div>
+                                <div class="flex items-center justify-between text-gray-500">
+                                    <span class="flex items-center gap-1.5">
+                                        <span>Shipping Logistics</span>
+                                        <template x-if="detailsOrder.shipping">
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-700" 
+                                                  x-text="detailsOrder.shipping.provider_name + ' (' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg)'"></span>
+                                        </template>
+                                    </span>
+                                    <span class="font-bold text-black" x-text="'₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                </div>
+                                <div class="flex items-center justify-between pt-2 border-t border-dashed border-gray-200">
+                                    <span class="font-bold text-gray-700 uppercase tracking-wider text-[11px]">Grand Total Amount</span>
+                                    <span class="text-base font-black text-[#C0420A]" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                </div>
                             </div>
                         </div>
 

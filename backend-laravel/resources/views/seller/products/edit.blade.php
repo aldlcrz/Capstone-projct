@@ -218,24 +218,35 @@
                         <p class="text-[8px] text-stone-400 font-medium">Auto-calculated</p>
                     </div>
 
-                    {{-- Shipping Fee --}}
+                    {{-- Package Weight --}}
                     <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Shipping Fee (₱)</label>
-                        <input type="number" name="shippingFee" min="0" max="500" step="0.01" placeholder="0.00"
-                            value="{{ old('shippingFee', $product->shippingFee ?? 0) }}"
-                            oninput="if(parseFloat(this.value) > 500) this.value = 500;"
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Pkg Weight (kg) <span class="text-red-500">*</span></label>
+                        <input type="number" name="package_weight_per_unit" min="0.01" max="100" step="0.01" placeholder="0.50"
+                            value="{{ old('package_weight_per_unit', $product->package_weight_per_unit ?? '0.50') }}" required
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C49520] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">Enter 0 for free</p>
+                        <p class="text-[8px] text-stone-400 font-medium">Packed unit weight</p>
                     </div>
 
-                    {{-- Est. Shipping Days --}}
+                    {{-- Package Dimensions (L x W x H in cm) --}}
+                    <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26 sm:col-span-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Dimensions L × W × H (cm) <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="number" name="package_length_per_unit" placeholder="L" min="1" step="0.1" value="{{ old('package_length_per_unit', $product->package_length_per_unit ?? '30') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
+                            <span class="text-stone-400 text-xs">×</span>
+                            <input type="number" name="package_width_per_unit" placeholder="W" min="1" step="0.1" value="{{ old('package_width_per_unit', $product->package_width_per_unit ?? '20') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
+                            <span class="text-stone-400 text-xs">×</span>
+                            <input type="number" name="package_height_per_unit" placeholder="H" min="1" step="0.1" value="{{ old('package_height_per_unit', $product->package_height_per_unit ?? '5') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
+                        </div>
+                        <p class="text-[8px] text-stone-400 font-medium">Packed unit dimensions</p>
+                    </div>
+
+                    {{-- Handling / Prep Days --}}
                     <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Est. Shipping Days</label>
-                        <input type="number" name="shippingDays" min="1" max="30" step="1" placeholder="5"
-                            value="{{ old('shippingDays', $product->shippingDays ?? 5) }}"
-                            oninput="if(parseInt(this.value) > 30) this.value = 30;"
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Prep Days <span class="text-red-500">*</span></label>
+                        <input type="number" name="handling_days" min="1" max="30" step="1" placeholder="2"
+                            value="{{ old('handling_days', $product->handling_days ?? '2') }}" required
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C49520] transition-all">
-                        <p class="text-[8px] text-stone-400 font-medium">To deliver</p>
+                        <p class="text-[8px] text-stone-400 font-medium">Artisan lead time</p>
                     </div>
                 </div>
             </div>

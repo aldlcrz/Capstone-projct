@@ -676,7 +676,7 @@ class DashboardController extends Controller
             $status = strtolower($request->input('status', 'all'));
 
             $query = Order::where('sellerId', $sellerId)
-                ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests']);
+                ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests', 'shipping']);
 
             if ($request->filled('search')) {
                 $s = strtolower($request->search);
@@ -748,7 +748,13 @@ class DashboardController extends Controller
             ->orderBy('createdAt', 'desc')
             ->take(25)
             ->get();
-        return view('seller.profile.index', compact('user', 'recentPayments'));
+
+        $shippingProviders = \App\Models\ShippingProvider::where('is_active', true)->get();
+        $sellerShippingProviders = \App\Models\SellerShippingProvider::where('seller_id', $user->id)
+            ->pluck('is_enabled', 'provider_id')
+            ->toArray();
+
+        return view('seller.profile.index', compact('user', 'recentPayments', 'shippingProviders', 'sellerShippingProviders'));
     }
 
     public function sellerPolicies(Request $request)
@@ -770,6 +776,32 @@ class DashboardController extends Controller
         $user->save();
 
         return redirect()->route('seller.policies.index')->with('success', 'Shop Cancellation and Refund policies updated successfully!');
+    }
+
+    public function updateShippingProviders(Request $request)
+    {
+        $seller = $request->user();
+        $request->validate([
+            'providers' => 'nullable|array',
+            'providers.*' => 'string|exists:shipping_providers,id'
+        ]);
+
+        $selectedProviderIds = $request->input('providers', []);
+        $allActive = \App\Models\ShippingProvider::where('is_active', true)->pluck('id');
+
+        foreach ($allActive as $pId) {
+            \App\Models\SellerShippingProvider::updateOrCreate(
+                [
+                    'seller_id' => $seller->id,
+                    'provider_id' => $pId
+                ],
+                [
+                    'is_enabled' => in_array($pId, $selectedProviderIds)
+                ]
+            );
+        }
+
+        return redirect()->route('seller.profile')->with('success', 'Couriers & Logistics settings updated successfully!');
     }
 
     public function updateSellerProfile(Request $request)

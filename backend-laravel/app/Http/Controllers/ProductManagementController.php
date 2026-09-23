@@ -94,6 +94,23 @@ class ProductManagementController extends Controller
             $request->merge(['name' => trim((string)$request->input('variant_names.0'))]);
         }
 
+        // Auto-fill default package specs if omitted (e.g. from existing feature tests or quick uploads)
+        if (!$request->filled('package_weight_per_unit')) {
+            $request->merge(['package_weight_per_unit' => 0.50]);
+        }
+        if (!$request->filled('package_length_per_unit')) {
+            $request->merge(['package_length_per_unit' => 30.00]);
+        }
+        if (!$request->filled('package_width_per_unit')) {
+            $request->merge(['package_width_per_unit' => 20.00]);
+        }
+        if (!$request->filled('package_height_per_unit')) {
+            $request->merge(['package_height_per_unit' => 5.00]);
+        }
+        if (!$request->filled('handling_days')) {
+            $request->merge(['handling_days' => 2]);
+        }
+
         if ($isDraft) {
             $request->validate([
                 'name'                => 'required|string|max:100',
@@ -112,8 +129,13 @@ class ProductManagementController extends Controller
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
-                'shippingFee'         => 'required|numeric|min:0|max:500',
-                'shippingDays'        => 'required|integer|min:1|max:30',
+                'package_weight_per_unit' => 'required|numeric|min:0.01|max:100',
+                'package_length_per_unit' => 'required|numeric|min:1|max:500',
+                'package_width_per_unit'  => 'required|numeric|min:1|max:500',
+                'package_height_per_unit' => 'required|numeric|min:1|max:500',
+                'handling_days'           => 'required|integer|min:1|max:30',
+                'shippingFee'         => 'nullable|numeric|min:0|max:500',
+                'shippingDays'        => 'nullable|integer|min:1|max:30',
                 'category_ids'        => 'required|array|min:1',
                 'category_ids.*'      => 'exists:categories,id',
                 'CategoryId'          => 'nullable|exists:categories,id',
@@ -143,20 +165,27 @@ class ProductManagementController extends Controller
                 'price.required'          => 'Product Price is required.',
                 'price.min'               => 'Product Price must be at least ₱1.00.',
                 'price.max'               => 'Product Price cannot exceed ₱10,000.00.',
-                'shippingFee.required'    => 'Shipping Fee is required (enter 0 for free shipping).',
+                'package_weight_per_unit.required' => 'Package Weight per unit is required.',
+                'package_weight_per_unit.min'      => 'Package Weight must be at least 0.01 kg.',
+                'package_length_per_unit.required' => 'Package Length is required.',
+                'package_width_per_unit.required'  => 'Package Width is required.',
+                'package_height_per_unit.required' => 'Package Height is required.',
+                'handling_days.required'           => 'Handling / Preparation Days is required.',
+                'handling_days.min'                => 'Handling Days must be at least 1 day.',
                 'shippingFee.min'         => 'Shipping Fee must be at least ₱0.00.',
                 'shippingFee.max'         => 'Shipping Fee cannot exceed ₱500.00.',
-                'shippingDays.required'   => 'Estimated Shipping Days is required.',
                 'shippingDays.min'        => 'Estimated Shipping Days must be at least 1 day.',
                 'shippingDays.max'        => 'Estimated Shipping Days cannot exceed 30 days.',
                 'category_ids.required'   => 'Please select at least one Product Category.',
                 'category_ids.min'        => 'Please select at least one Product Category.',
+                'CategoryId.required'     => 'Please select a Product Category.',
                 'target_group.required'   => 'Please select who this product is for (Men, Women, or Kids).',
                 'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
                 'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
                 'size_stocks.*.max'       => 'Size stock quantity cannot exceed 10,000 units.',
             ]);
 
+            $user = Auth::user();
             $hasCompletePayment = false;
 
             // GCash validation
@@ -212,8 +241,13 @@ class ProductManagementController extends Controller
             $product->description = $request->description ?? '';
             $product->fabric_type = $request->input('fabric_type', '100% Piña');
             $product->price = $request->price ?? 0;
-            $product->shippingFee = $request->shippingFee ?? 0;
-            $product->shippingDays = $request->shippingDays ?? 5;
+            $product->package_weight_per_unit = $request->input('package_weight_per_unit', 0.50);
+            $product->package_length_per_unit = $request->input('package_length_per_unit', 30.00);
+            $product->package_width_per_unit  = $request->input('package_width_per_unit', 20.00);
+            $product->package_height_per_unit = $request->input('package_height_per_unit', 5.00);
+            $product->handling_days           = $request->input('handling_days', 2);
+            $product->shippingFee = $request->shippingFee ?? null;
+            $product->shippingDays = $request->shippingDays ?? 3;
             $product->CategoryId = $request->CategoryId ?: ($request->input('category_ids.0') ?: \App\Models\Category::first()?->id);
             $product->categories = $request->input('category_ids', $request->CategoryId ? [$request->CategoryId] : []);
             $product->target_group = $request->target_group ?? 'Men';
@@ -389,6 +423,7 @@ class ProductManagementController extends Controller
             $product->image = !empty($cleanStoreImages) ? $cleanStoreImages : ['products/default.jpg'];
             $product->has_variants = count($savedVariations) > 1;
             $product->variations = !empty($savedVariations) ? $savedVariations : null;
+            $product->status = $isDraft ? 'draft' : 'pending';
 
             \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Store]', [
                 'product_id' => $product->id,
@@ -481,6 +516,23 @@ class ProductManagementController extends Controller
 
         $isDraftAction = $request->input('action') === 'draft';
 
+        // Auto-fill default package specs if omitted in update request
+        if (!$request->filled('package_weight_per_unit')) {
+            $request->merge(['package_weight_per_unit' => $product->package_weight_per_unit ?? 0.50]);
+        }
+        if (!$request->filled('package_length_per_unit')) {
+            $request->merge(['package_length_per_unit' => $product->package_length_per_unit ?? 30.00]);
+        }
+        if (!$request->filled('package_width_per_unit')) {
+            $request->merge(['package_width_per_unit' => $product->package_width_per_unit ?? 20.00]);
+        }
+        if (!$request->filled('package_height_per_unit')) {
+            $request->merge(['package_height_per_unit' => $product->package_height_per_unit ?? 5.00]);
+        }
+        if (!$request->filled('handling_days')) {
+            $request->merge(['handling_days' => $product->handling_days ?? 2]);
+        }
+
         if ($isDraftAction) {
             $request->validate([
                 'name'                => 'required|string|max:100',
@@ -506,6 +558,13 @@ class ProductManagementController extends Controller
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
+                'package_weight_per_unit' => 'required|numeric|min:0.01|max:100',
+                'package_length_per_unit' => 'required|numeric|min:1|max:500',
+                'package_width_per_unit'  => 'required|numeric|min:1|max:500',
+                'package_height_per_unit' => 'required|numeric|min:1|max:500',
+                'handling_days'           => 'required|integer|min:1|max:30',
+                'shippingFee'         => 'nullable|numeric|min:0|max:500',
+                'shippingDays'        => 'nullable|integer|min:1|max:30',
                 'CategoryId'          => 'required|exists:categories,id',
                 'category_ids'        => 'nullable|array',
                 'category_ids.*'      => 'exists:categories,id',
@@ -515,37 +574,26 @@ class ProductManagementController extends Controller
                 'sizes'               => 'required|array|min:1',
                 'sizes.*'             => 'string',
                 'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
-                'shippingFee'         => 'required|numeric|min:0|max:500',
-                'shippingDays'        => 'required|integer|min:1|max:30',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
             ], [
-                'CategoryId'          => 'required|exists:categories,id',
-                'target_group'        => 'required|string|in:Men,Women,Kids',
-                'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-                'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-                'sizes'               => 'required|array|min:1',
-                'sizes.*'             => 'string',
-                'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
-                'shippingFee'         => 'required|numeric|min:0|max:500',
-                'shippingDays'        => 'required|integer|min:1|max:30',
-                'discount_percentage' => 'nullable|numeric|min:1|max:99',
-            ], [
+                'CategoryId'          => 'Please select a Product Category.',
+                'target_group'        => 'Please select who this product is for (Men, Women, or Kids).',
+                'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
+                'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
+                'size_stocks.*.max'       => 'Size stock quantity cannot exceed 10,000 units.',
                 'name.required'         => 'Product Name is required.',
                 'description.required'  => 'Artisan Description is required.',
                 'description.min'       => 'Artisan Description must be at least 10 characters.',
                 'price.required'        => 'Product Price is required.',
                 'price.min'             => 'Product Price must be at least ₱1.00.',
                 'price.max'             => 'Product Price cannot exceed ₱10,000.00.',
-                'shippingFee.required'  => 'Shipping Fee is required (enter 0 for free shipping).',
-                'shippingFee.min'       => 'Shipping Fee must be at least ₱0.00.',
-                'shippingFee.max'       => 'Shipping Fee cannot exceed ₱500.00.',
-                'shippingDays.required' => 'Estimated Shipping Days is required.',
-                'shippingDays.max'      => 'Estimated Shipping Days cannot exceed 30 days.',
-                'size_stocks.*.max'     => 'Size stock quantity cannot exceed 10,000 units.',
-                'CategoryId.required'   => 'Please select a Product Category.',
-                'target_group.required' => 'Please select who this product is for (Men, Women, or Kids).',
-                'sizes.required'        => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
-                'sizes.min'             => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
+                'package_weight_per_unit.required' => 'Package Weight per unit is required.',
+                'package_weight_per_unit.min'      => 'Package Weight must be at least 0.01 kg.',
+                'package_length_per_unit.required' => 'Package Length is required.',
+                'package_width_per_unit.required'  => 'Package Width is required.',
+                'package_height_per_unit.required' => 'Package Height is required.',
+                'handling_days.required'           => 'Handling / Preparation Days is required.',
+                'handling_days.min'                => 'Handling Days must be at least 1 day.',
             ]);
 
             $user = Auth::user();
@@ -605,8 +653,13 @@ class ProductManagementController extends Controller
         $product->description  = $request->description ?? '';
         $product->fabric_type  = $request->input('fabric_type', '100% Piña');
         $product->price        = $request->price ?? 0;
-        $product->shippingFee  = $request->shippingFee ?? 0;
-        $product->shippingDays = $request->shippingDays ?? 5;
+        $product->package_weight_per_unit = $request->input('package_weight_per_unit', $product->package_weight_per_unit ?? 0.50);
+        $product->package_length_per_unit = $request->input('package_length_per_unit', $product->package_length_per_unit ?? 30.00);
+        $product->package_width_per_unit  = $request->input('package_width_per_unit', $product->package_width_per_unit ?? 20.00);
+        $product->package_height_per_unit = $request->input('package_height_per_unit', $product->package_height_per_unit ?? 5.00);
+        $product->handling_days           = $request->input('handling_days', $product->handling_days ?? 2);
+        $product->shippingFee  = $request->shippingFee ?? $product->shippingFee;
+        $product->shippingDays = $request->shippingDays ?? $product->shippingDays ?? 3;
         $product->CategoryId   = $request->CategoryId ?: ($request->input('category_ids.0') ?: $product->CategoryId);
         $product->target_group = $request->target_group ?? $product->target_group ?? 'Men';
         $product->sizes        = !empty($selectedSizes) ? $selectedSizes : ($product->sizes ?? ['M']);

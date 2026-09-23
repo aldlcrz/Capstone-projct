@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Address;
+use App\Models\OrderShipping;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ShippingCalculatorService;
 use App\Support\VariationFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +18,12 @@ use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    protected ShippingCalculatorService $shippingCalculator;
+
+    public function __construct(ShippingCalculatorService $shippingCalculator)
+    {
+        $this->shippingCalculator = $shippingCalculator;
+    }
     public function index(Request $request)
     {
         // Guard: Administrators cannot checkout or place orders
@@ -189,8 +197,75 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.index', ['mode' => 'selected']);
     }
 
+    /**
+     * Calculates dynamic shipping quotes across available logistics providers
+     * Returns informational quotes with a signed consistency token
+     */
+    public function getShippingQuotes(Request $request)
+    {
+        $request->validate([
+            'address_id' => 'required|string',
+            'mode'       => 'nullable|string',
+        ]);
+
+        $items = $request->input('items');
+        if (!empty($items) && is_array($items)) {
+            $cart = $items;
+        } else {
+            $mode = $request->input('mode', 'cart');
+            if ($mode === 'buy_now') {
+                $cart = [session()->get('buy_now_item')];
+            } elseif ($mode === 'selected') {
+                $cart = session()->get('checkout_cart', []);
+            } else {
+                $cart = session()->get('cart', []);
+            }
+        }
+
+        if (empty($cart) || empty($cart[0])) {
+            return response()->json(['success' => false, 'message' => 'Cart is empty.'], 422);
+        }
+
+        $address = Address::where('id', $request->address_id)
+            ->where('userId', Auth::id())
+            ->first();
+
+        if (!$address) {
+            return response()->json(['success' => false, 'message' => 'Selected delivery address not found.'], 404);
+        }
+
+        $firstItem = reset($cart);
+        $sellerId = $request->input('seller_id') ?: ($firstItem['sellerId'] ?? null);
+        if (!$sellerId && !empty($firstItem['id'])) {
+            $prod = Product::find($firstItem['id']);
+            $sellerId = $prod?->sellerId;
+        }
+
+        $seller = User::find($sellerId);
+        if (!$seller) {
+            return response()->json(['success' => false, 'message' => 'Seller shop not found.'], 404);
+        }
+
+        try {
+            $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $cart);
+            $token  = $this->shippingCalculator->generateQuoteToken($seller->id, $address->id, $cart);
+
+            return response()->json([
+                'success'     => true,
+                'quotes'      => $quotes,
+                'quote_token' => $token,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
     public function store(Request $request)
     {
+        $inTransaction = false;
         // Guard: Administrators cannot place orders
         if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
             return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
@@ -247,15 +322,20 @@ class CheckoutController extends Controller
                 },
             ],
             'paymentScreenshot' => 'required|image',
-            'shippingAddress' => 'required',
+            'shippingAddress' => 'required_without:addressId',
+            'addressId' => 'required_without:shippingAddress',
         ], [
             'paymentReference.required' => 'Please provide your payment reference number.',
+            'shippingAddress.required_without' => 'Please provide a valid shipping address.',
         ]);
 
         try {
             // 1. Resolve cart items
             $mode = $request->input('mode', 'cart');
-            if ($mode === 'buy_now') {
+            $itemsInput = $request->input('items');
+            if (!empty($itemsInput) && is_array($itemsInput)) {
+                $cart = $itemsInput;
+            } elseif ($mode === 'buy_now') {
                 $cart = [session()->get('buy_now_item')];
             } elseif ($mode === 'selected') {
                 $cart = session()->get('checkout_cart', []);
@@ -263,10 +343,31 @@ class CheckoutController extends Controller
                 $cart = session()->get('cart', []);
             }
             
-            if (empty($cart)) throw new \Exception('Cart is empty');
+            if (empty($cart) || empty($cart[0])) throw new \Exception('Cart is empty');
 
-            // 2. Calculate true server-side total amount for screening
-            $totalExpectedAmount = 0;
+            // 2. Resolve buyer shipping address and calculate server-authoritative shipping fee
+            $addressData = $request->input('shippingAddress');
+            if (is_string($addressData)) {
+                $addressData = json_decode($addressData, true) ?: $addressData;
+            }
+            if (empty($addressData)) {
+                $addrId = $request->input('addressId') ?: ($request->input('address_id') ?: $request->input('selected_address_id'));
+                if ($addrId) {
+                    $addrRecord = Address::where('id', $addrId)->where('userId', Auth::id())->first()
+                        ?: Address::find($addrId);
+                    if ($addrRecord) {
+                        $addressData = $addrRecord->toArray();
+                    }
+                }
+            }
+
+            if (empty($addressData)) {
+                throw new \Exception('Please provide a valid shipping address.');
+            }
+
+            $selectedProviderId = $request->input('shipping_provider_id') ?: $request->input('selected_provider_id');
+            $quoteToken         = $request->input('shipping_quote_token');
+
             $itemsBySeller = [];
             foreach ($cart as $item) {
                 $sellerId = $item['sellerId'] ?? null;
@@ -283,6 +384,9 @@ class CheckoutController extends Controller
                 throw new \Exception('Cross-shop checkout in a single payment is not supported. Please checkout each shop separately to ensure direct payment to each artisan.');
             }
 
+            $sellerCalculatedQuotes = [];
+            $totalExpectedAmount = 0;
+
             foreach ($itemsBySeller as $sellerId => $items) {
                 $sellerUser = User::find($sellerId);
                 if ($sellerUser) {
@@ -295,16 +399,30 @@ class CheckoutController extends Controller
                     }
                 }
 
-                $sellerSubtotal = 0;
-                $maxShipping = 0;
-                foreach ($items as $item) {
-                    $sellerSubtotal += ((float)$item['price']) * ((int)$item['quantity']);
-                    $itemShipping = (float) ($item['shippingFee'] ?? 0);
-                    if ($itemShipping > $maxShipping) {
-                        $maxShipping = $itemShipping;
+                // Validate quote token if provided
+                if ($quoteToken) {
+                    $addressIdForToken = $request->input('addressId') ?: ($addressData['id'] ?? null);
+                    if (!$this->shippingCalculator->validateQuoteToken($quoteToken, $sellerId, $addressIdForToken, $items)) {
+                        throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
                     }
                 }
-                $totalExpectedAmount += ($sellerSubtotal + $maxShipping);
+
+                $sellerSubtotal = 0;
+                foreach ($items as $item) {
+                    $sellerSubtotal += ((float)$item['price']) * ((int)$item['quantity']);
+                }
+
+                // Server-side authoritative calculation
+                // Re-calculate quotes against server database authoritatively
+                $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $items, $selectedProviderId);
+                $chosenQuote = collect($quotes)->firstWhere('provider_id', $selectedProviderId) ?: (empty($selectedProviderId) ? ($quotes[0] ?? null) : null);
+
+                if (!$chosenQuote) {
+                    throw new \Exception("The selected shipping provider is not available for this delivery route or weight bracket.");
+                }
+
+                $sellerCalculatedQuotes[$sellerId] = $chosenQuote;
+                $totalExpectedAmount += ($sellerSubtotal + (float)$chosenQuote['shipping_fee']);
             }
 
             // 3. Server-side Receipt Screening (reject obvious non-receipts and amount mismatches)
@@ -326,28 +444,65 @@ class CheckoutController extends Controller
                 }
             }
 
+            $inTransaction = true;
             DB::beginTransaction();
 
-            $addressData = json_decode($request->input('shippingAddress'), true);
             $orders = [];
             $postCommitTasks = [];
             foreach ($itemsBySeller as $sellerId => $items) {
                 $sellerUser = User::find($sellerId);
                 $orderId = (string) Str::uuid();
+                $chosenShipping = $sellerCalculatedQuotes[$sellerId];
+                $shippingFee = (float) $chosenShipping['shipping_fee'];
+
                 $totalAmount = 0;
                 foreach ($items as $item) {
                     $totalAmount += $item['price'] * $item['quantity'];
                 }
+                $totalAmount += $shippingFee;
 
-                // Add fees: maximum shipping fee among all items in this seller's group
-                $shippingFee = 0;
+                // 1. Group/aggregate demands and validate per-product & per-size requirements
+                $requestedQuantities = [];
+                $requestedSizes = [];
                 foreach ($items as $item) {
-                    $itemShipping = (float) ($item['shippingFee'] ?? 0);
-                    if ($itemShipping > $shippingFee) {
-                        $shippingFee = $itemShipping;
+                    $pId = (string) $item['id'];
+                    $qty = max(1, (int)$item['quantity']);
+                    $requestedQuantities[$pId] = ($requestedQuantities[$pId] ?? 0) + $qty;
+                    if (!empty($item['size'])) {
+                        $sizeKey = (string) $item['size'];
+                        $requestedSizes[$pId][$sizeKey] = ($requestedSizes[$pId][$sizeKey] ?? 0) + $qty;
                     }
                 }
-                $totalAmount += $shippingFee;
+
+                // 2. Sort product IDs deterministically to prevent deadlock across concurrent checkout transactions
+                $sortedProductIds = collect(array_keys($requestedQuantities))->sort()->values();
+
+                // 3. Lock each product row in sorted deterministic order and validate inventory
+                $lockedProducts = [];
+                foreach ($sortedProductIds as $pId) {
+                    $product = Product::whereKey($pId)->lockForUpdate()->first();
+                    if (!$product) {
+                        throw new \Exception("A product in your cart is no longer available.");
+                    }
+
+                    $totalDemand = $requestedQuantities[$pId];
+                    if ($product->stock < $totalDemand) {
+                        throw new \Exception("Insufficient stock for \"{$product->name}\". Only {$product->stock} piece(s) available (requested: {$totalDemand}).");
+                    }
+
+                    // Validate per-size stock if tracked
+                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
+                        $sizeStocks = $product->size_stocks;
+                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
+                            $availSizeStock = isset($sizeStocks[$sz]) ? (int)$sizeStocks[$sz] : null;
+                            if ($availSizeStock !== null && $availSizeStock < $szQty) {
+                                throw new \Exception("Insufficient stock for size \"{$sz}\" of \"{$product->name}\". Only {$availSizeStock} available (requested: {$szQty}).");
+                            }
+                        }
+                    }
+
+                    $lockedProducts[$pId] = $product;
+                }
 
                 $order = Order::create([
                     'id' => $orderId,
@@ -359,8 +514,32 @@ class CheckoutController extends Controller
                     'paymentReference' => $request->paymentReference,
                     'paymentStatus' => 'Payment Submitted',
                     'shippingAddress' => $addressData,
+                    'courierName' => $chosenShipping['provider_name'],
                     'createdAt' => now(),
                     'updatedAt' => now(),
+                ]);
+
+                // Create Immutable OrderShipping calculation snapshot
+                OrderShipping::create([
+                    'id'                             => (string) Str::uuid(),
+                    'order_id'                       => $orderId,
+                    'provider_id'                    => $chosenShipping['provider_id'],
+                    'provider_name'                  => $chosenShipping['provider_name'],
+                    'shipping_rate_id'               => $chosenShipping['shipping_rate_id'],
+                    'origin_zone_id'                 => $chosenShipping['origin_zone_id'],
+                    'origin_zone_name'               => $chosenShipping['origin_zone_name'],
+                    'destination_zone_id'            => $chosenShipping['destination_zone_id'],
+                    'destination_zone_name'          => $chosenShipping['destination_zone_name'],
+                    'actual_weight'                  => $chosenShipping['actual_weight'],
+                    'volumetric_weight'              => $chosenShipping['volumetric_weight'],
+                    'chargeable_weight'              => $chosenShipping['chargeable_weight'],
+                    'rate_base_snapshot'             => $chosenShipping['rate_base_snapshot'],
+                    'additional_weight_rate_snapshot'=> $chosenShipping['additional_weight_rate_snapshot'],
+                    'volumetric_divisor_snapshot'    => $chosenShipping['volumetric_divisor_snapshot'],
+                    'shipping_fee'                   => $shippingFee,
+                    'estimated_days_min'             => $chosenShipping['estimated_days_min'],
+                    'estimated_days_max'             => $chosenShipping['estimated_days_max'],
+                    'shipping_status'                => 'Pending',
                 ]);
 
                 // Record initial OrderStatusHistory
@@ -406,49 +585,6 @@ class CheckoutController extends Controller
                     'receipt_path' => $storedPath,
                     'notes' => $screening['message'] ?? 'Initial submission at checkout',
                 ]);
-
-                // 1. Group/aggregate demands and validate per-product & per-size requirements
-                $requestedQuantities = [];
-                $requestedSizes = [];
-                foreach ($items as $item) {
-                    $pId = (string) $item['id'];
-                    $qty = max(1, (int)$item['quantity']);
-                    $requestedQuantities[$pId] = ($requestedQuantities[$pId] ?? 0) + $qty;
-                    if (!empty($item['size'])) {
-                        $sizeKey = (string) $item['size'];
-                        $requestedSizes[$pId][$sizeKey] = ($requestedSizes[$pId][$sizeKey] ?? 0) + $qty;
-                    }
-                }
-
-                // 2. Sort product IDs deterministically to prevent deadlock across concurrent checkout transactions
-                $sortedProductIds = collect(array_keys($requestedQuantities))->sort()->values();
-
-                // 3. Lock each product row in sorted deterministic order and validate inventory
-                $lockedProducts = [];
-                foreach ($sortedProductIds as $pId) {
-                    $product = Product::whereKey($pId)->lockForUpdate()->first();
-                    if (!$product) {
-                        throw new \Exception("A product in your cart is no longer available.");
-                    }
-
-                    $totalDemand = $requestedQuantities[$pId];
-                    if ($product->stock < $totalDemand) {
-                        throw new \Exception("Insufficient stock for \"{$product->name}\". Only {$product->stock} piece(s) available (requested: {$totalDemand}).");
-                    }
-
-                    // Validate per-size stock if tracked
-                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
-                        $sizeStocks = $product->size_stocks;
-                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
-                            $availSizeStock = isset($sizeStocks[$sz]) ? (int)$sizeStocks[$sz] : null;
-                            if ($availSizeStock !== null && $availSizeStock < $szQty) {
-                                throw new \Exception("Insufficient stock for size \"{$sz}\" of \"{$product->name}\". Only {$availSizeStock} available (requested: {$szQty}).");
-                            }
-                        }
-                    }
-
-                    $lockedProducts[$pId] = $product;
-                }
 
                 foreach ($items as $item) {
                     $product = $lockedProducts[$item['id']] ?? null;
@@ -574,14 +710,27 @@ class CheckoutController extends Controller
             return redirect()->route('orders')->with('success', 'Order placed successfully!');
 
         } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
-            if ($e->getCode() == 23000 || str_contains($e->getMessage(), 'active_reference') || str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
-                return redirect()->back()->withInput()->with('error', 'This payment reference has already been claimed by another active order. Please provide a new and unique payment reference.');
+            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            \Illuminate\Support\Facades\Log::error("CHECKOUT_DB_ERROR: " . $e->getMessage());
+            $msg = ($e->getCode() == 23000 || str_contains($e->getMessage(), 'active_reference') || str_contains($e->getMessage(), 'UNIQUE constraint failed'))
+                ? 'This payment reference has already been claimed by another active order. Please provide a new and unique payment reference.'
+                : 'Failed to place order: ' . $e->getMessage();
+
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        } catch (\Throwable $e) {
+            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            \Illuminate\Support\Facades\Log::error("CHECKOUT_ERROR: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
             return redirect()->back()->withInput()->with('error', 'Failed to place order: ' . $e->getMessage());
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to place order: ' . $e->getMessage());
         }
     }
 }

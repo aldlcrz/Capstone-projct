@@ -49,6 +49,9 @@ class Product extends Model
         'is_maya_available',  'maya_number',  'maya_qr_code',
         // Seller Custom Size Guide
         'size_guide_image', 'size_guide_measurements',
+        // Multi-provider Package Specs
+        'package_weight_per_unit', 'package_length_per_unit',
+        'package_width_per_unit', 'package_height_per_unit', 'handling_days',
     ];
 
     /**

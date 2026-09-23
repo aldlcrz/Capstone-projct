@@ -20,6 +20,12 @@ class SecurityAndPipelineAuditTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        (new \Database\Seeders\ShippingLogisticsSeeder())->run();
+    }
+
     protected function createCustomer(array $attrs = []): User
     {
         return User::create(array_merge([
@@ -46,6 +52,10 @@ class SecurityAndPipelineAuditTest extends TestCase
             'password' => Hash::make('Password123!'),
             'role' => 'seller',
             'shopName' => 'Artisan Atelier ' . Str::random(4),
+            'shopProvince' => 'Metro Manila',
+            'shopCity' => 'Manila',
+            'shopBarangay' => 'Barangay 1',
+            'shopPostalCode' => '1000',
             'status' => 'active',
             'mobileNumber' => '0918' . rand(1000000, 9999999),
             'isVerified' => true,
@@ -218,6 +228,10 @@ class SecurityAndPipelineAuditTest extends TestCase
             'name' => 'Limited Barong',
             'price' => 2500.00,
             'stock' => 2,
+            'package_weight_per_unit' => 1.00,
+            'package_length_per_unit' => 30.00,
+            'package_width_per_unit' => 20.00,
+            'package_height_per_unit' => 5.00,
             'status' => 'approved',
             'image' => ['cover.jpg'],
         ]);
@@ -266,7 +280,13 @@ class SecurityAndPipelineAuditTest extends TestCase
                 'paymentMethod' => 'GCash',
                 'paymentReference' => '1029384756123',
                 'paymentScreenshot' => $screenshot,
-                'shippingAddress' => json_encode(['address' => 'Manila, Philippines']),
+                'shippingAddress' => json_encode([
+                    'province' => 'Metro Manila',
+                    'city' => 'Manila',
+                    'barangay' => 'Barangay 1',
+                    'postalCode' => '1000',
+                    'address' => 'Manila, Philippines',
+                ]),
             ]);
 
         $response->assertSessionHas('error');
@@ -290,6 +310,10 @@ class SecurityAndPipelineAuditTest extends TestCase
             'price' => 3000.00,
             'stock' => 10,
             'size_stocks' => ['S' => 5, 'M' => 1, 'L' => 4],
+            'package_weight_per_unit' => 1.00,
+            'package_length_per_unit' => 30.00,
+            'package_width_per_unit' => 20.00,
+            'package_height_per_unit' => 5.00,
             'status' => 'approved',
             'image' => ['cover.jpg'],
         ]);
@@ -338,7 +362,13 @@ class SecurityAndPipelineAuditTest extends TestCase
                 'paymentMethod' => 'GCash',
                 'paymentReference' => '1029384756123',
                 'paymentScreenshot' => $screenshot,
-                'shippingAddress' => json_encode(['address' => 'Manila, Philippines']),
+                'shippingAddress' => json_encode([
+                    'province' => 'Metro Manila',
+                    'city' => 'Manila',
+                    'barangay' => 'Barangay 1',
+                    'postalCode' => '1000',
+                    'address' => 'Manila, Philippines',
+                ]),
             ]);
 
         $response->assertSessionHas('error');

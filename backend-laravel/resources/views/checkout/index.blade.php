@@ -43,6 +43,8 @@
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
+        <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
+        <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
 
         <div class="space-y-6 pb-24 lg:pb-0 w-full">
             <!-- Main Content Area -->
@@ -154,29 +156,77 @@
                         </div>
                     </div>
 
-                    {{-- Delivery Guarantee Card --}}
-                    @php
-                        $shippingFee = 0;
-                        foreach ($cart as $item) {
-                            $itemShipping = (float) ($item['shippingFee'] ?? 0);
-                            if ($itemShipping > $shippingFee) {
-                                $shippingFee = $itemShipping;
-                            }
-                        }
-                    @endphp
-                    <div class="bg-[#FDF9F4] rounded-2xl border border-[#C0422A]/20 p-4 sm:p-5 lg:p-6 shadow-xs space-y-1">
-                        <div class="flex justify-between items-center gap-2">
+                    {{-- Multi-Provider Shipping Method Selection --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
                                 </svg>
-                                <span class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Standard Delivery (3-5 Days)</span>
+                                <div>
+                                    <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Shipping Method</h3>
+                                    <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Select your preferred courier service for this order.</p>
+                                </div>
                             </div>
-                            <span class="text-xs sm:text-sm lg:text-base font-black text-black shrink-0">
-                                @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else <span class="text-emerald-600 uppercase text-xs">FREE</span> @endif
+                            <template x-if="loadingQuotes">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#C0422A] bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                                    <svg class="w-3 h-3 animate-spin text-[#C0422A]" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Calculating rates...
+                                </span>
+                            </template>
+                        </div>
+
+                        {{-- Service Unserviceable / Error Alert --}}
+                        <div x-show="quotesError" x-cloak class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-start gap-2">
+                            <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span x-text="quotesError"></span>
+                        </div>
+
+                        {{-- Provider Option Cards --}}
+                        <div class="space-y-3" x-show="shippingQuotes.length > 0">
+                            <template x-for="quote in shippingQuotes" :key="quote.provider_id">
+                                <label class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-150"
+                                       :class="selectedProviderId === quote.provider_id ? 'border-[#C0422A] bg-[#FDF9F4]/60 shadow-xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                                    <div class="flex items-center gap-3">
+                                        <input type="radio" 
+                                               name="selectedCourierOption" 
+                                               :value="quote.provider_id" 
+                                               x-model="selectedProviderId" 
+                                               class="w-4 h-4 accent-[#C0422A] cursor-pointer">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="quote.provider_name"></span>
+                                                <span class="text-[9px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" 
+                                                      x-text="'Weight: ' + (Number(quote.chargeable_weight) || 0).toFixed(2) + ' kg'"></span>
+                                            </div>
+                                            <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
+                                                 x-text="'Estimated ' + quote.estimated_days_min + '-' + quote.estimated_days_max + ' business days'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                             x-text="'₱' + Number(quote.shipping_fee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+
+                        {{-- Empty State (No providers available) --}}
+                        <div x-show="!loadingQuotes && shippingQuotes.length === 0 && !quotesError" x-cloak class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
+                            Please provide a valid delivery address above to calculate shipping options.
+                        </div>
+
+                        <div class="bg-[#FDF9F4] rounded-xl border border-[#C0422A]/20 p-3 flex items-center justify-between text-[10px] lg:text-xs text-gray-600">
+                            <span class="flex items-center gap-1.5 font-medium">
+                                <svg class="w-4 h-4 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                LumBarong verified parcel logistics with delivery guarantee & secure packaging.
                             </span>
                         </div>
-                        <p class="text-[10px] lg:text-xs text-gray-500 font-medium pl-7">Protected by LumBarong nationwide delivery guarantee & secure packaging.</p>
                     </div>
 
                 </div>
@@ -461,16 +511,17 @@
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
                         <span class="text-sm font-bold text-gray-900">
-                            @if($shippingFee > 0)
-                                ₱{{ number_format($shippingFee, 2) }}
-                            @else
-                                <span class="text-emerald-600 uppercase text-xs">Free</span>
-                            @endif
+                            <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                            <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Select courier</span>
+                            <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
                         </span>
                     </div>
                     <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
                         <span class="text-base font-bold text-gray-900">Total Payment</span>
-                        <span class="text-2xl lg:text-3xl font-black text-[#C0422A]">₱{{ number_format($subtotal + $shippingFee) }}</span>
+                        <span class="text-2xl lg:text-3xl font-black text-[#C0422A]" 
+                              x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                            ₱{{ number_format($subtotal + $shippingFee) }}
+                        </span>
                     </div>
                 </div>
 
@@ -545,7 +596,9 @@
             <div class="flex justify-between items-center text-gray-500">
                 <span>Estimated Shipping</span>
                 <span class="font-bold text-black">
-                    @if($shippingFee > 0) ₱{{ number_format($shippingFee, 2) }} @else <span class="text-emerald-600">Free</span> @endif
+                    <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                    <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs">Select courier</span>
+                    <span x-show="loadingQuotes" class="text-amber-600 text-xs">Calculating...</span>
                 </span>
             </div>
         </div>
@@ -559,7 +612,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
-                <div class="text-lg font-black text-[#C0422A] leading-tight">
+                <div class="text-lg font-black text-[#C0422A] leading-tight"
+                     x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                     ₱{{ number_format($subtotal + $shippingFee) }}
                 </div>
             </div>
@@ -723,7 +777,10 @@
                 </div>
                 <div class="flex justify-between items-center text-gray-600 pt-2 border-t border-gray-200">
                     <span class="font-bold text-gray-900">Total Payment:</span>
-                    <span class="font-black text-[#C0422A] text-base">₱{{ number_format($subtotal + $shippingFee) }}</span>
+                    <span class="font-black text-[#C0422A] text-base"
+                          x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                        ₱{{ number_format($subtotal + $shippingFee) }}
+                    </span>
                 </div>
             </div>
 
@@ -1087,7 +1144,28 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         scanId: 0,
         fileScanned: false,
 
+        // Multi-Provider Logistics Engine State
+        shippingQuotes: [],
+        selectedProviderId: '',
+        shippingQuoteToken: '',
+        loadingQuotes: false,
+        quotesError: '',
+        currentShippingFee: 0,
+
         init() {
+            this.fetchShippingQuotes();
+
+            this.$watch('address', () => {
+                this.fetchShippingQuotes();
+            });
+
+            this.$watch('selectedProviderId', (val) => {
+                const quote = this.shippingQuotes.find(q => q.provider_id === val);
+                if (quote) {
+                    this.currentShippingFee = Number(quote.shipping_fee) || 0;
+                }
+            });
+
             this.$watch('paymentMethod', () => {
                 if (this.paymentRef) {
                     this.validateRef();
@@ -1096,6 +1174,72 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     this.refError = '';
                 }
             });
+        },
+
+        async fetchShippingQuotes() {
+            if (!this.address || !this.address.province || !this.address.city) {
+                this.shippingQuotes = [];
+                this.selectedProviderId = '';
+                this.shippingQuoteToken = '';
+                this.currentShippingFee = 0;
+                return;
+            }
+
+            this.loadingQuotes = true;
+            this.quotesError = '';
+
+            try {
+                const csrfToken = document.querySelector('input[name=_token]')?.value || 
+                                  document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const payload = {
+                    address: this.address,
+                    mode: '{{ $mode }}'
+                };
+
+                const res = await fetch('/checkout/shipping-quotes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    this.shippingQuotes = [];
+                    this.selectedProviderId = '';
+                    this.shippingQuoteToken = '';
+                    this.currentShippingFee = 0;
+                    this.quotesError = data.message || 'Logistics service unavailable for this destination.';
+                    return;
+                }
+
+                this.shippingQuotes = data.quotes || [];
+                this.shippingQuoteToken = data.shipping_quote_token || '';
+
+                if (this.shippingQuotes.length > 0) {
+                    // Retain previously selected provider if present in new quotes, else default to first
+                    const stillValid = this.shippingQuotes.find(q => q.provider_id === this.selectedProviderId);
+                    if (stillValid) {
+                        this.currentShippingFee = Number(stillValid.shipping_fee) || 0;
+                    } else {
+                        this.selectedProviderId = this.shippingQuotes[0].provider_id;
+                        this.currentShippingFee = Number(this.shippingQuotes[0].shipping_fee) || 0;
+                    }
+                } else {
+                    this.selectedProviderId = '';
+                    this.currentShippingFee = 0;
+                    this.quotesError = 'No courier rates are currently available for this delivery area.';
+                }
+            } catch (err) {
+                console.error('Failed to retrieve shipping quotes:', err);
+                this.quotesError = 'Network error fetching courier options. Please retry.';
+            } finally {
+                this.loadingQuotes = false;
+            }
         },
 
         handleRefInput() {
@@ -1664,6 +1808,12 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 document.querySelector('[data-address-section]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
+
+            if (!this.selectedProviderId || !this.shippingQuoteToken) {
+                this.addressStepError = 'Please select a valid courier service before proceeding.';
+                return;
+            }
+
             // Show the Shop Policy Notice Modal before proceeding to payment
             this.showPolicyModal = true;
         },

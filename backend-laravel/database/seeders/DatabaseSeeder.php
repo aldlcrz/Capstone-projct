@@ -50,5 +50,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed Categories
         $this->call(CategorySeeder::class);
+
+        // Seed Shipping & Logistics
+        $this->call(ShippingLogisticsSeeder::class);
     }
 }

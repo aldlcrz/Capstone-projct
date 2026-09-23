@@ -17,6 +17,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\AdminBannerController;
 use App\Http\Controllers\AdminSettingsController;
+use App\Http\Controllers\AdminShippingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AiController;
@@ -127,6 +128,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::post('/checkout/selected', [CheckoutController::class, 'fromSelected'])->name('checkout.selected');
+    Route::post('/checkout/shipping-quotes', [CheckoutController::class, 'getShippingQuotes'])->name('checkout.shipping-quotes');
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));
@@ -264,6 +266,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/maintenance/toggle', [AdminSettingsController::class, 'toggleMaintenance'])->name('admin.maintenance.toggle');
     Route::get('/audit-logs', [AdminSettingsController::class, 'auditLogs'])->name('admin.audit-logs');
     Route::get('/platform', [AdminSettingsController::class, 'platform'])->name('admin.platform');
+
+    // Logistics & Shipping Matrix Management
+    Route::get('/shipping', [AdminShippingController::class, 'index'])->name('admin.shipping.index');
+    Route::patch('/shipping/providers/{id}/toggle', [AdminShippingController::class, 'toggleProvider'])->name('admin.shipping.providers.toggle');
+    Route::put('/shipping/providers/{id}', [AdminShippingController::class, 'updateProvider'])->name('admin.shipping.providers.update');
+    Route::post('/shipping/rates', [AdminShippingController::class, 'storeRate'])->name('admin.shipping.rates.store');
+    Route::put('/shipping/rates/{id}', [AdminShippingController::class, 'updateRate'])->name('admin.shipping.rates.update');
+    Route::delete('/shipping/rates/{id}', [AdminShippingController::class, 'destroyRate'])->name('admin.shipping.rates.destroy');
+    Route::post('/shipping/areas', [AdminShippingController::class, 'storeArea'])->name('admin.shipping.areas.store');
+    Route::delete('/shipping/areas/{id}', [AdminShippingController::class, 'destroyArea'])->name('admin.shipping.areas.destroy');
 });
 
 // Seller Routes
@@ -278,6 +290,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/export-report', [DashboardController::class, 'exportSellerReport'])->name('seller.export');
     Route::get('/profile', [DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::match(['post', 'put'], '/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
+    Route::post('/shipping-providers', [DashboardController::class, 'updateShippingProviders'])->name('seller.shipping-providers.update');
     Route::get('/policies', [DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
     Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
     Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');

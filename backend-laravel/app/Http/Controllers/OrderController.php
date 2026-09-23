@@ -46,7 +46,7 @@ class OrderController extends Controller
     public function getMyOrders(Request $request)
     {
         $orders = Order::where('customerId', $request->user()->id)
-            ->with(['seller:id,name,email,profilePhoto', 'items.product', 'statusHistories'])
+            ->with(['seller:id,name,email,profilePhoto', 'items.product', 'statusHistories', 'shipping'])
             ->orderBy('createdAt', 'desc')
             ->get();
 
@@ -63,7 +63,7 @@ class OrderController extends Controller
             : $request->user()->id;
 
         $orders = Order::where('sellerId', $sellerId)
-            ->with(['customer:id,name,email,profilePhoto', 'items.product', 'statusHistories'])
+            ->with(['customer:id,name,email,profilePhoto', 'items.product', 'statusHistories', 'shipping'])
             ->orderBy('createdAt', 'desc')
             ->get();
 
@@ -360,6 +360,15 @@ class OrderController extends Controller
         }
         $order->save();
 
+        // Synchronize mutable fulfillment state on OrderShipping snapshot
+        if ($order->shipping) {
+            $shippingAttrs = ['shipping_status' => $canonicalTarget];
+            if ($order->trackingNumber) {
+                $shippingAttrs['tracking_number'] = $order->trackingNumber;
+            }
+            $order->shipping->update($shippingAttrs);
+        }
+
         if ($canonicalCurrent !== $canonicalTarget || $shippingUpdated) {
             OrderStatusHistory::create([
                 'orderId' => $order->id,
@@ -462,6 +471,10 @@ class OrderController extends Controller
         $prevStatus = $order->status;
         $order->status = 'Completed';
         $order->save();
+
+        if ($order->shipping) {
+            $order->shipping->update(['shipping_status' => 'Completed']);
+        }
 
         OrderStatusHistory::create([
             'orderId'        => $order->id,
@@ -578,6 +591,10 @@ class OrderController extends Controller
             $order->paymentRejectionReason = $reason;
             $order->cancellationReason = "Payment rejected: {$reason}";
             $order->save();
+
+            if ($order->shipping) {
+                $order->shipping->update(['shipping_status' => 'Cancelled']);
+            }
 
             // Release active reference claim by transitioning PaymentTransaction to REJECTED
             try {
@@ -914,6 +931,10 @@ class OrderController extends Controller
             $order->status = 'Cancelled';
             $order->cancellationReason = $reason;
             $order->save();
+
+            if ($order->shipping) {
+                $order->shipping->update(['shipping_status' => 'Cancelled']);
+            }
 
             // Release active reference claim for unverified transactions when order is cancelled
             try {

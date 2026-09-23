@@ -742,38 +742,49 @@
                         <p style="font-size:9px;color:#A8A096;margin:0;">Auto-summed from sizes</p>
                     </div>
 
-                    {{-- Shipping Fee --}}
-                    <div id="shipping-fee-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Shipping Fee (₱) <span style="color:#DC2626;">*</span></label>
+                    {{-- Package Weight --}}
+                    <div id="package-weight-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Pkg Weight (kg) <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
-                               name="shippingFee" 
-                               id="shippingFeeInput" 
+                               name="package_weight_per_unit" 
+                               id="packageWeightInput" 
                                required 
-                               min="1" 
-                               max="500" 
+                               min="0.01" 
+                               max="100" 
                                step="0.01" 
-                               placeholder="0.00"
-                               x-model="shippingFee"
-                               oninput="if(parseFloat(this.value) > 500) this.value = 500; calculateFillRate(); document.getElementById('shipping-fee-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
+                               placeholder="0.50"
+                               value="{{ old('package_weight_per_unit', '0.50') }}"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
-                        <p style="font-size:9px;color:#A8A096;margin:0;">Min. ₱1.00 (Max ₱500.00)</p>
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Packed unit weight</p>
                     </div>
 
-                    {{-- Shipping Days --}}
-                    <div id="shipping-days-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Est. Shipping Days <span style="color:#DC2626;">*</span></label>
+                    {{-- Package Dimensions (L x W x H in cm) --}}
+                    <div id="package-dimensions-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);grid-column:span 2;">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Package Dimensions L × W × H (cm) <span style="color:#DC2626;">*</span></label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <input type="number" name="package_length_per_unit" placeholder="L (30)" min="1" step="0.1" value="{{ old('package_length_per_unit', '30') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
+                            <span style="color:#A8A096;font-size:12px;">×</span>
+                            <input type="number" name="package_width_per_unit" placeholder="W (20)" min="1" step="0.1" value="{{ old('package_width_per_unit', '20') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
+                            <span style="color:#A8A096;font-size:12px;">×</span>
+                            <input type="number" name="package_height_per_unit" placeholder="H (5)" min="1" step="0.1" value="{{ old('package_height_per_unit', '5') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
+                        </div>
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Length × Width × Height (per unit)</p>
+                    </div>
+
+                    {{-- Handling / Prep Days --}}
+                    <div id="handling-days-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Prep / Handling (Days) <span style="color:#DC2626;">*</span></label>
                         <input type="number" 
-                               name="shippingDays" 
-                               id="shippingDaysInput" 
+                               name="handling_days" 
+                               id="handlingDaysInput" 
                                required 
                                min="1" 
                                max="30" 
                                step="1" 
-                               placeholder="5"
-                               x-model="shippingDays"
-                               oninput="if(parseInt(this.value) > 30) this.value = 30; calculateFillRate(); document.getElementById('shipping-days-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
+                               placeholder="2"
+                               value="{{ old('handling_days', '2') }}"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
-                        <p style="font-size:9px;color:#A8A096;margin:0;">Delivery lead time</p>
+                        <p style="font-size:9px;color:#A8A096;margin:0;">Artisan preparation lead time</p>
                     </div>
                 </div>
 
@@ -2710,17 +2721,17 @@ function addProductManager() {
                 return;
             }
 
-            const shipFeeVal = parseFloat(this.shippingFee);
-            if (this.shippingFee === '' || isNaN(shipFeeVal) || shipFeeVal < 0 || shipFeeVal > 500) {
-                const feeCard = document.getElementById('shipping-fee-card');
-                const feeInput = document.getElementById('shippingFeeInput');
-                if (feeCard) feeCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                if (feeInput) {
-                    feeInput.classList.add('border-red-500');
-                    feeInput.focus();
+            const pkgWeight = parseFloat(document.getElementById('packageWeightInput')?.value || 0);
+            if (isNaN(pkgWeight) || pkgWeight <= 0) {
+                const pkgCard = document.getElementById('package-weight-card');
+                const pkgInput = document.getElementById('packageWeightInput');
+                if (pkgCard) pkgCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (pkgInput) {
+                    pkgInput.classList.add('border-red-500');
+                    pkgInput.focus();
                 }
-                if (feeCard) feeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                triggerAppModal('Shipping Fee Required', 'Please enter a standard delivery shipping fee between ₱0.00 (Free shipping) and ₱500.00.', 'warning');
+                if (pkgCard) pkgCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                triggerAppModal('Package Weight Required', 'Please enter a valid packed item weight greater than 0 kg.', 'warning');
                 return;
             }
 
