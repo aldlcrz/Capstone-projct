@@ -116,12 +116,77 @@ class ShippingCalculatorService
             throw new \Exception("No logistics couriers are currently active or supported for this seller.");
         }
 
+        // Proximity Evaluation: Local Cluster vs Non-Local Destination
+        $isLocal = $this->isLocalCluster($seller, $destinationAddress);
+
+        if (!$specificProviderId) {
+            if ($isLocal) {
+                $localProviders = $providers->filter(fn($p) => in_array($p->code, ['store_pickup', 'seller_direct']));
+                if ($localProviders->isNotEmpty()) {
+                    $providers = $localProviders;
+                }
+            } else {
+                $nonLocalProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
+                if ($nonLocalProviders->isNotEmpty()) {
+                    $providers = $nonLocalProviders;
+                }
+            }
+        }
+
         $quotes = [];
 
         // 5. Calculate provider-specific quotes
         foreach ($providers as $provider) {
-            // Find applicable rate bracket
-            // Select volumetric divisor: rate divisor -> provider default -> 3500 fallback
+            // Special handling for local-only standard providers (store_pickup & seller_direct)
+            if ($provider->code === 'store_pickup') {
+                $quotes[] = [
+                    'provider_id'                     => $provider->id,
+                    'provider_name'                   => 'Store Pickup (In-Shop Collection)',
+                    'provider_code'                   => 'store_pickup',
+                    'shipping_rate_id'                => null,
+                    'origin_zone_id'                  => $originZone->id,
+                    'origin_zone_name'                => $originZone->name,
+                    'destination_zone_id'             => $destinationZone->id,
+                    'destination_zone_name'           => $destinationZone->name,
+                    'actual_weight'                   => round($totalActualWeight, 2),
+                    'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
+                    'chargeable_weight'               => round($totalActualWeight, 2),
+                    'rate_base_snapshot'              => 0.00,
+                    'additional_weight_rate_snapshot' => 0.00,
+                    'volumetric_divisor_snapshot'     => 3500,
+                    'shipping_fee'                    => 0.00,
+                    'estimated_days_min'              => 0,
+                    'estimated_days_max'              => 1,
+                    'delivery_estimate_display'       => 'Same Day / Next Day Pickup',
+                ];
+                continue;
+            }
+
+            if ($provider->code === 'seller_direct') {
+                $quotes[] = [
+                    'provider_id'                     => $provider->id,
+                    'provider_name'                   => 'Seller Direct Delivery (Local Rider)',
+                    'provider_code'                   => 'seller_direct',
+                    'shipping_rate_id'                => null,
+                    'origin_zone_id'                  => $originZone->id,
+                    'origin_zone_name'                => $originZone->name,
+                    'destination_zone_id'             => $destinationZone->id,
+                    'destination_zone_name'           => $destinationZone->name,
+                    'actual_weight'                   => round($totalActualWeight, 2),
+                    'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
+                    'chargeable_weight'               => round($totalActualWeight, 2),
+                    'rate_base_snapshot'              => 25.00,
+                    'additional_weight_rate_snapshot' => 0.00,
+                    'volumetric_divisor_snapshot'     => 3500,
+                    'shipping_fee'                    => 25.00,
+                    'estimated_days_min'              => 1,
+                    'estimated_days_max'              => 1,
+                    'delivery_estimate_display'       => '1 Day (Local Delivery)',
+                ];
+                continue;
+            }
+
+            // Standard Rate Bracket Query
             $rateQuery = ShippingRate::where('provider_id', $provider->id)
                 ->where('origin_zone_id', $originZone->id)
                 ->where('destination_zone_id', $destinationZone->id)
@@ -334,4 +399,73 @@ class ShippingCalculatorService
 
         return null;
     }
+
+    /**
+     * Evaluates if a given destination address is within the seller's local cluster.
+     *
+     * @param User $seller
+     * @param Address|array $destinationAddress
+     * @return bool
+     */
+    public function isLocalCluster(User $seller, Address|array $destinationAddress): bool
+    {
+        $sellerProvince = strtolower(trim((string)($seller->shopProvince ?: 'Laguna')));
+        $sellerCity     = strtolower(trim((string)($seller->shopCity ?: 'Lumban')));
+
+        $destProvince = strtolower(trim((string)(is_array($destinationAddress) ? ($destinationAddress['province'] ?? '') : ($destinationAddress->province ?? ''))));
+        $destCity     = strtolower(trim((string)(is_array($destinationAddress) ? ($destinationAddress['city'] ?? '') : ($destinationAddress->city ?? ''))));
+
+        // If both seller and buyer are in Laguna
+        if ((str_contains($sellerProvince, 'laguna') || empty($sellerProvince)) && str_contains($destProvince, 'laguna')) {
+            // Local 4th District / East Shore Cluster
+            $localMunicipalities = [
+                'lumban', 'santa cruz', 'sta. cruz', 'sta cruz', 'pagsanjan', 
+                'kalayaan', 'paete', 'pangil', 'cavinti', 'pakil', 'siniloan', 
+                'famy', 'mabitac', 'pila', 'victoria', 'luisiana', 'magdalena', 'majayjay'
+            ];
+            foreach ($localMunicipalities as $local) {
+                if (str_contains($destCity, $local)) {
+                    return true;
+                }
+            }
+        }
+
+        // Zone-based cluster evaluation
+        $originZone = $this->zoneResolver->resolve(
+            $seller->shopProvince ?: null,
+            $seller->shopCity ?: null,
+            $seller->shopBarangay ?: null,
+            $seller->shopPostalCode ?: null
+        );
+
+        $destinationZone = $this->zoneResolver->resolve(
+            $destProvince ?: null,
+            $destCity ?: null,
+            is_array($destinationAddress) ? ($destinationAddress['barangay'] ?? null) : ($destinationAddress->barangay ?? null),
+            is_array($destinationAddress) ? ($destinationAddress['postalCode'] ?? null) : ($destinationAddress->postalCode ?? null)
+        );
+
+        if ($originZone && $destinationZone && $originZone->id === $destinationZone->id) {
+            $originName = strtolower($originZone->name);
+            if (str_contains($originName, 'east') || str_contains($originName, 'local') || str_contains($originName, '4th')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns location-gated payment methods.
+     * Nearby / Local: COD, GCash, Maya
+     * Far away / Non-Local: GCash, Maya (COD disabled to eliminate RTS risk)
+     *
+     * @param bool $isLocal
+     * @return array
+     */
+    public function getAvailablePaymentMethods(bool $isLocal): array
+    {
+        return $isLocal ? ['COD', 'GCash', 'Maya'] : ['GCash', 'Maya'];
+    }
 }
+

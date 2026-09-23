@@ -580,4 +580,145 @@ class ShippingCalculatorTest extends TestCase
             $this->assertNotEquals(999.00, (float) $quote['shipping_fee']);
         }
     }
+
+    public function test_is_local_cluster_accurately_detects_nearby_laguna_municipalities()
+    {
+        $seller = User::create([
+            'name' => 'Lumban Seller',
+            'email' => 'lumban_seller_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Laguna',
+            'shopCity' => 'Lumban',
+            'shopPostalCode' => '4014',
+        ]);
+
+        // Local cluster municipalities
+        $this->assertTrue($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Lumban', 'postalCode' => '4014']));
+        $this->assertTrue($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Santa Cruz', 'postalCode' => '4009']));
+        $this->assertTrue($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Pagsanjan', 'postalCode' => '4008']));
+        $this->assertTrue($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Paete', 'postalCode' => '4016']));
+        $this->assertTrue($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Kalayaan', 'postalCode' => '4015']));
+
+        // Non-local / far-away destinations
+        $this->assertFalse($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'San Pedro', 'postalCode' => '4023']));
+        $this->assertFalse($this->calculator->isLocalCluster($seller, ['province' => 'Laguna', 'city' => 'Biñan', 'postalCode' => '4024']));
+        $this->assertFalse($this->calculator->isLocalCluster($seller, ['province' => 'Metro Manila', 'city' => 'Manila', 'postalCode' => '1000']));
+        $this->assertFalse($this->calculator->isLocalCluster($seller, ['province' => 'Cebu', 'city' => 'Cebu City', 'postalCode' => '6000']));
+    }
+
+    public function test_local_cluster_returns_store_pickup_and_seller_direct()
+    {
+        $seller = User::create([
+            'name' => 'Lumban Artisan',
+            'email' => 'lumban_artisan_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Laguna',
+            'shopCity' => 'Lumban',
+            'shopPostalCode' => '4014',
+        ]);
+
+        $product = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Barong Tagalog',
+            'price' => 2500,
+            'stock' => 10,
+            'package_weight_per_unit' => 0.50,
+            'package_length_per_unit' => 20.00,
+            'package_width_per_unit' => 15.00,
+            'package_height_per_unit' => 5.00,
+            'handling_days' => 1,
+        ]);
+
+        // Destination in Pagsanjan (adjacent to Lumban)
+        $destination = [
+            'province' => 'Laguna',
+            'city' => 'Pagsanjan',
+            'barangay' => 'Poblacion',
+            'postalCode' => '4008',
+        ];
+
+        $quotes = $this->calculator->calculateQuotes($seller, $destination, [
+            ['id' => $product->id, 'quantity' => 1],
+        ]);
+
+        $this->assertNotEmpty($quotes);
+        $providerCodes = array_column($quotes, 'provider_code');
+
+        // Must include store_pickup (₱0.00) and seller_direct (₱25.00)
+        $this->assertContains('store_pickup', $providerCodes);
+        $this->assertContains('seller_direct', $providerCodes);
+
+        $pickupQuote = collect($quotes)->firstWhere('provider_code', 'store_pickup');
+        $this->assertEquals(0.00, (float) $pickupQuote['shipping_fee']);
+
+        $directQuote = collect($quotes)->firstWhere('provider_code', 'seller_direct');
+        $this->assertEquals(25.00, (float) $directQuote['shipping_fee']);
+
+        // Courier (J&T) must be suppressed for local cluster
+        $this->assertNotContains('jnt', $providerCodes);
+    }
+
+    public function test_non_local_destination_suppresses_local_options_and_returns_standard_delivery()
+    {
+        $seller = User::create([
+            'name' => 'Lumban Artisan',
+            'email' => 'lumban_artisan_2_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Laguna',
+            'shopCity' => 'Lumban',
+            'shopPostalCode' => '4014',
+        ]);
+
+        $product = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Barong Tagalog',
+            'price' => 2500,
+            'stock' => 10,
+            'package_weight_per_unit' => 0.50,
+            'package_length_per_unit' => 20.00,
+            'package_width_per_unit' => 15.00,
+            'package_height_per_unit' => 5.00,
+            'handling_days' => 1,
+        ]);
+
+        // Destination in San Pedro, Laguna (far away from Lumban)
+        $destination = [
+            'province' => 'Laguna',
+            'city' => 'San Pedro',
+            'barangay' => 'San Antonio',
+            'postalCode' => '4023',
+        ];
+
+        $quotes = $this->calculator->calculateQuotes($seller, $destination, [
+            ['id' => $product->id, 'quantity' => 1],
+        ]);
+
+        $this->assertNotEmpty($quotes);
+        $providerCodes = array_column($quotes, 'provider_code');
+
+        // Must NOT include store_pickup or seller_direct
+        $this->assertNotContains('store_pickup', $providerCodes);
+        $this->assertNotContains('seller_direct', $providerCodes);
+
+        // Must return standard delivery quote with valid positive fee
+        $firstQuote = $quotes[0];
+        $this->assertGreaterThan(0.00, (float) $firstQuote['shipping_fee']);
+    }
+
+    public function test_get_available_payment_methods_returns_cod_only_for_local_cluster()
+    {
+        $localMethods = $this->calculator->getAvailablePaymentMethods(true);
+        $this->assertContains('COD', $localMethods);
+        $this->assertContains('GCash', $localMethods);
+        $this->assertContains('Maya', $localMethods);
+
+        $nonLocalMethods = $this->calculator->getAvailablePaymentMethods(false);
+        $this->assertNotContains('COD', $nonLocalMethods);
+        $this->assertContains('GCash', $nonLocalMethods);
+        $this->assertContains('Maya', $nonLocalMethods);
+    }
 }
+

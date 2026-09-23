@@ -1002,4 +1002,133 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['address_id']);
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* 12. LOCAL LOGISTICS & COD PAYMENT GATING TESTS                             */
+    /* -------------------------------------------------------------------------- */
+
+    public function test_checkout_shipping_quote_returns_is_local_cluster_and_available_payment_methods()
+    {
+        $seller = $this->createSeller(); // Lumban, Laguna (4014)
+        $customer = $this->createCustomer();
+
+        // Local address in Pagsanjan (4008)
+        $localAddress = $this->createAddress($customer, [
+            'province' => 'Laguna',
+            'city' => 'Pagsanjan',
+            'barangay' => 'Poblacion',
+            'postalCode' => '4008',
+        ]);
+
+        $product = $this->createTestProduct($seller);
+
+        $localQuoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
+            'seller_id' => $seller->id,
+            'address_id' => $localAddress->id,
+            'items' => [
+                ['id' => $product->id, 'quantity' => 1]
+            ]
+        ]);
+
+        $localQuoteResponse->assertStatus(200);
+        $localQuoteResponse->assertJson([
+            'is_local_cluster' => true,
+            'available_payment_methods' => ['COD', 'GCash', 'Maya'],
+        ]);
+        $quotes = $localQuoteResponse->json('quotes');
+        $providerCodes = array_column($quotes, 'provider_code');
+        $this->assertContains('store_pickup', $providerCodes);
+        $this->assertContains('seller_direct', $providerCodes);
+
+        // Non-local address in San Pedro, Laguna (4023)
+        $nonLocalAddress = $this->createAddress($customer, [
+            'province' => 'Laguna',
+            'city' => 'San Pedro',
+            'barangay' => 'San Antonio',
+            'postalCode' => '4023',
+        ]);
+
+        $nonLocalQuoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
+            'seller_id' => $seller->id,
+            'address_id' => $nonLocalAddress->id,
+            'items' => [
+                ['id' => $product->id, 'quantity' => 1]
+            ]
+        ]);
+
+        $nonLocalQuoteResponse->assertStatus(200);
+        $nonLocalQuoteResponse->assertJson([
+            'is_local_cluster' => false,
+            'available_payment_methods' => ['GCash', 'Maya'],
+        ]);
+        $quotesNonLocal = $nonLocalQuoteResponse->json('quotes');
+        $providerCodesNonLocal = array_column($quotesNonLocal, 'provider_code');
+        $this->assertNotContains('store_pickup', $providerCodesNonLocal);
+        $this->assertNotContains('seller_direct', $providerCodesNonLocal);
+    }
+
+    public function test_cod_payment_is_permitted_for_local_cluster()
+    {
+        $seller = $this->createSeller(); // Lumban, Laguna (4014)
+        $customer = $this->createCustomer();
+
+        // Local address in Santa Cruz, Laguna (4009)
+        $localAddress = $this->createAddress($customer, [
+            'province' => 'Laguna',
+            'city' => 'Santa Cruz',
+            'barangay' => 'Poblacion',
+            'postalCode' => '4009',
+        ]);
+
+        $product = $this->createTestProduct($seller, ['price' => 750.00]);
+
+        $response = $this->actingAs($customer)->postJson('/checkout', [
+            'seller_id' => $seller->id,
+            'address_id' => $localAddress->id,
+            'paymentMethod' => 'COD',
+            // No paymentScreenshot and no paymentReference needed for COD!
+            'items' => [
+                ['id' => $product->id, 'quantity' => 1, 'price' => 750.00]
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $order = Order::where('customerId', $customer->id)->latest('createdAt')->first();
+        $this->assertNotNull($order);
+        $this->assertEquals('COD', $order->paymentMethod);
+        $this->assertEquals('Pending Payment (COD)', $order->paymentStatus);
+        $this->assertStringStartsWith('COD-', $order->paymentReference);
+    }
+
+    public function test_cod_payment_is_strictly_rejected_for_non_local_destinations()
+    {
+        $seller = $this->createSeller(); // Lumban, Laguna (4014)
+        $customer = $this->createCustomer();
+
+        // Far-away address in Manila (1000)
+        $nonLocalAddress = $this->createAddress($customer, [
+            'province' => 'Metro Manila',
+            'city' => 'Manila',
+            'barangay' => 'Sampaloc',
+            'postalCode' => '1000',
+        ]);
+
+        $product = $this->createTestProduct($seller, ['price' => 1200.00]);
+
+        // Attempt COD checkout for non-local destination
+        $response = $this->actingAs($customer)->postJson('/checkout', [
+            'seller_id' => $seller->id,
+            'address_id' => $nonLocalAddress->id,
+            'paymentMethod' => 'COD',
+            'items' => [
+                ['id' => $product->id, 'quantity' => 1, 'price' => 1200.00]
+            ],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['paymentMethod']);
+    }
 }
+

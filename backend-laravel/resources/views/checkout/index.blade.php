@@ -44,6 +44,7 @@
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="address_id" :value="address?.id || ''">
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
+        <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
 
         <div class="space-y-6 pb-24 lg:pb-0 w-full">
             <!-- Main Content Area -->
@@ -188,29 +189,64 @@
 
                         {{-- Calculated Shipping Display --}}
                         <div class="space-y-3" x-show="shippingQuote && !quotesError">
-                            <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-gray-100 bg-[#FDF9F4]/60">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                                        </svg>
+                            {{-- Multiple Local Options (Store Pickup vs Local Direct Delivery) --}}
+                            <template x-if="isLocalCluster && shippingQuotesList && shippingQuotesList.length > 1">
+                                <div class="space-y-2.5">
+                                    <div class="text-[10px] sm:text-xs font-bold text-[#C0422A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                                        <span>Nearby Location — Local Fulfillment Options</span>
                                     </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="shippingQuote?.provider_name || 'Standard Courier'"></span>
-                                            <span class="text-[9px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" 
-                                                  x-show="shippingQuote?.chargeable_weight"
-                                                  x-text="'Weight: ' + (Number(shippingQuote?.chargeable_weight) || 0).toFixed(2) + ' kg'"></span>
+                                    <template x-for="q in shippingQuotesList" :key="q.provider_id">
+                                        <div @click="selectQuote(q)"
+                                             class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-150"
+                                             :class="shippingQuote?.provider_id === q.provider_id ? 'border-[#C0422A] bg-[#FDF9F4]' : 'border-gray-100 bg-white hover:border-gray-200'">
+                                            <div class="flex items-center gap-3">
+                                                <input type="radio" :name="'local_shipping_option'" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#C0422A]">
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="q.provider_name"></span>
+                                                        <template x-if="q.provider_code === 'store_pickup'">
+                                                            <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
+                                                        </template>
+                                                    </div>
+                                                    <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" x-text="'Est. Delivery: ' + (q.delivery_estimate_display || '1 Day')"></div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                                     x-text="Number(q.shipping_fee) === 0 ? 'FREE' : ('₱' + Number(q.shipping_fee || 0).toFixed(2))"></div>
+                                            </div>
                                         </div>
-                                        <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
-                                             x-text="'Estimated Delivery: ' + (shippingQuote?.delivery_estimate_display || ((shippingQuote?.estimated_days_min || 2) + '–' + (shippingQuote?.estimated_days_max || 4) + ' business days'))"></div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            {{-- Single Standard Delivery Option (Far away / NCR) --}}
+                            <template x-if="!isLocalCluster || !shippingQuotesList || shippingQuotesList.length <= 1">
+                                <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-gray-100 bg-[#FDF9F4]/60">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="shippingQuote?.provider_name || 'Standard Delivery'"></span>
+                                                <span class="text-[9px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" 
+                                                      x-show="shippingQuote?.chargeable_weight"
+                                                      x-text="'Weight: ' + (Number(shippingQuote?.chargeable_weight) || 0).toFixed(2) + ' kg'"></span>
+                                            </div>
+                                            <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
+                                                 x-text="'Estimated Delivery: ' + (shippingQuote?.delivery_estimate_display || ((shippingQuote?.estimated_days_min || 2) + '–' + (shippingQuote?.estimated_days_max || 4) + ' business days'))"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                             x-text="'₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-sm sm:text-base font-black text-[#C0422A]" 
-                                         x-text="'₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
-                                </div>
-                            </div>
+                            </template>
                         </div>
 
                         {{-- Empty State (No address provided yet) --}}
@@ -254,7 +290,31 @@
                     @endphp
 
                     <div class="space-y-4">
+                        {{-- Cash on Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
+                        <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
+                             class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200"
+                             :class="paymentMethod === 'COD' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">💵</div>
+                                    <div>
+                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery / Pay on Claim</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay in cash upon in-store pickup or local delivery arrival</div>
+                                    </div>
+                                </div>
+                                <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
+                            </label>
+                            
+                            <div x-show="paymentMethod === 'COD'" class="mt-4 pt-4 border-t border-gray-100" x-transition>
+                                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200/60 text-xs text-amber-900 font-medium flex items-start gap-2">
+                                    <span class="text-base shrink-0">ℹ️</span>
+                                    <span>You can pay with exact cash directly to the artisan upon claiming at the store or upon doorstep delivery. No online receipt screenshot required.</span>
+                                </div>
+                            </div>
+                        </div>
+
                         @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
+                        <!-- GCash Option -->
                         <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
@@ -328,8 +388,8 @@
                         @endif
                     </div>
 
-                    <!-- Payment Proof Upload Inputs -->
-                    <div class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 shadow-sm space-y-4">
+                    <!-- Payment Proof Upload Inputs (Only for GCash / Maya) -->
+                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
                             <div class="w-2 h-2 rounded-full bg-[#C0422A]"></div>
                             <h3 class="text-xs lg:text-sm font-bold text-gray-900 uppercase tracking-wider">Upload Proof of Payment</h3>
@@ -1144,6 +1204,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         // Logistics State
         shippingQuote: null,
         shippingQuoteToken: '',
+        selectedProviderId: '',
+        shippingQuotesList: [],
+        isLocalCluster: false,
+        availablePaymentMethods: ['GCash', 'Maya'],
         loadingQuotes: false,
         quotesError: '',
         currentShippingFee: 0,
@@ -1156,7 +1220,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             });
 
             this.$watch('paymentMethod', () => {
-                if (this.paymentRef) {
+                if (this.paymentMethod !== 'COD' && this.paymentRef) {
                     this.validateRef();
                     this.checkServerReference();
                 } else {
@@ -1165,10 +1229,18 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             });
         },
 
+        selectQuote(q) {
+            this.shippingQuote = q;
+            this.selectedProviderId = q.provider_id;
+            this.currentShippingFee = Number(q.shipping_fee) || 0;
+        },
+
         async fetchShippingQuotes() {
             if (!this.address || !this.address.id) {
                 this.shippingQuote = null;
                 this.shippingQuoteToken = '';
+                this.selectedProviderId = '';
+                this.shippingQuotesList = [];
                 this.currentShippingFee = 0;
                 return;
             }
@@ -1199,16 +1271,30 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 if (!res.ok) {
                     this.shippingQuote = null;
                     this.shippingQuoteToken = '';
+                    this.selectedProviderId = '';
+                    this.shippingQuotesList = [];
                     this.currentShippingFee = 0;
                     this.quotesError = data.message || 'Logistics service unavailable for this destination.';
                     return;
                 }
 
-                this.shippingQuote = data.quote || (data.quotes && data.quotes[0]) || null;
+                this.isLocalCluster = data.is_local_cluster ?? false;
+                this.availablePaymentMethods = data.available_payment_methods || (this.isLocalCluster ? ['COD', 'GCash', 'Maya'] : ['GCash', 'Maya']);
+                this.shippingQuotesList = data.quotes || [];
                 this.shippingQuoteToken = data.shipping_quote_token || '';
 
-                if (this.shippingQuote) {
-                    this.currentShippingFee = Number(this.shippingQuote.shipping_fee) || 0;
+                if (!this.isLocalCluster && this.paymentMethod === 'COD') {
+                    this.paymentMethod = 'GCash';
+                }
+
+                if (data.quote) {
+                    this.shippingQuote = data.quote;
+                    this.selectedProviderId = data.quote.provider_id;
+                    this.currentShippingFee = Number(data.quote.shipping_fee) || 0;
+                } else if (this.shippingQuotesList.length > 0) {
+                    this.shippingQuote = this.shippingQuotesList[0];
+                    this.selectedProviderId = this.shippingQuotesList[0].provider_id;
+                    this.currentShippingFee = Number(this.shippingQuotesList[0].shipping_fee) || 0;
                 } else {
                     this.currentShippingFee = 0;
                     this.quotesError = 'No courier rates are currently available for this delivery area.';
@@ -1806,27 +1892,30 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         },
         requestPlaceOrder() {
             if (this.isPlacingOrder) return;
-            if (this.aiChecking) {
-                this.screenshotError = 'Please wait while receipt scanning is in progress.';
-                return;
-            }
-            if (!this.validateRef() || this.isRefDuplicate) {
-                if (this.isRefDuplicate) {
-                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+            
+            if (this.paymentMethod !== 'COD') {
+                if (this.aiChecking) {
+                    this.screenshotError = 'Please wait while receipt scanning is in progress.';
+                    return;
                 }
-                document.getElementById('paymentReferenceInput')?.focus();
-                return;
-            }
-            const screenshotInput = document.getElementById('paymentScreenshotInput');
-            if (!screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
-                this.screenshotError = 'Payment receipt screenshot is required.';
-                document.getElementById('paymentScreenshotInput')?.focus();
-                return;
-            }
-            if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
-                this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
-                document.getElementById('paymentScreenshotInput')?.focus();
-                return;
+                if (!this.validateRef() || this.isRefDuplicate) {
+                    if (this.isRefDuplicate) {
+                        this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+                    }
+                    document.getElementById('paymentReferenceInput')?.focus();
+                    return;
+                }
+                const screenshotInput = document.getElementById('paymentScreenshotInput');
+                if (!screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
+                    this.screenshotError = 'Payment receipt screenshot is required.';
+                    document.getElementById('paymentScreenshotInput')?.focus();
+                    return;
+                }
+                if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
+                    this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
+                    document.getElementById('paymentScreenshotInput')?.focus();
+                    return;
+                }
             }
             this.screenshotError = '';
             const form = document.getElementById('checkout-form');
@@ -1835,20 +1924,22 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         },
         confirmPlaceOrder() {
             if (this.isPlacingOrder) return;
-            if (this.aiChecking) {
-                this.showConfirmModal = false;
-                this.screenshotError = 'Please wait while receipt scanning is in progress.';
-                return;
-            }
-            if (!this.validateRef() || this.isRefDuplicate) {
-                this.showConfirmModal = false;
-                document.getElementById('paymentReferenceInput')?.focus();
-                return;
-            }
-            if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
-                this.showConfirmModal = false;
-                document.getElementById('paymentScreenshotInput')?.focus();
-                return;
+            if (this.paymentMethod !== 'COD') {
+                if (this.aiChecking) {
+                    this.showConfirmModal = false;
+                    this.screenshotError = 'Please wait while receipt scanning is in progress.';
+                    return;
+                }
+                if (!this.validateRef() || this.isRefDuplicate) {
+                    this.showConfirmModal = false;
+                    document.getElementById('paymentReferenceInput')?.focus();
+                    return;
+                }
+                if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
+                    this.showConfirmModal = false;
+                    document.getElementById('paymentScreenshotInput')?.focus();
+                    return;
+                }
             }
             this.isPlacingOrder = true;
             this.showConfirmModal = false;

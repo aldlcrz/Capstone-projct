@@ -284,12 +284,26 @@ class CheckoutController extends Controller
             $token = $this->shippingCalculator->generateQuoteToken($allSellerIds, $address->id, $cart);
             $primaryQuote = reset($sellerQuotes);
 
+            // Determine if the destination is in the local cluster across all participating sellers
+            $isLocalCluster = true;
+            foreach ($itemsBySeller as $sellerId => $sellerItems) {
+                $sellerUser = User::find($sellerId);
+                if ($sellerUser && !$this->shippingCalculator->isLocalCluster($sellerUser, $address)) {
+                    $isLocalCluster = false;
+                    break;
+                }
+            }
+
+            $availablePaymentMethods = $this->shippingCalculator->getAvailablePaymentMethods($isLocalCluster);
+
             return response()->json([
-                'success'              => true,
-                'quote'                => $primaryQuote,
-                'quotes'               => $allSellerQuotes,
-                'seller_quotes'        => $sellerQuotes,
-                'shipping_quote_token' => $token,
+                'success'                  => true,
+                'is_local_cluster'         => $isLocalCluster,
+                'available_payment_methods'=> $availablePaymentMethods,
+                'quote'                    => $primaryQuote,
+                'quotes'                   => $allSellerQuotes,
+                'seller_quotes'            => $sellerQuotes,
+                'shipping_quote_token'     => $token,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -314,12 +328,17 @@ class CheckoutController extends Controller
         }
 
         $paymentMethod = trim($request->input('paymentMethod', 'GCash'));
+        $isCod   = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0;
         $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
         $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
 
-        $request->validate([
+        $validationRules = [
             'paymentMethod' => 'required|string',
-            'paymentReference' => [
+            'address_id'    => 'required|string',
+        ];
+
+        if (!$isCod) {
+            $validationRules['paymentReference'] = [
                 'required',
                 'string',
                 function ($attribute, $value, $fail) use ($isGcash, $isMaya) {
@@ -361,12 +380,14 @@ class CheckoutController extends Controller
                         return;
                     }
                 },
-            ],
-            'paymentScreenshot' => 'required|image',
-            'address_id' => 'required|string',
-        ], [
-            'paymentReference.required' => 'Please provide your payment reference number.',
-            'address_id.required' => 'Please provide a valid shipping address.',
+            ];
+            $validationRules['paymentScreenshot'] = 'required|image';
+        }
+
+        $request->validate($validationRules, [
+            'paymentReference.required'  => 'Please provide your payment reference number.',
+            'paymentScreenshot.required' => 'Payment receipt screenshot is required for online payments.',
+            'address_id.required'        => 'Please provide a valid shipping address.',
         ]);
 
         try {
@@ -420,6 +441,18 @@ class CheckoutController extends Controller
                 }
             }
 
+            // Validate COD locality
+            if ($isCod) {
+                foreach ($itemsBySeller as $sellerId => $items) {
+                    $sellerUser = User::find($sellerId);
+                    if ($sellerUser && !$this->shippingCalculator->isLocalCluster($sellerUser, $addressData)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'paymentMethod' => ['Cash on Delivery (COD) is available only for nearby local deliveries. Please choose GCash or Maya.'],
+                        ]);
+                    }
+                }
+            }
+
             $sellerCalculatedQuotes = [];
             $totalExpectedAmount = 0;
 
@@ -441,9 +474,9 @@ class CheckoutController extends Controller
                 }
 
                 // Server-side authoritative calculation
-                // Re-calculate quote against server database authoritatively using seller's preferred pricing provider
+                // Re-calculate quote against server database authoritatively using seller's preferred pricing provider or selected local method
                 $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
-                $providerId = $preferredProvider?->id;
+                $providerId = $selectedProviderId ?: ($preferredProvider?->id);
                 $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $items, $providerId);
                 $chosenQuote = $quotes[0] ?? null;
 
@@ -455,9 +488,9 @@ class CheckoutController extends Controller
                 $totalExpectedAmount += ($sellerSubtotal + (float)$chosenQuote['shipping_fee']);
             }
 
-            // 3. Server-side Receipt Screening (reject obvious non-receipts and amount mismatches)
+            // 3. Server-side Receipt Screening (only for online payments)
             $screening = null;
-            if ($request->hasFile('paymentScreenshot')) {
+            if (!$isCod && $request->hasFile('paymentScreenshot')) {
                 $tempPath = $request->file('paymentScreenshot')->getRealPath();
                 $origName = $request->file('paymentScreenshot')->getClientOriginalName();
                 $screening = \App\Services\AiService::verifyReceipt(
@@ -534,6 +567,11 @@ class CheckoutController extends Controller
                     $lockedProducts[$pId] = $product;
                 }
 
+                $paymentRefToSave = trim((string) $request->input('paymentReference', ''));
+                if ($isCod && empty($paymentRefToSave)) {
+                    $paymentRefToSave = 'COD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+                }
+
                 $order = Order::create([
                     'id' => $orderId,
                     'customerId' => Auth::id(),
@@ -541,8 +579,8 @@ class CheckoutController extends Controller
                     'totalAmount' => $totalAmount,
                     'status' => 'Pending',
                     'paymentMethod' => $request->paymentMethod,
-                    'paymentReference' => $request->paymentReference,
-                    'paymentStatus' => 'Payment Submitted',
+                    'paymentReference' => $paymentRefToSave,
+                    'paymentStatus' => $isCod ? 'Pending Payment (COD)' : 'Payment Submitted',
                     'shippingAddress' => $addressData,
                     'courierName' => $chosenShipping['provider_name'],
                     'createdAt' => now(),
@@ -583,7 +621,9 @@ class CheckoutController extends Controller
                     'newStatus' => 'Pending',
                     'updatedBy' => Auth::id(),
                     'userRole' => 'customer',
-                    'notes' => 'Order placed by customer. Payment proof submitted, awaiting artisan verification.',
+                    'notes' => $isCod 
+                        ? 'Order placed by customer via Cash on Delivery / Pay on Claim.' 
+                        : 'Order placed by customer. Payment proof submitted, awaiting artisan verification.',
                 ]);
 
                 $storedPath = null;
@@ -593,32 +633,34 @@ class CheckoutController extends Controller
                     $order->save();
                 }
 
-                // Create PaymentTransaction attempt linked to this order
-                $rawRef = trim((string) $request->paymentReference);
-                $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
-                    ? (float) $screening['detected_amount']
-                    : null;
-                $tier = in_array(($screening['status'] ?? ''), ['PASS', 'REVIEW', 'REJECT'])
-                    ? $screening['status']
-                    : 'REVIEW';
+                if (!$isCod) {
+                    // Create PaymentTransaction attempt linked to this order
+                    $rawRef = trim((string) $paymentRefToSave);
+                    $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
+                        ? (float) $screening['detected_amount']
+                        : null;
+                    $tier = in_array(($screening['status'] ?? ''), ['PASS', 'REVIEW', 'REJECT'])
+                        ? $screening['status']
+                        : 'REVIEW';
 
-                PaymentTransaction::create([
-                    'order_id' => $orderId,
-                    'customer_id' => Auth::id(),
-                    'seller_id' => $sellerId,
-                    'reference_number' => $rawRef,
-                    'active_reference' => $rawRef,
-                    'wallet_type' => $request->paymentMethod,
-                    'expected_amount' => $totalAmount,
-                    'detected_amount' => $detectedAmt,
-                    'amount_confidence' => $screening['amount_confidence'] ?? null,
-                    'reference_confidence' => $screening['reference_confidence'] ?? null,
-                    'confidence' => $screening['confidence'] ?? null,
-                    'status' => 'UNVERIFIED',
-                    'verification_tier' => $tier,
-                    'receipt_path' => $storedPath,
-                    'notes' => $screening['message'] ?? 'Initial submission at checkout',
-                ]);
+                    PaymentTransaction::create([
+                        'order_id' => $orderId,
+                        'customer_id' => Auth::id(),
+                        'seller_id' => $sellerId,
+                        'reference_number' => $rawRef,
+                        'active_reference' => $rawRef,
+                        'wallet_type' => $request->paymentMethod,
+                        'expected_amount' => $totalAmount,
+                        'detected_amount' => $detectedAmt,
+                        'amount_confidence' => $screening['amount_confidence'] ?? null,
+                        'reference_confidence' => $screening['reference_confidence'] ?? null,
+                        'confidence' => $screening['confidence'] ?? null,
+                        'status' => 'UNVERIFIED',
+                        'verification_tier' => $tier,
+                        'receipt_path' => $storedPath,
+                        'notes' => $screening['message'] ?? 'Initial submission at checkout',
+                    ]);
+                }
 
                 foreach ($items as $item) {
                     $product = $lockedProducts[$item['id']] ?? null;
@@ -629,9 +671,9 @@ class CheckoutController extends Controller
                         'productId' => $item['id'],
                         'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
                         'product_image' => !empty($item['image']) ? $item['image'] : ($product ? VariationFormatter::getImageForVariation($item['variation'] ?? null, $product) : null),
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                        'size' => $item['size'],
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $item['price'] ?? ($product?->price ?? 0),
+                        'size' => $item['size'] ?? null,
                         'variation' => VariationFormatter::label($item['variation'] ?? null, $product?->image)
                             ?? ($item['variation'] ?? 'Original'),
                     ];
@@ -741,8 +783,21 @@ class CheckoutController extends Controller
                 }
             }
 
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'Order placed successfully!',
+                    'redirect' => route('orders'),
+                ]);
+            }
+
             return redirect()->route('orders')->with('success', 'Order placed successfully!');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            throw $e;
         } catch (\Illuminate\Database\QueryException $e) {
             if (!empty($inTransaction) && DB::transactionLevel() > 0) {
                 DB::rollBack();
