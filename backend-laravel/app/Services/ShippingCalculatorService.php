@@ -34,12 +34,12 @@ class ShippingCalculatorService
      */
     public function calculateQuotes(User $seller, Address|array $destinationAddress, array $cartItems, ?string $specificProviderId = null): array
     {
-        // 1. Resolve Seller Origin Zone
+        // 1. Resolve Seller Origin Zone (Defaulting to platform artisan hub in Lumban, Laguna if unspecified)
         $originZone = $this->zoneResolver->resolve(
-            $seller->shopProvince ?: null,
-            $seller->shopCity ?: null,
+            $seller->shopProvince ?: 'Laguna',
+            $seller->shopCity ?: 'Lumban',
             $seller->shopBarangay ?: null,
-            $seller->shopPostalCode ?: null
+            $seller->shopPostalCode ?: '4014'
         );
 
         if (!$originZone) {
