@@ -127,8 +127,8 @@ Route::middleware('auth')->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::post('/checkout/selected', [CheckoutController::class, 'fromSelected'])->name('checkout.selected');
-    Route::post('/checkout/shipping-quotes', [CheckoutController::class, 'getShippingQuotes'])->name('checkout.shipping-quotes');
+    Route::post('/checkout/shipping-quote', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quote');
+    Route::post('/checkout/shipping-quotes', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quotes');
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));

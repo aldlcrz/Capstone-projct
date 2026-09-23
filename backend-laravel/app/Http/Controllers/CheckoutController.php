@@ -198,10 +198,10 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Calculates dynamic shipping quotes across available logistics providers
-     * Returns informational quotes with a signed consistency token
+     * Calculates dynamic shipping quote based on seller's configured preferred provider.
+     * Returns informational quote with signed consistency token.
      */
-    public function getShippingQuotes(Request $request)
+    public function getShippingQuote(Request $request)
     {
         $request->validate([
             'address_id' => 'required|string',
@@ -247,13 +247,25 @@ class CheckoutController extends Controller
         }
 
         try {
-            $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $cart);
-            $token  = $this->shippingCalculator->generateQuoteToken($seller->id, $address->id, $cart);
+            $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($seller);
+            if (!$preferredProvider) {
+                return response()->json(['success' => false, 'message' => 'No active shipping provider configured for this seller.'], 422);
+            }
+
+            $quotes = $this->shippingCalculator->calculateQuotes($seller, $address, $cart, $preferredProvider->id);
+            $quote = $quotes[0] ?? null;
+
+            if (!$quote) {
+                return response()->json(['success' => false, 'message' => 'Delivery is currently not available for this delivery area.'], 422);
+            }
+
+            $token = $this->shippingCalculator->generateQuoteToken($seller->id, $address->id, $cart);
 
             return response()->json([
-                'success'     => true,
-                'quotes'      => $quotes,
-                'quote_token' => $token,
+                'success'              => true,
+                'quote'                => $quote,
+                'quotes'               => [$quote],
+                'shipping_quote_token' => $token,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -261,6 +273,11 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    public function getShippingQuotes(Request $request)
+    {
+        return $this->getShippingQuote($request);
     }
 
     public function store(Request $request)
@@ -413,12 +430,14 @@ class CheckoutController extends Controller
                 }
 
                 // Server-side authoritative calculation
-                // Re-calculate quotes against server database authoritatively
-                $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $items, $selectedProviderId);
-                $chosenQuote = collect($quotes)->firstWhere('provider_id', $selectedProviderId) ?: (empty($selectedProviderId) ? ($quotes[0] ?? null) : null);
+                // Re-calculate quote against server database authoritatively using seller's preferred pricing provider
+                $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
+                $providerId = $preferredProvider?->id;
+                $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $items, $providerId);
+                $chosenQuote = $quotes[0] ?? null;
 
                 if (!$chosenQuote) {
-                    throw new \Exception("The selected shipping provider is not available for this delivery route or weight bracket.");
+                    throw new \Exception("Shipping service is currently not available for this delivery route or weight bracket.");
                 }
 
                 $sellerCalculatedQuotes[$sellerId] = $chosenQuote;

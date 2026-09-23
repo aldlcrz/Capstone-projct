@@ -267,4 +267,43 @@ class ShippingCalculatorService
         sort($normalized);
         return md5(implode('|', $normalized));
     }
+
+    /**
+     * Resolves the seller's preferred pricing provider.
+     * Hierarchy:
+     * 1. Seller-enabled provider marked as default/preferred (if is_default column exists)
+     * 2. First seller-enabled provider
+     * 3. Platform default active provider (J&T Express or first active)
+     *
+     * @param User $seller
+     * @return ShippingProvider|null
+     */
+    public function getSellerPreferredProvider(User $seller): ?ShippingProvider
+    {
+        $hasCustom = SellerShippingProvider::where('seller_id', $seller->id)->exists();
+
+        if ($hasCustom) {
+            $query = SellerShippingProvider::where('seller_id', $seller->id)
+                ->where('is_enabled', true);
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'is_default')) {
+                $query->orderByDesc('is_default');
+            }
+
+            $sellerPref = $query->first();
+
+            if ($sellerPref) {
+                $provider = ShippingProvider::where('id', $sellerPref->provider_id)
+                    ->where('is_active', true)
+                    ->first();
+                if ($provider) {
+                    return $provider;
+                }
+            }
+        }
+
+        // Default platform provider fallback: J&T or first active provider
+        return ShippingProvider::where('is_active', true)->where('code', 'jnt')->first()
+            ?: ShippingProvider::where('is_active', true)->first();
+    }
 }

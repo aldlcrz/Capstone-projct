@@ -373,7 +373,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $address = $this->createAddress($customer);
         $product = $this->createTestProduct($seller);
 
-        $response = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $response = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -395,7 +395,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
                     'delivery_estimate_display',
                 ]
             ],
-            'quote_token',
+            'shipping_quote_token',
         ]);
     }
 
@@ -414,7 +414,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
 
         // Get legitimate quote token
-        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -422,7 +422,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             ],
         ]);
         $quotes = $quoteResponse->json('quotes');
-        $quoteToken = $quoteResponse->json('quote_token');
+        $quoteToken = $quoteResponse->json('shipping_quote_token');
         $selectedProvider = $quotes[0];
 
         $screenshot = UploadedFile::fake()->image('gcash_receipt_screenshot.jpg', 600, 1200);
@@ -472,7 +472,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $product = $this->createTestProduct($seller);
 
         // Get quote for 1 item
-        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -480,7 +480,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             ],
         ]);
         $quotes = $quoteResponse->json('quotes');
-        $quoteToken = $quoteResponse->json('quote_token');
+        $quoteToken = $quoteResponse->json('shipping_quote_token');
 
         $screenshot = UploadedFile::fake()->image('gcash_receipt_screenshot.jpg', 600, 1200);
 
@@ -519,7 +519,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $address = $this->createAddress($customer);
         $product = $this->createTestProduct($seller);
 
-        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -527,7 +527,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             ],
         ]);
         $quotes = $quoteResponse->json('quotes');
-        $quoteToken = $quoteResponse->json('quote_token');
+        $quoteToken = $quoteResponse->json('shipping_quote_token');
         $selectedProvider = $quotes[0];
 
         $screenshot = UploadedFile::fake()->image('gcash_receipt_screenshot.jpg', 600, 1200);
@@ -595,7 +595,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'approval_status' => 'approved',
         ]);
 
-        $response = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $response = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -645,9 +645,10 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
 
         // 1. Request Quotes
-        $quoteResponse = $this->actingAs($buyer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponse = $this->actingAs($buyer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $buyerAddress->id,
+            'all_providers' => true,
             'items' => [
                 ['id' => $product->id, 'quantity' => 1],
             ],
@@ -655,7 +656,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $quoteResponse->assertStatus(200);
         $quotes = $quoteResponse->json('quotes');
-        $quoteToken = $quoteResponse->json('quote_token');
+        $quoteToken = $quoteResponse->json('shipping_quote_token');
 
         // Verify quotes exist for providers
         $this->assertNotEmpty($quotes);
@@ -758,7 +759,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
 
         // Step 1: Customer requests quotes for Address A (Manila)
-        $quoteResponseA = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponseA = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $addressA->id,
             'items' => [
@@ -767,13 +768,13 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
         $quoteResponseA->assertStatus(200);
         $quotesA = $quoteResponseA->json('quotes');
-        $tokenA = $quoteResponseA->json('quote_token');
+        $tokenA = $quoteResponseA->json('shipping_quote_token');
         $this->assertNotEmpty($quotesA);
         $jntQuoteA = collect($quotesA)->firstWhere('provider_code', 'jnt');
         $this->assertNotNull($jntQuoteA);
 
         // Step 2: Customer switches address to Address B (Cebu)
-        $quoteResponseB = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponseB = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $addressB->id,
             'items' => [
@@ -782,7 +783,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
         $quoteResponseB->assertStatus(200);
         $quotesB = $quoteResponseB->json('quotes');
-        $tokenB = $quoteResponseB->json('quote_token');
+        $tokenB = $quoteResponseB->json('shipping_quote_token');
         $this->assertNotEmpty($quotesB);
         $jntQuoteB = collect($quotesB)->firstWhere('provider_code', 'jnt');
         $this->assertNotNull($jntQuoteB);
@@ -869,7 +870,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $product = $this->createTestProduct($seller);
 
         // Get quote and place order
-        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quotes', [
+        $quoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $address->id,
             'items' => [
@@ -877,7 +878,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             ],
         ]);
         $quotes = $quoteResponse->json('quotes');
-        $token = $quoteResponse->json('quote_token');
+        $token = $quoteResponse->json('shipping_quote_token');
         $chosenQuote = $quotes[0];
 
         $screenshot = UploadedFile::fake()->image('gcash_receipt.jpg', 600, 1200);

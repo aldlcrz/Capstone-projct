@@ -43,7 +43,7 @@
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
-        <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
+        <input type="hidden" name="addressId" :value="address?.id || ''">
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
 
         <div class="space-y-6 pb-24 lg:pb-0 w-full">
@@ -156,7 +156,7 @@
                         </div>
                     </div>
 
-                    {{-- Multi-Provider Shipping Method Selection --}}
+                    {{-- Calculated Shipping Result --}}
                     <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                             <div class="flex items-center gap-2">
@@ -164,8 +164,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
                                 </svg>
                                 <div>
-                                    <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Shipping Method</h3>
-                                    <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Select your preferred courier service for this order.</p>
+                                    <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Shipping</h3>
+                                    <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Standard verified parcel logistics for your order destination.</p>
                                 </div>
                             </div>
                             <template x-if="loadingQuotes">
@@ -187,44 +187,42 @@
                             <span x-text="quotesError"></span>
                         </div>
 
-                        {{-- Provider Option Cards --}}
-                        <div class="space-y-3" x-show="shippingQuotes.length > 0">
-                            <template x-for="quote in shippingQuotes" :key="quote.provider_id">
-                                <label class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-150"
-                                       :class="selectedProviderId === quote.provider_id ? 'border-[#C0422A] bg-[#FDF9F4]/60 shadow-xs' : 'border-gray-100 bg-white hover:border-gray-200'">
-                                    <div class="flex items-center gap-3">
-                                        <input type="radio" 
-                                               name="selectedCourierOption" 
-                                               :value="quote.provider_id" 
-                                               x-model="selectedProviderId" 
-                                               class="w-4 h-4 accent-[#C0422A] cursor-pointer">
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="quote.provider_name"></span>
-                                                <span class="text-[9px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" 
-                                                      x-text="'Weight: ' + (Number(quote.chargeable_weight) || 0).toFixed(2) + ' kg'"></span>
-                                            </div>
-                                            <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
-                                                 x-text="'Estimated ' + quote.estimated_days_min + '-' + quote.estimated_days_max + ' business days'"></div>
+                        {{-- Calculated Shipping Display --}}
+                        <div class="space-y-3" x-show="shippingQuote && !quotesError">
+                            <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-gray-100 bg-[#FDF9F4]/60">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="shippingQuote?.provider_name || 'Standard Courier'"></span>
+                                            <span class="text-[9px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" 
+                                                  x-show="shippingQuote?.chargeable_weight"
+                                                  x-text="'Weight: ' + (Number(shippingQuote?.chargeable_weight) || 0).toFixed(2) + ' kg'"></span>
                                         </div>
+                                        <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
+                                             x-text="'Estimated Delivery: ' + (shippingQuote?.delivery_estimate_display || ((shippingQuote?.estimated_days_min || 2) + '–' + (shippingQuote?.estimated_days_max || 4) + ' business days'))"></div>
                                     </div>
-                                    <div class="text-right">
-                                        <div class="text-sm sm:text-base font-black text-[#C0422A]" 
-                                             x-text="'₱' + Number(quote.shipping_fee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
-                                    </div>
-                                </label>
-                            </template>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                         x-text="'₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Empty State (No providers available) --}}
-                        <div x-show="!loadingQuotes && shippingQuotes.length === 0 && !quotesError" x-cloak class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
-                            Please provide a valid delivery address above to calculate shipping options.
+                        {{-- Empty State (No address provided yet) --}}
+                        <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
+                            Please provide a valid delivery address above to calculate shipping.
                         </div>
 
                         <div class="bg-[#FDF9F4] rounded-xl border border-[#C0422A]/20 p-3 flex items-center justify-between text-[10px] lg:text-xs text-gray-600">
                             <span class="flex items-center gap-1.5 font-medium">
                                 <svg class="w-4 h-4 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                LumBarong verified parcel logistics with delivery guarantee & secure packaging.
+                                Shipping fee calculated based on: your delivery address, seller location, package weight, and package dimensions.
                             </span>
                         </div>
                     </div>
@@ -512,7 +510,7 @@
                         <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
                         <span class="text-sm font-bold text-gray-900">
                             <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                            <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Select courier</span>
+                            <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Calculated at checkout</span>
                             <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
                         </span>
                     </div>
@@ -597,7 +595,7 @@
                 <span>Estimated Shipping</span>
                 <span class="font-bold text-black">
                     <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                    <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs">Select courier</span>
+                    <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs">Calculated at checkout</span>
                     <span x-show="loadingQuotes" class="text-amber-600 text-xs">Calculating...</span>
                 </span>
             </div>
@@ -1144,9 +1142,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         scanId: 0,
         fileScanned: false,
 
-        // Multi-Provider Logistics Engine State
-        shippingQuotes: [],
-        selectedProviderId: '',
+        // Logistics State
+        shippingQuote: null,
         shippingQuoteToken: '',
         loadingQuotes: false,
         quotesError: '',
@@ -1157,13 +1154,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
 
             this.$watch('address', () => {
                 this.fetchShippingQuotes();
-            });
-
-            this.$watch('selectedProviderId', (val) => {
-                const quote = this.shippingQuotes.find(q => q.provider_id === val);
-                if (quote) {
-                    this.currentShippingFee = Number(quote.shipping_fee) || 0;
-                }
             });
 
             this.$watch('paymentMethod', () => {
@@ -1177,9 +1167,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         },
 
         async fetchShippingQuotes() {
-            if (!this.address || !this.address.province || !this.address.city) {
-                this.shippingQuotes = [];
-                this.selectedProviderId = '';
+            if (!this.address || !this.address.id) {
+                this.shippingQuote = null;
                 this.shippingQuoteToken = '';
                 this.currentShippingFee = 0;
                 return;
@@ -1192,11 +1181,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 const csrfToken = document.querySelector('input[name=_token]')?.value || 
                                   document.querySelector('meta[name="csrf-token"]')?.content || '';
                 const payload = {
-                    address: this.address,
+                    address_id: this.address.id,
                     mode: '{{ $mode }}'
                 };
 
-                const res = await fetch('/checkout/shipping-quotes', {
+                const res = await fetch('/checkout/shipping-quote', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1209,33 +1198,24 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    this.shippingQuotes = [];
-                    this.selectedProviderId = '';
+                    this.shippingQuote = null;
                     this.shippingQuoteToken = '';
                     this.currentShippingFee = 0;
                     this.quotesError = data.message || 'Logistics service unavailable for this destination.';
                     return;
                 }
 
-                this.shippingQuotes = data.quotes || [];
+                this.shippingQuote = data.quote || (data.quotes && data.quotes[0]) || null;
                 this.shippingQuoteToken = data.shipping_quote_token || '';
 
-                if (this.shippingQuotes.length > 0) {
-                    // Retain previously selected provider if present in new quotes, else default to first
-                    const stillValid = this.shippingQuotes.find(q => q.provider_id === this.selectedProviderId);
-                    if (stillValid) {
-                        this.currentShippingFee = Number(stillValid.shipping_fee) || 0;
-                    } else {
-                        this.selectedProviderId = this.shippingQuotes[0].provider_id;
-                        this.currentShippingFee = Number(this.shippingQuotes[0].shipping_fee) || 0;
-                    }
+                if (this.shippingQuote) {
+                    this.currentShippingFee = Number(this.shippingQuote.shipping_fee) || 0;
                 } else {
-                    this.selectedProviderId = '';
                     this.currentShippingFee = 0;
                     this.quotesError = 'No courier rates are currently available for this delivery area.';
                 }
             } catch (err) {
-                console.error('Failed to retrieve shipping quotes:', err);
+                console.error('Failed to retrieve shipping quote:', err);
                 this.quotesError = 'Network error fetching courier options. Please retry.';
             } finally {
                 this.loadingQuotes = false;
@@ -1809,8 +1789,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 return;
             }
 
-            if (!this.selectedProviderId || !this.shippingQuoteToken) {
-                this.addressStepError = 'Please select a valid courier service before proceeding.';
+            if (!this.shippingQuoteToken || !this.shippingQuote) {
+                this.addressStepError = 'A valid shipping calculation is required before proceeding. Please ensure your delivery address is complete.';
                 return;
             }
 
