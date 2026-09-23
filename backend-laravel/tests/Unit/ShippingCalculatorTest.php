@@ -186,11 +186,8 @@ class ShippingCalculatorTest extends TestCase
         $this->assertFalse($this->calculator->validateQuoteToken($token, $sellerId, 'different-addr', $cart));
     }
 
-    public function test_legacy_product_without_package_specs_is_safely_rejected()
+    public function test_legacy_product_without_package_specs_gracefully_applies_defaults()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('lacks physical package dimensions');
-
         $seller = User::create([
             'name' => 'Legacy Seller',
             'email' => 'artisan_' . Str::random(5) . '@example.com',
@@ -205,13 +202,16 @@ class ShippingCalculatorTest extends TestCase
             'name' => 'Old Product',
             'price' => 250,
             'stock' => 3,
-            'package_weight_per_unit' => 0.00, // Missing weight
+            'package_weight_per_unit' => 0.00, // Missing specs
             'package_length_per_unit' => 0.00,
         ]);
 
-        $this->calculator->calculateQuotes($seller, ['province' => 'Metro Manila'], [
+        $quotes = $this->calculator->calculateQuotes($seller, ['province' => 'Metro Manila'], [
             ['id' => $product->id, 'quantity' => 1],
         ]);
+
+        $this->assertNotEmpty($quotes);
+        $this->assertGreaterThan(0.00, (float) $quotes[0]['shipping_fee']);
     }
 
     public function test_deterministic_weight_bracket_boundary_and_excess_kg_calculations()

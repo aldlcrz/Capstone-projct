@@ -574,7 +574,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
     /* 7. LEGACY PRODUCT GATING TEST                                              */
     /* -------------------------------------------------------------------------- */
 
-    public function test_legacy_product_without_package_specs_is_blocked_from_checkout()
+    public function test_legacy_product_without_package_specs_gracefully_calculates_quote()
     {
         $seller = $this->createSeller();
         $customer = $this->createCustomer();
@@ -603,10 +603,10 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             ],
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonFragment([
-            'message' => "Product \"{$legacyProduct->name}\" lacks physical package dimensions. The seller must complete package specifications before this item can be shipped.",
-        ]);
+        $response->assertStatus(200);
+        $quotes = $response->json('quotes');
+        $this->assertNotEmpty($quotes);
+        $this->assertGreaterThan(0.00, (float) $quotes[0]['shipping_fee']);
     }
 
     /* -------------------------------------------------------------------------- */

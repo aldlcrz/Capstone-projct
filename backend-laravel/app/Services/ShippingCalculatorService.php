@@ -75,16 +75,22 @@ class ShippingCalculatorService
                 throw new \Exception("One of the products in your cart is no longer available.");
             }
 
-            // Safe legacy gating: Products must have valid physical package specs (> 0)
+            // Safe fallback: If a product was created without package specs,
+            // automatically apply standard heritage garment package dimensions (0.50kg, 35x25x5 cm, 2 handling days)
             $pWeight = (float) ($product->package_weight_per_unit ?? 0);
-            $pLen    = (float) ($product->package_length_per_unit ?? 0);
-            $pWid    = (float) ($product->package_width_per_unit ?? 0);
-            $pHgt    = (float) ($product->package_height_per_unit ?? 0);
-            $hDays   = (int)   ($product->handling_days ?? 2);
+            if ($pWeight <= 0) $pWeight = 0.50;
 
-            if ($pWeight <= 0 || $pLen <= 0 || $pWid <= 0 || $pHgt <= 0) {
-                throw new \Exception("Product \"{$product->name}\" lacks physical package dimensions. The seller must complete package specifications before this item can be shipped.");
-            }
+            $pLen    = (float) ($product->package_length_per_unit ?? 0);
+            if ($pLen <= 0) $pLen = 35.00;
+
+            $pWid    = (float) ($product->package_width_per_unit ?? 0);
+            if ($pWid <= 0) $pWid = 25.00;
+
+            $pHgt    = (float) ($product->package_height_per_unit ?? 0);
+            if ($pHgt <= 0) $pHgt = 5.00;
+
+            $hDays   = (int)   ($product->handling_days ?? 2);
+            if ($hDays <= 0) $hDays = 2;
 
             $totalActualWeight += ($pWeight * $qty);
             $totalPackedVolume += ($pLen * $pWid * $pHgt * $qty);
