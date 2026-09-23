@@ -497,8 +497,9 @@ function addressManager() {
             this.locationDropdownOpen = false;
             this.locationSearch = '';
 
-            if (!this.form.postalCode) {
-                this.form.postalCode = this.autoPostalCode(this.form.city, this.form.province);
+            const postal = this.autoPostalCode(this.form.city, this.form.province);
+            if (postal) {
+                this.form.postalCode = postal;
             }
         },
 
@@ -508,8 +509,10 @@ function addressManager() {
             const p = (provinceName || '').toLowerCase().trim();
 
             const postalMap = {
+                // Laguna
                 'lumban': '4014',
-                'santa cruz': p.includes('laguna') ? '4009' : '1003',
+                'santa cruz': p.includes('laguna') ? '4009' : (p.includes('davao') ? '8001' : (p.includes('zambales') ? '2213' : (p.includes('marinduque') ? '4901' : (p.includes('ilocos') ? '2710' : '1003')))),
+                'sta. cruz': p.includes('laguna') ? '4009' : '1003',
                 'calamba': '4027',
                 'los baños': '4030',
                 'los banos': '4030',
@@ -517,6 +520,7 @@ function addressManager() {
                 'binan': '4024',
                 'san pedro': '4023',
                 'santa rosa': '4026',
+                'sta. rosa': '4026',
                 'san pablo': '4000',
                 'pagsanjan': '4008',
                 'cavinti': '4013',
@@ -527,20 +531,119 @@ function addressManager() {
                 'siniloan': '4019',
                 'famy': '4020',
                 'mabitac': '4021',
-                'santa maria': '4022',
+                'santa maria': p.includes('laguna') ? '4022' : (p.includes('bulacan') ? '3022' : (p.includes('pangasinan') ? '2440' : (p.includes('ilocos') ? '2705' : '4022'))),
+                'sta. maria': p.includes('laguna') ? '4022' : '3022',
                 'cabuyao': '4025',
                 'bay': '4033',
-                'alaminos': '4001',
-                'victoria': '4011',
+                'alaminos': p.includes('laguna') ? '4001' : '2404',
+                'calauan': '4012',
+                'victoria': p.includes('laguna') ? '4011' : (p.includes('tarlac') ? '2313' : (p.includes('oriental mindoro') ? '5205' : '4011')),
                 'pila': '4010',
                 'magdalena': '4007',
                 'majayjay': '4005',
                 'liliw': '4004',
                 'nagcarlan': '4002',
-                'rizal': '4003',
+                'rizal': p.includes('laguna') ? '4003' : (p.includes('kalinga') ? '3808' : (p.includes('nueva ecija') ? '3127' : (p.includes('palawan') ? '5300' : '4003'))),
                 'luisiana': '4032',
-                
-                // Metro Manila & Key Cities
+
+                // Batangas
+                'alitagtag': '4205',
+                'balayan': '4213',
+                'balete': p.includes('batangas') ? '4219' : '5614',
+                'batangas city': '4200',
+                'city of batangas': '4200',
+                'bauan': '4201',
+                'calaca': '4212',
+                'calatagan': '4215',
+                'cuenca': '4222',
+                'ibaan': '4230',
+                'laurel': '4221',
+                'lemery': '4209',
+                'lian': '4216',
+                'lipa': '4217',
+                'lobo': '4229',
+                'mabini': p.includes('batangas') ? '4202' : (p.includes('davao') ? '8807' : (p.includes('pangasinan') ? '2409' : '4202')),
+                'malvar': '4233',
+                'mataasnakahoy': '4223',
+                'mataas na kahoy': '4223',
+                'nasugbu': '4231',
+                'padre garcia': '4224',
+                'rosario': p.includes('batangas') ? '4225' : (p.includes('cavite') ? '4106' : (p.includes('la union') ? '2506' : '4225')),
+                'san jose': p.includes('batangas') ? '4227' : (p.includes('nueva ecija') ? '3121' : (p.includes('occidental mindoro') ? '5100' : (p.includes('antique') ? '5700' : '4227'))),
+                'san juan': p.includes('batangas') ? '4226' : (p.includes('la union') ? '2514' : (p.includes('ilocos') ? '2727' : '1500')),
+                'san luis': p.includes('batangas') ? '4210' : (p.includes('pampanga') ? '2014' : (p.includes('aurora') ? '3201' : '4210')),
+                'san nicolas': p.includes('batangas') ? '4207' : (p.includes('pangasinan') ? '2447' : (p.includes('ilocos') ? '2901' : '4207')),
+                'san pascual': '4204',
+                'santa teresita': p.includes('batangas') ? '4206' : '3512',
+                'sta. teresita': '4206',
+                'santo tomas': p.includes('batangas') ? '4234' : (p.includes('pampanga') ? '2020' : (p.includes('pangasinan') ? '2426' : (p.includes('davao') ? '8112' : '4234'))),
+                'sto. tomas': '4234',
+                'taal': '4208',
+                'talisay': p.includes('batangas') ? '4220' : (p.includes('cebu') ? '6045' : (p.includes('negros') ? '6115' : '4220')),
+                'tanauan': p.includes('batangas') ? '4232' : '6502',
+                'taysan': '4228',
+                'tingloy': '4203',
+                'tuy': '4214',
+
+                // Cavite
+                'alfonso': '4120',
+                'amadeo': '4119',
+                'bacoor': '4102',
+                'carmona': '4116',
+                'cavite city': '4100',
+                'dasmariñas': '4114',
+                'dasmarinas': '4114',
+                'general emilio aguinaldo': '4124',
+                'bailen': '4124',
+                'general mariano alvarez': '4117',
+                'gma': '4117',
+                'general trias': '4107',
+                'gen. trias': '4107',
+                'imus': '4103',
+                'indang': '4122',
+                'kawit': '4104',
+                'magallanes': p.includes('cavite') ? '4113' : (p.includes('sorsogon') ? '4705' : '4113'),
+                'maragondon': '4112',
+                'mendez': '4121',
+                'naic': '4110',
+                'noveleta': '4105',
+                'silang': '4118',
+                'tagaytay': '4120',
+                'tanza': '4108',
+                'ternate': '4111',
+                'trece martires': '4109',
+
+                // Rizal
+                'angono': '1930',
+                'antipolo': '1870',
+                'baras': '1970',
+                'binangonan': '1940',
+                'cainta': '1900',
+                'cardona': '1950',
+                'jalajala': '1990',
+                'morong': p.includes('rizal') ? '1960' : '2108',
+                'pililla': '1910',
+                'rodriguez': '1860',
+                'montalban': '1860',
+                'san mateo': p.includes('rizal') ? '1850' : '3318',
+                'tanay': '1980',
+                'taytay': p.includes('rizal') ? '1920' : '5312',
+                'teresa': '1960',
+
+                // Quezon
+                'lucena': '4301',
+                'tayabas': '4327',
+                'candelaria': p.includes('quezon') ? '4323' : '2212',
+                'dolores': p.includes('quezon') ? '4326' : '3801',
+                'lucban': '4328',
+                'pagbilao': '4302',
+                'sariaya': '4322',
+                'tiaong': '4325',
+                'gumaca': '4307',
+                'infanta': p.includes('quezon') ? '4336' : '2412',
+                'real': '4335',
+
+                // Metro Manila & Key PH Cities
                 'city of manila': '1000',
                 'manila': '1000',
                 'quezon city': '1100',
@@ -560,22 +663,35 @@ function addressManager() {
                 'malabon': '1470',
                 'navotas': '1485',
                 'caloocan': '1400',
+                'pateros': '1620',
                 'cebu city': '6000',
+                'cebu': '6000',
+                'mandaue': '6014',
+                'lapu-lapu': '6015',
+                'lapu lapu': '6015',
                 'davao city': '8000',
+                'davao': '8000',
                 'baguio': '2600',
                 'iloilo city': '5000',
+                'iloilo': '5000',
                 'bacolod': '6100',
                 'cagayan de oro': '9000',
+                'cdo': '9000',
                 'zamboanga city': '7000',
+                'zamboanga': '7000',
                 'general santos': '9500',
+                'gensan': '9500',
                 'angeles': '2009',
+                'san fernando': p.includes('pampanga') ? '2000' : (p.includes('la union') ? '2500' : (p.includes('cebu') ? '6018' : '2000')),
+                'olongapo': '2200',
                 'subic': '2209',
-                'batangas city': '4200',
-                'lipa': '4217',
-                'lucena': '4301',
-                'naga': '4400',
+                'tarlac city': '2300',
+                'tarlac': '2300',
+                'cabanatuan': '3100',
+                'laoag': '2900',
+                'dagupan': '2400',
                 'legazpi': '4500',
-                'tacloban': '6500',
+                'naga': p.includes('camarines') ? '4400' : (p.includes('cebu') ? '6037' : '4400'),
                 'puerto princesa': '5300',
                 'tagbilaran': '6300',
                 'dumaguete': '6200',
@@ -585,11 +701,11 @@ function addressManager() {
             };
 
             for (const key in postalMap) {
-                if (c.includes(key)) {
+                if (c === key || c.includes(key) || key.includes(c)) {
                     return postalMap[key];
                 }
             }
-            return '4000'; // Default Laguna/PH region postal code
+            return '';
         },
 
         filteredGeoList(list) {
