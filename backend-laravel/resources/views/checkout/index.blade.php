@@ -220,10 +220,6 @@
                             {{-- Multiple Local Options (Store Pickup vs Local Direct Delivery) --}}
                             <template x-if="isLocalCluster && shippingQuotesList && shippingQuotesList.length > 1">
                                 <div class="space-y-1.5">
-                                    <div class="text-[10px] sm:text-xs font-extrabold text-[#996515] uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-                                        <span>Nearby Location — Local Fulfillment Options</span>
-                                    </div>
                                     <template x-for="q in shippingQuotesList" :key="q.provider_id">
                                         <div @click="selectQuote(q)"
                                              class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border cursor-pointer transition-all duration-150"
