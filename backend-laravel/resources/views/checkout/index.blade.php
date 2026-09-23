@@ -17,8 +17,8 @@
 )">
 
     {{-- Back Link & Page Title Header --}}
-    <div class="mb-6 lg:mb-8">
-        <button type="button" @click="if (step === 2) { step = 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href='/cart'; }" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C0422A] transition-colors mb-3">
+    <div class="mb-5 lg:mb-7">
+        <button type="button" @click="if (step === 2) { step = 1; window.scrollTo({ top: 0, behavior: 'smooth' }); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href='/cart'; }" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#1E1915] transition-colors mb-2.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
@@ -27,8 +27,8 @@
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <div class="flex items-center gap-2 mb-1">
-                    <div class="w-5 h-[1.5px] bg-[#C0422A]"></div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A]">Secure Checkout</span>
+                    <div class="w-5 h-[1.5px] bg-[#D4AF37]"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#8C6D1F]">Secure Checkout</span>
                 </div>
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-black">Order Checkout</h1>
             </div>
@@ -46,18 +46,18 @@
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
         <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-28 lg:pb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-24 lg:pb-10">
             <!-- Left Column: Checkout Steps & Forms -->
-            <div class="lg:col-span-7 xl:col-span-8 space-y-6">
+            <div class="lg:col-span-7 xl:col-span-8 space-y-5">
                 
                 <!-- STEP 1: SHIPPING INFORMATION -->
-                <div x-show="step === 1" x-transition class="space-y-6">
+                <div x-show="step === 1" x-transition class="space-y-5">
                     
                     {{-- Delivery Address Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 relative overflow-hidden">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs mb-5 relative overflow-hidden">
                         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3.5">
                             <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FDF9F4] border border-[#C0422A]/20 text-[#C0422A] flex items-center justify-center shrink-0 mt-0.5">
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FAF5E6] border border-[#D4AF37]/30 text-[#8C6D1F] flex items-center justify-center shrink-0 mt-0.5">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -69,7 +69,7 @@
                                         <span class="text-xs lg:text-sm text-gray-500 font-medium" x-text="address.phone"></span>
                                     </div>
                                     <div class="flex items-start gap-2 flex-wrap">
-                                        <span class="bg-[#C0422A]/10 text-[#C0422A] text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider border border-[#C0422A]/20 shrink-0 mt-0.5">HOME</span>
+                                        <span class="bg-[#FAF5E6] text-[#8C6D1F] text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider border border-[#D4AF37]/30 shrink-0 mt-0.5">HOME</span>
                                         <p class="text-xs lg:text-sm text-gray-700 font-medium leading-relaxed flex-1 min-w-0 wrap-break-word" x-text="address.houseNo ? address.houseNo + ' ' + (address.street ? address.street + ', ' : '') + (address.barangay ? address.barangay + ', ' : '') + address.city : 'Please select your delivery address'"></p>
                                     </div>
                                 </div>
@@ -79,7 +79,7 @@
                                     <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                     Edit
                                 </button>
-                                <button type="button" @click="showAddressModal = true" class="inline-flex items-center text-xs font-bold text-[#C0422A] hover:text-[#A33622] px-2.5 py-1 bg-[#FDF9F4] rounded-lg border border-[#C0422A]/20 transition-colors whitespace-nowrap">
+                                <button type="button" @click="showAddressModal = true" class="inline-flex items-center text-xs font-bold text-[#8C6D1F] hover:text-[#1E1915] px-2.5 py-1 bg-[#FAF5E6] hover:bg-[#FAF5E6]/80 rounded-lg border border-[#D4AF37]/30 transition-colors whitespace-nowrap">
                                     Change Address
                                 </button>
                             </div>
@@ -102,14 +102,14 @@
     $mayaQrUrl  = $paymentSource && !empty($paymentSource->mayaQrCode) ? $resolveQrUrl($paymentSource->mayaQrCode) : null;
 @endphp
                     {{-- Store Items Preview Card --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-xs mb-5 space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="bg-[#C0422A] text-white text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap">{{ $seller->shopName ?? ($seller->name ?? 'LumBarong Store') }}</span>
+                                <span class="bg-[#1E1915] text-[#D4AF37] text-[9px] lg:text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider whitespace-nowrap border border-[#D4AF37]/30">{{ $seller->shopName ?? ($seller->name ?? 'LumBarong Store') }}</span>
                                 <span class="text-xs sm:text-sm font-bold text-gray-900">{{ $seller ? ($seller->shopDescription ?? 'Official Heritage Artisan') : 'Official Heritage Store' }}</span>
                             </div>
-                            <span class="text-[10px] lg:text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60 w-fit">
-                                <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-[10px] lg:text-xs font-bold text-[#8C6D1F] uppercase tracking-wider flex items-center gap-1 bg-[#FAF5E6] px-2.5 py-1 rounded-md border border-[#D4AF37]/40 w-fit">
+                                <svg class="w-3.5 h-3.5 text-[#D4AF37] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 100% Authentic Handcrafted
                             </span>
                         </div>
@@ -124,8 +124,8 @@
                                     $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item['variation'] ?? null, $itemProduct)
                                         ?: (!empty($item['image']) ? $item['image'] : ($itemProduct ? $itemProduct->getImageUrl() : asset('uploads/products/default.jpg')));
                                 @endphp
-                                <div class="flex gap-3.5 sm:gap-4 py-3.5 first:pt-0 last:pb-0 items-start">
-                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
+                                <div class="flex gap-3.5 sm:gap-4 py-3 first:pt-0 last:pb-0 items-start">
+                                    <img src="{{ $imgSrc }}" onerror="this.src='/uploads/products/default.jpg'" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 object-cover rounded-xl bg-gray-50 border border-gray-100 shrink-0">
                                     @php
                                         $displayTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : $item['name'];
                                     @endphp
@@ -138,12 +138,12 @@
                                                  </span> 
                                              @endif
                                         </div>
-                                        <div class="inline-flex items-center gap-1 mt-1.5 bg-amber-50 text-amber-900 text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200/50 max-w-full">
+                                        <div class="inline-flex items-center gap-1 mt-1.5 bg-[#FAF5E6] text-[#8C6D1F] text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded border border-[#D4AF37]/30 max-w-full">
                                             <span class="shrink-0">🛡️</span> <span class="truncate">30 Days Heritage Return Guarantee</span>
                                         </div>
-                                        <div class="flex items-center justify-between mt-2.5 flex-wrap gap-1">
+                                        <div class="flex items-center justify-between mt-2 flex-wrap gap-1">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-sm lg:text-base font-black text-[#C0422A]">₱{{ number_format($item['price'], 2) }}</span>
+                                                <span class="text-sm lg:text-base font-black text-[#1E1915]">₱{{ number_format($item['price'], 2) }}</span>
                                                 @if(!empty($item['is_on_sale']) && ($item['discount_percentage'] ?? 0) > 0)
                                                     <span class="text-[10px] lg:text-xs text-gray-400 line-through">₱{{ number_format($item['original_price'] ?? $item['price'], 2) }}</span>
                                                 @endif
@@ -157,20 +157,22 @@
                     </div>
 
                     {{-- Calculated Shipping Result --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm mb-6 space-y-4">
-                        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div class="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 shadow-xs mb-4 space-y-2.5">
+                        <div class="flex items-center justify-between pb-2 border-b border-gray-100">
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-[#C0422A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
-                                </svg>
+                                <div class="w-7 h-7 rounded-lg bg-[#FAF5E6] text-[#8C6D1F] flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+                                    </svg>
+                                </div>
                                 <div>
                                     <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900">Shipping</h3>
                                     <p class="text-[10px] lg:text-xs text-gray-500 font-medium">Standard verified parcel logistics for your order destination.</p>
                                 </div>
                             </div>
                             <template x-if="loadingQuotes">
-                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#C0422A] bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
-                                    <svg class="w-3 h-3 animate-spin text-[#C0422A]" fill="none" viewBox="0 0 24 24">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#8C6D1F] bg-[#FAF5E6] px-2 py-0.5 rounded-md border border-[#D4AF37]/30">
+                                    <svg class="w-3 h-3 animate-spin text-[#8C6D1F]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -180,7 +182,7 @@
                         </div>
 
                         {{-- Service Unserviceable / Error Alert --}}
-                        <div x-show="quotesError" x-cloak class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-start gap-2">
+                        <div x-show="quotesError" x-cloak class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-start gap-2">
                             <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
@@ -188,31 +190,31 @@
                         </div>
 
                         {{-- Calculated Shipping Display --}}
-                        <div class="space-y-3" x-show="shippingQuote && !quotesError">
+                        <div class="space-y-2" x-show="shippingQuote && !quotesError">
                             {{-- Multiple Local Options (Store Pickup vs Local Direct Delivery) --}}
                             <template x-if="isLocalCluster && shippingQuotesList && shippingQuotesList.length > 1">
-                                <div class="space-y-2.5">
-                                    <div class="text-[10px] sm:text-xs font-bold text-[#C0422A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                                <div class="space-y-1.5">
+                                    <div class="text-[10px] sm:text-xs font-bold text-[#8C6D1F] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
                                         <span>Nearby Location — Local Fulfillment Options</span>
                                     </div>
                                     <template x-for="q in shippingQuotesList" :key="q.provider_id">
                                         <div @click="selectQuote(q)"
-                                             class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-150"
-                                             :class="shippingQuote?.provider_id === q.provider_id ? 'border-[#C0422A] bg-[#FDF9F4]' : 'border-gray-100 bg-white hover:border-gray-200'">
-                                            <div class="flex items-center gap-3">
-                                                <input type="radio" :name="'local_shipping_option'" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#C0422A]">
+                                             class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150"
+                                             :class="shippingQuote?.provider_id === q.provider_id ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
+                                            <div class="flex items-center gap-2.5">
+                                                <input type="radio" :name="'local_shipping_option'" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#1E1915]">
                                                 <div>
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="q.provider_name"></span>
                                                         <template x-if="q.provider_code === 'store_pickup'">
-                                                            <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
+                                                            <span class="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
                                                         </template>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="text-right">
-                                                <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                                <div class="text-xs sm:text-sm font-black text-[#1E1915]" 
                                                      x-text="Number(q.shipping_fee) === 0 ? 'FREE' : ('₱' + Number(q.shipping_fee || 0).toFixed(2))"></div>
                                             </div>
                                         </div>
@@ -222,10 +224,10 @@
 
                             {{-- Single Standard Delivery Option (Far away / NCR) --}}
                             <template x-if="!isLocalCluster || !shippingQuotesList || shippingQuotesList.length <= 1">
-                                <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-gray-100 bg-[#FDF9F4]/60">
+                                <div class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border border-gray-100 bg-[#FAF5E6]/30">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-[#C0422A]/10 text-[#C0422A] flex items-center justify-center shrink-0">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="w-8 h-8 rounded-xl bg-[#FAF5E6] border border-[#D4AF37]/30 text-[#8C6D1F] flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
                                             </svg>
                                         </div>
@@ -241,7 +243,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <div class="text-sm sm:text-base font-black text-[#C0422A]" 
+                                        <div class="text-xs sm:text-sm font-black text-[#1E1915]" 
                                              x-text="'₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
                                     </div>
                                 </div>
@@ -249,7 +251,7 @@
                         </div>
 
                         {{-- Empty State (No address provided yet) --}}
-                        <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
+                        <div x-show="!loadingQuotes && !shippingQuote && !quotesError" x-cloak class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-center text-xs text-gray-500">
                             Please provide a valid delivery address above to calculate shipping.
                         </div>
                     </div>
@@ -257,8 +259,8 @@
                 </div>
 
                 <!-- STEP 2: PAYMENT METHOD & PROOF UPLOAD -->
-                <div x-show="step === 2" x-transition class="space-y-6">
-                    <div class="mb-6">
+                <div x-show="step === 2" x-transition class="space-y-5">
+                    <div class="mb-5">
                         <h2 class="font-serif text-xl lg:text-2xl font-bold text-black mb-1">Select Payment Channel</h2>
                         <p class="text-xs lg:text-sm text-gray-500 font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
                     </div>
@@ -282,24 +284,24 @@
                         $mayaQrUrl  = $rawMayaQr ? $resolveQrUrl($rawMayaQr) : null;
                     @endphp
 
-                    <div class="space-y-4">
+                    <div class="space-y-3.5">
                         {{-- Cash on Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
                         <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
                              class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200"
-                             :class="paymentMethod === 'COD' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
+                             :class="paymentMethod === 'COD' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">💵</div>
+                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery / Pay on Claim</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Pay in cash upon in-store pickup or local delivery arrival</div>
                                     </div>
                                 </div>
-                                <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
+                                <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
                             
                             <div x-show="paymentMethod === 'COD'" class="mt-4 pt-4 border-t border-gray-100" x-transition>
-                                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200/60 text-xs text-amber-900 font-medium flex items-start gap-2">
+                                <div class="bg-[#FAF5E6] p-3.5 rounded-xl border border-[#D4AF37]/40 text-xs text-[#8C6D1F] font-medium flex items-start gap-2">
                                     <span class="text-base shrink-0">ℹ️</span>
                                     <span>You can pay with exact cash directly to the artisan upon claiming at the store or upon doorstep delivery. No online receipt screenshot required.</span>
                                 </div>
@@ -308,20 +310,20 @@
 
                         @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
                         <!-- GCash Option -->
-                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
+                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'GCash' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">GC</div>
+                                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">GC</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Scan QR or Transfer to Mobile Number</div>
                                     </div>
                                 </div>
-                                <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
+                                <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
                             
                             <div x-show="paymentMethod === 'GCash'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
                                      @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
                                     @if($gcashQrUrl)
                                         <img src="{{ $gcashQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
@@ -330,11 +332,11 @@
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#C0422A] tracking-wider mt-1">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#8C6D1F] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
                                 <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FDF9F4] p-3.5 sm:p-4 rounded-xl border border-[#C0422A]/20">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-[#C0422A] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
+                                    <div class="bg-[#FAF5E6] p-3.5 sm:p-4 rounded-xl border border-[#D4AF37]/30">
+                                        <div class="text-[9px] lg:text-[10px] font-black text-[#8C6D1F] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
                                         <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
                                         <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
@@ -345,20 +347,20 @@
 
                         @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
                         <!-- Maya Option -->
-                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-[#C0422A] bg-[#FDF9F4]/40 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'">
+                        <div class="rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-[#1E1915] bg-[#FAF5E6]/40 shadow-2xs' : 'border-gray-100 bg-white hover:border-gray-200'">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">MY</div>
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">MY</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Pay via Maya App or Scan QR</div>
                                     </div>
                                 </div>
-                                <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#C0422A] cursor-pointer">
+                                <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
 
                             <div x-show="paymentMethod === 'Maya'" class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#C0422A]/40 transition-all group/qr @endif"
+                                <div class="w-full sm:w-1/3 bg-white border border-gray-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
                                      @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
                                     @if($mayaQrUrl)
                                         <img src="{{ $mayaQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
@@ -367,11 +369,11 @@
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                         </div>
                                     @endif
-                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#C0422A] tracking-wider mt-1">Tap to Zoom QR</span>
+                                    <span class="text-[8px] lg:text-[9px] font-black uppercase text-[#8C6D1F] tracking-wider mt-1">Tap to Zoom QR</span>
                                 </div>
                                 <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FDF9F4] p-3.5 sm:p-4 rounded-xl border border-[#C0422A]/20">
-                                        <div class="text-[9px] lg:text-[10px] font-black text-[#C0422A] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
+                                    <div class="bg-[#FAF5E6] p-3.5 sm:p-4 rounded-xl border border-[#D4AF37]/30">
+                                        <div class="text-[9px] lg:text-[10px] font-black text-[#8C6D1F] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
                                         <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
                                         <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
                                     </div>
@@ -382,9 +384,9 @@
                     </div>
 
                     <!-- Payment Proof Upload Inputs (Only for GCash / Maya) -->
-                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-6 shadow-sm space-y-4">
+                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 mt-5 shadow-xs space-y-4">
                         <div class="flex items-center gap-2 border-b border-gray-100 pb-3">
-                            <div class="w-2 h-2 rounded-full bg-[#C0422A]"></div>
+                            <div class="w-2 h-2 rounded-full bg-[#D4AF37]"></div>
                             <h3 class="text-xs lg:text-sm font-bold text-gray-900 uppercase tracking-wider">Upload Proof of Payment</h3>
                         </div>
                         
@@ -392,7 +394,7 @@
                             <div class="space-y-1.5">
                                 <div class="flex items-center justify-between flex-wrap gap-1">
                                     <div class="flex items-center gap-2">
-                                        <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#C0422A]">*</span></label>
+                                        <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Reference Number <span class="text-[#8C6D1F]">*</span></label>
                                         <template x-if="ocrExtracted">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
                                                 <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -401,7 +403,8 @@
                                         </template>
                                     </div>
                                     <span class="text-[9px] font-bold text-gray-400" x-text="paymentMethod === 'GCash' ? 'GCash requirement: 13 digits' : 'Maya requirement: 12 digits'"></span>
-                                               <input type="text"
+                                </div>
+                                <input type="text"
                                        id="paymentReferenceInput"
                                        name="paymentReference"
                                        x-model="paymentRef"
@@ -412,7 +415,7 @@
                                        :required="paymentMethod !== 'COD'"
                                        :disabled="paymentMethod === 'COD'"
                                        :placeholder="paymentMethod === 'GCash' ? 'e.g. 1002345678901 (13-digit GCash Reference)' : 'e.g. 123456789012 (12-digit Maya Reference)'"
-                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'))"
+                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#1E1915] focus:ring-[#D4AF37]/20 bg-gray-50/50'))"
                                        class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
                                 <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-amber-700 font-bold px-1 mt-0.5 flex items-center gap-1">
@@ -426,7 +429,7 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#C0422A]">*</span></label>
+                                <label class="text-[9px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#8C6D1F]">*</span></label>
                                 
                                 <input type="file" 
                                        id="paymentScreenshotInput" 
@@ -439,13 +442,13 @@
                                 <!-- Upload Card Dropzone -->
                                 <div x-show="!fileName" 
                                      @click="document.getElementById('paymentScreenshotInput').click()" 
-                                     class="cursor-pointer py-6 px-4 bg-gray-50/70 border-2 border-dashed border-gray-200 rounded-2xl text-center hover:border-[#C0422A] hover:bg-[#FDF9F4]/40 transition-all flex flex-col items-center justify-center gap-2 group">
-                                    <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 text-gray-400 group-hover:text-[#C0422A] group-hover:border-[#C0422A]/30 flex items-center justify-center shadow-xs transition-all">
+                                     class="cursor-pointer py-6 px-4 bg-gray-50/70 border-2 border-dashed border-gray-200 rounded-2xl text-center hover:border-[#D4AF37] hover:bg-[#FAF5E6]/30 transition-all flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 text-gray-400 group-hover:text-[#1E1915] group-hover:border-[#D4AF37]/40 flex items-center justify-center shadow-xs transition-all">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     </div>
                                     <div>
-                                        <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#C0422A]">
-                                            <span class="px-3 py-1.5 bg-[#C0422A] text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
+                                        <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#1E1915]">
+                                            <span class="px-3 py-1.5 bg-[#1E1915] text-[#D4AF37] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
                                             <span class="hidden sm:inline text-gray-500">or tap to select</span>
                                         </div>
                                         <p class="text-[10px] text-gray-400 mt-2">PNG, JPG, or JPEG (Clear receipt showing ref # & amount)</p>
@@ -454,7 +457,7 @@
 
                                 <!-- Active Attached File Display -->
                                 <div x-show="fileName" x-cloak class="space-y-2">
-                                    <div class="p-3.5 bg-[#FDF9F4] border-2 border-[#C0422A]/30 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                                    <div class="p-3.5 bg-[#FAF5E6] border-2 border-[#D4AF37]/40 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
                                         <div class="flex items-center gap-3 min-w-0">
                                             <template x-if="filePreview">
                                                 <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
@@ -479,7 +482,7 @@
 
                                     <!-- Verification Status Card -->
                                     <div x-show="aiChecking" x-cloak class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 font-bold animate-pulse">
-                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#C0422A] animate-ping"></span>
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1E1915] animate-ping"></span>
                                         <span>Scanning receipt image & cross-referencing with payment details...</span>
                                     </div>
 
@@ -520,7 +523,7 @@
                                                             <button type="button" 
                                                                     @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
                                                                     x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
-                                                                    class="text-[10px] font-bold text-[#C0422A] hover:underline px-2.5 py-1 bg-[#C0422A]/10 hover:bg-[#C0422A]/20 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1">
+                                                                    class="text-[10px] font-bold text-[#8C6D1F] hover:underline px-2.5 py-1 bg-[#FAF5E6] hover:bg-[#FAF5E6]/80 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1 border border-[#D4AF37]/30">
                                                                 <span>Use Detected Ref</span>
                                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                             </button>
@@ -541,13 +544,13 @@
             </div>
 
             <!-- Right Column: Order Summary (5 cols on lg, 4 cols on xl) - Sticky on Desktop! -->
-            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-6 w-full">
+            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-5 w-full">
                 <!-- Order Summary Card -->
-                <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
+                <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-7 border border-gray-100 shadow-xs space-y-5 sm:space-y-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
+                            <div class="w-4 h-[1.5px] bg-[#D4AF37]"></div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#8C6D1F]">Order Overview</span>
                         </div>
                         <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
                         <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
@@ -570,7 +573,7 @@
                         </div>
                         <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
                             <span class="text-base font-bold text-gray-900">Total Payment</span>
-                            <span class="text-2xl lg:text-3xl font-black text-[#C0422A]" 
+                            <span class="text-2xl lg:text-3xl font-black text-[#1E1915]" 
                                   x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                                 ₱{{ number_format($subtotal) }}
                             </span>
@@ -583,9 +586,9 @@
                             <div x-show="addressStepError" x-cloak
                                  class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                                  x-text="addressStepError"></div>
-                            <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
+                            <button type="button" @click="validateStep1()" class="w-full bg-[#1E1915] text-white hover:bg-black py-4 rounded-xl text-sm font-bold shadow-md hover:shadow-black/20 border border-[#D4AF37]/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
                                 <span>Proceed to Payment</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </button>
                         </div>
                     </template>
@@ -597,21 +600,21 @@
                             <button type="button" 
                                     @click="requestPlaceOrder()" 
                                     :disabled="aiChecking || isPlacingOrder"
-                                    :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
-                                    class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                    :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-[0.99] cursor-pointer shadow-md'"
+                                    class="flex-1 bg-[#1E1915] text-white border border-[#D4AF37]/30 py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
                                 <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
                                     <span>Place Order</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </span>
                                 <span x-show="aiChecking && !isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     <span>Scanning Receipt...</span>
                                 </span>
                                 <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -623,7 +626,7 @@
 
                     <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
                         <div class="font-bold text-gray-700 flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             LumBarong Buyer Protection
                         </div>
                         <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
@@ -667,7 +670,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div class="text-lg sm:text-xl font-black text-[#C0422A] leading-tight"
+                    <div class="text-lg sm:text-xl font-black text-[#1E1915] leading-tight"
                          x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                         ₱{{ number_format($subtotal) }}
                     </div>
@@ -676,7 +679,7 @@
                 {{-- Step 1 Button --}}
                 <template x-if="step === 1">
                     <div class="flex flex-col items-end gap-1">
-                        <button type="button" @click="validateStep1()" class="px-6 sm:px-8 py-3 bg-[#C0422A] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#A33622] transition-all cursor-pointer">
+                        <button type="button" @click="validateStep1()" class="px-6 sm:px-8 py-3 bg-[#1E1915] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl shadow-md border border-[#D4AF37]/30 hover:bg-black transition-all cursor-pointer">
                             Proceed to Payment
                         </button>
                         <div x-show="addressStepError" x-cloak
@@ -694,18 +697,18 @@
                         <button type="button" 
                                 @click="requestPlaceOrder()" 
                                 :disabled="aiChecking || isPlacingOrder"
-                                :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-95 cursor-pointer shadow-lg'"
-                                class="px-6 sm:px-8 py-3 bg-[#C0422A] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5">
+                                :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-95 cursor-pointer shadow-md'"
+                                class="px-6 sm:px-8 py-3 bg-[#1E1915] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border border-[#D4AF37]/30 transition-all flex items-center gap-1.5">
                             <span x-show="!aiChecking && !isPlacingOrder">Place Order</span>
                             <span x-show="aiChecking && !isPlacingOrder" x-cloak class="flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                <svg class="w-3.5 h-3.5 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span>Scanning...</span>
                             </span>
                             <span x-show="isPlacingOrder" x-cloak class="flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                <svg class="w-3.5 h-3.5 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -718,13 +721,14 @@
         </div>
     </div>
 
+
     <!-- Step 1: Shop Policy Notice Modal (Shown when clicking Proceed to Payment) -->
     <div x-show="showPolicyModal" class="fixed inset-0 z-110 flex items-center justify-center p-4" style="display: none;" x-cloak>
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showPolicyModal = false"></div>
         <div @click.away="showPolicyModal = false" class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar" x-transition>
             <div class="text-center">
                 <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-3 border border-amber-200/50">
-                    <svg class="w-7 h-7 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-7 h-7 text-[#8C6D1F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
                 </div>
@@ -736,7 +740,7 @@
 
             {{-- Policy Notice Box --}}
             <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 text-left space-y-1.5">
-                <div class="flex items-center gap-1.5 text-xs font-bold text-[#C0422A] uppercase tracking-wider">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-[#8C6D1F] uppercase tracking-wider">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>Important Policy Notice</span>
                 </div>
@@ -757,10 +761,10 @@
                     <div class="p-3 bg-stone-50/80 rounded-2xl border border-stone-200 text-left text-xs space-y-2" x-data="{ expanded: false }">
                         <div class="flex items-center justify-between cursor-pointer select-none" @click="expanded = !expanded">
                             <span class="font-bold text-gray-900 flex items-center gap-1.5 truncate">
-                                <span class="px-1.5 py-0.5 bg-[#C0422A] text-white text-[8px] font-black rounded uppercase shrink-0">Artisan</span>
+                                <span class="px-1.5 py-0.5 bg-[#1E1915] text-[#D4AF37] border border-[#D4AF37]/30 text-[8px] font-black rounded uppercase shrink-0">Artisan</span>
                                 <span class="truncate">{{ $s->shopName ?: $s->name }}</span>
                             </span>
-                            <button type="button" class="text-[10px] font-bold text-[#C0422A] flex items-center gap-1 shrink-0 ml-2 hover:underline cursor-pointer">
+                            <button type="button" class="text-[10px] font-bold text-[#8C6D1F] flex items-center gap-1 shrink-0 ml-2 hover:underline cursor-pointer">
                                 <span x-text="expanded ? 'Hide Policies' : 'View Policies'"></span>
                                 <svg class="w-3 h-3 transition-transform" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
@@ -783,7 +787,7 @@
 
             {{-- Consent Checkbox --}}
             <label class="flex items-start gap-3 cursor-pointer text-left select-none bg-stone-50/80 hover:bg-stone-50 p-3.5 rounded-2xl border border-stone-200 transition-all">
-                <input type="checkbox" x-model="policyAccepted" class="mt-0.5 w-4 h-4 rounded text-[#C0422A] accent-[#C0422A] focus:ring-[#C0422A] cursor-pointer shrink-0">
+                <input type="checkbox" x-model="policyAccepted" class="mt-0.5 w-4 h-4 rounded text-[#D4AF37] accent-[#D4AF37] focus:ring-[#D4AF37] cursor-pointer shrink-0">
                 <span class="text-xs text-gray-700 leading-relaxed font-medium">
                     I understand that once my payment is confirmed, my order may not be cancellable or refundable depending on the shop’s policy. I have reviewed the shop’s cancellation and refund policy and wish to proceed with this purchase.
                 </span>
@@ -797,7 +801,7 @@
                 </button>
                 <button type="button" @click="proceedToPaymentStep()"
                     :disabled="!policyAccepted"
-                    :class="!policyAccepted ? 'opacity-40 cursor-not-allowed bg-gray-400' : 'bg-[#C0422A] hover:bg-[#A33622] cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95'"
+                    :class="!policyAccepted ? 'opacity-40 cursor-not-allowed bg-gray-400' : 'bg-[#1E1915] text-white border border-[#D4AF37]/30 hover:bg-black cursor-pointer shadow-md active:scale-95'"
                     class="flex-1 py-3.5 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest transition-all">
                     Proceed to Payment
                 </button>
@@ -833,7 +837,7 @@
                 </div>
                 <div class="flex justify-between items-center text-gray-600 pt-2 border-t border-gray-200">
                     <span class="font-bold text-gray-900">Total Payment:</span>
-                    <span class="font-black text-[#C0422A] text-base"
+                    <span class="font-black text-[#1E1915] text-base"
                           x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                         ₱{{ number_format($subtotal) }}
                     </span>
@@ -848,11 +852,11 @@
                 </button>
                 <button type="button" @click="confirmPlaceOrder()"
                     :disabled="isPlacingOrder"
-                    :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] cursor-pointer shadow-md shadow-[#C0422A]/20 active:scale-95'"
-                    class="flex-1 py-3.5 rounded-xl bg-[#C0422A] text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                    :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black cursor-pointer shadow-md active:scale-95'"
+                    class="flex-1 py-3.5 rounded-xl bg-[#1E1915] text-white border border-[#D4AF37]/30 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <span x-show="!isPlacingOrder">Yes, Place Order</span>
                     <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -866,7 +870,7 @@
     <!-- Fullscreen Loading Overlay during Order Placement -->
     <div x-show="isPlacingOrder" x-cloak class="fixed inset-0 z-120 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
-            <div class="w-16 h-16 rounded-2xl bg-[#FDF9F4] border border-[#C0422A]/20 flex items-center justify-center text-[#C0422A]">
+            <div class="w-16 h-16 rounded-2xl bg-[#FAF5E6] border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
                 <svg class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -885,7 +889,7 @@
         <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden" x-transition>
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                    <div class="w-4 h-[1.5px] bg-[#D4AF37]"></div>
                     <h3 class="font-serif text-xl font-bold text-gray-900">Select Delivery Address</h3>
                 </div>
                 <button @click="showAddressModal = false" class="text-gray-400 hover:text-black">
@@ -894,10 +898,10 @@
             </div>
             <div class="p-6 space-y-3.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 <template x-for="addr in addresses" :key="addr.id">
-                    <div class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:border-[#C0422A] relative group" :class="address.id === addr.id ? 'border-[#C0422A] bg-[#FDF9F4]/50 shadow-xs' : 'border-gray-100'" @click="selectAddress(addr)">
+                    <div class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:border-[#D4AF37] relative group" :class="address.id === addr.id ? 'border-[#D4AF37] bg-[#FAF5E6]/40 shadow-xs' : 'border-gray-100'" @click="selectAddress(addr)">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex gap-3.5 flex-1">
-                                <div class="w-9 h-9 rounded-xl bg-[#FDF9F4] text-[#C0422A] border border-[#C0422A]/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <div class="w-9 h-9 rounded-xl bg-[#FAF5E6] text-[#8C6D1F] border border-[#D4AF37]/30 flex items-center justify-center shrink-0 mt-0.5">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 </div>
                                 <div>
@@ -906,14 +910,14 @@
                                     <p class="text-xs text-gray-600 mt-1.5 leading-relaxed" x-text="addr.houseNo + ' ' + (addr.street ? addr.street + ', ' : '') + (addr.barangay ? addr.barangay + ', ' : '') + addr.city"></p>
                                 </div>
                             </div>
-                            <button type="button" @click.stop="openEditAddress(addr)" class="text-xs font-bold text-[#C0422A] hover:underline px-2 py-1 rounded hover:bg-[#C0422A]/10 transition-colors">
+                            <button type="button" @click.stop="openEditAddress(addr)" class="text-xs font-bold text-[#8C6D1F] hover:underline px-2 py-1 rounded hover:bg-[#FAF5E6] transition-colors">
                                 Edit
                             </button>
                         </div>
                     </div>
                 </template>
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="button" @click="openEditAddress(null)" class="flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-dashed border-[#C0422A]/40 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#C0422A] hover:bg-[#FDF9F4] transition-all">
+                    <button type="button" @click="openEditAddress(null)" class="flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-dashed border-[#D4AF37]/50 rounded-2xl text-xs font-bold uppercase tracking-wider text-[#8C6D1F] hover:bg-[#FAF5E6]/50 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         Add New Address
                     </button>
@@ -931,7 +935,7 @@
         <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto" x-transition>
             <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                 <div class="flex items-center gap-2">
-                    <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                    <div class="w-4 h-[1.5px] bg-[#D4AF37]"></div>
                     <h3 class="font-serif text-xl font-bold text-gray-900" x-text="editForm.id ? 'Edit Delivery Address' : 'Add New Address'"></h3>
                 </div>
                 <button type="button" @click="showEditAddressModal = false" class="text-gray-400 hover:text-black">
@@ -943,25 +947,25 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div class="col-span-1 sm:col-span-2 space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#C0422A]">*</span></label>
-                    <input type="text" x-model="editForm.recipientName" @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, '')" placeholder="e.g. John Doe (letters only)" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#8C6D1F]">*</span></label>
+                    <input type="text" x-model="editForm.recipientName" @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, '')" placeholder="e.g. John Doe (letters only)" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Phone Number <span class="text-[#C0422A]">*</span></label>
-                    <input type="text" x-model="editForm.phone" @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11)" placeholder="e.g. 09123456789 (11 digits)" inputmode="numeric" maxlength="11" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Phone Number <span class="text-[#8C6D1F]">*</span></label>
+                    <input type="text" x-model="editForm.phone" @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11)" placeholder="e.g. 09123456789 (11 digits)" inputmode="numeric" maxlength="11" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">House / Building / Unit No. <span class="text-[#C0422A]">*</span></label>
-                    <input type="text" x-model="editForm.houseNo" placeholder="e.g. Block 1 Lot 2 Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">House / Building / Unit No. <span class="text-[#8C6D1F]">*</span></label>
+                    <input type="text" x-model="editForm.houseNo" placeholder="e.g. Block 1 Lot 2 Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                 </div>
 
                 <!-- Region, Province, City, Barangay Dropdown Selector -->
                 <div class="col-span-1 sm:col-span-2 relative space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Region, Province, City, Barangay <span class="text-[#C0422A]">*</span></label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Region, Province, City, Barangay <span class="text-[#8C6D1F]">*</span></label>
                     <div @click="toggleLocationDropdown()"
-                         class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
+                         class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
                         <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-bold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                         <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -978,14 +982,14 @@
                          <div class="flex border-b border-gray-150 bg-gray-50 text-[11px] font-bold text-gray-500">
                              <button @click="activeTab = 'region'"
                                      type="button"
-                                     :class="activeTab === 'region' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     :class="activeTab === 'region' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors">
                                  Region
                              </button>
                              <button @click="if(selectedRegion && hasProvinces) activeTab = 'province'"
                                      type="button"
                                      :disabled="!selectedRegion || !hasProvinces"
-                                     :class="activeTab === 'province' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     :class="activeTab === 'province' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  Province
                                  <span x-show="!selectedRegion" class="text-[10px] text-red-500">🚫</span>
@@ -993,7 +997,7 @@
                              <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'"
                                      type="button"
                                      :disabled="!selectedProvince && (hasProvinces || !selectedRegion)"
-                                     :class="activeTab === 'city' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     :class="activeTab === 'city' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  City
                                  <span x-show="!selectedProvince && hasProvinces" class="text-[10px] text-red-500">🚫</span>
@@ -1001,7 +1005,7 @@
                              <button @click="if(selectedCity) activeTab = 'barangay'"
                                      type="button"
                                      :disabled="!selectedCity"
-                                     :class="activeTab === 'barangay' ? 'text-[#C0422A] border-b-2 border-[#C0422A] bg-white' : ''"
+                                     :class="activeTab === 'barangay' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  Barangay
                                  <span x-show="!selectedCity" class="text-[10px] text-red-500">🚫</span>
@@ -1011,14 +1015,14 @@
                          <!-- Inline Search Field -->
                          <div class="p-2 border-b border-gray-100 bg-gray-50/50">
                              <input type="text" x-model="locationSearch" :placeholder="'Search ' + activeTab + '...'"
-                                    class="w-full h-8 px-3 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#C0422A] transition-colors">
+                                    class="w-full h-8 px-3 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#D4AF37] transition-colors">
                          </div>
 
                          <!-- Scrollable List -->
                          <div class="flex-1 overflow-y-auto min-h-45 max-h-55 divide-y divide-gray-50 text-xs">
                              <!-- Loading Geo Data Spinner -->
                              <div x-show="loadingGeoData" class="flex items-center justify-center py-10 text-xs text-gray-400 gap-2">
-                                 <svg class="animate-spin h-4 w-4 text-[#C0422A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                 <svg class="animate-spin h-4 w-4 text-[#D4AF37]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                  </svg>
@@ -1030,10 +1034,10 @@
                                  <div class="py-1">
                                      <template x-for="reg in filteredGeoList(regionsList)" :key="reg.code">
                                          <button type="button" @click="selectRegion(reg)"
-                                              :class="selectedRegion?.code === reg.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              :class="selectedRegion?.code === reg.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="reg.name + ' (' + reg.regionName + ')'"></span>
-                                              <span x-show="selectedRegion?.code === reg.code" class="text-xs">✓</span>
+                                              <span x-show="selectedRegion?.code === reg.code" class="text-xs text-[#8C6D1F]">✓</span>
                                          </button>
                                      </template>
                                  </div>
@@ -1044,10 +1048,10 @@
                                  <div class="py-1">
                                      <template x-for="prov in filteredGeoList(provincesList)" :key="prov.code">
                                          <button type="button" @click="selectProvince(prov)"
-                                              :class="selectedProvince?.code === prov.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              :class="selectedProvince?.code === prov.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="prov.name"></span>
-                                              <span x-show="selectedProvince?.code === prov.code" class="text-xs">✓</span>
+                                              <span x-show="selectedProvince?.code === prov.code" class="text-xs text-[#8C6D1F]">✓</span>
                                          </button>
                                      </template>
                                  </div>
@@ -1058,10 +1062,10 @@
                                  <div class="py-1">
                                      <template x-for="ct in filteredGeoList(citiesList)" :key="ct.code">
                                          <button type="button" @click="selectCity(ct)"
-                                              :class="selectedCity?.code === ct.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              :class="selectedCity?.code === ct.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="ct.name"></span>
-                                              <span x-show="selectedCity?.code === ct.code" class="text-xs">✓</span>
+                                              <span x-show="selectedCity?.code === ct.code" class="text-xs text-[#8C6D1F]">✓</span>
                                          </button>
                                      </template>
                                  </div>
@@ -1072,10 +1076,10 @@
                                  <div class="py-1">
                                      <template x-for="brgy in filteredGeoList(barangaysList)" :key="brgy.code">
                                          <button type="button" @click="selectBarangay(brgy)"
-                                              :class="selectedBarangay?.code === brgy.code ? 'bg-[#C0422A]/5 text-[#C0422A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                              :class="selectedBarangay?.code === brgy.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="brgy.name"></span>
-                                              <span x-show="selectedBarangay?.code === brgy.code" class="text-xs">✓</span>
+                                              <span x-show="selectedBarangay?.code === brgy.code" class="text-xs text-[#8C6D1F]">✓</span>
                                          </button>
                                      </template>
                                  </div>
@@ -1092,12 +1096,12 @@
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Street (Optional)</label>
-                    <input type="text" x-model="editForm.street" placeholder="e.g. Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                    <input type="text" x-model="editForm.street" placeholder="e.g. Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Postal Code</label>
-                    <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#C0422A] focus:bg-white transition-all">
+                    <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                 </div>
             </div>
 
@@ -1105,7 +1109,7 @@
                 <button type="button" @click="showEditAddressModal = false" class="flex-1 py-3 border border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-500 rounded-xl hover:bg-gray-50 transition-colors">
                     Cancel
                 </button>
-                <button type="button" @click="saveEditAddress()" :disabled="savingAddress" class="flex-1 py-3 bg-[#C0422A] text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#A33622] transition-colors shadow-md shadow-[#C0422A]/20 disabled:opacity-50">
+                <button type="button" @click="saveEditAddress()" :disabled="savingAddress" class="flex-1 py-3 bg-[#1E1915] text-white border border-[#D4AF37]/30 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-black transition-colors shadow-md disabled:opacity-50">
                     <span x-text="savingAddress ? 'Saving Address...' : 'Save Address'"></span>
                 </button>
             </div>
@@ -1145,7 +1149,7 @@
                 </button>
 
                 <!-- Modal Content -->
-                <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-1.5 mt-1">Scan QR Code</div>
+                <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8C6D1F] mb-1.5 mt-1">Scan QR Code</div>
                 <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight mb-4" x-text="paymentMethod === 'GCash' ? 'GCash Payment QR' : 'Maya Payment QR'"></h3>
                 
                 <div class="w-64 h-64 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs flex items-center justify-center p-4">
