@@ -39,7 +39,7 @@
 
 
 
-    <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
+    <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" novalidate @submit="isSubmitting = true">
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="address_id" :value="address?.id || ''">
@@ -408,8 +408,7 @@
                                         </template>
                                     </div>
                                     <span class="text-[9px] font-bold text-gray-400" x-text="paymentMethod === 'GCash' ? 'GCash requirement: 13 digits' : 'Maya requirement: 12 digits'"></span>
-                                </div>
-                                <input type="text"
+                                               <input type="text"
                                        id="paymentReferenceInput"
                                        name="paymentReference"
                                        x-model="paymentRef"
@@ -417,9 +416,10 @@
                                        @blur="validateRef()"
                                        inputmode="numeric"
                                        :maxlength="paymentMethod === 'GCash' ? 13 : 12"
-                                       required
+                                       :required="paymentMethod !== 'COD'"
+                                       :disabled="paymentMethod === 'COD'"
                                        :placeholder="paymentMethod === 'GCash' ? 'e.g. 1002345678901 (13-digit GCash Reference)' : 'e.g. 123456789012 (12-digit Maya Reference)'"
-                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'))"
+                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-gray-200 focus:border-[#C0422A] focus:ring-[#C0422A]/10 bg-gray-50/50'))"
                                        class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
                                 <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
                                 <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-amber-700 font-bold px-1 mt-0.5 flex items-center gap-1">
@@ -439,7 +439,7 @@
                                        id="paymentScreenshotInput" 
                                        name="paymentScreenshot" 
                                        accept="image/*" 
-                                       required 
+                                       :disabled="paymentMethod === 'COD'"
                                        @change="handleFileChange($event)" 
                                        class="sr-only">
 
@@ -1918,8 +1918,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 }
             }
             this.screenshotError = '';
-            const form = document.getElementById('checkout-form');
-            if (!form || !form.reportValidity()) return;
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
