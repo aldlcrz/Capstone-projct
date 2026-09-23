@@ -751,7 +751,7 @@ function sellerOrdersManager() {
         openDetails(order) {
             this.detailsOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.shipping?.provider_name || order.courierName || 'J&T Express';
+            this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
             this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
             this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';
@@ -771,7 +771,7 @@ function sellerOrdersManager() {
         openStatus(order) {
             this.activeOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.shipping?.provider_name || order.courierName || 'J&T Express';
+            this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
             this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
             this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
             this.shippingError = '';

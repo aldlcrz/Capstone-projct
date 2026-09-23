@@ -430,7 +430,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // Attempt checkout submitting a tampered ₱1.00 shipping fee and manipulated total
         $checkoutResponse = $this->actingAs($customer)->post('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $address->id,
+            'address_id' => $address->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . rand(1000000000, 9999999999),
             'paymentScreenshot' => $screenshot,
@@ -487,7 +487,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // Submit checkout for 5 items with the 1-item token
         $checkoutResponse = $this->actingAs($customer)->postJson('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $address->id,
+            'address_id' => $address->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . rand(1000000000, 9999999999),
             'paymentScreenshot' => $screenshot,
@@ -534,7 +534,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $checkoutResponse = $this->actingAs($customer)->post('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $address->id,
+            'address_id' => $address->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
             'paymentScreenshot' => $screenshot,
@@ -676,7 +676,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // 2. Select SPX Express and Checkout
         $checkoutResponse = $this->actingAs($buyer)->post('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $buyerAddress->id,
+            'address_id' => $buyerAddress->id,
             'paymentMethod' => 'Maya',
             'paymentReference' => '900' . sprintf('%05d%04d', mt_rand(10000, 99999), mt_rand(1000, 9999)),
             'paymentScreenshot' => $screenshot,
@@ -797,7 +797,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // Step 3: Malicious/Stale Attempt - submit Address B using Token A
         $staleAttemptResponse = $this->actingAs($customer)->postJson('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $addressB->id,
+            'address_id' => $addressB->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
             'paymentScreenshot' => $screenshot,
@@ -825,7 +825,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $validCheckoutResponse = $this->actingAs($customer)->post('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $addressB->id,
+            'address_id' => $addressB->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
             'paymentScreenshot' => $screenshot2,
@@ -885,7 +885,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $this->actingAs($customer)->post('/checkout', [
             'seller_id' => $seller->id,
-            'addressId' => $address->id,
+            'address_id' => $address->id,
             'paymentMethod' => 'GCash',
             'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
             'paymentScreenshot' => $screenshot,
@@ -922,12 +922,12 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $this->assertEquals('To Ship', $order->status);
         $this->assertEquals('To Ship', $shippingSnapshot->shipping_status);
 
-        // Seller fulfills order: moves to 'Shipped' with courier and tracking number
+        // Seller fulfills order: moves to 'Shipped' with courier (e.g. Flash Express) and tracking number
         $shippedResponse = $this->actingAs($seller)->patchJson("/seller/api/orders/{$order->id}/status", [
             'status' => 'Shipped',
-            'courierName' => $chosenQuote['provider_name'],
-            'trackingNumber' => 'JNT-TRACK-99887766',
-            'trackingLink' => 'https://www.jtexpress.ph/track?billcode=JNT-TRACK-99887766',
+            'courierName' => 'Flash Express',
+            'trackingNumber' => 'FLASH-TRACK-99887766',
+            'trackingLink' => 'https://www.flashexpress.ph/tracking?se=FLASH-TRACK-99887766',
         ]);
         $shippedResponse->assertStatus(200);
 
@@ -936,13 +936,44 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         // Verify authoritative synchronization across orders and order_shipping
         $this->assertEquals('Shipped', $order->status);
-        $this->assertEquals('JNT-TRACK-99887766', $order->trackingNumber);
+        $this->assertEquals('FLASH-TRACK-99887766', $order->trackingNumber);
         $this->assertEquals('Shipped', $shippingSnapshot->shipping_status);
-        $this->assertEquals('JNT-TRACK-99887766', $shippingSnapshot->tracking_number);
+        $this->assertEquals('FLASH-TRACK-99887766', $shippingSnapshot->tracking_number);
+
+        // Verify explicit separation of pricing provider vs fulfillment provider
+        $this->assertEquals($chosenQuote['provider_name'], $shippingSnapshot->pricing_provider_name);
+        $this->assertEquals((float) $chosenQuote['shipping_fee'], (float) $shippingSnapshot->shipping_fee);
+        $this->assertEquals('Flash Express', $shippingSnapshot->fulfillment_provider_name);
 
         // Verify OrderStatusHistory record exists
         $history = OrderStatusHistory::where('orderId', $order->id)->where('newStatus', 'Shipped')->first();
         $this->assertNotNull($history);
         $this->assertEquals($seller->id, $history->updatedBy);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* 11. STRICT ADDRESS_ID REQUIREMENT TEST                                     */
+    /* -------------------------------------------------------------------------- */
+
+    public function test_checkout_strictly_requires_address_id_and_rejects_missing_address()
+    {
+        $seller = $this->createSeller();
+        $customer = $this->createCustomer();
+        $product = $this->createTestProduct($seller);
+        $screenshot = UploadedFile::fake()->image('gcash_receipt.jpg', 600, 1200);
+
+        // Post without address_id
+        $response = $this->actingAs($customer)->postJson('/checkout', [
+            'seller_id' => $seller->id,
+            'paymentMethod' => 'GCash',
+            'paymentReference' => '100' . sprintf('%05d%05d', mt_rand(10000, 99999), mt_rand(10000, 99999)),
+            'paymentScreenshot' => $screenshot,
+            'items' => [
+                ['id' => $product->id, 'quantity' => 1, 'price' => 500.00]
+            ],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['address_id']);
     }
 }

@@ -339,11 +339,10 @@ class CheckoutController extends Controller
                 },
             ],
             'paymentScreenshot' => 'required|image',
-            'shippingAddress' => 'required_without_all:address_id,addressId',
-            'address_id' => 'required_without_all:shippingAddress,addressId',
+            'address_id' => 'required|string',
         ], [
             'paymentReference.required' => 'Please provide your payment reference number.',
-            'shippingAddress.required_without_all' => 'Please provide a valid shipping address.',
+            'address_id.required' => 'Please provide a valid shipping address.',
         ]);
 
         try {
@@ -362,25 +361,14 @@ class CheckoutController extends Controller
             
             if (empty($cart) || empty($cart[0])) throw new \Exception('Cart is empty');
 
-            // 2. Resolve buyer shipping address and calculate server-authoritative shipping fee
-            $addressData = $request->input('shippingAddress');
-            if (is_string($addressData)) {
-                $addressData = json_decode($addressData, true) ?: $addressData;
+            // 2. Resolve buyer shipping address strictly via address_id
+            $addrRecord = Address::where('id', $request->address_id)
+                ->where('userId', Auth::id())
+                ->first();
+            if (!$addrRecord) {
+                throw new \Exception('Please provide a valid delivery address.');
             }
-            if (empty($addressData)) {
-                $addrId = $request->input('addressId') ?: ($request->input('address_id') ?: $request->input('selected_address_id'));
-                if ($addrId) {
-                    $addrRecord = Address::where('id', $addrId)->where('userId', Auth::id())->first()
-                        ?: Address::find($addrId);
-                    if ($addrRecord) {
-                        $addressData = $addrRecord->toArray();
-                    }
-                }
-            }
-
-            if (empty($addressData)) {
-                throw new \Exception('Please provide a valid shipping address.');
-            }
+            $addressData = $addrRecord->toArray();
 
             $selectedProviderId = $request->input('shipping_provider_id') ?: $request->input('selected_provider_id');
             $quoteToken         = $request->input('shipping_quote_token');
@@ -418,8 +406,7 @@ class CheckoutController extends Controller
 
                 // Validate quote token if provided
                 if ($quoteToken) {
-                    $addressIdForToken = $request->input('address_id') ?: ($request->input('addressId') ?: ($addressData['id'] ?? null));
-                    if (!$this->shippingCalculator->validateQuoteToken($quoteToken, $sellerId, $addressIdForToken, $items)) {
+                    if (!$this->shippingCalculator->validateQuoteToken($quoteToken, $sellerId, $request->address_id, $items)) {
                         throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
                     }
                 }
@@ -544,6 +531,10 @@ class CheckoutController extends Controller
                     'order_id'                       => $orderId,
                     'provider_id'                    => $chosenShipping['provider_id'],
                     'provider_name'                  => $chosenShipping['provider_name'],
+                    'pricing_provider_id'            => $chosenShipping['provider_id'],
+                    'pricing_provider_name'          => $chosenShipping['provider_name'],
+                    'fulfillment_provider_id'        => null,
+                    'fulfillment_provider_name'      => null,
                     'shipping_rate_id'               => $chosenShipping['shipping_rate_id'],
                     'origin_zone_id'                 => $chosenShipping['origin_zone_id'],
                     'origin_zone_name'               => $chosenShipping['origin_zone_name'],

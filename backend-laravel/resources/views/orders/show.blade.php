@@ -371,7 +371,7 @@
                                     <span>Shipping</span>
                                     @if($order->shipping)
                                         <span class="text-[9px] font-bold px-1.5 py-0.2 bg-[#FAF8F5] border border-[#ECE3D2] rounded text-[#1E1915]">
-                                            {{ $order->shipping->provider_name }} ({{ number_format($order->shipping->chargeable_weight, 2) }} kg)
+                                            {{ $order->shipping->pricing_provider_name ?? $order->shipping->provider_name }} ({{ number_format($order->shipping->chargeable_weight, 2) }} kg)
                                         </span>
                                     @endif
                                 </span>
@@ -624,7 +624,8 @@
 
                                 <div class="space-y-2.5 pt-2">
                                     @php
-                                        $displayCourier = $order->shipping?->provider_name ?? ($order->courierName ?? null);
+                                        $displayCourier = $order->shipping?->fulfillment_provider_name 
+                                            ?? ($order->courierName ?? ($order->shipping?->pricing_provider_name ?? ($order->shipping?->provider_name ?? null)));
                                     @endphp
                                     @if($displayCourier)
                                         <div class="flex justify-between items-center text-xs">

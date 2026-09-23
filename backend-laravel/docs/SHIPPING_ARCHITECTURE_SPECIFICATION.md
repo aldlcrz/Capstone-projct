@@ -175,10 +175,20 @@ For a consolidated order from a seller:
 5. $\text{Chargeable Weight} = \max(\text{Total Actual Weight}, \text{Volumetric Weight})$
 
 ### E. Quote Consistency Token (`shipping_quote_token`)
-1. When quotes are generated (`POST /checkout/shipping-quotes`), the server returns quotes accompanied by a short-lived token (`shipping_quote_token`).
-2. The token binds: `seller_id`, `destination_address_id`, `items_hash`, and `timestamp` (expires in 15 minutes).
-3. **Purity Rule**: The quote token is **strictly a consistency and security mechanism, NEVER a trusted price**.
-4. At order placement, the server verifies the token to ensure cart items, quantities, and address haven't changed, then **independently recalculates the authoritative quote** from the database inside `DB::beginTransaction()`.
+1. When quotes are generated (`POST /checkout/shipping-quote`), the server returns quotes accompanied by a signed token (`shipping_quote_token`).
+2. **Authority Rule**: `shipping_quote_token` identifies and binds a temporary shipping quote; the server recalculates the authoritative shipping fee during order placement. The token itself is **strictly a consistency and anti-tamper binding, NEVER the financial authority**.
+3. The token binds: `seller_id`, `address_id`, `items_hash`, and `timestamp` (expires in 15 minutes).
+4. At order placement, the server verifies the token to ensure cart items, quantities, and `address_id` haven't changed, then **independently recalculates the authoritative quote** from the database inside `DB::beginTransaction()`.
+
+### F. Dual-Provider Representation: Pricing Provider vs Fulfillment Provider
+To preserve accounting and physical fulfillment truth across order lifecycles:
+1. **Pricing Provider (`pricing_provider_id`, `pricing_provider_name`)**:
+   - The courier configured by the seller and evaluated by the shipping engine to calculate the customer's shipping fee during checkout.
+   - Captured as an **immutable financial snapshot** in `order_shipping`. The customer's agreed shipping fee never changes.
+2. **Fulfillment Provider (`fulfillment_provider_id`, `fulfillment_provider_name`)**:
+   - The actual courier the seller chooses and uses when dispatching the package (e.g. J&T Express, Flash Express, SPX Express, LBC).
+   - Recorded alongside `tracking_number` and `shipping_status` when the order transitions to `Shipped` or `In Transit`.
+   - Allows the customer to track via the actual dispatch carrier while honoring the original calculated shipping fee.
 
 ---
 

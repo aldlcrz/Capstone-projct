@@ -11,6 +11,8 @@ use App\Models\SystemSetting;
 use App\Models\Notification;
 use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
+use App\Models\ShippingProvider;
+use App\Models\OrderShipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -365,6 +367,15 @@ class OrderController extends Controller
             $shippingAttrs = ['shipping_status' => $canonicalTarget];
             if ($order->trackingNumber) {
                 $shippingAttrs['tracking_number'] = $order->trackingNumber;
+            }
+            if (!empty($order->courierName)) {
+                $shippingAttrs['fulfillment_provider_name'] = $order->courierName;
+                $matchedProvider = ShippingProvider::where('name', $order->courierName)
+                    ->orWhere('code', strtolower(str_replace([' ', '&'], ['_', 'and'], $order->courierName)))
+                    ->first();
+                if ($matchedProvider) {
+                    $shippingAttrs['fulfillment_provider_id'] = $matchedProvider->id;
+                }
             }
             $order->shipping->update($shippingAttrs);
         }

@@ -42,9 +42,7 @@
     <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
         @csrf
         <input type="hidden" name="mode" value="{{ $mode }}">
-        <input type="hidden" name="shippingAddress" :value="JSON.stringify(address)">
         <input type="hidden" name="address_id" :value="address?.id || ''">
-        <input type="hidden" name="addressId" :value="address?.id || ''">
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
 
         <div class="space-y-6 pb-24 lg:pb-0 w-full">

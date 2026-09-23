@@ -19,6 +19,10 @@ class OrderShipping extends Model
         'order_id',
         'provider_id',
         'provider_name',
+        'pricing_provider_id',
+        'pricing_provider_name',
+        'fulfillment_provider_id',
+        'fulfillment_provider_name',
         'shipping_rate_id',
         'origin_zone_id',
         'origin_zone_name',
@@ -67,6 +71,16 @@ class OrderShipping extends Model
     public function provider()
     {
         return $this->belongsTo(ShippingProvider::class, 'provider_id');
+    }
+
+    public function pricingProvider()
+    {
+        return $this->belongsTo(ShippingProvider::class, 'pricing_provider_id');
+    }
+
+    public function fulfillmentProvider()
+    {
+        return $this->belongsTo(ShippingProvider::class, 'fulfillment_provider_id');
     }
 
     public function shippingRate()
