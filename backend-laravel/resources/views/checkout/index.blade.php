@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 pt-2 pb-0 sm:py-6 lg:py-8" x-data="checkoutApp(
+<div class="max-w-6xl mx-auto px-4 pt-2 pb-0 sm:py-6 lg:py-8" x-data="checkoutApp(
     @js($addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
@@ -46,9 +46,9 @@
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
         <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
 
-        <div class="space-y-6 pb-32 w-full">
-            <!-- Main Content Area -->
-            <div class="space-y-6 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-28 lg:pb-12">
+            <!-- Left Column: Checkout Steps & Forms -->
+            <div class="lg:col-span-7 xl:col-span-8 space-y-6">
                 
                 <!-- STEP 1: SHIPPING INFORMATION -->
                 <div x-show="step === 1" x-transition class="space-y-6">
@@ -547,97 +547,101 @@
 
             </div>
 
-            <!-- Order Summary Card -->
-            <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
-                        <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
+            <!-- Right Column: Order Summary (5 cols on lg, 4 cols on xl) - Sticky on Desktop! -->
+            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-6 w-full">
+                <!-- Order Summary Card -->
+                <div class="w-full bg-white rounded-3xl p-5 sm:p-6 lg:p-8 border border-gray-100 shadow-sm space-y-5 sm:space-y-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-4 h-[1.5px] bg-[#C0422A]"></div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#C0422A]">Order Overview</span>
+                        </div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                            {{ count($cart) }} item(s) selected
+                        </p>
                     </div>
-                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
-                        {{ count($cart) }} item(s) selected
-                    </p>
-                </div>
 
-                <div class="space-y-3.5 border-t border-gray-100 pt-5 sm:pt-6">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600 font-medium">Subtotal</span>
-                        <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
+                    <div class="space-y-3.5 border-t border-gray-100 pt-5 sm:pt-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 font-medium">Subtotal</span>
+                            <span class="text-sm font-bold text-gray-900">₱{{ number_format($subtotal) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
+                            <span class="text-sm font-bold text-gray-900">
+                                <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Calculated at checkout</span>
+                                <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
+                            <span class="text-base font-bold text-gray-900">Total Payment</span>
+                            <span class="text-2xl lg:text-3xl font-black text-[#C0422A]" 
+                                  x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                                ₱{{ number_format($subtotal) }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600 font-medium">Estimated Delivery</span>
-                        <span class="text-sm font-bold text-gray-900">
-                            <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                            <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Calculated at checkout</span>
-                            <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
-                        </span>
-                    </div>
-                    <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
-                        <span class="text-base font-bold text-gray-900">Total Payment</span>
-                        <span class="text-2xl lg:text-3xl font-black text-[#C0422A]" 
-                              x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
-                            ₱{{ number_format($subtotal) }}
-                        </span>
-                    </div>
-                </div>
 
-                <template x-if="step === 1">
-                    <div class="space-y-2">
-                        <div x-show="addressStepError" x-cloak
-                             class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
-                             x-text="addressStepError"></div>
-                        <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Proceed to Payment</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </button>
-                    </div>
-                </template>
-                <template x-if="step === 2">
-                    <div class="gap-3 flex">
-                        <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        </button>
-                        <button type="button" 
-                                @click="requestPlaceOrder()" 
-                                :disabled="aiChecking || isPlacingOrder"
-                                :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
-                                class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
-                            <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
-                                <span>Place Order</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            </span>
-                            <span x-show="aiChecking && !isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Scanning Receipt...</span>
-                            </span>
-                            <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
-                                <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Placing Order...</span>
-                            </span>
-                        </button>
-                    </div>
-                </template>
+                    {{-- Primary action buttons inside summary card (Desktop only - mobile uses sticky bottom bar) --}}
+                    <template x-if="step === 1">
+                        <div class="space-y-2 hidden lg:block">
+                            <div x-show="addressStepError" x-cloak
+                                 class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
+                                 x-text="addressStepError"></div>
+                            <button type="button" @click="validateStep1()" class="w-full bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold shadow-lg shadow-[#C0422A]/20 hover:bg-[#A33622] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
+                                <span>Proceed to Payment</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="step === 2">
+                        <div class="gap-3 hidden lg:flex">
+                            <button type="button" @click="step = 1" class="px-4 py-4 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-black hover:border-black transition-colors cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <button type="button" 
+                                    @click="requestPlaceOrder()" 
+                                    :disabled="aiChecking || isPlacingOrder"
+                                    :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#C0422A]/80' : 'hover:bg-[#A33622] active:scale-[0.99] cursor-pointer shadow-lg shadow-[#C0422A]/20'"
+                                    class="flex-1 bg-[#C0422A] text-white py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
+                                    <span>Place Order</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </span>
+                                <span x-show="aiChecking && !isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Scanning Receipt...</span>
+                                </span>
+                                <span x-show="isPlacingOrder" x-cloak class="inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Placing Order...</span>
+                                </span>
+                            </button>
+                        </div>
+                    </template>
 
-                <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
-                    <div class="font-bold text-gray-700 flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        LumBarong Buyer Protection
+                    <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100/80 text-[11px] text-gray-500 leading-relaxed space-y-1">
+                        <div class="font-bold text-gray-700 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            LumBarong Buyer Protection
+                        </div>
+                        <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
                     </div>
-                    <p class="text-[10px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
                 </div>
             </div>
         </div>
     </form>
 
-    <!-- Persistent Sticky Place Order / Proceed to Payment Bar (Available across all screen sizes) -->
-    <div class="fixed inset-x-0 bottom-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-4 py-3 sm:py-4"
+    <!-- Mobile Sticky Place Order / Proceed to Payment Bar (Mobile Only: lg:hidden) -->
+    <div class="fixed inset-x-0 bottom-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-4 py-3 sm:py-4 lg:hidden"
          style="position: fixed; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; margin: 0 !important; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;"
          x-data="{ showCheckoutBreakdown: false }">
 
