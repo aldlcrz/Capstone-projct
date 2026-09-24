@@ -67,6 +67,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [WebAuthController::class, 'register']);
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
     Route::post('/auth/google/signup', [WebAuthController::class, 'handleGoogleSignup'])->name('auth.google.signup');
+    Route::post('/auth/google/seller/signup', [WebAuthController::class, 'handleGoogleSellerSignup'])->name('auth.google.seller.signup');
+    Route::get('/auth/google/seller/signup', fn() => redirect()->route('seller.register'));
+    Route::get('/auth/google/signup', fn() => redirect()->route('register'));
+    Route::get('/auth/google', fn() => redirect()->route('login'));
 });
 
 // Email Verification Routes (accessible by guests and authenticated unverified users)
