@@ -1542,27 +1542,30 @@
     };
 
     $productInitData = [
-        'name'             => (string) old('name', ''),
-        'categoryId'       => (string) old('CategoryId', ''),
-        'targetGroup'      => (string) old('target_group', ''),
-        'fabricType'       => (string) old('fabric_type', '100% Piña'),
-        'price'            => (string) old('price', ''),
-        'shippingFee'      => (string) old('shippingFee', ''),
-        'shippingDays'     => (string) old('shippingDays', '5'),
-        'sellerId'         => (string) (auth()->id() ?? 'guest'),
-        'description'      => (string) old('description', ''),
-        'csrfToken'        => (string) csrf_token(),
-        'aiSuggestUrl'     => (string) route('ai.seller.suggest'),
-        'aiDescriptionUrl' => (string) route('ai.seller.description'),
-        'paymentUpdateUrl' => (string) route('seller.profile.update'),
-        'gcashNumber'      => (string) ($currentUser?->gcashNumber ?? ''),
-        'gcashQrUrl'       => $currentUser?->gcashQrCode ? $getPaymentImgUrl($currentUser->gcashQrCode) : null,
-        'hasGcashNumber'   => !empty($currentUser?->gcashNumber),
-        'hasGcashQr'       => !empty($currentUser?->gcashQrCode),
-        'mayaNumber'       => (string) ($currentUser?->mayaNumber ?? ''),
-        'mayaQrUrl'        => $currentUser?->mayaQrCode ? $getPaymentImgUrl($currentUser->mayaQrCode) : null,
-        'hasMayaNumber'    => !empty($currentUser?->mayaNumber),
-        'hasMayaQr'        => !empty($currentUser?->mayaQrCode),
+        'name'                      => (string) old('name', ''),
+        'categoryId'                => (string) old('CategoryId', ''),
+        'targetGroup'               => (string) old('target_group', ''),
+        'fabricType'                => (string) old('fabric_type', '100% Piña'),
+        'price'                     => (string) old('price', ''),
+        'package_weight_per_unit'   => (string) old('package_weight_per_unit', '0.50'),
+        'package_length_per_unit'   => (string) old('package_length_per_unit', '30'),
+        'package_width_per_unit'    => (string) old('package_width_per_unit', '20'),
+        'package_height_per_unit'   => (string) old('package_height_per_unit', '5'),
+        'handling_days'             => (string) old('handling_days', '2'),
+        'sellerId'                  => (string) (auth()->id() ?? 'guest'),
+        'description'               => (string) old('description', ''),
+        'csrfToken'                 => (string) csrf_token(),
+        'aiSuggestUrl'              => (string) route('ai.seller.suggest'),
+        'aiDescriptionUrl'          => (string) route('ai.seller.description'),
+        'paymentUpdateUrl'          => (string) route('seller.profile.update'),
+        'gcashNumber'               => (string) ($currentUser?->gcashNumber ?? ''),
+        'gcashQrUrl'                => $currentUser?->gcashQrCode ? $getPaymentImgUrl($currentUser->gcashQrCode) : null,
+        'hasGcashNumber'            => !empty($currentUser?->gcashNumber),
+        'hasGcashQr'                => !empty($currentUser?->gcashQrCode),
+        'mayaNumber'                => (string) ($currentUser?->mayaNumber ?? ''),
+        'mayaQrUrl'                 => $currentUser?->mayaQrCode ? $getPaymentImgUrl($currentUser->mayaQrCode) : null,
+        'hasMayaNumber'             => !empty($currentUser?->mayaNumber),
+        'hasMayaQr'                 => !empty($currentUser?->mayaMayaCode ?? $currentUser?->mayaQrCode),
     ];
 @endphp
 
@@ -1768,8 +1771,6 @@ function addProductManager() {
         targetGroup: initData.targetGroup || '',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
-        shippingFee: initData.shippingFee || '',
-        shippingDays: initData.shippingDays || '5',
         description: initData.description || '',
         fillRate: 15,
         isAiLoading: false,
@@ -1978,17 +1979,13 @@ function addProductManager() {
 
         get isPricingComplete() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
-            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 1 && parseFloat(this.shippingFee) <= 500);
-            return hasPrice && hasFee;
+            return hasPrice;
         },
 
         get pricingStatusText() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
-            const hasFee = Boolean(this.shippingFee !== '' && !isNaN(parseFloat(this.shippingFee)) && parseFloat(this.shippingFee) >= 1 && parseFloat(this.shippingFee) <= 500);
-            if (!hasPrice && !hasFee) return 'Price & shipping fee required';
-            if (!hasPrice) return 'Base price required';
-            if (!hasFee) return 'Shipping fee required (min ₱1)';
-            return '✓ Price & shipping configured';
+            if (!hasPrice) return 'Base price required (min ₱1)';
+            return '✓ Price & specs configured';
         },
 
         // Media State: Variations & Images (Min 1, Max 3 images per variation)
@@ -2050,8 +2047,11 @@ function addProductManager() {
                     fabricType: this.fabricType || '100% Piña',
                     price: this.price || '',
                     description: this.description || '',
-                    shippingFee: document.getElementById('shippingFeeInput')?.value || '0',
-                    shippingDays: document.getElementById('shippingDaysInput')?.value || '5',
+                    packageWeight: document.getElementById('packageWeightInput')?.value || '0.50',
+                    handlingDays: document.getElementById('handlingDaysInput')?.value || '2',
+                    packageLength: document.querySelector('input[name="package_length_per_unit"]')?.value || '30',
+                    packageWidth: document.querySelector('input[name="package_width_per_unit"]')?.value || '20',
+                    packageHeight: document.querySelector('input[name="package_height_per_unit"]')?.value || '5',
                     checkedSizes: checkedSizes,
                     sizeStocks: sizeStocks,
                     isOnSale: document.getElementById('discountToggle')?.checked || false,
@@ -2120,16 +2120,26 @@ function addProductManager() {
                 if (Array.isArray(draft.selectedCategories)) this.selectedCategories = draft.selectedCategories;
                 if (draft.step && [1, 2, 3].includes(draft.step)) this.step = draft.step;
 
-                // Restore shipping
-                const shipFeeEl = document.getElementById('shippingFeeInput');
-                if (shipFeeEl && draft.shippingFee !== undefined) {
-                    shipFeeEl.value = draft.shippingFee;
-                    this.shippingFee = draft.shippingFee;
+                // Restore package specs & handling days
+                if (draft.packageWeight) {
+                    const el = document.getElementById('packageWeightInput');
+                    if (el) el.value = draft.packageWeight;
                 }
-                const shipDaysEl = document.getElementById('shippingDaysInput');
-                if (shipDaysEl && draft.shippingDays !== undefined) {
-                    shipDaysEl.value = draft.shippingDays;
-                    this.shippingDays = draft.shippingDays;
+                if (draft.handlingDays) {
+                    const el = document.getElementById('handlingDaysInput');
+                    if (el) el.value = draft.handlingDays;
+                }
+                if (draft.packageLength) {
+                    const el = document.querySelector('input[name="package_length_per_unit"]');
+                    if (el) el.value = draft.packageLength;
+                }
+                if (draft.packageWidth) {
+                    const el = document.querySelector('input[name="package_width_per_unit"]');
+                    if (el) el.value = draft.packageWidth;
+                }
+                if (draft.packageHeight) {
+                    const el = document.querySelector('input[name="package_height_per_unit"]');
+                    if (el) el.value = draft.packageHeight;
                 }
 
                 // Restore discount
@@ -2675,7 +2685,7 @@ function addProductManager() {
 
         goToStep3() {
             // Remove previous Step 2 error highlights
-            document.querySelectorAll('#price-card, #priceInput, #shipping-fee-card, #shippingFeeInput, #shipping-days-card, #shippingDaysInput, #tour-create-step2-sizing, #sizing-section, #stock-card').forEach(el => {
+            document.querySelectorAll('#price-card, #priceInput, #stock-card, #package-weight-card, #packageWeightInput, #package-dimensions-card, #handling-days-card, #handlingDaysInput, #tour-create-step2-sizing, #sizing-section').forEach(el => {
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
             });
 
@@ -2722,7 +2732,7 @@ function addProductManager() {
             }
 
             const pkgWeight = parseFloat(document.getElementById('packageWeightInput')?.value || 0);
-            if (isNaN(pkgWeight) || pkgWeight <= 0) {
+            if (isNaN(pkgWeight) || pkgWeight <= 0 || pkgWeight > 100) {
                 const pkgCard = document.getElementById('package-weight-card');
                 const pkgInput = document.getElementById('packageWeightInput');
                 if (pkgCard) pkgCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
@@ -2731,21 +2741,32 @@ function addProductManager() {
                     pkgInput.focus();
                 }
                 if (pkgCard) pkgCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                triggerAppModal('Package Weight Required', 'Please enter a valid packed item weight greater than 0 kg.', 'warning');
+                triggerAppModal('Package Weight Required', 'Please enter a valid packed item weight between 0.01 kg and 100 kg.', 'warning');
                 return;
             }
 
-            const shipDaysVal = parseInt(this.shippingDays);
-            if (this.shippingDays === '' || isNaN(shipDaysVal) || shipDaysVal < 1 || shipDaysVal > 30) {
-                const daysCard = document.getElementById('shipping-days-card');
-                const daysInput = document.getElementById('shippingDaysInput');
+            const len = parseFloat(document.querySelector('input[name="package_length_per_unit"]')?.value || 0);
+            const wid = parseFloat(document.querySelector('input[name="package_width_per_unit"]')?.value || 0);
+            const hgt = parseFloat(document.querySelector('input[name="package_height_per_unit"]')?.value || 0);
+            if (isNaN(len) || len < 1 || isNaN(wid) || wid < 1 || isNaN(hgt) || hgt < 1) {
+                const dimCard = document.getElementById('package-dimensions-card');
+                if (dimCard) dimCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                if (dimCard) dimCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                triggerAppModal('Package Dimensions Required', 'Please enter valid package dimensions (Length, Width, Height) of at least 1 cm each.', 'warning');
+                return;
+            }
+
+            const handlingDaysVal = parseInt(document.getElementById('handlingDaysInput')?.value || 0);
+            if (isNaN(handlingDaysVal) || handlingDaysVal < 1 || handlingDaysVal > 30) {
+                const daysCard = document.getElementById('handling-days-card');
+                const daysInput = document.getElementById('handlingDaysInput');
                 if (daysCard) daysCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                 if (daysInput) {
                     daysInput.classList.add('border-red-500');
                     daysInput.focus();
                 }
                 if (daysCard) daysCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                triggerAppModal('Shipping Days Required', 'Please specify estimated shipping days between 1 and 30 business days.', 'warning');
+                triggerAppModal('Prep Days Required', 'Please specify prep / handling days between 1 and 30 business days.', 'warning');
                 return;
             }
 
@@ -3169,30 +3190,34 @@ function validateProductForm(e, isEdit = false) {
         if (priceInput) priceInput.classList.add('border-red-500');
     }
 
-    const shipFeeInput = document.querySelector('input[name="shippingFee"]');
-    const shipFeeCard = document.getElementById('shipping-fee-card');
-    if (!shipFeeInput || shipFeeInput.value === '' || isNaN(parseFloat(shipFeeInput.value))) {
-        errors.push('Shipping Fee is required (enter 0 for free shipping).');
-        if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
-    } else {
-        const shipFeeVal = parseFloat(shipFeeInput.value);
-        if (shipFeeVal < 0 || shipFeeVal > 500) {
-            errors.push('Shipping Fee must be between ₱0.00 and ₱500.00.');
-            if (shipFeeCard) shipFeeCard.classList.add('border-red-500');
-        }
+    const pkgWeightInput = document.querySelector('input[name="package_weight_per_unit"]');
+    const pkgWeightCard = document.getElementById('package-weight-card');
+    const pkgWeightVal = parseFloat(pkgWeightInput ? pkgWeightInput.value : 0);
+    if (!pkgWeightInput || isNaN(pkgWeightVal) || pkgWeightVal < 0.01 || pkgWeightVal > 100) {
+        errors.push('Package Weight must be between 0.01 kg and 100 kg.');
+        if (pkgWeightCard) pkgWeightCard.classList.add('border-red-500');
+        if (pkgWeightInput) pkgWeightInput.classList.add('border-red-500');
     }
 
-    const shipDaysInput = document.querySelector('input[name="shippingDays"]');
-    const shipDaysCard = document.getElementById('shipping-days-card');
-    if (!shipDaysInput || !shipDaysInput.value || isNaN(parseInt(shipDaysInput.value))) {
-        errors.push('Estimated Shipping Days is required.');
-        if (shipDaysCard) shipDaysCard.classList.add('border-red-500');
-    } else {
-        const shipDaysVal = parseInt(shipDaysInput.value);
-        if (shipDaysVal < 1 || shipDaysVal > 30) {
-            errors.push('Estimated Shipping Days must be between 1 and 30 days.');
-            if (shipDaysCard) shipDaysCard.classList.add('border-red-500');
-        }
+    const pkgLenInput = document.querySelector('input[name="package_length_per_unit"]');
+    const pkgWidInput = document.querySelector('input[name="package_width_per_unit"]');
+    const pkgHgtInput = document.querySelector('input[name="package_height_per_unit"]');
+    const dimCard = document.getElementById('package-dimensions-card');
+    const lenVal = parseFloat(pkgLenInput ? pkgLenInput.value : 0);
+    const widVal = parseFloat(pkgWidInput ? pkgWidInput.value : 0);
+    const hgtVal = parseFloat(pkgHgtInput ? pkgHgtInput.value : 0);
+    if (isNaN(lenVal) || lenVal < 1 || isNaN(widVal) || widVal < 1 || isNaN(hgtVal) || hgtVal < 1) {
+        errors.push('Package Dimensions (Length, Width, Height) must be at least 1 cm each.');
+        if (dimCard) dimCard.classList.add('border-red-500');
+    }
+
+    const handlingDaysInput = document.querySelector('input[name="handling_days"]');
+    const handlingDaysCard = document.getElementById('handling-days-card');
+    const handlingDaysVal = parseInt(handlingDaysInput ? handlingDaysInput.value : 0);
+    if (!handlingDaysInput || isNaN(handlingDaysVal) || handlingDaysVal < 1 || handlingDaysVal > 30) {
+        errors.push('Prep / Handling Days is required (1 to 30 days).');
+        if (handlingDaysCard) handlingDaysCard.classList.add('border-red-500');
+        if (handlingDaysInput) handlingDaysInput.classList.add('border-red-500');
     }
 
     // 3. Heritage Sizing & Stock

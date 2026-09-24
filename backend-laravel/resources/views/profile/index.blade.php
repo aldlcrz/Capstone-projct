@@ -2060,8 +2060,6 @@ function profileApp() {
                     this.updatePinLocation(pos.lat, pos.lng);
                 });
 
-                this.reverseGeocode(lat, lng);
-
                 setTimeout(() => {
                     if (this.map) this.map.invalidateSize();
                 }, 350);

@@ -679,32 +679,7 @@ class OrderController extends Controller
         $isMaya  = strcasecmp($order->paymentMethod, 'Maya') === 0;
 
         $request->validate([
-            'paymentReference' => [
-                'required',
-                'string',
-                function ($attribute, $value, $fail) use ($isGcash, $isMaya, $order) {
-                    $raw = trim((string)$value);
-                    if (preg_match('/^(\d)\1+$/', $raw)) {
-                        $fail('Invalid payment reference number. Repeated digit sequences are not allowed.');
-                        return;
-                    }
-                    if ($isGcash && !preg_match('/^\d{13}$/', $raw)) {
-                        $fail('GCash reference number must be exactly 13 digits.');
-                        return;
-                    } elseif ($isMaya && !preg_match('/^\d{12}$/', $raw)) {
-                        $fail('Maya reference number must be exactly 12 digits.');
-                        return;
-                    }
-                    // Duplicate check: cannot use a reference that is active or verified in another transaction
-                    $isDuplicate = PaymentTransaction::where('active_reference', $raw)
-                        ->where('order_id', '!=', $order->id)
-                        ->exists();
-                    if ($isDuplicate) {
-                        $fail('This payment reference number is already tied to an active or verified order. Please provide a new and unique payment reference.');
-                        return;
-                    }
-                }
-            ],
+            'paymentReference'  => 'nullable|string',
             'paymentScreenshot' => 'required|image|max:10240',
         ]);
 
@@ -715,10 +690,11 @@ class OrderController extends Controller
             $origName = $request->file('paymentScreenshot')->getClientOriginalName();
             $screening = \App\Services\AiService::verifyReceipt(
                 $tempPath,
-                $request->paymentReference,
+                (string) $request->input('paymentReference', ''),
                 $order->paymentMethod,
                 (float) $order->totalAmount,
-                $origName
+                $origName,
+                $order->id
             );
 
             if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
@@ -731,7 +707,34 @@ class OrderController extends Controller
             $order->paymentProof = $path;
         }
 
-        $rawRef = trim($request->paymentReference);
+        $detectedRef = !empty($screening['detected_ref']) ? preg_replace('/\D/', '', (string)$screening['detected_ref']) : null;
+        $rawRef = $detectedRef ?: preg_replace('/\D/', '', (string) $request->input('paymentReference', ''));
+
+        if (empty($rawRef)) {
+            return response()->json([
+                'message' => 'Could not detect a valid transaction reference number from the uploaded receipt. Please attach a clear payment confirmation screenshot.'
+            ], 422);
+        }
+
+        if (preg_match('/^(\d)\1+$/', $rawRef)) {
+            return response()->json(['message' => 'Invalid payment reference number detected. Repeated digit sequences are not allowed.'], 422);
+        }
+        if ($isGcash && strlen($rawRef) !== 13) {
+            return response()->json(['message' => 'GCash reference number must be exactly 13 digits.'], 422);
+        } elseif ($isMaya && strlen($rawRef) !== 12) {
+            return response()->json(['message' => 'Maya reference number must be exactly 12 digits.'], 422);
+        }
+
+        // Duplicate check: cannot use a reference that is active or verified in another transaction
+        $isDuplicate = PaymentTransaction::where('active_reference', $rawRef)
+            ->where('order_id', '!=', $order->id)
+            ->exists();
+        if ($isDuplicate) {
+            return response()->json([
+                'message' => 'This payment reference number is already tied to an active or verified order. Please provide a new and unique payment reference.'
+            ], 422);
+        }
+
         $order->paymentReference = $rawRef;
         $order->paymentStatus = 'Payment Submitted';
         $order->paymentRejectionReason = null;

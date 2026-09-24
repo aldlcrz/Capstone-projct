@@ -10,10 +10,10 @@ class SellerDeletedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $sellerName;
-    public $userName;
-    public $shopName;
-    public $reason;
+    public string $sellerName;
+    public string $userName;
+    public string $shopName;
+    public string $reason;
 
     public function __construct(string $sellerName, ?string $shopName = null, ?string $reason = null)
     {

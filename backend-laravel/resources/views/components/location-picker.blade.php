@@ -121,8 +121,6 @@ function locationPicker(config) {
                     });
                 }
 
-                this.reverseGeocode(this.lat, this.lng);
-                
                 // Force layout update after slight delay to fix grey box issue in modals
                 setTimeout(() => {
                     this.map.invalidateSize();

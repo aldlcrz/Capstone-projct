@@ -2001,23 +2001,36 @@ function validateProductForm(e, isEdit = true) {
         if (priceInput) priceInput.classList.add('border-red-500');
     }
 
-    // Shipping Fee
-    const shipFeeInput = document.querySelector('input[name="shippingFee"]');
-    if (shipFeeInput) {
-        const shipFeeVal = parseFloat(shipFeeInput.value) || 0;
-        if (shipFeeVal < 0 || shipFeeVal > 500) {
-            errors.push('Shipping Fee must be between ₱0.00 and ₱500.00.');
-            shipFeeInput.classList.add('border-red-500');
+    const pkgWeightInput = document.querySelector('input[name="package_weight_per_unit"]');
+    if (pkgWeightInput) {
+        const pkgWeightVal = parseFloat(pkgWeightInput.value) || 0;
+        if (pkgWeightVal < 0.01 || pkgWeightVal > 100) {
+            errors.push('Package Weight must be between 0.01 kg and 100 kg.');
+            pkgWeightInput.classList.add('border-red-500');
         }
     }
 
-    // Shipping Days
-    const shipDaysInput = document.querySelector('input[name="shippingDays"]');
-    if (shipDaysInput) {
-        const shipDaysVal = parseInt(shipDaysInput.value) || 0;
-        if (shipDaysVal < 1 || shipDaysVal > 30) {
-            errors.push('Estimated Shipping Days must be between 1 and 30 days.');
-            shipDaysInput.classList.add('border-red-500');
+    const pkgLenInput = document.querySelector('input[name="package_length_per_unit"]');
+    const pkgWidInput = document.querySelector('input[name="package_width_per_unit"]');
+    const pkgHgtInput = document.querySelector('input[name="package_height_per_unit"]');
+    if (pkgLenInput && pkgWidInput && pkgHgtInput) {
+        const lenVal = parseFloat(pkgLenInput.value) || 0;
+        const widVal = parseFloat(pkgWidInput.value) || 0;
+        const hgtVal = parseFloat(pkgHgtInput.value) || 0;
+        if (lenVal < 1 || widVal < 1 || hgtVal < 1) {
+            errors.push('Package Dimensions (Length, Width, Height) must be at least 1 cm each.');
+            pkgLenInput.classList.add('border-red-500');
+            pkgWidInput.classList.add('border-red-500');
+            pkgHgtInput.classList.add('border-red-500');
+        }
+    }
+
+    const handlingDaysInput = document.querySelector('input[name="handling_days"]');
+    if (handlingDaysInput) {
+        const handlingDaysVal = parseInt(handlingDaysInput.value) || 0;
+        if (handlingDaysVal < 1 || handlingDaysVal > 30) {
+            errors.push('Prep / Handling Days is required (1 to 30 days).');
+            handlingDaysInput.classList.add('border-red-500');
         }
     }
 
@@ -2215,8 +2228,11 @@ function saveEditTemporaryFormData() {
                 description: document.querySelector('textarea[name="description"]')?.value || '',
                 price: document.querySelector('input[name="price"]')?.value || '',
                 fabric_type: document.querySelector('input[name="fabric_type"]')?.value || '',
-                shippingFee: document.querySelector('input[name="shippingFee"]')?.value || '',
-                shippingDays: document.querySelector('input[name="shippingDays"]')?.value || '',
+                package_weight_per_unit: document.querySelector('input[name="package_weight_per_unit"]')?.value || '',
+                package_length_per_unit: document.querySelector('input[name="package_length_per_unit"]')?.value || '',
+                package_width_per_unit: document.querySelector('input[name="package_width_per_unit"]')?.value || '',
+                package_height_per_unit: document.querySelector('input[name="package_height_per_unit"]')?.value || '',
+                handling_days: document.querySelector('input[name="handling_days"]')?.value || '',
                 isOnSale: document.getElementById('discountToggle')?.checked || false,
                 discountPercentage: document.getElementById('discountPercentage')?.value || ''
             };
@@ -2248,13 +2264,25 @@ function restoreEditTemporaryFormData() {
             const el = document.querySelector('input[name="fabric_type"]');
             if (el) el.value = data.fabric_type;
         }
-        if (data.shippingFee) {
-            const el = document.querySelector('input[name="shippingFee"]');
-            if (el) el.value = data.shippingFee;
+        if (data.package_weight_per_unit) {
+            const el = document.querySelector('input[name="package_weight_per_unit"]');
+            if (el) el.value = data.package_weight_per_unit;
         }
-        if (data.shippingDays) {
-            const el = document.querySelector('input[name="shippingDays"]');
-            if (el) el.value = data.shippingDays;
+        if (data.package_length_per_unit) {
+            const el = document.querySelector('input[name="package_length_per_unit"]');
+            if (el) el.value = data.package_length_per_unit;
+        }
+        if (data.package_width_per_unit) {
+            const el = document.querySelector('input[name="package_width_per_unit"]');
+            if (el) el.value = data.package_width_per_unit;
+        }
+        if (data.package_height_per_unit) {
+            const el = document.querySelector('input[name="package_height_per_unit"]');
+            if (el) el.value = data.package_height_per_unit;
+        }
+        if (data.handling_days) {
+            const el = document.querySelector('input[name="handling_days"]');
+            if (el) el.value = data.handling_days;
         }
         if (data.isOnSale) {
             const toggle = document.getElementById('discountToggle');

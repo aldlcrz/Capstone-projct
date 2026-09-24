@@ -1455,7 +1455,7 @@ STRICT DOMAIN LIMITS & SECURITY:
             'wallet'                    => $wallet,
             'ref_matched'               => $refMatched,
             'amount_matched'            => $amountMatched,
-            'detected_ref'              => $cleanDetectedRef,
+            'detected_ref'              => $cleanDetectedRef ?: $cleanEnteredRef,
             'detected_amount'           => $detectedAmount,
             'amount_confidence'         => $amountConf,
             'reference_confidence'      => $refConf,
@@ -1545,7 +1545,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                     'wallet'                    => $method,
                     'ref_matched'               => false,
                     'amount_matched'            => false,
-                    'detected_ref'              => '',
+                    'detected_ref'              => $cleanRef,
                     'detected_amount'           => null,
                     'amount_confidence'         => 0.0,
                     'reference_confidence'      => 0.0,
@@ -1556,14 +1556,19 @@ STRICT DOMAIN LIMITS & SECURITY:
             }
         }
 
+        $detectedRef = $cleanRef;
+        if (!$detectedRef && preg_match('/(\d{12,13})/', $filename, $m)) {
+            $detectedRef = $m[1];
+        }
+
         // Heuristic fallback: image passed geometry screening, but reference/amount match requires artisan check
         return [
             'status'                    => 'REVIEW',
             'is_receipt'                => true,
             'wallet'                    => $method,
-            'ref_matched'               => false,
+            'ref_matched'               => !empty($detectedRef),
             'amount_matched'            => false,
-            'detected_ref'              => '',
+            'detected_ref'              => $detectedRef ?: '',
             'detected_amount'           => null,
             'amount_confidence'         => 0.50,
             'reference_confidence'      => 0.50,

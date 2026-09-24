@@ -10,9 +10,9 @@ class SellerApprovedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $sellerName;
-    public $userName;
-    public $shopName;
+    public string $sellerName;
+    public string $userName;
+    public string $shopName;
 
     public function __construct(string $sellerName, ?string $shopName = null)
     {

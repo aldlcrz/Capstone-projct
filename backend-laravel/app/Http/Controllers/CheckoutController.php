@@ -92,7 +92,7 @@ class CheckoutController extends Controller
         }
         unset($item);
 
-        $addresses = Auth::user()->addresses ?? [];
+        $addresses = Auth::check() ? Address::where('userId', Auth::id())->get() : collect();
         $subtotal = 0;
         foreach ($cart as $item) {
             $subtotal += $item['price'] * $item['quantity'];
@@ -338,54 +338,11 @@ class CheckoutController extends Controller
         ];
 
         if (!$isCod) {
-            $validationRules['paymentReference'] = [
-                'required',
-                'string',
-                function ($attribute, $value, $fail) use ($isGcash, $isMaya) {
-                    $raw = trim((string)$value);
-
-                    if (preg_match('/^(\d)\1+$/', $raw)) {
-                        $fail('Invalid payment reference number. Repeated digit sequences are not allowed.');
-                        return;
-                    }
-
-                    if ($isGcash) {
-                        if (!preg_match('/^\d{13}$/', $raw)) {
-                            $fail('Reference number must be exactly 13 digits.');
-                            return;
-                        }
-                    } elseif ($isMaya) {
-                        if (!preg_match('/^\d{12}$/', $raw)) {
-                            $fail('Reference number must be exactly 12 digits.');
-                            return;
-                        }
-                    } else {
-                        if (!preg_match('/^\d{10,16}$/', $raw)) {
-                            $fail('The payment reference number must contain between 10 and 16 digits.');
-                            return;
-                        }
-                    }
-
-                    // Security: Reject already-used or currently claimed active payment reference numbers
-                    $isDuplicate = PaymentTransaction::where('active_reference', $raw)->exists();
-                    if (!$isDuplicate) {
-                        // Fallback check against legacy orders if not yet backfilled
-                        $isDuplicate = Order::where('paymentReference', $raw)
-                            ->whereNotIn('status', ['Cancelled', 'Declined'])
-                            ->where('paymentStatus', '!=', 'Payment Rejected')
-                            ->exists();
-                    }
-                    if ($isDuplicate) {
-                        $fail('This payment reference number is already tied to an active or verified order. Please provide a new and unique payment reference.');
-                        return;
-                    }
-                },
-            ];
-            $validationRules['paymentScreenshot'] = 'required|image';
+            $validationRules['paymentReference'] = 'nullable|string';
+            $validationRules['paymentScreenshot'] = 'required|image|max:10240';
         }
 
         $request->validate($validationRules, [
-            'paymentReference.required'  => 'Please provide your payment reference number.',
             'paymentScreenshot.required' => 'Payment receipt screenshot is required for online payments.',
             'address_id.required'        => 'Please provide a valid shipping address.',
         ]);
@@ -490,12 +447,17 @@ class CheckoutController extends Controller
 
             // 3. Server-side Receipt Screening (only for online payments)
             $screening = null;
-            if (!$isCod && $request->hasFile('paymentScreenshot')) {
+            $detectedRef = null;
+            if (!$isCod) {
+                if (!$request->hasFile('paymentScreenshot')) {
+                    return redirect()->back()->withInput()->with('error', 'Payment receipt screenshot is required for online payments.');
+                }
+
                 $tempPath = $request->file('paymentScreenshot')->getRealPath();
                 $origName = $request->file('paymentScreenshot')->getClientOriginalName();
                 $screening = \App\Services\AiService::verifyReceipt(
                     $tempPath,
-                    $request->paymentReference,
+                    (string) $request->input('paymentReference', ''),
                     $request->paymentMethod,
                     $totalExpectedAmount,
                     $origName
@@ -504,6 +466,34 @@ class CheckoutController extends Controller
                 if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
                     $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
                     return redirect()->back()->withInput()->with('error', $errorMessage);
+                }
+
+                $detectedRef = !empty($screening['detected_ref']) ? preg_replace('/\D/', '', (string)$screening['detected_ref']) : null;
+                $resolvedRef = $detectedRef ?: preg_replace('/\D/', '', (string) $request->input('paymentReference', ''));
+
+                if (empty($resolvedRef)) {
+                    return redirect()->back()->withInput()->with('error', 'Could not detect a valid transaction reference number from the uploaded receipt. Please attach a clear payment confirmation screenshot.');
+                }
+
+                if ($isGcash && strlen($resolvedRef) !== 13) {
+                    return redirect()->back()->withInput()->with('error', 'GCash reference number extracted from receipt must be exactly 13 digits.');
+                } elseif ($isMaya && strlen($resolvedRef) !== 12) {
+                    return redirect()->back()->withInput()->with('error', 'Maya reference number extracted from receipt must be exactly 12 digits.');
+                }
+
+                if (preg_match('/^(\d)\1+$/', $resolvedRef)) {
+                    return redirect()->back()->withInput()->with('error', 'Invalid payment reference number detected. Repeated digit sequences are not allowed.');
+                }
+
+                $isDuplicate = PaymentTransaction::where('active_reference', $resolvedRef)->exists();
+                if (!$isDuplicate) {
+                    $isDuplicate = Order::where('paymentReference', $resolvedRef)
+                        ->whereNotIn('status', ['Cancelled', 'Declined'])
+                        ->where('paymentStatus', '!=', 'Payment Rejected')
+                        ->exists();
+                }
+                if ($isDuplicate) {
+                    return redirect()->back()->withInput()->with('error', 'This payment reference number has already been used in another order. Please provide a new and unique payment receipt.');
                 }
             }
 
@@ -567,10 +557,9 @@ class CheckoutController extends Controller
                     $lockedProducts[$pId] = $product;
                 }
 
-                $paymentRefToSave = trim((string) $request->input('paymentReference', ''));
-                if ($isCod && empty($paymentRefToSave)) {
-                    $paymentRefToSave = 'COD-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-                }
+                $paymentRefToSave = $isCod
+                    ? ('COD-' . date('Ymd') . '-' . strtoupper(Str::random(6)))
+                    : ($detectedRef ?: preg_replace('/\D/', '', (string) $request->input('paymentReference', '')));
 
                 $order = Order::create([
                     'id' => $orderId,

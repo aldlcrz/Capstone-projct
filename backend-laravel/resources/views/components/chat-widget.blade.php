@@ -1,6 +1,6 @@
 <script>
-    window.lumbarongChatUserId = @json(auth()->id() ? (string) auth()->id() : '');
-    window.lumbarongIsLoggedIn = @json(auth()->check());
+    window.lumbarongChatUserId = {!! json_encode(auth()->id() ? (string) auth()->id() : '') !!};
+    window.lumbarongIsLoggedIn = {!! json_encode(auth()->check()) !!};
 </script>
 
 <script type="application/json" id="chat-widget-config">
@@ -495,21 +495,15 @@ body.chat-open {
 /* Mobile Screens: Position floating button cleanly above bottom bars */
 @media (max-width: 1023px) {
     .lumbarong-chat-wrapper {
-        @if(request()->is('cart*', 'checkout*'))
-            bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
-        @else
-            bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
-        @endif
+        bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
         right: 16px !important;
     }
+    .lumbarong-chat-wrapper.in-checkout-flow {
+        bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
+    }
     .lumbarong-chat-window {
-        @if(request()->is('cart*', 'checkout*'))
-            bottom: calc(210px + env(safe-area-inset-bottom, 0px)) !important;
-            height: calc(100dvh - 230px) !important;
-        @else
-            bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
-            height: calc(100dvh - 170px) !important;
-        @endif
+        bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(100dvh - 170px) !important;
         right: 12px !important;
         left: 12px !important;
         width: auto !important;
@@ -518,10 +512,14 @@ body.chat-open {
         z-index: 100000 !important;
         overscroll-behavior: contain;
     }
+    .lumbarong-chat-wrapper.in-checkout-flow .lumbarong-chat-window {
+        bottom: calc(210px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(100dvh - 230px) !important;
+    }
 }
 </style>
 
-<div x-data="chatWidget" class="lumbarong-chat-wrapper" :class="isOpen ? 'chat-is-open' : ''">
+<div x-data="chatWidget" class="lumbarong-chat-wrapper {{ request()->is('cart*', 'checkout*') ? 'in-checkout-flow' : '' }}" :class="isOpen ? 'chat-is-open' : ''">
     <!-- Transparent Interaction Shield to absorb outside gestures & close on outside tap -->
     <div 
         x-show="isOpen" 

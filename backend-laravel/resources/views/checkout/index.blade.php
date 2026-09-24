@@ -408,50 +408,22 @@
                         @endif
                     </div>
 
-                    <!-- Payment Proof Upload Inputs (Only for GCash / Maya) -->
+                    <!-- Payment Proof Upload & Automated Extraction (Only for GCash / Maya) -->
                     <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
-                        <div class="flex items-center gap-2 border-b border-[#ECE3D2] pb-2.5">
-                            <div class="w-2 h-2 rounded-full bg-[#C49520]"></div>
-                            <h3 class="text-xs font-extrabold text-[#1E1915] uppercase tracking-wider">Upload Proof of Payment</h3>
+                        <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2.5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-[#C49520]"></div>
+                                <h3 class="text-xs font-extrabold text-[#1E1915] uppercase tracking-wider">Upload Proof of Payment</h3>
+                            </div>
+                            <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] uppercase tracking-wider">
+                                Auto-Scanned Reference
+                            </span>
                         </div>
                         
+                        <!-- Hidden Reference Input for Form Submission -->
+                        <input type="hidden" name="paymentReference" :value="paymentRef">
+
                         <div class="space-y-3.5">
-                            <div class="space-y-1.5">
-                                <div class="flex items-center justify-between flex-wrap gap-1">
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">Payment Reference Number <span class="text-[#996515]">*</span></label>
-                                        <template x-if="ocrExtracted">
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
-                                                <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                                OCR Auto-Extracted (Editable)
-                                            </span>
-                                        </template>
-                                    </div>
-                                    <span class="text-[9px] font-bold text-gray-400" x-text="paymentMethod === 'GCash' ? 'GCash requirement: 13 digits' : 'Maya requirement: 12 digits'"></span>
-                                </div>
-                                <input type="text"
-                                       id="paymentReferenceInput"
-                                       name="paymentReference"
-                                       x-model="paymentRef"
-                                       @input="handleRefInput()"
-                                       @blur="validateRef()"
-                                       inputmode="numeric"
-                                       :maxlength="paymentMethod === 'GCash' ? 13 : 12"
-                                       :required="paymentMethod !== 'COD'"
-                                       :disabled="paymentMethod === 'COD'"
-                                       :placeholder="paymentMethod === 'GCash' ? 'e.g. 1002345678901 (13-digit GCash Reference)' : 'e.g. 123456789012 (12-digit Maya Reference)'"
-                                       :class="refError ? 'border-red-500 focus:ring-red-200 bg-red-50/20' : (hasReceiptMismatch() ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-200 bg-rose-50/20' : (isRefValid() ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-50/10 bg-emerald-50/10' : 'border-[#ECE3D2] focus:border-[#1E1915] focus:ring-[#D4AF37]/20 bg-gray-50/50'))"
-                                       class="w-full px-4 py-3 border rounded-xl text-sm lg:text-base font-bold outline-none focus:ring-4 transition-all">
-                                <div x-show="refError" x-cloak x-text="refError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
-                                <div x-show="!refError && hasReceiptMismatch()" x-cloak class="text-[10px] lg:text-xs text-amber-700 font-bold px-1 mt-0.5 flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    <span>⚠️ Notice: Receipt screenshot requires manual seller verification against reference number.</span>
-                                </div>
-                                <div x-show="!refError && !hasReceiptMismatch() && isRefValid()" x-cloak class="text-[10px] lg:text-xs text-emerald-600 font-bold px-1 mt-0.5 flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    <span x-text="isReceiptVerified() ? (paymentMethod === 'GCash' ? '✓ Valid GCash Reference & Receipt Verified (13 digits)' : '✓ Valid Maya Reference & Receipt Verified (12 digits)') : (paymentMethod === 'GCash' ? 'Valid GCash Reference Format (13 digits)' : 'Valid Maya Reference Format (12 digits)')"></span>
-                                </div>
-                            </div>
 
                             <div class="space-y-1.5">
                                 <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#996515]">*</span></label>
@@ -1608,6 +1580,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.screenshotError = '';
             this.aiVerificationResult = null;
             this.aiChecking = false;
+            this.paymentRef = '';
+            this.ocrExtracted = false;
+            this.refError = '';
+            this.isRefDuplicate = false;
         },
 
         selectAddress(addr) {
@@ -1729,8 +1705,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     const pos = e.target.getLatLng();
                     this.updatePinLocation(pos.lat, pos.lng);
                 });
-
-                this.reverseGeocode(lat, lng);
 
                 setTimeout(() => {
                     if (this.map) this.map.invalidateSize();
@@ -2368,26 +2342,26 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             if (this.isPlacingOrder) return;
             
             if (this.paymentMethod !== 'COD') {
+                const screenshotInput = document.getElementById('paymentScreenshotInput');
+                if (!this.fileName || !screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
+                    this.screenshotError = 'Payment receipt screenshot is required for online payments.';
+                    document.getElementById('paymentScreenshotInput')?.click();
+                    return;
+                }
                 if (this.aiChecking) {
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (!this.validateRef() || this.isRefDuplicate) {
-                    if (this.isRefDuplicate) {
-                        this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
-                    }
-                    document.getElementById('paymentReferenceInput')?.focus();
-                    return;
-                }
-                const screenshotInput = document.getElementById('paymentScreenshotInput');
-                if (!screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
-                    this.screenshotError = 'Payment receipt screenshot is required.';
-                    document.getElementById('paymentScreenshotInput')?.focus();
-                    return;
-                }
                 if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
                     this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
-                    document.getElementById('paymentScreenshotInput')?.focus();
+                    return;
+                }
+                if (!this.paymentRef || !this.validateRef()) {
+                    this.screenshotError = this.refError || `Could not detect a valid ${this.paymentMethod} reference number from your receipt. Please attach a clearer screenshot.`;
+                    return;
+                }
+                if (this.isRefDuplicate) {
+                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
                     return;
                 }
             }
@@ -2397,19 +2371,23 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         confirmPlaceOrder() {
             if (this.isPlacingOrder) return;
             if (this.paymentMethod !== 'COD') {
+                if (!this.fileName) {
+                    this.showConfirmModal = false;
+                    this.screenshotError = 'Payment receipt screenshot is required for online payments.';
+                    return;
+                }
                 if (this.aiChecking) {
                     this.showConfirmModal = false;
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (!this.validateRef() || this.isRefDuplicate) {
-                    this.showConfirmModal = false;
-                    document.getElementById('paymentReferenceInput')?.focus();
-                    return;
-                }
                 if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
                     this.showConfirmModal = false;
-                    document.getElementById('paymentScreenshotInput')?.focus();
+                    this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
+                    return;
+                }
+                if (!this.paymentRef || !this.validateRef() || this.isRefDuplicate) {
+                    this.showConfirmModal = false;
                     return;
                 }
             }

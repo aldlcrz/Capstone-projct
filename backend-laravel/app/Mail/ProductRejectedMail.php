@@ -10,11 +10,11 @@ class ProductRejectedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $sellerName;
-    public $productName;
-    public $productId;
-    public $rejectionReason;
-    public $reason;
+    public string $sellerName;
+    public string $productName;
+    public string $productId;
+    public string $rejectionReason;
+    public string $reason;
 
     public function __construct(string $sellerName, string $productName, string $productId, string $rejectionReason)
     {
