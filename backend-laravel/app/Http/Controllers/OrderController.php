@@ -13,6 +13,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ShippingProvider;
 use App\Models\OrderShipping;
+use App\Services\CreateOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,13 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    protected CreateOrderService $createOrderService;
+
+    public function __construct(CreateOrderService $createOrderService)
+    {
+        $this->createOrderService = $createOrderService;
+    }
+
     /**
      * Helper to send notifications.
      */
@@ -73,144 +81,36 @@ class OrderController extends Controller
     }
 
     /**
-     * Create a new order.
+     * Create a new order (delegates to canonical CreateOrderService).
      */
     public function createOrder(Request $request)
     {
-        // Maintenance Mode Guard
-        $maintenance = SystemSetting::where('key', 'maintenanceMode')->first();
-        if ($maintenance && ($maintenance->value === 'true' || $maintenance->value === true) && $request->user()->role !== 'admin') {
-            return response()->json([
-                'message' => "Transactions are temporarily paused for maintenance. Please try again later.",
-                'maintenanceMode' => true 
-            ], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'items' => 'required|array',
-            'paymentMethod' => 'required|string|in:GCash,Maya',
-            'addressId' => 'nullable|string',
-            'shippingAddress' => 'nullable|array',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Validation error', 'errors' => $validator->errors()], 400);
-        }
-
         try {
-            return DB::transaction(function () use ($request) {
-                $items = $request->items;
-                $customerId = $request->user()->id;
-                $shippingAddress = $request->shippingAddress;
+            $user = $request->user() ?: Auth::user();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
 
-                if ($request->has('addressId')) {
-                    $addressRecord = Address::where('id', $request->addressId)
-                        ->where('userId', $customerId)
-                        ->first();
-                    if ($addressRecord) {
-                        $shippingAddress = $addressRecord->toArray();
-                    }
-                }
+            $order = $this->createOrderService->createOrder([
+                'customer' => $user,
+                'items' => $request->items,
+                'paymentMethod' => $request->paymentMethod ?? 'GCash',
+                'paymentReference' => $request->paymentReference,
+                'paymentProof' => $request->paymentProof,
+                'address_id' => $request->addressId ?? $request->address_id,
+                'shippingAddress' => $request->shippingAddress,
+                'quoteToken' => $request->quoteToken ?? $request->shipping_token,
+                'selectedProviderId' => $request->selectedProviderId ?? $request->provider_id,
+                'idempotencyKey' => $request->header('X-Idempotency-Key') ?? $request->idempotencyKey,
+                'visitorSessionId' => $request->header('x-visitor-session'),
+            ]);
 
-                if (!$shippingAddress) {
-                    throw new \Exception('Shipping address is required', 400);
-                }
-
-                $calculatedTotal = 0;
-                $sellerId = null;
-                $preparedItems = [];
-
-                foreach ($items as $item) {
-                    $productId = $item['productId'] ?? $item['id'];
-                    $product = Product::lockForUpdate()->find($productId);
-                    if (!$product) {
-                        throw new \Exception("Product not found: " . $productId, 404);
-                    }
-
-                    if ($product->stock < $item['quantity']) {
-                        throw new \Exception("Not enough stock for: " . $product->name, 400);
-                    }
-
-                    if ($sellerId && $sellerId !== $product->sellerId) {
-                        throw new \Exception("Orders can only contain products from one seller", 400);
-                    }
-
-                    $sellerId = $product->sellerId;
-                    $calculatedTotal += $product->price * $item['quantity'];
-
-                    $preparedItems[] = [
-                        'product' => $product,
-                        'productId' => $product->id,
-                        'quantity' => $item['quantity'],
-                        'price' => $product->price,
-                        'size' => $item['size'] ?? 'M',
-                        'variation' => $item['variation'] ?? 'Original',
-                    ];
-                }
-
-                $order = Order::create([
-                    'customerId' => $customerId,
-                    'sellerId' => $sellerId,
-                    'totalAmount' => $calculatedTotal,
-                    'shippingAddress' => $shippingAddress,
-                    'paymentMethod' => $request->paymentMethod,
-                    'paymentReference' => $request->paymentReference,
-                    'paymentProof' => $request->paymentProof,
-                    'status' => 'Pending',
-                    'visitorSessionId' => $request->header('x-visitor-session'),
-                ]);
-
-                // Record initial OrderStatusHistory
-                OrderStatusHistory::create([
-                    'orderId' => $order->id,
-                    'previousStatus' => null,
-                    'newStatus' => 'Pending',
-                    'updatedBy' => $customerId,
-                    'userRole' => 'customer',
-                    'notes' => 'Order placed by customer.',
-                ]);
-
-                foreach ($preparedItems as $pItem) {
-                    $pItem['product']->decrement('stock', $pItem['quantity']);
-
-                    OrderItem::create([
-                        'orderId' => $order->id,
-                        'productId' => $pItem['productId'],
-                        'quantity' => $pItem['quantity'],
-                        'price' => $pItem['price'],
-                        'size' => $pItem['size'],
-                        'variation' => $pItem['variation'],
-                    ]);
-
-                    // Stock notifications
-                    if ($pItem['product']->fresh()->stock <= 0) {
-                        $this->sendNotification($sellerId, '⚠️ Out of Stock', "\"{$pItem['product']->name}\" is now out of stock.", 'system', '/seller/products', 'seller');
-                    } elseif ($pItem['product']->fresh()->stock <= 5) {
-                        $this->sendNotification($sellerId, '🔔 Low Stock Alert', "\"{$pItem['product']->name}\" has only {$pItem['product']->stock} items left.", 'system', '/seller/products', 'seller');
-                    }
-                }
-
-                $this->sendNotification($customerId, 'Order placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', "/orders/{$order->id}", 'customer');
-                $this->sendNotification($sellerId, 'New order received', "A customer placed a new order (#LB-" . strtoupper(substr($order->id, -8)) . ") in your shop.", 'order', "/seller/orders?order_id={$order->id}", 'seller');
-
-                // Gmail Notifications
-                $customerUser = User::find($customerId);
-                $sellerUser   = User::find($sellerId);
-
-                if ($customerUser && $customerUser->email) {
-                    $cMail = new \App\Mail\OrderStatusUpdatedMail($customerUser->name, $order->id, 'Order Confirmed', 'Your order has been placed successfully.');
-                    \App\Services\EmailNotificationService::sendNotification($customerUser->email, $cMail, 'order_status_updated', $customerUser->id, 'Order', $order->id);
-                }
-
-                if ($sellerUser && $sellerUser->email) {
-                    $sMail = new \App\Mail\NewOrderSellerMail($sellerUser->name, $order->id, (float) $calculatedTotal, $customerUser?->name);
-                    \App\Services\EmailNotificationService::sendNotification($sellerUser->email, $sMail, 'new_order', $sellerUser->id, 'Order', $order->id);
-                }
-
-                return response()->json($order->load(['seller', 'items.product']), 201);
-            });
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
+            return response()->json($order->load(['seller', 'items.product', 'shipping', 'latestPaymentTransaction']), 201);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            Log::error('API Order creation failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => $e->getMessage() ?: 'Failed to create order.'], 500);
         }
     }
 
@@ -229,12 +129,22 @@ class OrderController extends Controller
             return $this->cancelOrder($request, $id);
         }
 
-        $user = $request->user();
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+        $currentStatus = $order->status;
+        $normalizedCurrent = strtolower($currentStatus);
+
         // Permissions
         if ($user->role === 'customer') {
             if ($order->customerId !== $user->id) return response()->json(['message' => 'Unauthorized'], 403);
             if (!in_array($normalizedTarget, ['received by buyer', 'completed'], true)) {
                 return response()->json(['message' => 'Customers can only confirm receipt.'], 403);
+            }
+            // Problem 06: Customers can only confirm receipt once order has been shipped or delivered
+            if (!in_array($normalizedCurrent, ['delivered', 'shipped', 'in transit', 'in_transit'], true)) {
+                return response()->json(['message' => 'Cannot confirm delivery until the order has been shipped or delivered.'], 400);
             }
         } elseif ($user->role === 'seller') {
             if ($order->sellerId !== $user->id && $user->role !== 'admin') return response()->json(['message' => 'Unauthorized'], 403);
@@ -343,21 +253,30 @@ class OrderController extends Controller
 
         $order->status = $canonicalTarget;
         if ($canonicalTarget === 'To Ship') {
-            $order->paymentStatus = 'Verified';
-            $order->paymentRejectionReason = null;
-
-            // Seller verification authority: officially marks transaction attempt as VERIFIED
-            try {
-                $tx = $order->latestPaymentTransaction;
-                if ($tx) {
-                    $tx->update([
-                        'status' => 'VERIFIED',
-                        'verified_at' => now(),
-                        'notes' => 'Payment verified and accepted by seller.',
-                    ]);
+            if (strcasecmp($order->paymentMethod, 'COD') === 0 || strcasecmp($order->paymentMethod, 'Cash on Delivery') === 0) {
+                // COD payment remains pending until delivered
+                $order->paymentStatus = 'Pending';
+            } else {
+                // If payment was rejected, block transition to To Ship without re-verification
+                if ($order->paymentStatus === 'Rejected') {
+                    return response()->json(['message' => 'Cannot move order to To Ship because payment proof was rejected. Payment must be re-verified.'], 400);
                 }
-            } catch (\Throwable $e) {
-                Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
+                $order->paymentStatus = 'Verified';
+                $order->paymentRejectionReason = null;
+
+                // Seller verification authority: officially marks transaction attempt as VERIFIED
+                try {
+                    $tx = $order->latestPaymentTransaction;
+                    if ($tx) {
+                        $tx->update([
+                            'status' => 'VERIFIED',
+                            'verified_at' => now(),
+                            'notes' => 'Payment verified and accepted by seller.',
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
+                }
             }
         }
         $order->save();

@@ -13,12 +13,12 @@ use App\Models\ShippingRate;
 use App\Models\SellerShippingProvider;
 use App\Services\ShippingZoneResolverService;
 use App\Services\ShippingCalculatorService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
 class ShippingCalculatorTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected ShippingZoneResolverService $resolver;
     protected ShippingCalculatorService $calculator;

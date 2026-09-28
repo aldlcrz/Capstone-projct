@@ -56,12 +56,8 @@ class SellerMiddleware
                     return redirect('/login')->withErrors(['email' => $msg]);
                 }
 
-                // If already approved by admin (isVerified = true, status = active), do NOT block them!
-                if ($user->isVerified && ($user->status === 'active' || empty($user->status))) {
-                    if (is_null($user->email_verified_at)) {
-                        $user->email_verified_at = now();
-                        $user->save();
-                    }
+                // If already approved by admin (isVerified = true, status = active) and email verified, grant access
+                if ($user->isVerified && ($user->status === 'active' || empty($user->status)) && !is_null($user->email_verified_at)) {
                     return $next($request);
                 }
 

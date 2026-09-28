@@ -49,6 +49,8 @@
             currentUserId: window.lumbarongChatUserId || _chatConfig.currentUserId || '',
             isLoggedIn: typeof window.lumbarongIsLoggedIn === 'boolean' ? window.lumbarongIsLoggedIn : Boolean(_chatConfig.isLoggedIn),
             pollInterval: null,
+            isLoadingMessages: false,
+            isLoadingConversations: false,
 
             // Smart Support State & Session Context Memory
             aiInput: '',
@@ -265,10 +267,11 @@
 
             // --- Artisan Peer-to-Peer Chat Methods ---
             loadConversations() {
-                if (!this.isLoggedIn) {
-                    this.conversations = [];
+                if (!this.isLoggedIn || this.isLoadingConversations) {
+                    if (!this.isLoggedIn) this.conversations = [];
                     return;
                 }
+                this.isLoadingConversations = true;
                 fetch('/chat/conversations', {
                     headers: {
                         'Accept': 'application/json',
@@ -285,6 +288,9 @@
                 .catch(err => {
                     console.error('Failed to load conversations:', err);
                     this.conversations = [];
+                })
+                .finally(() => {
+                    this.isLoadingConversations = false;
                 });
             },
 
@@ -331,11 +337,12 @@
             },
 
             loadMessages(isPolling = false) {
-                if (!this.activeUser || !this.isLoggedIn) {
-                    this.messages = [];
+                if (!this.activeUser || !this.isLoggedIn || this.isLoadingMessages) {
+                    if (!this.activeUser || !this.isLoggedIn) this.messages = [];
                     return;
                 }
 
+                this.isLoadingMessages = true;
                 fetch('/chat/messages/' + this.activeUser.id, {
                     headers: {
                         'Accept': 'application/json',
@@ -358,6 +365,9 @@
                 .catch(err => {
                     console.error('Failed to load messages:', err);
                     if (!Array.isArray(this.messages)) this.messages = [];
+                })
+                .finally(() => {
+                    this.isLoadingMessages = false;
                 });
             },
 

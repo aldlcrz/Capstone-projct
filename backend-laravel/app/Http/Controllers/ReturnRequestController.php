@@ -54,6 +54,13 @@ class ReturnRequestController extends Controller
             return back()->with('error', 'Only delivered or completed orders can be returned.');
         }
 
+        if ($order->reviews()->exists()) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'This order has already been reviewed and accepted. Return requests cannot be submitted for reviewed orders.'], 422);
+            }
+            return back()->with('error', 'This order has already been reviewed and accepted. Return requests cannot be submitted for reviewed orders.');
+        }
+
         $existing = ReturnRequest::where('orderId', $order->id)
             ->whereIn('status', ['Pending', 'Approved'])
             ->first();

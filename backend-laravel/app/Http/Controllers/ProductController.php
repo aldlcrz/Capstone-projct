@@ -53,10 +53,14 @@ class ProductController extends Controller
         $data['image'] = $canonicalImages;
         $data['image_urls'] = $canonicalImages;
 
-        // Handle seller
-        if (isset($data['seller'])) {
-            $data['seller']['profilePhoto'] = $this->toPublicUrl($request, $data['seller']['profilePhoto'] ?? null);
-            $data['seller']['birDocument'] = $this->toPublicUrl($request, $data['seller']['birDocument'] ?? null);
+        // Handle seller: Whitelist only public seller fields (no GCash/BIR/sensitive documents)
+        if (isset($data['seller']) && is_array($data['seller'])) {
+            $data['seller'] = [
+                'id' => $data['seller']['id'] ?? null,
+                'name' => $data['seller']['name'] ?? 'Shop',
+                'profilePhoto' => $this->toPublicUrl($request, $data['seller']['profilePhoto'] ?? null),
+                'isVerified' => (bool)($data['seller']['isVerified'] ?? false),
+            ];
         }
 
         $data['rating'] = number_format($product->avgRating ?? 0, 1);
@@ -87,7 +91,7 @@ class ProductController extends Controller
     public function getAllProducts(Request $request)
     {
         $query = Product::where('status', 'approved')
-            ->with(['seller:id,name,gcashNumber,isVerified,profilePhoto'])
+            ->with(['seller:id,name,isVerified,profilePhoto'])
             ->withAvg('reviews as avgRating', 'rating')
             ->withCount('reviews as reviewCount');
 
@@ -192,13 +196,19 @@ class ProductController extends Controller
             $product = Product::find($id);
             if (!$product) return response()->json(['message' => 'Product not found'], 404);
 
+            $allowedEvents = ['view', 'add_to_cart', 'initiate_checkout', 'purchase', 'wishlist'];
+            $eventType = strtolower(trim((string)($request->eventType ?? $request->event_type ?? 'add_to_cart')));
+            if (!in_array($eventType, $allowedEvents, true)) {
+                return response()->json(['message' => 'Invalid event type'], 422);
+            }
+
             SellerFunnelEvent::create([
                 'product_id' => $id,
                 'seller_id' => $product->sellerId,
                 'customer_id' => ($request->user() && $request->user()->role === 'customer') ? $request->user()->id : null,
                 'visitor_session_id' => $request->header('X-Visitor-Session') ?? $request->visitorSessionId,
                 'ip_address' => $request->ip(),
-                'event_type' => $request->eventType ?? 'add_to_cart'
+                'event_type' => $eventType
             ]);
 
             return response()->json(['message' => 'Event tracked successfully']);

@@ -46,14 +46,19 @@ class ShippingZoneResolverService
         if (!empty($normPostal)) {
             $query = ShippingZoneArea::with('zone')
                 ->whereNotNull('postal_code_prefix')
-                ->where('postal_code_prefix', '!=', '')
-                ->whereRaw('? LIKE CONCAT(postal_code_prefix, "%")', [$normPostal]);
+                ->where('postal_code_prefix', '!=', '');
             if (!empty($normProvince)) {
                 $query->whereRaw('LOWER(province) = ?', [$normProvince]);
             }
-            $area = $query->orderByRaw('LENGTH(postal_code_prefix) DESC')->first();
-            if ($area && $area->zone) {
-                return $area->zone;
+            $areas = $query->get();
+            $matchingArea = $areas->filter(function ($a) use ($normPostal) {
+                return str_starts_with($normPostal, (string) $a->postal_code_prefix);
+            })->sortByDesc(function ($a) {
+                return strlen((string) $a->postal_code_prefix);
+            })->first();
+
+            if ($matchingArea && $matchingArea->zone) {
+                return $matchingArea->zone;
             }
         }
 

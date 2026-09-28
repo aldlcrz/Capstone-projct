@@ -9,6 +9,7 @@ use App\Models\OrderShipping;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\CreateOrderService;
 use App\Services\ShippingCalculatorService;
 use App\Support\VariationFormatter;
 use Illuminate\Http\Request;
@@ -19,10 +20,14 @@ use Illuminate\Support\Str;
 class CheckoutController extends Controller
 {
     protected ShippingCalculatorService $shippingCalculator;
+    protected CreateOrderService $createOrderService;
 
-    public function __construct(ShippingCalculatorService $shippingCalculator)
-    {
+    public function __construct(
+        ShippingCalculatorService $shippingCalculator,
+        CreateOrderService $createOrderService
+    ) {
         $this->shippingCalculator = $shippingCalculator;
+        $this->createOrderService = $createOrderService;
     }
     public function index(Request $request)
     {
@@ -320,7 +325,6 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        $inTransaction = false;
         // Guard: Administrators cannot place orders
         if (Auth::check() && in_array(Auth::user()->role, ['admin', 'superadmin'])) {
             return redirect()->route(Auth::user()->role === 'superadmin' ? 'superadmin.dashboard' : 'admin.dashboard')
@@ -333,8 +337,9 @@ class CheckoutController extends Controller
         $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
 
         $validationRules = [
-            'paymentMethod' => 'required|string',
-            'address_id'    => 'required|string',
+            'paymentMethod'   => 'required|string',
+            'address_id'      => 'required_without:shippingAddress|nullable|string',
+            'shippingAddress' => 'required_without:address_id|nullable',
         ];
 
         if (!$isCod) {
@@ -344,7 +349,8 @@ class CheckoutController extends Controller
 
         $request->validate($validationRules, [
             'paymentScreenshot.required' => 'Payment receipt screenshot is required for online payments.',
-            'address_id.required'        => 'Please provide a valid shipping address.',
+            'address_id.required_without' => 'Please provide a valid shipping address.',
+            'shippingAddress.required_without' => 'Please provide a valid shipping address.',
         ]);
 
         try {
@@ -360,106 +366,33 @@ class CheckoutController extends Controller
             } else {
                 $cart = session()->get('cart', []);
             }
-            
-            if (empty($cart) || empty($cart[0])) throw new \Exception('Cart is empty');
 
-            // 2. Resolve buyer shipping address strictly via address_id
-            $addrRecord = Address::where('id', $request->address_id)
-                ->where('userId', Auth::id())
-                ->first();
-            if (!$addrRecord) {
-                throw new \Exception('Please provide a valid delivery address.');
-            }
-            $addressData = $addrRecord->toArray();
-
-            $selectedProviderId = $request->input('shipping_provider_id') ?: $request->input('selected_provider_id');
-            $quoteToken         = $request->input('shipping_quote_token');
-
-            $itemsBySeller = [];
-            foreach ($cart as $item) {
-                $sellerId = $item['sellerId'] ?? null;
-                if (!$sellerId && !empty($item['id'])) {
-                    $prod = Product::find($item['id']);
-                    $sellerId = $prod?->sellerId;
-                }
-                if ($sellerId) {
-                    $itemsBySeller[$sellerId][] = $item;
-                }
+            if (empty($cart) || empty($cart[0])) {
+                throw new \Exception('Cart is empty');
             }
 
-            if (count($itemsBySeller) > 1) {
-                throw new \Exception('Cross-shop checkout in a single payment is not supported. Please checkout each shop separately to ensure direct payment to each artisan.');
-            }
-
-            // Validate quote token across complete seller set if token provided
-            if ($quoteToken) {
-                if (!$this->shippingCalculator->validateQuoteToken($quoteToken, array_keys($itemsBySeller), $request->address_id, $cart)) {
-                    throw new \Exception('Your shipping quote has expired or the order items changed. Please review and refresh your shipping quote.');
-                }
-            }
-
-            // Validate COD locality
-            if ($isCod) {
-                foreach ($itemsBySeller as $sellerId => $items) {
-                    $sellerUser = User::find($sellerId);
-                    if ($sellerUser && !$this->shippingCalculator->isLocalCluster($sellerUser, $addressData)) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'paymentMethod' => ['Cash on Delivery (COD) is available only for nearby local deliveries. Please choose GCash or Maya.'],
-                        ]);
-                    }
-                }
-            }
-
-            $sellerCalculatedQuotes = [];
-            $totalExpectedAmount = 0;
-
-            foreach ($itemsBySeller as $sellerId => $items) {
-                $sellerUser = User::find($sellerId);
-                if ($sellerUser) {
-                    $shopName = $sellerUser->shopName ?: $sellerUser->name;
-                    if (in_array($sellerUser->status, ['blocked', 'suspended'])) {
-                        throw new \Exception("The shop '{$shopName}' is currently suspended and cannot process orders at this time.");
-                    }
-                    if ($sellerUser->status === 'frozen') {
-                        throw new \Exception("The shop '{$shopName}' is currently frozen due to overdue monthly commission and cannot process orders at this time.");
-                    }
-                }
-
-                $sellerSubtotal = 0;
-                foreach ($items as $item) {
-                    $sellerSubtotal += ((float)$item['price']) * ((int)$item['quantity']);
-                }
-
-                // Server-side authoritative calculation
-                // Re-calculate quote against server database authoritatively using seller's preferred pricing provider or selected local method
-                $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
-                $providerId = $selectedProviderId ?: ($preferredProvider?->id);
-                $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $items, $providerId);
-                $chosenQuote = $quotes[0] ?? null;
-
-                if (!$chosenQuote) {
-                    throw new \Exception("Shipping service is currently not available for this delivery route or weight bracket.");
-                }
-
-                $sellerCalculatedQuotes[$sellerId] = $chosenQuote;
-                $totalExpectedAmount += ($sellerSubtotal + (float)$chosenQuote['shipping_fee']);
-            }
-
-            // 3. Server-side Receipt Screening (only for online payments)
+            // 2. Handle Receipt Upload & Screening for Online Payments
             $screening = null;
-            $detectedRef = null;
+            $paymentProofPath = null;
             if (!$isCod) {
                 if (!$request->hasFile('paymentScreenshot')) {
                     return redirect()->back()->withInput()->with('error', 'Payment receipt screenshot is required for online payments.');
                 }
 
-                $tempPath = $request->file('paymentScreenshot')->getRealPath();
-                $origName = $request->file('paymentScreenshot')->getClientOriginalName();
+                $file = $request->file('paymentScreenshot');
+                $tempPath = $file->getRealPath();
+                $origName = $file->getClientOriginalName();
+
+                // Store receipt privately
+                $storedFileName = (string) Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+                $storedPath = $file->storeAs('payments', $storedFileName, 'local');
+                $paymentProofPath = 'private/' . $storedPath;
+
                 $screening = \App\Services\AiService::verifyReceipt(
                     $tempPath,
                     (string) $request->input('paymentReference', ''),
-                    $request->paymentMethod,
-                    $totalExpectedAmount,
+                    $paymentMethod,
+                    0.0,
                     $origName
                 );
 
@@ -467,281 +400,25 @@ class CheckoutController extends Controller
                     $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
                     return redirect()->back()->withInput()->with('error', $errorMessage);
                 }
-
-                $detectedRef = !empty($screening['detected_ref']) ? preg_replace('/\D/', '', (string)$screening['detected_ref']) : null;
-                $resolvedRef = $detectedRef ?: preg_replace('/\D/', '', (string) $request->input('paymentReference', ''));
-
-                if (empty($resolvedRef)) {
-                    return redirect()->back()->withInput()->with('error', 'Could not detect a valid transaction reference number from the uploaded receipt. Please attach a clear payment confirmation screenshot.');
-                }
-
-                if ($isGcash && strlen($resolvedRef) !== 13) {
-                    return redirect()->back()->withInput()->with('error', 'GCash reference number extracted from receipt must be exactly 13 digits.');
-                } elseif ($isMaya && strlen($resolvedRef) !== 12) {
-                    return redirect()->back()->withInput()->with('error', 'Maya reference number extracted from receipt must be exactly 12 digits.');
-                }
-
-                if (preg_match('/^(\d)\1+$/', $resolvedRef)) {
-                    return redirect()->back()->withInput()->with('error', 'Invalid payment reference number detected. Repeated digit sequences are not allowed.');
-                }
-
-                $isDuplicate = PaymentTransaction::where('active_reference', $resolvedRef)->exists();
-                if (!$isDuplicate) {
-                    $isDuplicate = Order::where('paymentReference', $resolvedRef)
-                        ->whereNotIn('status', ['Cancelled', 'Declined'])
-                        ->where('paymentStatus', '!=', 'Payment Rejected')
-                        ->exists();
-                }
-                if ($isDuplicate) {
-                    return redirect()->back()->withInput()->with('error', 'This payment reference number has already been used in another order. Please provide a new and unique payment receipt.');
-                }
             }
 
-            $inTransaction = true;
-            DB::beginTransaction();
+            // 3. Delegate to Canonical CreateOrderService
+            $order = $this->createOrderService->createOrder([
+                'customer'            => Auth::user(),
+                'items'               => $cart,
+                'address_id'          => $request->address_id,
+                'shippingAddress'     => $request->input('shippingAddress'),
+                'paymentMethod'       => $paymentMethod,
+                'paymentReference'    => $request->input('paymentReference'),
+                'paymentProof'        => $paymentProofPath,
+                'screening'           => $screening,
+                'quoteToken'          => $request->input('shipping_quote_token'),
+                'selectedProviderId'  => $request->input('shipping_provider_id') ?: $request->input('selected_provider_id'),
+                'idempotencyKey'      => $request->input('idempotency_key') ?: $request->header('X-Idempotency-Key'),
+                'visitorSessionId'    => $request->header('X-Visitor-Session') ?? $request->visitorSessionId,
+            ]);
 
-            $orders = [];
-            $postCommitTasks = [];
-            foreach ($itemsBySeller as $sellerId => $items) {
-                $sellerUser = User::find($sellerId);
-                $orderId = (string) Str::uuid();
-                $chosenShipping = $sellerCalculatedQuotes[$sellerId];
-                $shippingFee = (float) $chosenShipping['shipping_fee'];
-
-                $totalAmount = 0;
-                foreach ($items as $item) {
-                    $totalAmount += $item['price'] * $item['quantity'];
-                }
-                $totalAmount += $shippingFee;
-
-                // 1. Group/aggregate demands and validate per-product & per-size requirements
-                $requestedQuantities = [];
-                $requestedSizes = [];
-                foreach ($items as $item) {
-                    $pId = (string) $item['id'];
-                    $qty = max(1, (int)$item['quantity']);
-                    $requestedQuantities[$pId] = ($requestedQuantities[$pId] ?? 0) + $qty;
-                    if (!empty($item['size'])) {
-                        $sizeKey = (string) $item['size'];
-                        $requestedSizes[$pId][$sizeKey] = ($requestedSizes[$pId][$sizeKey] ?? 0) + $qty;
-                    }
-                }
-
-                // 2. Sort product IDs deterministically to prevent deadlock across concurrent checkout transactions
-                $sortedProductIds = collect(array_keys($requestedQuantities))->sort()->values();
-
-                // 3. Lock each product row in sorted deterministic order and validate inventory
-                $lockedProducts = [];
-                foreach ($sortedProductIds as $pId) {
-                    $product = Product::whereKey($pId)->lockForUpdate()->first();
-                    if (!$product) {
-                        throw new \Exception("A product in your cart is no longer available.");
-                    }
-
-                    $totalDemand = $requestedQuantities[$pId];
-                    if ($product->stock < $totalDemand) {
-                        throw new \Exception("Insufficient stock for \"{$product->name}\". Only {$product->stock} piece(s) available (requested: {$totalDemand}).");
-                    }
-
-                    // Validate per-size stock if tracked
-                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
-                        $sizeStocks = $product->size_stocks;
-                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
-                            $availSizeStock = isset($sizeStocks[$sz]) ? (int)$sizeStocks[$sz] : null;
-                            if ($availSizeStock !== null && $availSizeStock < $szQty) {
-                                throw new \Exception("Insufficient stock for size \"{$sz}\" of \"{$product->name}\". Only {$availSizeStock} available (requested: {$szQty}).");
-                            }
-                        }
-                    }
-
-                    $lockedProducts[$pId] = $product;
-                }
-
-                $paymentRefToSave = $isCod
-                    ? ('COD-' . date('Ymd') . '-' . strtoupper(Str::random(6)))
-                    : ($detectedRef ?: preg_replace('/\D/', '', (string) $request->input('paymentReference', '')));
-
-                $order = Order::create([
-                    'id' => $orderId,
-                    'customerId' => Auth::id(),
-                    'sellerId' => $sellerId,
-                    'totalAmount' => $totalAmount,
-                    'status' => 'Pending',
-                    'paymentMethod' => $request->paymentMethod,
-                    'paymentReference' => $paymentRefToSave,
-                    'paymentStatus' => $isCod ? 'Pending Payment (COD)' : 'Payment Submitted',
-                    'shippingAddress' => $addressData,
-                    'courierName' => $chosenShipping['provider_name'],
-                    'createdAt' => now(),
-                    'updatedAt' => now(),
-                ]);
-
-                // Create Immutable OrderShipping calculation snapshot
-                OrderShipping::create([
-                    'id'                             => (string) Str::uuid(),
-                    'order_id'                       => $orderId,
-                    'provider_id'                    => $chosenShipping['provider_id'],
-                    'provider_name'                  => $chosenShipping['provider_name'],
-                    'pricing_provider_id'            => $chosenShipping['provider_id'],
-                    'pricing_provider_name'          => $chosenShipping['provider_name'],
-                    'fulfillment_provider_id'        => null,
-                    'fulfillment_provider_name'      => null,
-                    'shipping_rate_id'               => $chosenShipping['shipping_rate_id'],
-                    'origin_zone_id'                 => $chosenShipping['origin_zone_id'],
-                    'origin_zone_name'               => $chosenShipping['origin_zone_name'],
-                    'destination_zone_id'            => $chosenShipping['destination_zone_id'],
-                    'destination_zone_name'          => $chosenShipping['destination_zone_name'],
-                    'actual_weight'                  => $chosenShipping['actual_weight'],
-                    'volumetric_weight'              => $chosenShipping['volumetric_weight'],
-                    'chargeable_weight'              => $chosenShipping['chargeable_weight'],
-                    'rate_base_snapshot'             => $chosenShipping['rate_base_snapshot'],
-                    'additional_weight_rate_snapshot'=> $chosenShipping['additional_weight_rate_snapshot'],
-                    'volumetric_divisor_snapshot'    => $chosenShipping['volumetric_divisor_snapshot'],
-                    'shipping_fee'                   => $shippingFee,
-                    'estimated_days_min'             => $chosenShipping['estimated_days_min'],
-                    'estimated_days_max'             => $chosenShipping['estimated_days_max'],
-                    'shipping_status'                => 'Pending',
-                ]);
-
-                // Record initial OrderStatusHistory
-                \App\Models\OrderStatusHistory::create([
-                    'orderId' => $orderId,
-                    'previousStatus' => null,
-                    'newStatus' => 'Pending',
-                    'updatedBy' => Auth::id(),
-                    'userRole' => 'customer',
-                    'notes' => $isCod 
-                        ? 'Order placed by customer via Cash on Delivery / Pay on Claim.' 
-                        : 'Order placed by customer. Payment proof submitted, awaiting artisan verification.',
-                ]);
-
-                $storedPath = null;
-                if ($request->hasFile('paymentScreenshot')) {
-                    $storedPath = $request->file('paymentScreenshot')->store('payments', 'public');
-                    $order->paymentProof = $storedPath;
-                    $order->save();
-                }
-
-                if (!$isCod) {
-                    // Create PaymentTransaction attempt linked to this order
-                    $rawRef = trim((string) $paymentRefToSave);
-                    $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
-                        ? (float) $screening['detected_amount']
-                        : null;
-                    $tier = in_array(($screening['status'] ?? ''), ['PASS', 'REVIEW', 'REJECT'])
-                        ? $screening['status']
-                        : 'REVIEW';
-
-                    PaymentTransaction::create([
-                        'order_id' => $orderId,
-                        'customer_id' => Auth::id(),
-                        'seller_id' => $sellerId,
-                        'reference_number' => $rawRef,
-                        'active_reference' => $rawRef,
-                        'wallet_type' => $request->paymentMethod,
-                        'expected_amount' => $totalAmount,
-                        'detected_amount' => $detectedAmt,
-                        'amount_confidence' => $screening['amount_confidence'] ?? null,
-                        'reference_confidence' => $screening['reference_confidence'] ?? null,
-                        'confidence' => $screening['confidence'] ?? null,
-                        'status' => 'UNVERIFIED',
-                        'verification_tier' => $tier,
-                        'receipt_path' => $storedPath,
-                        'notes' => $screening['message'] ?? 'Initial submission at checkout',
-                    ]);
-                }
-
-                foreach ($items as $item) {
-                    $product = $lockedProducts[$item['id']] ?? null;
-
-                    $orderItemData = [
-                        'id' => (string) Str::uuid(),
-                        'orderId' => $orderId,
-                        'productId' => $item['id'],
-                        'product_name' => $product?->name ?? ($item['name'] ?? 'Heritage Piece'),
-                        'product_image' => !empty($item['image']) ? $item['image'] : ($product ? VariationFormatter::getImageForVariation($item['variation'] ?? null, $product) : null),
-                        'quantity' => $item['quantity'] ?? 1,
-                        'price' => $item['price'] ?? ($product?->price ?? 0),
-                        'size' => $item['size'] ?? null,
-                        'variation' => VariationFormatter::label($item['variation'] ?? null, $product?->image)
-                            ?? ($item['variation'] ?? 'Original'),
-                    ];
-
-                    OrderItem::create($orderItemData);
-                }
-
-                // 4. Deduct inventory atomically across locked products
-                foreach ($lockedProducts as $pId => $product) {
-                    $deductQty = $requestedQuantities[$pId];
-
-                    if (!empty($product->size_stocks) && isset($requestedSizes[$pId])) {
-                        $sizeStocks = $product->size_stocks;
-                        foreach ($requestedSizes[$pId] as $sz => $szQty) {
-                            if (isset($sizeStocks[$sz])) {
-                                $sizeStocks[$sz] = max(0, ((int)$sizeStocks[$sz]) - $szQty);
-                            }
-                        }
-                        $product->size_stocks = $sizeStocks;
-                    }
-
-                    $product->stock = max(0, $product->stock - $deductQty);
-                    $product->save();
-
-                    // Low/Out of Stock Warnings
-                    $freshStock = $product->stock;
-                    $prodName = $product->name;
-                    $postCommitTasks[] = function() use ($sellerId, $prodName, $freshStock) {
-                        if ($freshStock <= 0) {
-                            \App\Models\Notification::send($sellerId, '⚠️ Out of Stock', "\"{$prodName}\" is now out of stock.", 'system', '/seller/products', 'seller');
-                        } elseif ($freshStock <= 5) {
-                            \App\Models\Notification::send($sellerId, 'Low Stock Alert', "\"{$prodName}\" has only {$freshStock} items left.", 'system', '/seller/products', 'seller');
-                        }
-                    };
-                }
-                
-                // Collect side-effects to run after commit
-                $currentOrderId = $orderId;
-                $currentSellerId = $sellerId;
-                $currentTotalAmount = (float) $totalAmount;
-                $currentCustomerUser = Auth::user();
-                $currentSellerUser = $sellerUser;
-                $postCommitTasks[] = function() use ($currentOrderId, $currentSellerId, $currentTotalAmount, $currentCustomerUser, $currentSellerUser) {
-                    \App\Models\Notification::send($currentCustomerUser->id, 'Order Placed', 'Your order has been placed successfully and is awaiting confirmation.', 'order', '/orders/' . $currentOrderId, 'customer');
-                    \App\Models\Notification::send($currentSellerId, 'New order received', 'A customer has placed a new order in your shop.', 'order', '/seller/orders', 'seller');
-
-                    try {
-                        \App\Models\Message::create([
-                            'senderId'   => $currentSellerId,
-                            'receiverId' => $currentCustomerUser->id,
-                            'content'    => "Thank you for placing your order (#" . substr($currentOrderId, 0, 8) . ")! We have received your order and will prepare your handcrafted pieces with care. Feel free to message us here if you have any questions or custom requests.",
-                            'read'       => false,
-                        ]);
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::warning('Automatic checkout chat message error: ' . $e->getMessage());
-                    }
-
-                    if ($currentCustomerUser && $currentCustomerUser->email) {
-                        try {
-                            $cMail = new \App\Mail\OrderStatusUpdatedMail($currentCustomerUser->name, $currentOrderId, 'Order Confirmed', 'Your order has been placed successfully and confirmed.');
-                            \App\Services\EmailNotificationService::sendNotification($currentCustomerUser->email, $cMail, 'order_status_updated', $currentCustomerUser->id, 'Order', $currentOrderId);
-                        } catch (\Throwable $e) {
-                            \Illuminate\Support\Facades\Log::warning('Customer order confirmation email failed: ' . $e->getMessage());
-                        }
-                    }
-
-                    if ($currentSellerUser && $currentSellerUser->email) {
-                        try {
-                            $sMail = new \App\Mail\NewOrderSellerMail($currentSellerUser->name, $currentOrderId, $currentTotalAmount, $currentCustomerUser?->name);
-                            \App\Services\EmailNotificationService::sendNotification($currentSellerUser->email, $sMail, 'new_order', $currentSellerUser->id, 'Order', $currentOrderId);
-                        } catch (\Throwable $e) {
-                            \Illuminate\Support\Facades\Log::warning('Seller new order notification email failed: ' . $e->getMessage());
-                        }
-                    }
-                };
-
-                $orders[] = $order;
-            }
-
+            // 4. Cart Session Cleanup
             if ($mode === 'cart') {
                 session()->forget('cart');
                 if (Auth::check()) {
@@ -761,21 +438,11 @@ class CheckoutController extends Controller
                 session()->forget('buy_now_item');
             }
 
-            DB::commit();
-
-            // Run post-commit notifications/emails safely outside the transaction
-            foreach ($postCommitTasks as $task) {
-                try {
-                    $task();
-                } catch (\Throwable $taskEx) {
-                    \Illuminate\Support\Facades\Log::error('Post-checkout side effect failed: ' . $taskEx->getMessage(), ['exception' => $taskEx]);
-                }
-            }
-
             if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
                 return response()->json([
                     'success'  => true,
                     'message'  => 'Order placed successfully!',
+                    'order_id' => $order->id,
                     'redirect' => route('orders'),
                 ]);
             }
@@ -783,14 +450,8 @@ class CheckoutController extends Controller
             return redirect()->route('orders')->with('success', 'Order placed successfully!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
             throw $e;
         } catch (\Illuminate\Database\QueryException $e) {
-            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
             \Illuminate\Support\Facades\Log::error("CHECKOUT_DB_ERROR: " . $e->getMessage());
             $msg = ($e->getCode() == 23000 || str_contains($e->getMessage(), 'active_reference') || str_contains($e->getMessage(), 'UNIQUE constraint failed'))
                 ? 'This payment reference has already been claimed by another active order. Please provide a new and unique payment reference.'
@@ -801,10 +462,7 @@ class CheckoutController extends Controller
             }
             return redirect()->back()->withInput()->with('error', $msg);
         } catch (\Throwable $e) {
-            if (!empty($inTransaction) && DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
-            \Illuminate\Support\Facades\Log::error("CHECKOUT_ERROR: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            \Illuminate\Support\Facades\Log::error("CHECKOUT_ERROR: " . $e->getMessage());
             if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }

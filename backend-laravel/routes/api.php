@@ -72,15 +72,15 @@ Route::prefix('v1')->group(function () {
 
     // Address Routes
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/addresses', [AddressController::class, 'getAddresses']);
-        Route::post('/addresses', [AddressController::class, 'createAddress']);
-        Route::put('/addresses/{id}', [AddressController::class, 'updateAddress']);
-        Route::delete('/addresses/{id}', [AddressController::class, 'deleteAddress']);
-        Route::patch('/addresses/{id}/set-default', [AddressController::class, 'setDefaultAddress']);
+        Route::get('/addresses', [AddressController::class, 'index']);
+        Route::post('/addresses', [AddressController::class, 'store']);
+        Route::put('/addresses/{id}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
+        Route::patch('/addresses/{id}/set-default', [AddressController::class, 'setDefault']);
     });
 
     // Category Routes
-    Route::get('/categories', [CategoryController::class, 'getCategories']);
+    Route::get('/categories', [CategoryController::class, 'index']);
 
     // Public seller profile (for shop pages)
     Route::get('/user/seller/{id}', [UserController::class, 'getSellerInfo']);
@@ -105,7 +105,7 @@ Route::prefix('v1')->group(function () {
 
     // Analytics Routes
     Route::middleware(['auth:sanctum', 'seller'])->group(function () {
-        Route::get('/analytics/seller', [AnalyticsController::class, 'getSellerAnalytics']);
+        Route::get('/analytics/seller', [AnalyticsController::class, 'sellerAnalytics']);
         Route::get('/dashboard/summary', [DashboardController::class, 'getSellerDashboardSummary']);
     });
 
@@ -147,11 +147,11 @@ Route::prefix('v1')->group(function () {
 
     // Refund Routes
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/refunds', [RefundController::class, 'createRefundRequest']);
+        Route::post('/refunds', [RefundController::class, 'store']);
     });
     Route::middleware(['auth:sanctum', 'seller'])->group(function () {
-        Route::get('/refunds/seller', [RefundController::class, 'getSellerRefundRequests']);
-        Route::patch('/refunds/{id}/status', [RefundController::class, 'updateRefundStatus']);
+        Route::get('/refunds/seller', [RefundController::class, 'sellerIndex']);
+        Route::patch('/refunds/{id}/status', [RefundController::class, 'updateStatus']);
     });
 
     // AI Core Feature Routes

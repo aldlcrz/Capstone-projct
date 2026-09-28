@@ -49,6 +49,11 @@ class ReviewController extends Controller
             return $this->errorResponse($request, 'Products can only be rated after the order has been delivered or completed.', 403);
         }
 
+        // 2b. Block review if a return request has been submitted
+        if ($order->returnRequests()->whereIn('status', ['Pending', 'Approved'])->exists()) {
+            return $this->errorResponse($request, 'A return request is active for this order. Reviews cannot be submitted while a return is in progress or approved.', 422);
+        }
+
         // 3. Verify OrderItem exists in this order
         $orderItemQuery = OrderItem::where('orderId', $order->id)
             ->where('productId', $productId);

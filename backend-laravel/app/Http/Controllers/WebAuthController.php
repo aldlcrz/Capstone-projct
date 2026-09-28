@@ -523,7 +523,9 @@ class WebAuthController extends Controller
             $data['businessPermit'] = '/uploads/requirements/' . basename($path);
         }
 
-        $user = User::create($data);
+        $user = new User();
+        $user->forceFill($data);
+        $user->save();
         session()->forget('google_seller_signup');
 
         // Generate verification code and send email
@@ -657,7 +659,9 @@ class WebAuthController extends Controller
                 try {
                     $pending['isVerified'] = true;
                     $pending['status']     = 'active';
-                    $user = User::create($pending);
+                    $user = new User();
+                    $user->forceFill($pending);
+                    $user->save();
                 } catch (\Throwable $e) {
                     // Fallback for environments with legacy unique constraints on trashed rows
                     $trashed = User::onlyTrashed()->where('email', $email)->first();
@@ -665,7 +669,9 @@ class WebAuthController extends Controller
                         $trashed->forceDelete();
                         $pending['isVerified'] = true;
                         $pending['status']     = 'active';
-                        $user = User::create($pending);
+                        $user = new User();
+                        $user->forceFill($pending);
+                        $user->save();
                     } else {
                         throw $e;
                     }

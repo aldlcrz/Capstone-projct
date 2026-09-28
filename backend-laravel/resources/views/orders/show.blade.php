@@ -277,7 +277,8 @@
                                     $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
                                         ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
                                     $itemStatus = strtolower(trim($order->status ?? ''));
-                                    $canRate = ($itemStatus === 'completed');
+                                    $hasReturn = $order->returnRequests && $order->returnRequests->count() > 0;
+                                    $canRate = ($itemStatus === 'completed') && !$hasReturn;
                                     $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
                                     if (!$existingReview && $order->reviews) {
                                         $existingReview = $order->reviews->where('productId', $item->productId)->first();
@@ -753,11 +754,12 @@
             </div>
         @endif
 
-        {{-- Completed / Delivered Post-Confirmation Actions: Rate Now & Request Return --}}
+        {{-- Completed / Delivered Post-Confirmation Actions: Rate Now & Request Return (Mutually Exclusive) --}}
         @if($statusLower === 'completed')
             @php
                 $firstItem = $order->items ? $order->items->first() : null;
                 $unreviewedItem = null;
+                $hasReviews = $order->reviews && $order->reviews->count() > 0;
                 if ($firstItem && $order->items) {
                     $unreviewedItem = $order->items->first(function($itm) use ($order) {
                         return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
@@ -774,30 +776,20 @@
                         </div>
                         <div>
                             <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] uppercase tracking-tight">Order Delivered & Confirmed</h4>
-                            <p class="text-xs text-[#78716C] mt-0.5">Thank you for confirming receipt. You can now leave a review for your artisan or request a return if needed.</p>
+                            <p class="text-xs text-[#78716C] mt-0.5">
+                                @if($activeReturn)
+                                    A return request has been submitted for this order.
+                                @elseif($hasReviews)
+                                    Thank you for reviewing your artisan purchase!
+                                @else
+                                    Thank you for confirming receipt. You can now leave a review for your artisan or request a return if needed.
+                                @endif
+                            </p>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                        {{-- 1. Rate Now Button --}}
-                        @if($unreviewedItem)
-                            @php
-                                $imgForReview = \App\Support\VariationFormatter::getImageForVariation($unreviewedItem->variation, $unreviewedItem->product)
-                                    ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
-                            @endphp
-                            <button type="button"
-                                    @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
-                                    style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                    class="px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                <span>⭐ Rate Now</span>
-                            </button>
-                        @else
-                            <span style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider">
-                                ★ Reviewed
-                            </span>
-                        @endif
-
-                        {{-- 2. Request Return Button or Badge --}}
+                        {{-- 1. If Return Request exists: show Return badge only, hide Review button --}}
                         @if($activeReturn)
                             @php
                                 $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
@@ -815,7 +807,28 @@
                                     ⏳ Return Pending
                                 </span>
                             @endif
+
+                        {{-- 2. Else If Reviews exist: show Reviewed badge only, hide Return button --}}
+                        @elseif($hasReviews)
+                            <span style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider">
+                                ★ Reviewed
+                            </span>
+
+                        {{-- 3. Else (Neither submitted yet): show both options so customer can choose --}}
                         @else
+                            @if($unreviewedItem)
+                                @php
+                                    $imgForReview = \App\Support\VariationFormatter::getImageForVariation($unreviewedItem->variation, $unreviewedItem->product)
+                                        ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
+                                @endphp
+                                <button type="button"
+                                        @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
+                                        style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
+                                        class="px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                    <span>⭐ Rate Now</span>
+                                </button>
+                            @endif
+
                             <button type="button"
                                     @click="returnModal = true;"
                                     class="px-5 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">

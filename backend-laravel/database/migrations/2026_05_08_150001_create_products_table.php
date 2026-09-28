@@ -22,13 +22,13 @@ return new class extends Migration
             $table->json('categories')->nullable();
             $table->json('image')->nullable();
             $table->integer('stock')->default(0);
-            $table->decimal('shippingFee', 10, 2)->default(0);
+            $table->decimal('shippingFee', 10, 2)->nullable()->default(0);
             $table->integer('shippingDays')->default(3);
             $table->uuid('sellerId');
             $table->uuid('CategoryId')->nullable();
             $table->foreign('sellerId')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('CategoryId')->references('id')->on('categories')->onDelete('set null');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->string('status', 50)->default('pending');
             $table->text('rejectionReason')->nullable();
             $table->integer('views')->default(0);
             $table->timestamp('createdAt')->useCurrent();

@@ -55,7 +55,7 @@ class ProductShippingController extends Controller
             } else {
                 // Fallback to default or first saved address of user
                 $destinationAddress = Address::where('userId', Auth::id())
-                    ->orderByDesc('is_default')
+                    ->orderByDesc('isDefault')
                     ->first();
             }
 

@@ -340,7 +340,7 @@
                     </div>
 
                     {{-- Checkout Form --}}
-                    <form action="/checkout/selected" method="POST" class="pt-1" x-ref="checkoutForm">
+                    <form action="{{ route('checkout.selected') }}" method="POST" class="pt-1" x-ref="checkoutForm">
                         @csrf
                         <template x-for="key in selected" :key="key">
                             <input type="hidden" name="selected_keys[]" :value="key">

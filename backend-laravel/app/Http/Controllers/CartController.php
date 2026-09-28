@@ -84,7 +84,7 @@ class CartController extends Controller
         // Save intent for guest customers before redirecting to login
         if (!Auth::check()) {
             $intentAction = $request->input('action') === 'buy_now' ? 'buy_now' : 'add_to_cart';
-            $redirectTarget = $intentAction === 'buy_now' ? route('checkout') : ($request->headers->get('referer') ?: route('cart.index'));
+            $redirectTarget = $intentAction === 'buy_now' ? route('checkout.index') : ($request->headers->get('referer') ?: route('cart.index'));
 
             $intent = [
                 'action'      => $intentAction,

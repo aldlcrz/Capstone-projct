@@ -4,9 +4,11 @@ namespace Tests\Unit;
 
 use App\Services\AiService;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AiServiceTest extends TestCase
 {
+    use RefreshDatabase;
     protected function setUp(): void
     {
         parent::setUp();

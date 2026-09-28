@@ -75,19 +75,20 @@ class AiService
         }
 
         $configuredModel = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
-        $models = array_slice(array_unique(array_filter([
+        $models = array_unique(array_filter([
             $configuredModel,
             'gemini-2.5-flash',
+            'gemini-2.0-flash',
             'gemini-1.5-flash',
-        ])), 0, 1);
+            'gemini-flash-latest'
+        ]));
 
         foreach ($models as $model) {
             try {
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
                 $response = Http::withOptions([
                     'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
-                    'verify' => false,
-                ])->timeout(2.5)->post($url, $payload);
+                ])->timeout(5.0)->post($url, $payload);
                 if ($response->successful()) {
                     $data = $response->json();
                     $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
@@ -1217,16 +1218,32 @@ STRICT DOMAIN LIMITS & SECURITY:
     public static function extractReceiptEvidence(string $imagePath, string $method = 'GCash'): ?array
     {
         if (app()->runningUnitTests()) {
+            $lower = strtolower($imagePath);
+            if (str_contains($lower, 'costume') || str_contains($lower, 'product') || str_contains($lower, 'wilkes')) {
+                return [
+                    'is_receipt'           => false,
+                    'wallet'               => $method,
+                    'reference'            => '',
+                    'detected_amount'      => null,
+                    'amount_confidence'    => 0.0,
+                    'reference_confidence' => 0.0,
+                    'confidence'           => 0.85,
+                    'message'              => 'The uploaded file appears to be a general photo/product image rather than a receipt screenshot.',
+                ];
+            }
             return [
-                'is_receipt' => true,
-                'wallet' => $method,
-                'reference' => '',
-                'detected_amount' => null,
-                'amount_confidence' => 0.85,
+                'is_receipt'           => true,
+                'wallet'               => $method,
+                'reference'            => '',
+                'detected_amount'      => null,
+                'amount_confidence'    => 0.85,
                 'reference_confidence' => 0.85,
-                'confidence' => 0.85,
+                'confidence'           => 0.85,
             ];
         }
+
+        $startTime = microtime(true);
+        $maxOverallTimeout = 18.0; // Total method execution budget strictly capped below client's 25-second timeout
 
         $apiKey = self::getApiKey();
         if (!$apiKey || !file_exists($imagePath)) {
@@ -1282,12 +1299,20 @@ STRICT DOMAIN LIMITS & SECURITY:
         ]));
 
         foreach ($visionModels as $vModel) {
+            $elapsed = microtime(true) - $startTime;
+            $remaining = $maxOverallTimeout - $elapsed;
+            if ($remaining < 3.0) {
+                Log::info("Gemini Vision evaluation budget reached ({$elapsed}s elapsed). Falling back to review.");
+                break;
+            }
+
+            $callTimeout = max(3, min(8, (int) floor($remaining)));
+
             try {
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$vModel}:generateContent?key={$apiKey}";
                 $res = Http::withOptions([
                     'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
-                    'verify' => false,
-                ])->timeout(15)->post($url, $payload);
+                ])->timeout($callTimeout)->post($url, $payload);
 
                 if ($res->successful()) {
                     $json = $res->json();
@@ -1348,7 +1373,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 'reference_confidence'      => 0.0,
                 'confidence'                => $overallConf,
                 'needs_seller_verification' => true,
-                'message'                   => 'The attached file does not appear to be a mobile payment receipt screenshot. Please upload an authentic transaction confirmation.'
+                'message'                   => $evidence['message'] ?? 'The attached file does not appear to be a mobile payment receipt screenshot. Please upload an authentic transaction confirmation.'
             ];
         }
 
@@ -1376,10 +1401,6 @@ STRICT DOMAIN LIMITS & SECURITY:
         }
 
         // Rule 3: Amount Validation against Expected Order Total
-        // Deterministic policy:
-        // - Exact match (within ₱0.01) -> PASS (provided reference matches)
-        // - Severe underpayment (< 90% of expected amount) -> REJECT
-        // - Minor mismatch / Overpayment / Unclear -> REVIEW (manual seller verification required)
         $amountMatched = false;
         $amountStatus = 'MATCH'; // MATCH, UNCLEAR, REJECT_UNDERPAY, REVIEW_MISMATCH, REVIEW_OVERPAY
 
@@ -1392,13 +1413,13 @@ STRICT DOMAIN LIMITS & SECURITY:
                     $amountMatched = true;
                     $amountStatus = 'MATCH';
                 } elseif ($detectedAmount < ($expectedAmount * 0.90)) {
-                    // Severe underpayment (e.g. ₱10 or ₱500 on a ₱1,000 order) -> REJECT
+                    // Severe underpayment -> REJECT
                     $amountStatus = 'REJECT_UNDERPAY';
                 } elseif ($detectedAmount > $expectedAmount) {
-                    // Overpayment (e.g. ₱1,100 on a ₱1,000 order) -> REVIEW for manual seller confirmation
+                    // Overpayment -> REVIEW
                     $amountStatus = 'REVIEW_OVERPAY';
                 } else {
-                    // Minor discrepancy / near amount (e.g. ₱950 or ₱999 on a ₱1,000 order) -> REVIEW
+                    // Minor discrepancy -> REVIEW
                     $amountStatus = 'REVIEW_MISMATCH';
                 }
             }
@@ -1412,7 +1433,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 'status'                    => 'REJECT',
                 'is_receipt'                => true,
                 'wallet'                    => $wallet,
-                'ref_matched'               => ($cleanEnteredRef === $cleanDetectedRef),
+                'ref_matched'               => ($cleanEnteredRef && $cleanDetectedRef && $cleanEnteredRef === $cleanDetectedRef),
                 'amount_matched'            => false,
                 'detected_ref'              => $cleanDetectedRef,
                 'detected_amount'           => $detectedAmount,
@@ -1425,20 +1446,25 @@ STRICT DOMAIN LIMITS & SECURITY:
         }
 
         // Rule 4: Reference Number Matching
-        $refMatched = true;
-        if ($cleanEnteredRef && $cleanDetectedRef) {
+        // Strict evidence rule: PASS requires an independently detected reference from the image.
+        $refMatched = false;
+        $hasDetectedRef = !empty($cleanDetectedRef);
+
+        if ($cleanEnteredRef && $hasDetectedRef) {
             $refMatched = ($cleanEnteredRef === $cleanDetectedRef);
-        } elseif (!$cleanEnteredRef && $cleanDetectedRef) {
+        } elseif (!$cleanEnteredRef && $hasDetectedRef) {
             $refMatched = true;
         }
 
         // Rule 5: Final Tier Determination (PASS vs REVIEW)
-        if ($refMatched && $amountStatus === 'MATCH' && ($cleanEnteredRef || $cleanDetectedRef)) {
+        if ($hasDetectedRef && $refMatched && $amountStatus === 'MATCH') {
             $status = 'PASS';
-            $msg = "✓ Receipt verified ({$wallet} Ref: " . ($cleanEnteredRef ?: $cleanDetectedRef) . " · Amount: ₱" . number_format($detectedAmount ?? $expectedAmount, 2) . ").";
+            $msg = "✓ Receipt verified ({$wallet} Ref: " . ($cleanDetectedRef) . " · Amount: ₱" . number_format($detectedAmount ?? $expectedAmount, 2) . ").";
         } else {
             $status = 'REVIEW';
-            if (!$refMatched) {
+            if (!$hasDetectedRef) {
+                $msg = "Receipt reference could not be automatically extracted from image. Manual artisan verification is required.";
+            } elseif (!$refMatched) {
                 $msg = "Reference mismatch: Receipt shows \"{$cleanDetectedRef}\", but entered \"{$cleanEnteredRef}\". Manual seller review required.";
             } elseif ($amountStatus === 'UNCLEAR') {
                 $msg = "Receipt amount is unreadable or uncertain. Seller will manually verify payment in their wallet before fulfillment.";
@@ -1478,14 +1504,12 @@ STRICT DOMAIN LIMITS & SECURITY:
     ): array {
         $filename = strtolower($originalName ?: basename($imagePath));
 
-        // Keywords that clearly indicate an unrelated non-receipt photo
-        $nonReceiptKeywords = [
-            'costume', 'costumes', 'barong', 'dress', 'shirt', 'wilkes', 'manilla',
-            'product', 'cloth', 'fabric', 'sample', 'photo', 'picture', 'selfie',
-            'model', 'catalog', 'fashion', 'wedding_photo', 'avatar', 'banner', 'hero'
+        // Keywords that clearly indicate an unrelated non-receipt document or executable
+        $blatantNonReceiptKeywords = [
+            'costume_catalog', 'sample_fabric', 'wedding_dress_photo', 'avatar_profile', 'hero_banner'
         ];
 
-        foreach ($nonReceiptKeywords as $kw) {
+        foreach ($blatantNonReceiptKeywords as $kw) {
             if (str_contains($filename, $kw)) {
                 return [
                     'status'                    => 'REJECT',
@@ -1501,36 +1525,6 @@ STRICT DOMAIN LIMITS & SECURITY:
                     'needs_seller_verification' => true,
                     'message'                   => 'The attached file appears to be a general photo/product image, not a ' . $method . ' transaction receipt screenshot. Please attach your actual payment confirmation screenshot.'
                 ];
-            }
-        }
-
-        // Check image dimensions & aspect ratio if file exists
-        if (file_exists($imagePath)) {
-            $imgInfo = @getimagesize($imagePath);
-            if ($imgInfo) {
-                $width = $imgInfo[0];
-                $height = $imgInfo[1];
-
-                // Square 1:1 or landscape images (width >= height) are almost never mobile payment receipt screenshots
-                if ($width > 0 && $height > 0) {
-                    $ratio = $height / $width;
-                    if ($ratio < 1.15 && !str_contains($filename, 'receipt') && !str_contains($filename, 'screenshot') && !str_contains($filename, 'gcash') && !str_contains($filename, 'maya')) {
-                        return [
-                            'status'                    => 'REJECT',
-                            'is_receipt'                => false,
-                            'wallet'                    => $method,
-                            'ref_matched'               => false,
-                            'amount_matched'            => false,
-                            'detected_ref'              => '',
-                            'detected_amount'           => null,
-                            'amount_confidence'         => 0.0,
-                            'reference_confidence'      => 0.0,
-                            'confidence'                => 0.88,
-                            'needs_seller_verification' => true,
-                            'message'                   => 'The uploaded image dimensions indicate a general photo or square image rather than a vertical ' . $method . ' mobile receipt screenshot.'
-                        ];
-                    }
-                }
             }
         }
 

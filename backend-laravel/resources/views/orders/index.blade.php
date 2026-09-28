@@ -353,22 +353,11 @@
                                         <span>Confirm Received</span>
                                     </button>
                                 @elseif($isCompleted)
-                                    {{-- 1. Rate Now Button --}}
-                                    @if($unreviewedItem)
-                                        <button type="button"
-                                                onclick="event.stopPropagation();"
-                                                @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
-                                                style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                            <span>⭐ Rate Now</span>
-                                        </button>
-                                    @else
-                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                            ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
-                                        </span>
-                                    @endif
+                                    @php
+                                        $hasReviews = $order->reviews && $order->reviews->count() > 0;
+                                    @endphp
 
-                                    {{-- 2. Request Return Button or Return Status Badge --}}
+                                    {{-- 1. If Return Request exists: show Return badge only, hide Review button --}}
                                     @if($activeReturn)
                                         @php
                                             $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
@@ -386,7 +375,25 @@
                                                 ⏳ Return Pending
                                             </span>
                                         @endif
+
+                                    {{-- 2. Else If Reviews exist: show Reviewed badge only, hide Return button --}}
+                                    @elseif($hasReviews)
+                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                                            ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
+                                        </span>
+
+                                    {{-- 3. Else (Neither submitted yet): show both options so customer can choose --}}
                                     @else
+                                        @if($unreviewedItem)
+                                            <button type="button"
+                                                    onclick="event.stopPropagation();"
+                                                    @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
+                                                    style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
+                                                    class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                                <span>⭐ Rate Now</span>
+                                            </button>
+                                        @endif
+
                                         <button type="button"
                                                 onclick="event.stopPropagation();"
                                                 @click.stop="returnOrderId = '{{ $order->id }}'; returnModal = true;"

@@ -70,6 +70,7 @@
 
     <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" novalidate @submit="isSubmitting = true">
         @csrf
+        <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
         <input type="hidden" name="mode" value="{{ $mode }}">
         <input type="hidden" name="address_id" :value="address?.id || ''">
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
@@ -1276,6 +1277,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         loadingQuotes: false,
         quotesError: '',
         currentShippingFee: 0,
+        shippingQuoteReqId: 0,
+        shippingQuoteController: null,
 
         init() {
             this.fetchShippingQuotes();
@@ -1310,6 +1313,18 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 return;
             }
 
+            // Abort previous in-flight quote request
+            if (this.shippingQuoteController) {
+                try { this.shippingQuoteController.abort(); } catch(e) {}
+            }
+
+            const controller = new AbortController();
+            this.shippingQuoteController = controller;
+            const currentReqId = ++this.shippingQuoteReqId;
+            const timeoutId = setTimeout(() => {
+                try { controller.abort(); } catch(e) {}
+            }, 15000);
+
             this.loadingQuotes = true;
             this.quotesError = '';
 
@@ -1328,8 +1343,14 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
+                if (currentReqId !== this.shippingQuoteReqId) {
+                    return; // Discard stale out-of-order response
+                }
 
                 const data = await res.json();
 
@@ -1365,10 +1386,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     this.quotesError = 'No courier rates are currently available for this delivery area.';
                 }
             } catch (err) {
+                clearTimeout(timeoutId);
+                if (currentReqId !== this.shippingQuoteReqId) {
+                    return;
+                }
                 console.error('Failed to retrieve shipping quote:', err);
                 this.quotesError = 'Network error fetching courier options. Please retry.';
             } finally {
-                this.loadingQuotes = false;
+                if (currentReqId === this.shippingQuoteReqId) {
+                    this.loadingQuotes = false;
+                }
             }
         },
 

@@ -21,9 +21,9 @@ class EmailNotificationService
         $normalizedEmail = strtolower(trim($email));
         $code = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
-        // DEV / Testing / Demo OTP logging (gated to non-production / debug)
-        if (app()->environment('local', 'testing') || config('app.debug') || env('OTP_DEBUG', false)) {
-            Log::info("[DEV/DEMO OTP] Verification code for {$normalizedEmail} ({$type}): {$code}");
+        // DEV / Testing OTP logging (strictly gated to local/testing environments with explicit LOG_OTP_CODES flag)
+        if (app()->environment('local', 'testing') && env('LOG_OTP_CODES', false)) {
+            Log::info("[DEV/TEST OTP] Verification code for {$normalizedEmail} ({$type}): {$code}");
         }
 
         $existing = EmailVerification::where('email', $normalizedEmail)

@@ -19,8 +19,9 @@ class RefundController extends Controller
         $request->validate([
             'orderId' => 'required|exists:orders,id',
             'orderItemId' => 'required|exists:order_items,id',
-            'reason' => 'required|string',
-            'videoProof' => 'required|file',
+            'reason' => 'required|string|in:Damaged Item,Wrong Size,Other',
+            'message' => 'nullable|string|max:1000',
+            'videoProof' => 'required|file|mimes:mp4,mov,avi,webm,mkv,jpg,jpeg,png,webp|max:51200',
         ]);
 
         $customerId = Auth::id();
@@ -30,8 +31,17 @@ class RefundController extends Controller
             return response()->json(['message' => 'Refunds are only available after receiving the item.'], 400);
         }
 
-        $existingRequest = RefundRequest::where('orderItemId', $request->orderItemId)
-            ->where('customerId', $customerId)
+        // Constrain the requested item directly to the authenticated order (Problem 30)
+        $orderItem = OrderItem::where('id', $request->orderItemId)
+            ->where('orderId', $order->id)
+            ->first();
+
+        if (!$orderItem) {
+            return response()->json(['message' => 'The selected item does not belong to the specified order.'], 422);
+        }
+
+        $existingRequest = RefundRequest::where('order_item_id', $request->orderItemId)
+            ->where('customer_id', $customerId)
             ->first();
 
         if ($existingRequest) {
@@ -41,13 +51,13 @@ class RefundController extends Controller
         $videoPath = $request->file('videoProof')->store('refunds', 'public');
 
         $refundRequest = RefundRequest::create([
-            'orderId' => $request->orderId,
-            'orderItemId' => $request->orderItemId,
-            'customerId' => $customerId,
-            'sellerId' => $order->sellerId,
+            'order_id' => $order->id,
+            'order_item_id' => $orderItem->id,
+            'customer_id' => $customerId,
+            'seller_id' => $order->sellerId,
             'reason' => $request->reason,
             'message' => $request->message,
-            'videoProof' => $videoPath,
+            'video_proof' => $videoPath,
             'status' => 'Pending',
         ]);
 
@@ -76,8 +86,8 @@ class RefundController extends Controller
      */
     public function sellerIndex()
     {
-        $requests = RefundRequest::where('sellerId', Auth::id())
-            ->orderBy('createdAt', 'desc')
+        $requests = RefundRequest::where('seller_id', Auth::id())
+            ->orderBy('created_at', 'desc')
             ->get();
             
         return response()->json($requests);
@@ -88,8 +98,8 @@ class RefundController extends Controller
      */
     public function customerIndex()
     {
-        $requests = RefundRequest::where('customerId', Auth::id())
-            ->orderBy('createdAt', 'desc')
+        $requests = RefundRequest::where('customer_id', Auth::id())
+            ->orderBy('created_at', 'desc')
             ->get();
             
         return response()->json($requests);
@@ -100,30 +110,30 @@ class RefundController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        $refundRequest = RefundRequest::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
+        $refundRequest = RefundRequest::where('id', $id)->where('seller_id', Auth::id())->firstOrFail();
         
         $request->validate([
-            'status' => 'required|string',
-            'sellerComment' => 'nullable|string',
+            'status' => 'required|string|in:Pending,Approved,Rejected,Resolved',
+            'sellerComment' => 'nullable|string|max:1000',
         ]);
 
         $refundRequest->update([
             'status' => $request->status,
-            'sellerComment' => $request->sellerComment,
+            'seller_comment' => $request->sellerComment,
         ]);
 
         // Notify Customer
         Notification::create([
-            'userId' => $refundRequest->customerId,
+            'userId' => $refundRequest->customer_id,
             'title' => 'Refund Request Updated',
             'message' => "Your refund request has been {$request->status}.",
             'targetRole' => 'customer',
         ]);
 
-        $customerUser = \App\Models\User::find($refundRequest->customerId);
+        $customerUser = \App\Models\User::find($refundRequest->customer_id);
         if ($customerUser && $customerUser->email) {
-            $mailable = new \App\Mail\ReturnRefundStatusMail($customerUser->name, $refundRequest->orderId, $request->status, $request->sellerComment, 'Refund');
-            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'return_refund_update', $customerUser->id, 'Order', $refundRequest->orderId);
+            $mailable = new \App\Mail\ReturnRefundStatusMail($customerUser->name, $refundRequest->order_id, $request->status, $request->seller_comment, 'Refund');
+            \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'return_refund_update', $customerUser->id, 'Order', $refundRequest->order_id);
         }
 
         return response()->json([

@@ -12,6 +12,8 @@ document.addEventListener('alpine:init', () => {
         autoOpenUserName: config.autoOpenUserName || 'Customer',
         currentUserId: config.currentUserId || null,
         pollInterval: null,
+        isLoadingMessages: false,
+        isLoadingConversations: false,
 
         init() {
             this.loadConversations();
@@ -37,10 +39,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         loadConversations() {
+            if (this.isLoadingConversations) return;
+            this.isLoadingConversations = true;
             fetch('/api/chat/conversations')
                 .then(res => res.json())
                 .then(data => { this.conversations = data; })
-                .catch(() => {});
+                .catch(() => {})
+                .finally(() => { this.isLoadingConversations = false; });
         },
 
         selectUser(user) {
@@ -50,14 +55,16 @@ document.addEventListener('alpine:init', () => {
         },
 
         loadMessages() {
-            if (!this.activeUser) return;
+            if (!this.activeUser || this.isLoadingMessages) return;
+            this.isLoadingMessages = true;
             fetch('/api/chat/conversation/' + this.activeUser.id)
                 .then(res => res.json())
                 .then(data => {
                     this.messages = data;
                     this.scrollToBottom();
                 })
-                .catch(() => {});
+                .catch(() => {})
+                .finally(() => { this.isLoadingMessages = false; });
         },
 
         sendMessage() {

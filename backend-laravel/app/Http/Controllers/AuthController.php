@@ -167,7 +167,9 @@ class AuthController extends Controller
             }
         }
 
-        $user = User::create($data);
+        $user = new User();
+        $user->forceFill($data);
+        $user->save();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -214,7 +216,8 @@ class AuthController extends Controller
 
             if (!$user) {
                 $isNewUser = true;
-                $user = User::create([
+                $user = new User();
+                $user->forceFill([
                     'name' => $name,
                     'email' => $email,
                     'password' => Hash::make(Str::random(32)),
@@ -225,6 +228,7 @@ class AuthController extends Controller
                     'profilePhoto' => $picture,
                     'hasPasswordSet' => false
                 ]);
+                $user->save();
             } else {
                 // Account status checks
                 if ($user->status === 'blocked' || $user->status === 'frozen') {

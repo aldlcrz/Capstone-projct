@@ -133,6 +133,7 @@ Route::middleware('auth')->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/selected', [CheckoutController::class, 'fromSelected'])->name('checkout.selected');
     Route::post('/checkout/shipping-quote', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quote');
     Route::post('/checkout/shipping-quotes', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quotes');
 
@@ -386,8 +387,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
 
     // Product Moderation
     Route::get('/products', [SuperAdminController::class, 'products'])->name('superadmin.products');
-    Route::match(['get', 'post'], '/products/{id}/approve', [SuperAdminController::class, 'approveProductWeb'])->name('superadmin.products.approve');
-    Route::match(['get', 'post'], '/products/{id}/reject', [SuperAdminController::class, 'rejectProductWeb'])->name('superadmin.products.reject');
+    Route::post('/products/{id}/approve', [SuperAdminController::class, 'approveProductWeb'])->name('superadmin.products.approve');
+    Route::post('/products/{id}/reject', [SuperAdminController::class, 'rejectProductWeb'])->name('superadmin.products.reject');
     Route::delete('/products/{id}', [SuperAdminController::class, 'deleteProductWeb'])->name('superadmin.products.delete');
 
     // Hero Banners & Promotions
@@ -409,15 +410,33 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     // Developer & System Tools
     Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');
     Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
-    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('superadmin.audit-logs');
     Route::get('/error-logs', [SuperAdminController::class, 'errorLogs'])->name('superadmin.error-logs');
     Route::post('/error-logs/clear', [SuperAdminController::class, 'clearErrorLogs'])->name('superadmin.error-logs.clear');
 });
 
-// ─── Storage & Upload Fallback Routes ──────────────────────────────────────────
-// Serves uploaded files directly if storage symlink is missing or broken on Hostinger
+// ─── Storage & Upload Fallback Routes (Hardened & Contained) ─────────────────
+// Serves public uploaded assets directly if storage symlink is missing on production
 Route::get('/storage/{path}', function ($path) {
-    $cleanPath = ltrim(str_replace('\\', '/', $path), '/');
+    // 1. Block directory traversal and invalid characters
+    if (str_contains($path, '..') || str_contains($path, "\0") || str_contains($path, '\\')) {
+        abort(404);
+    }
+
+    $cleanPath = ltrim($path, '/');
+
+    // 2. Block sensitive/private prefixes from public fallback
+    $forbiddenPrefixes = ['private', 'kyc', 'payments', 'receipts', 'refunds', 'packing-proofs', 'documents', 'bir', 'valid-ids', '.env'];
+    foreach ($forbiddenPrefixes as $badPrefix) {
+        if (str_starts_with($cleanPath, $badPrefix) || str_contains($cleanPath, '/' . $badPrefix)) {
+            abort(404);
+        }
+    }
+
+    $allowedPublicRoots = [
+        realpath(public_path('storage')),
+        realpath(public_path('uploads')),
+        realpath(storage_path('app/public')),
+    ];
 
     $candidates = [
         storage_path('app/public/' . $cleanPath),
@@ -428,12 +447,19 @@ Route::get('/storage/{path}', function ($path) {
         public_path('uploads/' . $cleanPath),
         public_path('uploads/products/' . $cleanPath),
         public_path('uploads/profiles/' . $cleanPath),
-        base_path('uploads/' . $cleanPath),
     ];
 
-    foreach ($candidates as $filePath) {
-        if (file_exists($filePath) && is_file($filePath)) {
-            return response()->file($filePath);
+    foreach ($candidates as $candidatePath) {
+        if (file_exists($candidatePath) && is_file($candidatePath)) {
+            $real = realpath($candidatePath);
+            if ($real) {
+                // Ensure the file is strictly contained inside an allowed public root
+                foreach ($allowedPublicRoots as $allowedRoot) {
+                    if ($allowedRoot && str_starts_with($real, $allowedRoot)) {
+                        return response()->file($real);
+                    }
+                }
+            }
         }
     }
 
@@ -453,19 +479,42 @@ Route::get('/storage/{path}', function ($path) {
 })->where('path', '.*');
 
 Route::get('/uploads/{path}', function ($path) {
-    $cleanPath = ltrim(str_replace('\\', '/', $path), '/');
+    if (str_contains($path, '..') || str_contains($path, "\0") || str_contains($path, '\\')) {
+        abort(404);
+    }
+
+    $cleanPath = ltrim($path, '/');
+
+    $forbiddenPrefixes = ['private', 'kyc', 'payments', 'receipts', 'refunds', 'packing-proofs', 'documents', 'bir', 'valid-ids', '.env'];
+    foreach ($forbiddenPrefixes as $badPrefix) {
+        if (str_starts_with($cleanPath, $badPrefix) || str_contains($cleanPath, '/' . $badPrefix)) {
+            abort(404);
+        }
+    }
+
+    $allowedPublicRoots = [
+        realpath(public_path('uploads')),
+        realpath(public_path('storage')),
+        realpath(storage_path('app/public')),
+    ];
 
     $candidates = [
         public_path('uploads/' . $cleanPath),
         storage_path('app/public/' . $cleanPath),
         storage_path('app/public/uploads/' . $cleanPath),
         public_path('storage/' . $cleanPath),
-        base_path('uploads/' . $cleanPath),
     ];
 
-    foreach ($candidates as $filePath) {
-        if (file_exists($filePath) && is_file($filePath)) {
-            return response()->file($filePath);
+    foreach ($candidates as $candidatePath) {
+        if (file_exists($candidatePath) && is_file($candidatePath)) {
+            $real = realpath($candidatePath);
+            if ($real) {
+                foreach ($allowedPublicRoots as $allowedRoot) {
+                    if ($allowedRoot && str_starts_with($real, $allowedRoot)) {
+                        return response()->file($real);
+                    }
+                }
+            }
         }
     }
 
@@ -477,26 +526,27 @@ Route::get('/uploads/{path}', function ($path) {
     abort(404);
 })->where('path', '.*');
 
-// Web AI Service Routes
-Route::prefix('ai')->group(function () {
+// Web AI Service Routes (Throttled)
+Route::prefix('ai')->middleware(['throttle:60,1'])->group(function () {
     Route::post('/stylist/chat', [AiController::class, 'chatStylist'])->name('ai.stylist');
     Route::post('/sizing/recommend', [AiController::class, 'recommendSize'])->name('ai.sizing');
-    Route::post('/seller/generate-description', [AiController::class, 'generateSellerListing'])->name('ai.seller.description');
-    Route::post('/seller/suggest-product', [AiController::class, 'suggestProduct'])->name('ai.seller.suggest');
     Route::post('/security/password-check', [AiController::class, 'analyzePassword'])->name('ai.security.password');
-    Route::post('/payment-reference/check', [AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
-    Route::post('/receipt/verify', [AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
+
+    Route::middleware(['auth', 'seller'])->group(function () {
+        Route::post('/seller/generate-description', [AiController::class, 'generateSellerListing'])->name('ai.seller.description');
+        Route::post('/seller/suggest-product', [AiController::class, 'suggestProduct'])->name('ai.seller.suggest');
+    });
+
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/payment-reference/check', [AiController::class, 'checkPaymentReference'])->name('ai.payment.check');
+        Route::post('/receipt/verify', [AiController::class, 'verifyReceipt'])->name('ai.receipt.verify');
+    });
 });
 
 // Web Upload & Report Routes (For Session-Authenticated Users)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/api/v1/upload', [UploadController::class, 'uploadImage']);
-    Route::post('/api/v1/reports', [ReportController::class, 'createReport']);
-    Route::post('/upload', [UploadController::class, 'uploadImage']);
-    Route::post('/reports', [ReportController::class, 'createReport']);
-    Route::get('/api/v1/reports/{id?}', [ReportController::class, 'getSellerReportDetail']);
-    Route::post('/api/v1/reports/{id}/response', [ReportController::class, 'submitSellerResponse']);
-    Route::get('/api/v1/seller/reports/{id?}', [ReportController::class, 'getSellerReportDetail']);
+    Route::post('/upload', [UploadController::class, 'uploadImage'])->name('web.upload');
+    Route::post('/reports', [ReportController::class, 'createReport'])->name('web.reports.create');
 });
 
 
