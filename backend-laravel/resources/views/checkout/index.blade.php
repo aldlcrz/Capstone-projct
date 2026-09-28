@@ -488,15 +488,15 @@
                                         <div class="p-3.5 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all"
                                              :class="{
                                                  'bg-emerald-50/80 border-emerald-200 text-emerald-800': aiVerificationResult.status === 'PASS',
-                                                 'bg-amber-50/80 border-amber-200 text-amber-900': aiVerificationResult.status === 'REVIEW',
+                                                 'bg-stone-50 border-stone-200 text-stone-800': aiVerificationResult.status === 'REVIEW',
                                                  'bg-rose-50/80 border-rose-200 text-rose-800': aiVerificationResult.status === 'REJECT' || aiVerificationResult.is_receipt === false
                                              }">
-                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.status === 'PASS' ? '✓' : (aiVerificationResult.status === 'REVIEW' ? '⚠️' : '❌')"></span>
+                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.status === 'PASS' ? '✓' : (aiVerificationResult.status === 'REVIEW' ? '✓' : '❌')"></span>
                                             <div class="space-y-1">
                                                 <div class="font-extrabold uppercase text-[10px] tracking-wider"
                                                      x-text="aiVerificationResult.status === 'PASS' 
                                                          ? 'Receipt Verification Passed' 
-                                                         : (aiVerificationResult.status === 'REVIEW' ? 'Manual Verification Required' : 'Receipt Verification Rejected')"></div>
+                                                         : (aiVerificationResult.status === 'REVIEW' ? 'Upload Complete — For Seller Verification' : 'Receipt Verification Rejected')"></div>
                                                 <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
                                                 <template x-if="aiVerificationResult.detected_ref || aiVerificationResult.detected_amount !== undefined">
                                                     <div class="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -1586,7 +1586,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                     status: 'REVIEW',
                     is_receipt: true,
                     ref_matched: true,
-                    message: 'Receipt attached. Seller will manually verify payment details during order fulfillment.'
+                    message: 'Receipt attached successfully. The artisan will verify your payment reference before dispatch.'
                 };
                 this.screenshotError = '';
             })
