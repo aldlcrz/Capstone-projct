@@ -1129,14 +1129,11 @@
                             <button 
                                 type="button" 
                                 @click="toggleWishlist()" 
-                                class="w-full h-12 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-[0.99]"
+                                class="w-full h-12 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-[0.99]"
                                 style="background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(166, 124, 46, 0.35);"
                                 onmouseover="this.style.opacity='0.92'"
                                 onmouseout="this.style.opacity='1'"
                             >
-                                <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white scale-110' : 'fill-none stroke-current'" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                </svg>
                                 <span x-text="isWishlisted ? 'Saved in Your Wishlist' : 'Add to Wishlist (Restock Alert)'"></span>
                             </button>
                         </div>
@@ -2827,13 +2824,10 @@
                 <button 
                     type="button" 
                     @click="toggleWishlist()" 
-                    style="width: 100%; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4); padding: 0 12px; box-sizing: border-box;"
+                    style="width: 100%; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4); padding: 0 12px; box-sizing: border-box;"
                     onmouseover="this.style.opacity='0.92'"
                     onmouseout="this.style.opacity='1'"
                 >
-                    <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white' : 'fill-none stroke-current'" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
                     <span style="font-size: 12px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap;" x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist (Restock Notice)'"></span>
                 </button>
             </div>
