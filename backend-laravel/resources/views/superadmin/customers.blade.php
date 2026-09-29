@@ -347,4 +347,17 @@
     </div>
 
 </div>
+
+<x-spotlight-tour
+    tourId="admin-customers-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-superadmin-users-header',  'title' => '👥 Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers, monitor purchasing activity, and enforce account compliance.'],
+        ['selector' => '#tour-superadmin-users-search',  'title' => '🔍 Customer Search',              'description' => 'Instantly lookup customer accounts by name or registered email address.'],
+        ['selector' => '#tour-superadmin-users-stats',   'title' => '📊 Account Status Filters',        'description' => 'Filter between Total registered buyers, Active accounts, and Banned/Blocked users.'],
+        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, registration dates, and live access statuses.'],
+        ['selector' => '#tour-superadmin-users-actions', 'title' => '🛡️ Moderation & Safety Controls', 'description' => 'Manage user standing: Ban abusive buyers with audit justification notes or permanently delete spam accounts.']
+    ]"
+/>
+
 @endsection

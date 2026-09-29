@@ -17,7 +17,19 @@
         'postalCode' => ''
     ]),
     @js($addresses),
-    '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}'
+    '{{ ($paymentSource && !($paymentSource->isGcashAvailable ?? true) && ($paymentSource->isMayaAvailable ?? false)) ? 'Maya' : 'GCash' }}',
+    @js([
+        'shopLatitude' => (float) ($seller->shopLatitude ?? 14.2952),
+        'shopLongitude' => (float) ($seller->shopLongitude ?? 121.4647),
+        'shopName' => $seller->shopName ?: ($seller->name ?: 'Artisan Workshop'),
+        'shopAddress' => trim(($seller->shopHouseNo ? $seller->shopHouseNo . ' ' : '') . ($seller->shopStreet ? $seller->shopStreet . ', ' : '') . ($seller->shopBarangay ? $seller->shopBarangay . ', ' : '') . ($seller->shopCity ?: 'Lumban') . ', ' . ($seller->shopProvince ?: 'Laguna')),
+        'shopPhone' => $seller->mobileNumber ?: '',
+    ]),
+    @js([
+        'name' => auth()->user()->name ?? '',
+        'mobileNumber' => auth()->user()->mobileNumber ?? '',
+        'mode' => $mode
+    ])
 )">
     <div class="w-full max-w-6xl mx-auto transition-all duration-300 p-4 sm:p-6"
          style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);color:#1E1915;">
@@ -274,6 +286,47 @@
                                     </div>
                                 </div>
                             </template>
+                            {{-- Interactive Store Pickup Workshop Location & Map --}}
+                            <div x-show="shippingQuote?.provider_code === 'store_pickup'" x-cloak class="mt-3 pt-3 border-t border-[#ECE3D2] space-y-3" x-transition>
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-[#C49520]"></span>
+                                        <span class="text-xs font-bold text-[#1E1915] uppercase tracking-wider">Artisan Workshop Pickup Location</span>
+                                    </div>
+                                    <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        Self Collection
+                                    </span>
+                                </div>
+
+                                {{-- Interactive Leaflet Map Container --}}
+                                <div class="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden border border-[#ECE3D2] shadow-xs">
+                                    <div id="store-pickup-leaflet-map" class="w-full h-full z-10"></div>
+                                </div>
+
+                                {{-- Workshop Address Details & Direct Link --}}
+                                <div class="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#ECE3D2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="space-y-1 min-w-0 flex-1">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-bold text-xs sm:text-sm text-[#1E1915]" x-text="shippingQuote?.shop_name || '{{ addslashes($seller->shopName ?? ($seller->name ?? "Artisan Workshop")) }}'"></span>
+                                            <template x-if="shippingQuote?.shop_phone || '{{ $seller->mobileNumber ?? '' }}'">
+                                                <span class="text-[11px] text-stone-500 font-medium" x-text="'• ' + (shippingQuote?.shop_phone || '{{ addslashes($seller->mobileNumber ?? '') }}')"></span>
+                                            </template>
+                                        </div>
+                                        <p class="text-xs text-stone-600 font-medium leading-relaxed wrap-break-word" x-text="shippingQuote?.shop_address || '{{ addslashes(trim(($seller->shopHouseNo ? $seller->shopHouseNo . " " : "") . ($seller->shopStreet ? $seller->shopStreet . ", " : "") . ($seller->shopBarangay ? $seller->shopBarangay . ", " : "") . ($seller->shopCity ?: "Lumban") . ", " . ($seller->shopProvince ?: "Laguna"))) }}'"></p>
+                                        <p class="text-[10px] text-[#996515] font-semibold mt-1">
+                                            📍 Present your Order Reference Number when picking up your crafted item at the workshop.
+                                        </p>
+                                    </div>
+
+                                    <a :href="'https://www.google.com/maps/dir/?api=1&destination=' + (shippingQuote?.shop_latitude || {{ $seller->shopLatitude ?? 14.2952 }}) + ',' + (shippingQuote?.shop_longitude || {{ $seller->shopLongitude ?? 121.4647 }})"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#1E1915] text-[#DFC97A] hover:bg-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs shrink-0 no-underline cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span>Get Directions</span>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Empty State (No address provided yet) --}}
@@ -311,7 +364,7 @@
                     @endphp
 
                     <div class="space-y-3">
-                        {{-- Cash on Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
+                        {{-- Special Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
                         <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
                              class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
                              :class="paymentMethod === 'COD' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
@@ -319,8 +372,8 @@
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
                                     <div>
-                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery / Pay on Claim</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay in cash upon in-store pickup or local delivery arrival</div>
+                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Special Delivery / Pay on Claim</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay upon in-store pickup or Special Delivery arrival</div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
@@ -329,7 +382,7 @@
                             <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
                                 <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
                                     <span class="text-base shrink-0">ℹ️</span>
-                                    <span>You can pay with exact cash directly to the artisan upon claiming at the store or upon doorstep delivery. No online receipt screenshot required.</span>
+                                    <span>You can pay directly with cash upon in-store pickup or upon Special Delivery arrival. No online receipt screenshot required.</span>
                                 </div>
                             </div>
                         </div>
@@ -1218,7 +1271,10 @@
 </div>
 
 <script>
-function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
+function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, initialSeller, initialUserData) {
+    const userDefaults = initialUserData || {};
+    const sellerDefaults = initialSeller || {};
+
     return {
         step: 1,
         paymentMethod: defaultPaymentMethod || 'GCash',
@@ -1234,8 +1290,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         addressStepError: '',
         editForm: {
             id: null,
-            recipientName: "{{ addslashes(auth()->user()->name ?? '') }}",
-            phone: "{{ addslashes(auth()->user()->mobileNumber ?? '') }}",
+            recipientName: userDefaults.name || '',
+            phone: userDefaults.mobileNumber || '',
             houseNo: '',
             street: '',
             barangay: '',
@@ -1279,6 +1335,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
         currentShippingFee: 0,
         shippingQuoteReqId: 0,
         shippingQuoteController: null,
+        storePickupMap: null,
+        storePickupMarker: null,
 
         init() {
             this.fetchShippingQuotes();
@@ -1301,6 +1359,67 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
             this.shippingQuote = q;
             this.selectedProviderId = q.provider_id;
             this.currentShippingFee = Number(q.shipping_fee) || 0;
+            if (q.provider_code === 'store_pickup') {
+                this.initStorePickupMap();
+            }
+        },
+
+        initStorePickupMap() {
+            this.$nextTick(() => {
+                const container = document.getElementById('store-pickup-leaflet-map');
+                if (!container || typeof L === 'undefined') return;
+
+                const lat = parseFloat(this.shippingQuote?.shop_latitude) || Number(sellerDefaults.shopLatitude) || 14.2952;
+                const lng = parseFloat(this.shippingQuote?.shop_longitude) || Number(sellerDefaults.shopLongitude) || 121.4647;
+                const shopName = this.shippingQuote?.shop_name || sellerDefaults.shopName || 'Artisan Workshop';
+                const shopAddress = this.shippingQuote?.shop_address || sellerDefaults.shopAddress || 'Lumban, Laguna';
+
+                if (this.storePickupMap) {
+                    this.storePickupMap.remove();
+                    this.storePickupMap = null;
+                }
+
+                this.storePickupMap = L.map('store-pickup-leaflet-map', {
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([lat, lng], 16);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(this.storePickupMap);
+
+                const shopPinIcon = L.divIcon({
+                    className: 'lumbarong-shop-pin-icon',
+                    html: `
+                        <div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:32px;height:32px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:13px;font-weight:900;">🏛️</span>
+                            </div>
+                            <div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div>
+                        </div>
+                    `,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 36],
+                    popupAnchor: [0, -36]
+                });
+
+                this.storePickupMarker = L.marker([lat, lng], {
+                    icon: shopPinIcon
+                }).addTo(this.storePickupMap);
+
+                const popupHtml = `
+                    <div style="font-family:sans-serif;font-size:12px;line-height:1.4;color:#1E1915;padding:2px;max-width:200px;">
+                        <div style="font-weight:800;color:#1E1915;font-size:12px;margin-bottom:2px;">${shopName}</div>
+                        <div style="color:#78716C;font-size:11px;">${shopAddress}</div>
+                        <div style="margin-top:5px;font-size:9px;font-weight:800;color:#8C6D1F;background:#FAF5EA;padding:2px 6px;border-radius:4px;border:1px solid #E6D8BA;display:inline-block;">Artisan Workshop</div>
+                    </div>
+                `;
+                this.storePickupMarker.bindPopup(popupHtml).openPopup();
+
+                setTimeout(() => {
+                    if (this.storePickupMap) this.storePickupMap.invalidateSize();
+                }, 300);
+            });
         },
 
         async fetchShippingQuotes() {
@@ -1333,7 +1452,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                                   document.querySelector('meta[name="csrf-token"]')?.content || '';
                 const payload = {
                     address_id: this.address.id,
-                    mode: '{{ $mode }}'
+                    mode: userDefaults.mode || 'cart'
                 };
 
                 const res = await fetch('/checkout/shipping-quote', {
@@ -1384,6 +1503,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod) {
                 } else {
                     this.currentShippingFee = 0;
                     this.quotesError = 'No courier rates are currently available for this delivery area.';
+                }
+
+                if (this.shippingQuote?.provider_code === 'store_pickup') {
+                    this.initStorePickupMap();
                 }
             } catch (err) {
                 clearTimeout(timeoutId);

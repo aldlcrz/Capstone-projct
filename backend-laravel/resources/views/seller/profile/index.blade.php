@@ -596,7 +596,7 @@
                                 <div style="display:flex;align-items:center;gap:7px;">
                                     <div style="font-size:14px;font-weight:700;color:#1E1915;">Couriers &amp; Logistics</div>
                                 </div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Enable J&amp;T, SPX, or LBC options</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Configure Store Pickup, Special Delivery, and Couriers</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -1857,30 +1857,82 @@
 
                 <form action="{{ route('seller.shipping-providers.update') }}" method="POST">
                     @csrf
-                    <div class="space-y-3.5 mb-6">
+                    <div class="space-y-4 mb-6">
                         @forelse($shippingProviders as $provider)
                             @php
-                                $isEnabled = !empty($sellerShippingProviders[$provider->id]);
+                                $sellerRecord = $sellerShippingProviders[$provider->id] ?? null;
+                                $isEnabled = $sellerRecord ? (is_object($sellerRecord) ? $sellerRecord->is_enabled : (bool)$sellerRecord) : true;
+                                $customFee = is_object($sellerRecord) && $sellerRecord->custom_fee !== null ? $sellerRecord->custom_fee : ($provider->code === 'seller_direct' ? 25.00 : null);
                             @endphp
-                            <label class="flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer select-none hover:border-[#C49520] hover:bg-[#FAF8F5]"
-                                   :class="'{{ $isEnabled ? 'border-[#C49520] bg-[#FAF8F5]' : 'border-[#EAE1D0] bg-white' }}'">
-                                <input type="checkbox"
-                                       name="providers[]"
-                                       value="{{ $provider->id }}"
-                                       {{ $isEnabled ? 'checked' : '' }}
-                                       class="mt-1 w-4 h-4 rounded text-[#996515] border-[#D1C7B7] focus:ring-[#C49520]">
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <div class="font-bold text-sm text-[#1E1915]">{{ $provider->name }}</div>
-                                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">
-                                            Divisor: {{ $provider->volumetric_divisor }}
-                                        </span>
-                                    </div>
-                                    <div class="text-xs text-stone-500 mt-0.5">
-                                        {{ $provider->tracking_url_template ? 'Automated tracking integrated' : 'Standard national logistics dispatch' }}
+                            <div class="p-4 rounded-2xl border transition-all select-none hover:border-[#C49520] hover:bg-[#FAF8F5] {{ $isEnabled ? 'border-[#C49520] bg-[#FAF8F5]' : 'border-[#EAE1D0] bg-white' }}"
+                                 x-data="{ enabled: {{ $isEnabled ? 'true' : 'false' }} }">
+                                <div class="flex items-start gap-3.5">
+                                    <input type="checkbox"
+                                           name="providers[]"
+                                           value="{{ $provider->id }}"
+                                           x-model="enabled"
+                                           class="mt-1 w-4 h-4 rounded text-[#996515] border-[#D1C7B7] focus:ring-[#C49520] cursor-pointer">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                                            <div class="font-bold text-sm text-[#1E1915]">
+                                                @if($provider->code === 'store_pickup')
+                                                    Store Pickup (In-Shop Collection)
+                                                @elseif($provider->code === 'seller_direct')
+                                                    Special Delivery (Local Artisan Rider)
+                                                @else
+                                                    {{ $provider->name }}
+                                                @endif
+                                            </div>
+                                            @if($provider->code === 'store_pickup')
+                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    FREE (In-Store)
+                                                </span>
+                                            @elseif($provider->code === 'seller_direct')
+                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                                                    Local Special Delivery
+                                                </span>
+                                            @else
+                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">
+                                                    Divisor: {{ $provider->volumetric_divisor }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <div class="text-xs text-stone-500 mt-1">
+                                            @if($provider->code === 'store_pickup')
+                                                Allow nearby customers to pick up orders directly at your physical workshop location.
+                                            @elseif($provider->code === 'seller_direct')
+                                                Special local delivery handled directly by your shop or assigned local rider for local cluster orders.
+                                            @else
+                                                {{ $provider->tracking_url_template ? 'Automated tracking integrated' : 'Standard national logistics dispatch' }}
+                                            @endif
+                                        </div>
+
+                                        {{-- Special Delivery Custom Fee Configuration --}}
+                                        @if($provider->code === 'seller_direct')
+                                            <div x-show="enabled" x-collapse class="mt-3 pt-3 border-t border-[#ECE3D2]/80">
+                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-[#1E1915]">Custom Special Delivery Fee</label>
+                                                        <p class="text-[10px] text-stone-500">Set the delivery fee charged to local customers</p>
+                                                    </div>
+                                                    <div class="relative w-full sm:w-36">
+                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-600">₱</span>
+                                                        <input type="number"
+                                                               step="0.01"
+                                                               min="0"
+                                                               max="10000"
+                                                               name="custom_fees[{{ $provider->id }}]"
+                                                               value="{{ number_format($customFee ?? 25.00, 2, '.', '') }}"
+                                                               placeholder="25.00"
+                                                               class="w-full pl-7 pr-3 py-1.5 text-xs font-bold text-stone-900 bg-white border border-[#D1C7B7] rounded-xl focus:border-[#C49520] focus:ring-1 focus:ring-[#C49520]">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
-                            </label>
+                            </div>
                         @empty
                             <p class="text-xs text-stone-500 italic text-center py-4">No active shipping providers configured on the platform.</p>
                         @endforelse
@@ -1889,12 +1941,12 @@
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#ECE3D2]">
                         <button type="button"
                                 @click="showShippingProvidersModal = false"
-                                class="px-5 py-2.5 rounded-xl border border-[#E2D9C8] text-[#78716C] hover:bg-[#FAF6EE] text-xs font-bold uppercase tracking-wider transition-all">
+                                class="px-5 py-2.5 rounded-xl border border-[#E2D9C8] text-[#78716C] hover:bg-[#FAF6EE] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
                             Cancel
                         </button>
                         <button type="submit"
-                                class="px-6 py-2.5 rounded-xl bg-[#1E1915] text-[#DFC97A] hover:bg-black text-xs font-bold uppercase tracking-wider transition-all shadow-md">
-                            Save Couriers
+                                class="px-6 py-2.5 rounded-xl bg-[#1E1915] text-[#DFC97A] hover:bg-black text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Save Settings
                         </button>
                     </div>
                 </form>
@@ -1993,38 +2045,38 @@
         $profileTourSteps = [
             [
                 'target' => '#tour-profile-header',
-                'title' => 'My Profile & Account',
+                'title' => '🏛️ Artisan Shop Hub',
                 'content' => 'This is your central artisan shop administration hub. Manage your public profile, business credentials, payouts, orders, catalogue, and shop settings.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-hero',
-                'title' => 'Artisan Storefront Identity',
-                'content' => 'Displays your official artisan shop name, verified badge, and contact details. Click "Edit Profile" to update your avatar photo, mobile number, and artisan shop biography.',
+                'title' => '✨ Artisan Storefront Identity',
+                'content' => 'Displays your official artisan shop name, verified badge, email, and contact number. Click "Edit Profile" to update your avatar photo, mobile number, and artisan shop biography.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-metrics',
-                'title' => 'Artisan Quick Metrics',
-                'content' => 'At-a-glance performance snapshot displaying total live Creations, overall Orders received, aggregate Sales revenue, and buyer Star Rating.',
+                'title' => '📊 Artisan Quick Metrics',
+                'content' => 'At-a-glance performance snapshot displaying your live Creations count, total Orders received, aggregate Sales revenue, and buyer Star Rating.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-col-account',
-                'title' => 'Account & Security Settings',
-                'content' => 'Open "Account Setting" to manage your email with 2-step verification, update your shop story, and review legal verification documents. Configure your GCash & Maya payout accounts or change your password.',
+                'title' => '🔒 Account & Security Settings',
+                'content' => 'Manage your email with 2-step verification, review legal accreditation permits, configure your direct GCash & Maya payout accounts, or update your password.',
                 'position' => 'right'
             ],
             [
                 'target' => '#tour-profile-col-operations',
-                'title' => 'Creations & Operations',
-                'content' => 'Quickly navigate to your full Products Catalogue (with low stock / pending item alerts) and your Orders & Dispatch fulfillment center.',
+                'title' => '📦 Creations & Logistics Center',
+                'content' => 'Manage your Products Catalogue and Orders & Dispatch pipeline. Click "Couriers & Logistics" to enable in-shop Store Pickup and set custom Special Delivery shipping fees!',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-col-insights',
-                'title' => 'Insights & Shop Policies',
-                'content' => 'View your Customer Directory with purchase histories, dive into detailed Shop Analytics & Reports, or customize your Shop Cancellation & Refund Policies.',
+                'title' => '📈 Insights, Analytics & Shop Policies',
+                'content' => 'Access your Customer Directory, review detailed 7-tab Shop Analytics & financial statements, or tailor your custom Shop Cancellation & Refund Policies.',
                 'position' => 'left'
             ]
         ];

@@ -145,6 +145,16 @@ class ShippingCalculatorService
         foreach ($providers as $provider) {
             // Special handling for local-only standard providers (store_pickup & seller_direct)
             if ($provider->code === 'store_pickup') {
+                $shopAddressParts = array_filter([
+                    $seller->shopHouseNo,
+                    $seller->shopStreet,
+                    $seller->shopBarangay,
+                    $seller->shopCity ?: 'Lumban',
+                    $seller->shopProvince ?: 'Laguna',
+                    $seller->shopPostalCode
+                ]);
+                $formattedShopAddress = !empty($shopAddressParts) ? implode(', ', $shopAddressParts) : 'Lumban, Laguna';
+
                 $quotes[] = [
                     'provider_id'                     => $provider->id,
                     'provider_name'                   => 'Store Pickup (In-Shop Collection)',
@@ -164,14 +174,27 @@ class ShippingCalculatorService
                     'estimated_days_min'              => 0,
                     'estimated_days_max'              => 1,
                     'delivery_estimate_display'       => 'Same Day / Next Day Pickup',
+                    'shop_name'                       => $seller->shopName ?: ($seller->name ?: 'Artisan Workshop'),
+                    'shop_latitude'                   => (float) ($seller->shopLatitude ?: 14.2952),
+                    'shop_longitude'                  => (float) ($seller->shopLongitude ?: 121.4647),
+                    'shop_address'                    => $formattedShopAddress,
+                    'shop_phone'                      => $seller->mobileNumber ?: '',
                 ];
                 continue;
             }
 
             if ($provider->code === 'seller_direct') {
+                $sellerProviderConfig = \Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'custom_fee')
+                    ? SellerShippingProvider::where('seller_id', $seller->id)->where('provider_id', $provider->id)->first()
+                    : null;
+
+                $customFee = ($sellerProviderConfig && $sellerProviderConfig->custom_fee !== null && $sellerProviderConfig->custom_fee >= 0)
+                    ? (float) $sellerProviderConfig->custom_fee
+                    : 25.00;
+
                 $quotes[] = [
                     'provider_id'                     => $provider->id,
-                    'provider_name'                   => 'Seller Direct Delivery (Local Rider)',
+                    'provider_name'                   => 'Special Delivery (Local Artisan Rider)',
                     'provider_code'                   => 'seller_direct',
                     'shipping_rate_id'                => null,
                     'origin_zone_id'                  => $originZone->id,
@@ -181,10 +204,10 @@ class ShippingCalculatorService
                     'actual_weight'                   => round($totalActualWeight, 2),
                     'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
                     'chargeable_weight'               => round($totalActualWeight, 2),
-                    'rate_base_snapshot'              => 25.00,
+                    'rate_base_snapshot'              => $customFee,
                     'additional_weight_rate_snapshot' => 0.00,
                     'volumetric_divisor_snapshot'     => 3500,
-                    'shipping_fee'                    => 25.00,
+                    'shipping_fee'                    => $customFee,
                     'estimated_days_min'              => 1,
                     'estimated_days_max'              => 1,
                     'delivery_estimate_display'       => '1 Day (Local Delivery)',

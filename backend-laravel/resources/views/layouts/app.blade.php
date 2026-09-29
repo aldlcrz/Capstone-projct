@@ -644,16 +644,16 @@
     @stack('scripts')
 
     @auth
-    @if(Auth::user()->role === 'customer' && request()->is('/'))
+    @if(Auth::user()->role === 'customer' && (request()->is('/') || request()->routeIs('home')))
     <x-spotlight-tour
         tour-id="customer"
         :user-id="Auth::id()"
         :auto-start="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
         :steps="[
-            ['selector' => '#tour-search-bar',       'title' => 'Search Products',     'text' => 'Use the search bar to find Barong Tagalog, sellers, and styles by name or keyword.'],
-            ['selector' => '#shop-by-category-section',  'title' => 'Shop by Category',    'text' => 'Browse our curated categories — from Wedding Barong to Filipiniana Gowns — to quickly narrow down your style.'],
-            ['selector' => '#tour-artisan-shops',     'title' => 'Featured Sections',   'text' => 'Explore top-rated shops and bestsellers to discover highly recommended artisan-crafted pieces.'],
-            ['selector' => '#tour-cart-btn',          'title' => 'Your Shopping Cart',  'text' => 'Items you add will appear here. Click to review your cart and proceed to checkout anytime.'],
+            ['selector' => '#tour-search-bar',          'title' => '🔍 Search Artisans & Barongs',     'text' => 'Search across authentic hand-embroidered Barong Tagalog, Filipiniana attire, master tailoring guilds, or specific fabrics by keyword.'],
+            ['selector' => '#shop-by-category-section', 'title' => '🏷️ Browse Heritage Categories',   'text' => 'Browse curated styles organized by audience (Men, Women, Kids) and occasions (Wedding, Modern Barong, Traditional Calado).'],
+            ['selector' => '#tour-artisan-shops',        'title' => '🏛️ Master Workshops & Promos',    'text' => 'Explore verified Lumban artisan shops, browse customer reviews, and take advantage of limited-time seasonal promotional discounts.'],
+            ['selector' => '#tour-cart-btn',             'title' => '🛍️ Shopping Bag & Flexible Delivery', 'text' => 'Review your cart and proceed to checkout with Special Delivery (local courier) or in-person Store Pickup with interactive workshop maps!'],
         ]"
     />
     @endif

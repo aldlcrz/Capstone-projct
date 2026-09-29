@@ -259,6 +259,39 @@
                         </div>
                     </div>
 
+                    {{-- Shipping Method Selection in Simulator --}}
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold" style="color: #1E1915;">Select Fulfillment Method:</label>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button type="button"
+                                    @click="selectedShipping = 'courier'"
+                                    class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
+                                    :style="selectedShipping === 'courier' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-base">🚚</span>
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">Standard / Special</span>
+                                </div>
+                                <div class="mt-1">
+                                    <div class="text-xs font-extrabold" style="color: #1E1915;">Courier Delivery</div>
+                                    <div class="text-[10px]" style="color: #766C60;">Direct to your doorstep</div>
+                                </div>
+                            </button>
+                            <button type="button"
+                                    @click="selectedShipping = 'pickup'"
+                                    class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
+                                    :style="selectedShipping === 'pickup' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-base">🏬</span>
+                                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded">FREE • ₱0</span>
+                                </div>
+                                <div class="mt-1">
+                                    <div class="text-xs font-extrabold" style="color: #1E1915;">Store Pickup</div>
+                                    <div class="text-[10px]" style="color: #766C60;">Visit artisan's workshop</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
                     {{-- Summary Calculation --}}
                     <div class="p-4 rounded-2xl border space-y-2 text-xs" style="background-color: #FDF8EE; border-color: #E8DECB;">
                         <div class="flex justify-between" style="color: #5C5247;">
@@ -266,8 +299,8 @@
                             <span class="font-bold" style="color: #1E1915;" x-text="currentProduct.formatted_price"></span>
                         </div>
                         <div class="flex justify-between items-center" style="color: #5C5247;">
-                            <span>Shipping Fee</span>
-                            <span class="font-bold text-[11px]" style="color: #1E1915;">Depends on location (₱150 - ₱250)</span>
+                            <span>Fulfillment Fee</span>
+                            <span class="font-bold text-[11px]" :style="selectedShipping === 'pickup' ? 'color: #059669;' : 'color: #1E1915;'" x-text="selectedShipping === 'pickup' ? '₱0.00 (In-Shop Pickup)' : '₱180.00 (Special Delivery / Courier)'"></span>
                         </div>
                         <div class="flex justify-between" style="color: #5C5247;">
                             <span>Promo Voucher (LUMBARONGPROMO)</span>
@@ -276,9 +309,9 @@
                         <div class="pt-2 border-t flex justify-between items-center text-sm font-extrabold" style="border-color: #E8DECB; color: #1E1915;">
                             <div>
                                 <span>Total Payable:</span>
-                                <div class="text-[10px] font-normal text-gray-500 font-sans">+ Courier shipping fee based on destination</div>
+                                <div class="text-[10px] font-normal text-gray-500 font-sans" x-text="selectedShipping === 'pickup' ? 'Zero shipping • Claim at Lumban boutique' : 'Doorstep Special Delivery included'"></div>
                             </div>
-                            <span x-text="'₱' + (Math.max(0, currentProduct.price - 200)).toLocaleString('en-US', { minimumFractionDigits: 2 })"></span>
+                            <span x-text="'₱' + (Math.max(0, currentProduct.price - 200 + (selectedShipping === 'pickup' ? 0 : 180))).toLocaleString('en-US', { minimumFractionDigits: 2 })"></span>
                         </div>
                     </div>
 
@@ -297,66 +330,94 @@
                     </div>
                 </div>
 
-                {{-- STEP 3: Real Checkout Simulation (GCash & Maya) --}}
+                {{-- STEP 3: Real Checkout Simulation (GCash & Maya & Pay on Claim) --}}
                 <div x-show="currentStep === 2" x-transition class="space-y-5">
                     <div>
                         <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 3: Secure Artisan Checkout</span>
                         <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Delivery & Payment Verification</h3>
-                        <p class="text-xs mt-1" style="color: #5C5247;">In LumBarong, payments are sent directly to the artisan's verified GCash or Maya account with reference verification.</p>
+                        <p class="text-xs mt-1" style="color: #5C5247;">In LumBarong, payments are sent directly to the artisan's verified GCash/Maya or paid upon in-shop collection.</p>
                     </div>
 
-                    {{-- Address Box --}}
+                    {{-- Address / Pickup Workshop Box --}}
                     <div class="p-4 rounded-2xl border space-y-2" style="background-color: #FFFFFF; border-color: #E8DECB;">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
-                                📍 Delivery Destination
-                            </span>
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider" style="color: #C49520;">Verified Address</span>
-                        </div>
-                        <p class="text-xs leading-relaxed" style="color: #5C5247;">
-                            <strong style="color: #1E1915;" x-text="userData.name"></strong> (<span x-text="userData.phone"></span>)<br>
-                            <span x-text="userData.address"></span>
-                        </p>
+                        <template x-if="selectedShipping === 'courier'">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
+                                        📍 Delivery Destination (Special Delivery)
+                                    </span>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider" style="color: #C49520;">Verified Address</span>
+                                </div>
+                                <p class="text-xs leading-relaxed mt-1" style="color: #5C5247;">
+                                    <strong style="color: #1E1915;" x-text="userData.name"></strong> (<span x-text="userData.phone"></span>)<br>
+                                    <span x-text="userData.address"></span>
+                                </p>
+                            </div>
+                        </template>
+                        <template x-if="selectedShipping === 'pickup'">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold flex items-center gap-1.5 text-emerald-800">
+                                        🏬 In-Shop Collection & Map Pin
+                                    </span>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Store Pickup</span>
+                                </div>
+                                <p class="text-xs leading-relaxed mt-1" style="color: #5C5247;">
+                                    Artisan Workshop: <strong style="color: #1E1915;" x-text="currentProduct.seller_name"></strong><br>
+                                    Location: <span x-text="currentProduct.artisan_region"></span> • <span class="text-[#C49520] font-semibold">Interactive map & directions provided in order receipt</span>
+                                </p>
+                            </div>
+                        </template>
                     </div>
 
-                    {{-- Payment Method Selection (Only GCash and Maya) --}}
+                    {{-- Payment Method Selection (GCash, Maya, Pay on Claim) --}}
                     <div class="space-y-2">
                         <label class="text-xs font-bold" style="color: #1E1915;">Select Verified Payment Gateway:</label>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                             <button type="button"
                                     @click="selectedPayment = 'GCash'"
-                                    class="p-3.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'GCash' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-2xl">📱</span>
-                                <span class="text-xs font-extrabold" style="color: #1E1915;">GCash (13-Digit Ref)</span>
-                                <span class="text-[10px]" style="color: #766C60;" x-text="'Seller: ' + (currentProduct.seller_gcash || '09123456789')"></span>
+                                <span class="text-xl">📱</span>
+                                <span class="text-xs font-extrabold" style="color: #1E1915;">GCash (13-Digit)</span>
+                                <span class="text-[9px] truncate max-w-full" style="color: #766C60;" x-text="currentProduct.seller_gcash || '09123456789'"></span>
                             </button>
                             <button type="button"
                                     @click="selectedPayment = 'Maya'"
-                                    class="p-3.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
+                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'Maya' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-2xl">💳</span>
-                                <span class="text-xs font-extrabold" style="color: #1E1915;">Maya (12-Digit Ref)</span>
-                                <span class="text-[10px]" style="color: #766C60;" x-text="'Seller: ' + (currentProduct.seller_maya || '09987654321')"></span>
+                                <span class="text-xl">💳</span>
+                                <span class="text-xs font-extrabold" style="color: #1E1915;">Maya (12-Digit)</span>
+                                <span class="text-[9px] truncate max-w-full" style="color: #766C60;" x-text="currentProduct.seller_maya || '09987654321'"></span>
+                            </button>
+                            <button type="button"
+                                    @click="selectedPayment = 'Pay on Store Claim'"
+                                    class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer col-span-2 sm:col-span-1"
+                                    :style="selectedPayment === 'Pay on Store Claim' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
+                                <span class="text-xl">🏪</span>
+                                <span class="text-xs font-extrabold" style="color: #1E1915;">Pay on Claim</span>
+                                <span class="text-[9px]" style="color: #766C60;">Cash/QR upon visit</span>
                             </button>
                         </div>
                     </div>
 
                     {{-- Simulated Reference Number & Proof Upload --}}
                     <div class="p-4 rounded-2xl border space-y-2.5" style="background-color: #FDF8EE; border-color: #E8DECB;">
-                        <div>
-                            <label class="text-[11px] font-bold" style="color: #1E1915;">
-                                Payment Reference Number (<span x-text="selectedPayment"></span> Verification):
-                            </label>
-                            <input type="text"
-                                   :value="selectedPayment === 'GCash' ? '1002948291048' : '982740192837'"
-                                   readonly
-                                   class="w-full text-xs font-mono font-bold rounded-lg p-2.5 mt-1"
-                                   style="background-color: #FFFFFF; border: 1px solid #E8DECB; color: #1E1915;">
-                        </div>
+                        <template x-if="selectedPayment !== 'Pay on Store Claim'">
+                            <div>
+                                <label class="text-[11px] font-bold" style="color: #1E1915;">
+                                    Payment Reference Number (<span x-text="selectedPayment"></span> Verification):
+                                </label>
+                                <input type="text"
+                                       :value="selectedPayment === 'GCash' ? '1002948291048' : '982740192837'"
+                                       readonly
+                                       class="w-full text-xs font-mono font-bold rounded-lg p-2.5 mt-1"
+                                       style="background-color: #FFFFFF; border: 1px solid #E8DECB; color: #1E1915;">
+                            </div>
+                        </template>
                         <div class="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
                             <span>🧾</span>
-                            <span>Payment Screenshot Proof Attached (Simulation)</span>
+                            <span x-text="selectedPayment === 'Pay on Store Claim' ? 'Payment settled in-person upon pickup & inspection' : 'Payment Screenshot Proof Attached (Simulation)'"></span>
                         </div>
                     </div>
 
@@ -378,7 +439,7 @@
                         <div>
                             <span class="text-[10px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Step 4: Real Order Lifecycle</span>
                             <h3 class="font-serif text-xl sm:text-2xl font-extrabold mt-0.5" style="color: #1E1915;">Live Order Tracking</h3>
-                            <p class="text-xs mt-1" style="color: #5C5247;">Track every milestone from tailoring to doorstep delivery.</p>
+                            <p class="text-xs mt-1" style="color: #5C5247;">Track every milestone from tailoring to doorstep delivery or in-shop collection.</p>
                         </div>
                         <span class="text-xs font-mono font-bold px-3 py-1 rounded-full shrink-0" style="background-color: #1E1915; color: #C49520;" x-text="'#LMB-' + (Math.floor(100000 + Math.random() * 900000))">
                         </span>
@@ -413,8 +474,8 @@
                                      :class="orderStatusStage >= 3 ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-200 text-gray-500'">
                                     3
                                 </div>
-                                <div class="text-[10px] font-bold" style="color: #1E1915;">Shipped</div>
-                                <div class="text-[9px]" style="color: #5C5247;">J&T / LBC Courier</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;" x-text="selectedShipping === 'pickup' ? 'Ready' : 'Shipped'"></div>
+                                <div class="text-[9px]" style="color: #5C5247;" x-text="selectedShipping === 'pickup' ? 'Workshop Pickup' : 'Courier / Rider'"></div>
                             </div>
 
                             {{-- Step 4 --}}
@@ -423,7 +484,7 @@
                                      :class="orderStatusStage >= 4 ? 'bg-emerald-700 text-white shadow-sm' : 'bg-gray-200 text-gray-500'">
                                     4
                                 </div>
-                                <div class="text-[10px] font-bold" style="color: #1E1915;">Delivered</div>
+                                <div class="text-[10px] font-bold" style="color: #1E1915;" x-text="selectedShipping === 'pickup' ? 'Claimed' : 'Delivered'"></div>
                                 <div class="text-[9px]" style="color: #5C5247;">Confirm & Review</div>
                             </div>
                         </div>
@@ -452,19 +513,19 @@
                                     @click="orderStatusStage = 2"
                                     class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
                                     :style="orderStatusStage === 2 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
-                                2. Seller Uploads Packing Proof
+                                2. Packing Proof Uploaded
                             </button>
                             <button type="button"
                                     @click="orderStatusStage = 3"
                                     class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
                                     :style="orderStatusStage === 3 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
-                                3. Courier Picked Up & In Transit
+                                <span x-text="selectedShipping === 'pickup' ? '3. Ready for In-Shop Pickup' : '3. Special Delivery / In Transit'"></span>
                             </button>
                             <button type="button"
                                     @click="orderStatusStage = 4"
                                     class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
                                     :style="orderStatusStage === 4 ? 'background-color: #1E1915; color: #FFFFFF; border-color: #1E1915;' : 'background-color: #FFFFFF; color: #1E1915; border-color: #E8DECB;'">
-                                4. Delivered — Confirm & Review
+                                <span x-text="selectedShipping === 'pickup' ? '4. Picked Up & Reviewed' : '4. Delivered — Confirm & Review'"></span>
                             </button>
                         </div>
                     </div>
@@ -495,6 +556,7 @@ function realtimeOrderDemoEngine() {
         isOpen: false,
         currentStep: 0,
         selectedProductIndex: 0,
+        selectedShipping: 'courier',
         products: (() => {
             try {
                 const el = document.getElementById('real-products-demo-data');
@@ -542,22 +604,28 @@ function realtimeOrderDemoEngine() {
 
         get stageDetails() {
             const seller = this.currentProduct.seller_name || 'The artisan';
+            const isPickup = this.selectedShipping === 'pickup';
+
             return {
                 1: {
                     title: 'Order Placed (Pending Confirmation)',
-                    desc: `${seller} receives your order notification and verifies your ${this.selectedPayment} reference number.`
+                    desc: `${seller} receives your order notification and verifies your ${this.selectedPayment} reference details.`
                 },
                 2: {
                     title: 'Preparing / Packing Proof Uploaded',
-                    desc: `${seller} packages your ${this.currentProduct.name} and uploads a photo proof of the finished barong before dispatch.`
+                    desc: `${seller} packages your ${this.currentProduct.name} and uploads a photo proof of the finished barong before dispatch or claim.`
                 },
                 3: {
-                    title: 'Shipped (Courier In Transit)',
-                    desc: `Courier picks up your parcel from ${this.currentProduct.artisan_region}. You can track the delivery progress in real time under My Purchase.`
+                    title: isPickup ? 'Ready for In-Shop Store Pickup' : 'Shipped (Courier / Rider In Transit)',
+                    desc: isPickup
+                        ? `Your barong is ready at ${this.currentProduct.artisan_region}. Open the interactive workshop map in your receipt for exact navigation!`
+                        : `Courier / local rider has picked up your parcel from ${this.currentProduct.artisan_region}. Track delivery progress under My Purchase.`
                 },
                 4: {
-                    title: 'Delivered (Inspect, Confirm & Review)',
-                    desc: `You receive the barong at ${this.userData.address}, click "Confirm Order Received", and share your rating and review for ${seller}!`
+                    title: isPickup ? 'Claimed & Inspected at Workshop' : 'Delivered (Inspect, Confirm & Review)',
+                    desc: isPickup
+                        ? `You visited the artisan's shop, inspected your handcrafted barong, confirmed collection, and left a 5-star review for ${seller}!`
+                        : `You received the barong at ${this.userData.address}, clicked "Confirm Order Received", and shared your verified review for ${seller}!`
                 }
             };
         },

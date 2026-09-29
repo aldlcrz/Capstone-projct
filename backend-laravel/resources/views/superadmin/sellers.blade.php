@@ -852,4 +852,17 @@ function superSellerManager() {
     };
 }
 </script>
+
+<x-spotlight-tour
+    tourId="admin-sellers-guide"
+    :autoStart="false"
+    :steps="[
+        ['selector' => '#tour-superadmin-sellers-header',  'title' => '🏛️ Seller & Artisan Governance',  'description' => 'Review and manage artisan accounts, oversee shop compliance, and process merchant accreditation applications.'],
+        ['selector' => '#tour-superadmin-sellers-search',  'title' => '🔍 Artisan Search',              'description' => 'Find specific sellers by artisan name, registered email, or dedicated shop workshop name.'],
+        ['selector' => '#tour-superadmin-sellers-filters', 'title' => '🏷️ Compliance Status Filters',   'description' => 'Quickly toggle between Approved sellers, Pending verifications, Frozen commission debt accounts, and Suspended shops.'],
+        ['selector' => '#tour-superadmin-sellers-table',   'title' => '📋 Artisan Seller Directory',    'description' => 'Comprehensive directory showing shop details, active inventory count, registration dates, and verification badges.'],
+        ['selector' => '#tour-superadmin-sellers-actions', 'title' => '⚖️ Governance Actions & Audit',   'description' => 'Inspect legal documents (BIR, Barangay permits), verify applications, freeze commission debt, or manage account standing.']
+    ]"
+/>
+
 @endsection

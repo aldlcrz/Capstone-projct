@@ -704,7 +704,7 @@
                          alt="{{ $product->name }}"
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
-                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                    @if($product->isSaleActive())
                         <div style="position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:none;">
                             {{-- Top badge: LUMBARONG SPECIALS & PROMO --}}
                             <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:20px;box-shadow:0 0 8px rgba(180,130,15,0.45),inset 0 1px 0 rgba(230,185,60,0.12);white-space:nowrap;">
@@ -761,10 +761,10 @@
                     </span>
                 </div>
                 <div class="flex items-center gap-2 mt-1">
-                    <p class="text-base font-extrabold {{ $product->is_on_sale && $product->discount_percentage > 0 ? 'text-[#E02424]' : 'text-gray-900' }}">
+                    <p class="text-base font-extrabold {{ $product->isSaleActive() ? 'text-[#E02424]' : 'text-gray-900' }}">
                         ₱{{ number_format($product->salePrice) }}
                     </p>
-                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                    @if($product->isSaleActive())
                         <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
                     @endif
                 </div>

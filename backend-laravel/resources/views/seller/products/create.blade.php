@@ -3698,8 +3698,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         [
             'selector' => '#tour-create-step2-pricing',
-            'title' => '💵 Pricing, Shipping & Discounts',
-            'text' => 'Set your base item price, shipping fees, delivery lead time, and optionally enable a promotional discount percentage with live price preview.'
+            'title' => '💵 Pricing, Lead Time & Promotional Discounts',
+            'text' => 'Set your base price, delivery lead days, and optionally enable promotional discounts with real-time price and sale timer calculations.'
         ],
         [
             'selector' => '#tour-create-step2-footer',

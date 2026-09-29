@@ -2742,39 +2742,39 @@ function sellerOrdersManager() {
                 [
                     'selector' => '#tour-orders-tabs',
                     'title' => '📦 To Ship & Production Stage',
-                    'text' => 'Orders in this stage have verified payment and are actively undergoing bespoke tailoring, embroidery, quality check, and packaging.',
+                    'text' => 'Orders in this stage have verified payment and are actively undergoing bespoke tailoring, embroidery, quality inspection, and packaging.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
                     'title' => '📸 Live Packaging Photo Proof',
-                    'text' => 'Inside the order dossier, use your device camera or upload photo proof of the packaged garment and waybill before handing off to the courier.',
+                    'text' => 'Inside the order dossier, capture or upload photo proof of the packaged garment and waybill before courier dispatch or store pickup notification.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-search',
-                    'title' => '🚚 Courier Selection & Tracking Number',
-                    'text' => 'Select an accredited courier (J&T Express, LBC, Ninja Van, Flash Express, etc.) and enter the official tracking code to dispatch and mark as Shipped.',
+                    'title' => '🚚 Logistics Courier / Special Delivery / Store Pickup',
+                    'text' => 'Select an accredited courier (J&T, LBC), dispatch via Special Delivery (local rider), or mark ready for in-shop Store Pickup collection.',
                     'position' => 'bottom'
                 ]
             ],
             'shipped' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '🚚 Shipped Orders Stage',
-                    'text' => 'Parcels that have been dropped off or picked up by your courier from your Lumban artisan workshop and are in the courier network.',
+                    'title' => '🚚 Shipped & Ready Orders Stage',
+                    'text' => 'Parcels dispatched via courier/rider or awaiting buyer claim at your Lumban artisan workshop.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '📲 Live Buyer Notification',
-                    'text' => 'The customer receives real-time SMS and dashboard notifications with their tracking number and courier details upon dispatch.',
+                    'title' => '📲 Live Buyer Notification & GPS Map',
+                    'text' => 'The customer receives real-time SMS and dashboard notifications with tracking details or workshop map directions upon dispatch.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '🛣️ Transitioning to In Transit',
-                    'text' => 'Once the courier scans the parcel at the sorting facility, the package advances to "In Transit" as it travels to the destination city.',
+                    'title' => '🛣️ Transitioning to In Transit / Claimed',
+                    'text' => 'Track packages as they move through regional sorting hubs to the buyer\'s doorstep or are picked up in-shop.',
                     'position' => 'bottom'
                 ]
             ],

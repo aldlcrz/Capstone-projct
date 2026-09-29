@@ -751,8 +751,8 @@ class DashboardController extends Controller
 
         $shippingProviders = \App\Models\ShippingProvider::where('is_active', true)->get();
         $sellerShippingProviders = \App\Models\SellerShippingProvider::where('seller_id', $user->id)
-            ->pluck('is_enabled', 'provider_id')
-            ->toArray();
+            ->get()
+            ->keyBy('provider_id');
 
         return view('seller.profile.index', compact('user', 'recentPayments', 'shippingProviders', 'sellerShippingProviders'));
     }
@@ -783,21 +783,34 @@ class DashboardController extends Controller
         $seller = $request->user();
         $request->validate([
             'providers' => 'nullable|array',
-            'providers.*' => 'string|exists:shipping_providers,id'
+            'providers.*' => 'string|exists:shipping_providers,id',
+            'custom_fees' => 'nullable|array',
+            'custom_fees.*' => 'nullable|numeric|min:0|max:10000',
         ]);
 
         $selectedProviderIds = $request->input('providers', []);
-        $allActive = \App\Models\ShippingProvider::where('is_active', true)->pluck('id');
+        $customFees = $request->input('custom_fees', []);
+        $allActive = \App\Models\ShippingProvider::where('is_active', true)->get();
 
-        foreach ($allActive as $pId) {
+        foreach ($allActive as $provider) {
+            $customFee = isset($customFees[$provider->id]) && $customFees[$provider->id] !== ''
+                ? (float) $customFees[$provider->id]
+                : null;
+
+            $updateData = [
+                'is_enabled' => in_array($provider->id, $selectedProviderIds),
+            ];
+
+            if (Schema::hasColumn('seller_shipping_providers', 'custom_fee')) {
+                $updateData['custom_fee'] = $customFee;
+            }
+
             \App\Models\SellerShippingProvider::updateOrCreate(
                 [
-                    'seller_id' => $seller->id,
-                    'provider_id' => $pId
+                    'seller_id'   => $seller->id,
+                    'provider_id' => $provider->id,
                 ],
-                [
-                    'is_enabled' => in_array($pId, $selectedProviderIds)
-                ]
+                $updateData
             );
         }
 

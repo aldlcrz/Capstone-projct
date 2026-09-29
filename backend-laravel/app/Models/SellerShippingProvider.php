@@ -20,11 +20,13 @@ class SellerShippingProvider extends Model
         'provider_id',
         'is_enabled',
         'is_default',
+        'custom_fee',
     ];
 
     protected $casts = [
         'is_enabled' => 'boolean',
         'is_default' => 'boolean',
+        'custom_fee' => 'float',
     ];
 
     protected static function boot()
