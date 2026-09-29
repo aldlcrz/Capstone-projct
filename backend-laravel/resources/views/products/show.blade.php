@@ -1103,26 +1103,43 @@
                             </div>
                         </div>
 
-                        {{-- WHEN OUT OF STOCK (stock <= 0) - Wishlist Button --}}
-                        <div x-show="stock <= 0" class="space-y-3" x-cloak style="display: none;">
-                            <div class="p-3 bg-red-50/80 border border-red-200 rounded-xl flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-2 text-red-700 font-bold">
-                                    <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    <span>This item is currently out of stock.</span>
+                        {{-- WHEN OUT OF STOCK (stock <= 0) - Wishlist & Restock Alert Banner --}}
+                        <div x-show="stock <= 0" class="space-y-3.5" x-cloak style="display: none;">
+                            {{-- Luxury Out-of-Stock Status Banner --}}
+                            <div class="p-4 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-2xs"
+                                 style="background: linear-gradient(135deg, #FFF9F7 0%, #FEF2F2 100%); border: 1.5px solid #FECACA;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                                         style="background-color: rgba(225, 29, 72, 0.1); border: 1px solid rgba(225, 29, 72, 0.2); color: #E11D48;">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-black text-rose-950 text-xs">Currently Out of Stock</div>
+                                        <div class="text-[11px] text-rose-700/90 font-medium">Save to your wishlist to receive instant restock updates.</div>
+                                    </div>
                                 </div>
-                                <span class="text-[10px] uppercase tracking-wider font-extrabold text-red-800 bg-red-100 px-2 py-0.5 rounded">Sold Out</span>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-900 border border-rose-200/80 shrink-0">
+                                    Sold Out
+                                </span>
                             </div>
 
+                            {{-- Premium Luxury Wishlist CTA Button --}}
                             <button 
                                 type="button" 
                                 @click="toggleWishlist()" 
-                                class="w-full h-12 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
-                                :class="isWishlisted ? 'text-red-600 border-red-200 bg-red-50 hover:bg-red-100/70' : 'text-gray-900 border-gray-300 bg-white hover:bg-gray-50'"
+                                class="w-full h-12 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-[0.99]"
+                                :style="isWishlisted 
+                                    ? 'background: linear-gradient(135deg, #BE123C 0%, #9F1239 100%); color: #FFFFFF; box-shadow: 0 4px 14px rgba(190, 18, 60, 0.35); border: 1px solid #9F1239;' 
+                                    : 'background: linear-gradient(135deg, #1E1915 0%, #2B231D 100%); color: #FFFFFF; box-shadow: 0 4px 14px rgba(30, 25, 21, 0.25); border: 1px solid #3E342B;'"
+                                onmouseover="this.style.opacity='0.92'"
+                                onmouseout="this.style.opacity='1'"
                             >
-                                <svg class="w-4 h-4" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white scale-110' : 'fill-rose-400/30 text-rose-400 stroke-current'" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                                 </svg>
-                                <span x-text="isWishlisted ? '❤️ Saved in Your Wishlist' : '♡ Add to Wishlist (Save for later)'"></span>
+                                <span x-text="isWishlisted ? 'Saved in Your Wishlist' : 'Add to Wishlist (Restock Alert)'"></span>
                             </button>
                         </div>
                     </div>
@@ -2811,17 +2828,19 @@
 
             {{-- When Out of Stock: Add to Wishlist Button --}}
             <template x-if="stock <= 0">
-                <div style="flex: 1; display: flex; align-items: stretch; margin-left: 4px;">
+                <div style="flex: 1; display: flex; align-items: stretch; margin-left: 6px;">
                     <button 
                         type="button" 
                         @click="toggleWishlist()" 
-                        style="flex: 1; height: 42px; border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.15s ease; border: 1px solid #E5E7EB;"
-                        :style="isWishlisted ? 'background-color: #FEF2F2; color: #DC2626; border-color: #FECACA;' : 'background-color: #F9FAFB; color: #374151; border-color: #D1D5DB;'"
+                        style="flex: 1; height: 42px; border-radius: 8px; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: all 0.15s ease; border: none; white-space: nowrap; padding: 0 12px;"
+                        :style="isWishlisted 
+                            ? 'background: linear-gradient(135deg, #BE123C 0%, #9F1239 100%); color: #FFFFFF; box-shadow: 0 2px 10px rgba(190, 18, 60, 0.35);' 
+                            : 'background: linear-gradient(135deg, #1E1915 0%, #2B231D 100%); color: #FFFFFF; box-shadow: 0 2px 10px rgba(30, 25, 21, 0.25);'"
                     >
-                        <svg class="w-4 h-4 shrink-0" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none stroke-current'" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white' : 'fill-rose-400/40 text-rose-400 stroke-current'" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
-                        <span x-text="isWishlisted ? '❤️ Saved in Wishlist' : '♡ Add to Wishlist (Out of Stock)'"></span>
+                        <span style="letter-spacing: -0.01em;" x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist (Restock Notice)'"></span>
                     </button>
                 </div>
             </template>
