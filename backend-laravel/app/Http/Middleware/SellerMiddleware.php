@@ -108,6 +108,6 @@ class SellerMiddleware
             return response()->json(['message' => 'Access denied. Artisans only.'], 403);
         }
 
-        return redirect('/')->with('error', 'Access denied. Artisans only.');
+        return redirect('/');
     }
 }

@@ -19,6 +19,7 @@ use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -460,7 +461,7 @@ class CreateOrderService
             }
 
             // Create Order
-            $order = Order::create([
+            $orderAttributes = [
                 'id'                     => (string) Str::uuid(),
                 'customerId'             => $customer->id,
                 'sellerId'               => $sellerId,
@@ -471,9 +472,17 @@ class CreateOrderService
                 'paymentProof'           => $paymentProofPath,
                 'paymentStatus'          => $initialPaymentStatus,
                 'shippingAddress'        => $addressData,
-                'visitorSessionId'       => $visitorSessionId,
-                'paymentRejectionReason' => null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('orders', 'visitorSessionId')) {
+                $orderAttributes['visitorSessionId'] = $visitorSessionId;
+            }
+
+            if (Schema::hasColumn('orders', 'paymentRejectionReason')) {
+                $orderAttributes['paymentRejectionReason'] = null;
+            }
+
+            $order = Order::create($orderAttributes);
 
             // Create Order Shipping Snapshot (Immutable pricing data)
             $pricingProvider = ShippingProvider::find($chosenQuote['provider_id'] ?? null);

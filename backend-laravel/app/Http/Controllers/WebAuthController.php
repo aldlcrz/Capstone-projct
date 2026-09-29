@@ -249,6 +249,12 @@ class WebAuthController extends Controller
             $contextRedirect = $this->restorePendingContext($user, $request);
             if ($contextRedirect) return $contextRedirect;
 
+            // Clear any stale artisan or admin intended URLs from session for customers
+            $intended = session()->get('url.intended');
+            if ($intended && (str_contains($intended, '/seller') || str_contains($intended, '/admin') || str_contains($intended, '/superadmin'))) {
+                session()->forget('url.intended');
+            }
+
             return redirect()->intended('/');
         }
 
