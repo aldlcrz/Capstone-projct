@@ -1379,7 +1379,7 @@
             @endphp
 
             {{-- ═══ Mobile Reviews Directory View ═══ --}}
-            <div class="lg:hidden bg-white mb-3">
+            <div class="lg:hidden bg-white px-3.5 sm:px-4 mb-3">
                 {{-- Reviews Header Row --}}
                 <div class="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer" @click="reviewsModal = true">
                     <span class="text-sm font-bold text-gray-900">Reviews ({{ $totalRevCount }})</span>
