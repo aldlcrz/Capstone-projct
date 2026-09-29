@@ -1382,7 +1382,7 @@
             <div class="lg:hidden bg-white px-3.5 sm:px-4 mb-3">
                 {{-- Reviews Header Row --}}
                 <div class="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer" @click="reviewsModal = true">
-                    <span class="text-sm font-bold text-gray-900">Reviews ({{ $totalRevCount }})</span>
+                    <span class="text-sm font-bold text-gray-900">Customer Reviews ({{ $totalRevCount }})</span>
                     <div class="flex items-center gap-1.5 text-xs text-gray-500">
                         @if($totalRevCount > 0)
                             <span class="font-bold text-gray-900">{{ number_format($product->avgRating, 1) }}</span>
@@ -1447,8 +1447,9 @@
                             @endif
                         </div>
                     @empty
-                        <div class="py-6 text-center text-gray-400">
-                            <p class="text-xs font-medium">No reviews yet for this product.</p>
+                        <div class="py-4 text-left">
+                            <p class="text-xs font-semibold text-gray-400">No reviews yet for this heritage piece.</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Purchased items can be rated once they are received.</p>
                         </div>
                     @endforelse
                 </div>
