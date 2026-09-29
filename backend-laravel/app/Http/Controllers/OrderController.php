@@ -457,7 +457,8 @@ class OrderController extends Controller
         }
 
         $file = $request->file('packingPhoto');
-        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $ext = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?: 'jpg');
+        $filename = time() . '_' . uniqid() . '.' . $ext;
         $file->move($destDir, $filename);
 
         $path = 'uploads/packing-proofs/' . $filename;

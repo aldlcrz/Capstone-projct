@@ -785,45 +785,114 @@ function sellerOrdersManager() {
         },
 
         onPackingFileChange(event) {
-            const file = event.target.files[0];
+            const file = event.target.files ? event.target.files[0] : null;
             if (!file) return;
             this.packingPhotoFile = file;
             this.packingUploadError = '';
+            this.shippingError = '';
             const reader = new FileReader();
             reader.onload = (e) => { this.packingPhotoPreview = e.target.result; };
             reader.readAsDataURL(file);
         },
 
+        removeSelectedPackingPhoto() {
+            this.packingPhotoFile = null;
+            this.packingPhotoPreview = this.detailsOrder?.packingProof ? ('/' + this.detailsOrder.packingProof) : null;
+            this.packingUploadError = '';
+            this.shippingError = '';
+            const inputEl = document.getElementById('packing-file-input');
+            if (inputEl) inputEl.value = '';
+            const camEl = document.getElementById('packing-camera-input');
+            if (camEl) camEl.value = '';
+        },
+
         async uploadPackingProof() {
-            if (!this.packingPhotoFile || !this.detailsOrder) return;
+            if (!this.packingPhotoFile || !this.detailsOrder) return false;
             this.packingUploading = true;
             this.packingUploadError = '';
+            this.shippingError = '';
             try {
                 const formData = new FormData();
                 formData.append('packingPhoto', this.packingPhotoFile);
-                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                formData.append('_token', token);
                 const res = await fetch(`/seller/api/orders/${this.detailsOrder.id}/packing-proof`, {
                     method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
                     body: formData,
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message || 'Upload failed.');
                 this.packingUploadSuccess = true;
-                this.packingPhotoPreview = data.packingProofUrl;
+                this.packingPhotoPreview = data.packingProofUrl || ('/' + data.packingProof);
                 this.detailsOrder.packingProof = data.packingProof;
+                this.detailsOrder.packingProofUrl = data.packingProofUrl;
                 const idx = this.orders.findIndex(o => o.id === this.detailsOrder.id);
-                if (idx !== -1) this.orders[idx].packingProof = data.packingProof;
+                if (idx !== -1) {
+                    this.orders[idx].packingProof = data.packingProof;
+                    this.orders[idx].packingProofUrl = data.packingProofUrl;
+                }
+                this.showToast('✓ Packing proof uploaded successfully!');
+                return true;
             } catch(e) {
                 this.packingUploadError = e.message || 'Upload failed. Please try again.';
+                this.shippingError = this.packingUploadError;
+                this.showToast('✕ ' + this.packingUploadError);
+                return false;
             } finally {
                 this.packingUploading = false;
             }
         },
 
+        async confirmShipmentWithProof() {
+            if (!this.detailsOrder || this.statusUpdating || this.packingUploading) return;
+            this.shippingError = '';
+            this.packingUploadError = '';
+
+            // 1. If proof already recorded or successfully uploaded, proceed to update status to Shipped
+            if (this.packingUploadSuccess || this.detailsOrder.packingProof) {
+                await this.updateStatus(this.detailsOrder, 'Shipped');
+                return;
+            }
+
+            // 2. If photo is selected, upload it first then mark as Shipped
+            if (this.packingPhotoFile) {
+                const uploaded = await this.uploadPackingProof();
+                if (uploaded) {
+                    await this.updateStatus(this.detailsOrder, 'Shipped');
+                }
+                return;
+            }
+
+            // 3. No photo selected yet: alert seller and trigger file picker
+            this.packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.';
+            this.shippingError = this.packingUploadError;
+            this.showToast('⚠️ Please select or take a packing proof photo first.');
+
+            const card = document.getElementById('packing-proof-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            const inputEl = document.getElementById('packing-file-input');
+            if (inputEl) {
+                inputEl.click();
+            }
+        },
+
         async openCameraModal() {
             this.packingUploadError = '';
+            this.shippingError = '';
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert('Camera API is not supported on this browser or connection. Please upload a photo using Gallery instead.');
+                const inputEl = document.getElementById('packing-camera-input');
+                if (inputEl) {
+                    inputEl.click();
+                } else {
+                    alert('Camera API is not supported on this browser. Please upload a photo using Gallery instead.');
+                }
                 return;
             }
             try {
@@ -838,8 +907,13 @@ function sellerOrdersManager() {
                 }
             } catch(err) {
                 console.error('Camera error:', err);
-                alert('Could not access camera (' + (err.message || 'permission denied') + '). Please upload a photo using Gallery instead.');
                 this.closeCameraModal();
+                const inputEl = document.getElementById('packing-camera-input');
+                if (inputEl) {
+                    inputEl.click();
+                } else {
+                    this.showToast('Could not access camera (' + (err.message || 'permission denied') + '). Please use Gallery / Files instead.');
+                }
             }
         },
 
@@ -861,8 +935,10 @@ function sellerOrdersManager() {
                 this.packingPhotoFile = file;
                 this.packingPhotoPreview = canvas.toDataURL('image/jpeg');
                 this.packingUploadError = '';
+                this.shippingError = '';
                 this.packingUploadSuccess = false;
                 this.closeCameraModal();
+                this.showToast('✓ Packing photo captured! Click Upload or Confirm Shipment.');
             }, 'image/jpeg', 0.9);
         },
 
@@ -1474,77 +1550,93 @@ function sellerOrdersManager() {
                         </template>
 
                         {{-- PACKING PROOF UPLOAD CARD — shown when To Ship --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200/70 space-y-3">
+                        <div id="packing-proof-card" x-show="normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-3 shadow-xs">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">📦</span>
                                 <div>
-                                    <div class="text-[9px] font-black uppercase tracking-widest text-emerald-900">
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-emerald-900">
                                         Packing Proof Required <span class="text-red-500 font-bold">*</span>
                                     </div>
-                                    <div class="text-[10px] text-emerald-700 mt-0.5">Please take or upload a photo of the packaged items. The customer will see this photo in their order tracking to verify their order.</div>
+                                    <div class="text-[10px] text-emerald-700 mt-0.5">Please take or upload a photo of the packaged garments before marking this order as shipped.</div>
                                 </div>
                             </div>
 
-                            {{-- Success state: already uploaded --}}
-                            <template x-if="packingUploadSuccess && packingPhotoPreview">
+                            {{-- Hidden file inputs for direct camera and file gallery --}}
+                            <input type="file" id="packing-file-input" class="hidden" accept="image/*" @change="onPackingFileChange($event)">
+                            <input type="file" id="packing-camera-input" class="hidden" accept="image/*" capture="environment" @change="onPackingFileChange($event)">
+
+                            {{-- Success state: already uploaded in database or session --}}
+                            <template x-if="packingUploadSuccess || detailsOrder.packingProof">
                                 <div class="space-y-2">
-                                    <div class="w-full rounded-2xl overflow-hidden border-2 border-emerald-300 bg-white max-h-52 flex items-center justify-center">
-                                        <img :src="packingPhotoPreview" class="max-h-52 w-full object-contain" alt="Packing Proof">
+                                    <div class="w-full rounded-2xl overflow-hidden border-2 border-emerald-300 bg-white max-h-60 flex items-center justify-center p-1">
+                                        <img :src="packingPhotoPreview || ('/' + detailsOrder.packingProof)" class="max-h-56 w-full object-contain rounded-xl" alt="Packing Proof">
                                     </div>
-                                    <div class="flex items-center gap-2 text-[10px] font-bold text-emerald-700">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        Packing proof uploaded. You can replace it by uploading again.
+                                    <div class="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-1">
+                                        <span class="flex items-center gap-1.5">
+                                            <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            Packing proof attached and verified.
+                                        </span>
+                                        <button type="button" @click="document.getElementById('packing-file-input').click()" class="text-emerald-800 hover:text-emerald-950 underline font-black uppercase tracking-wider text-[9px] cursor-pointer">
+                                            Replace Photo ↻
+                                        </button>
                                     </div>
-                                    <label class="flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-emerald-300 bg-white text-[10px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-all">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
-                                        Replace Photo
-                                        <input type="file" class="hidden" accept="image/*" capture="environment" @change="onPackingFileChange($event); packingUploadSuccess = false;">
-                                    </label>
                                 </div>
                             </template>
 
-                            {{-- Upload state: no photo yet or replacing --}}
-                            <template x-if="!packingUploadSuccess">
+                            {{-- Upload state: no photo uploaded yet --}}
+                            <template x-if="!packingUploadSuccess && !detailsOrder.packingProof">
                                 <div class="space-y-3">
-                                    {{-- Preview if file chosen --}}
+                                    {{-- Preview if file chosen locally --}}
                                     <template x-if="packingPhotoPreview">
-                                        <div class="w-full rounded-2xl overflow-hidden border-2 border-dashed border-emerald-300 bg-white max-h-52 flex items-center justify-center">
-                                            <img :src="packingPhotoPreview" class="max-h-52 w-full object-contain" alt="Preview">
+                                        <div class="space-y-2">
+                                            <div class="w-full rounded-2xl overflow-hidden border-2 border-dashed border-emerald-400 bg-white max-h-60 flex items-center justify-center p-1 relative group">
+                                                <img :src="packingPhotoPreview" class="max-h-56 w-full object-contain rounded-xl" alt="Preview">
+                                                <button type="button" @click="removeSelectedPackingPhoto()" class="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md text-xs font-bold transition-all cursor-pointer" title="Remove photo">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[10px] text-emerald-800 font-bold px-1">
+                                                <span>✓ Photo ready to upload</span>
+                                                <button type="button" @click="removeSelectedPackingPhoto()" class="text-red-600 hover:text-red-700 font-black uppercase text-[9px]">Remove</button>
+                                            </div>
                                         </div>
                                     </template>
 
-                                    {{-- Error --}}
+                                    {{-- Error alert --}}
                                     <template x-if="packingUploadError">
-                                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="packingUploadError"></div>
+                                        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[11px] font-bold text-red-600 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span x-text="packingUploadError"></span>
+                                        </div>
                                     </template>
 
                                     {{-- File picker / camera buttons --}}
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <button type="button" @click="openCameraModal()" class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
-                                            <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Open Camera</span>
+                                    <div class="grid grid-cols-2 gap-2.5">
+                                        <button type="button" @click="openCameraModal()" class="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
+                                            <svg class="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800">Open Camera</span>
                                         </button>
-                                        <label class="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group">
-                                            <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700">Gallery / Files</span>
-                                            <input type="file" class="hidden" accept="image/*" @change="onPackingFileChange($event)">
-                                        </label>
+                                        <button type="button" @click="document.getElementById('packing-file-input').click()" class="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
+                                            <svg class="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800">Gallery / Choose File</span>
+                                        </button>
                                     </div>
 
-                                    {{-- Upload button --}}
-                                    <button type="button"
-                                        @click="uploadPackingProof()"
-                                        :disabled="!packingPhotoFile || packingUploading"
-                                        :class="(!packingPhotoFile || packingUploading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'"
-                                        class="w-full py-2.5 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
-                                        <template x-if="packingUploading">
-                                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                                        </template>
-                                        <template x-if="!packingUploading">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
-                                        </template>
-                                        <span x-text="packingUploading ? 'Uploading...' : 'Upload Packing Proof'"></span>
-                                    </button>
+                                    {{-- Direct standalone upload button when file is selected --}}
+                                    <template x-if="packingPhotoFile">
+                                        <button type="button"
+                                            @click="uploadPackingProof()"
+                                            :disabled="packingUploading"
+                                            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                            <template x-if="packingUploading">
+                                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                            </template>
+                                            <template x-if="!packingUploading">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                            </template>
+                                            <span x-text="packingUploading ? 'Uploading Photo...' : 'Upload Packing Proof Photo'"></span>
+                                        </button>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -1771,10 +1863,10 @@ function sellerOrdersManager() {
 
             {{-- Modal Footer Actions --}}
             <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex flex-col gap-3 shrink-0">
-                <template x-if="shippingError">
+                <template x-if="shippingError || packingUploadError">
                     <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 flex items-center gap-2">
                         <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span x-text="shippingError"></span>
+                        <span x-text="shippingError || packingUploadError"></span>
                     </div>
                 </template>
 
@@ -1848,10 +1940,10 @@ function sellerOrdersManager() {
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
-                                @click="if (!packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.'; } else if (packingPhotoFile && !packingUploadSuccess && !detailsOrder.packingProof) { uploadPackingProof().then(() => updateStatus(detailsOrder, 'Shipped')); } else { updateStatus(detailsOrder, 'Shipped'); }"
+                                @click="confirmShipmentWithProof()"
                                 :disabled="packingUploading || statusUpdating"
-                                :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;'"
-                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #059669; color: #ffffff;' : (packingPhotoFile ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;')"
+                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 hover:opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
                                 <template x-if="packingUploading || statusUpdating">
                                     <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>
@@ -2688,6 +2780,52 @@ function sellerOrdersManager() {
                 <a :href="activeProofImage" target="_blank" class="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 transition-all">
                     <span>↗ Open Original</span>
                 </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Camera Live Capture Modal --}}
+    <div x-show="showCameraModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/80 backdrop-blur-sm z-99999 flex items-center justify-center p-4"
+         @click.self="closeCameraModal()"
+         @keydown.escape.window="closeCameraModal()"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📷</span>
+                    <div>
+                        <h3 class="text-sm font-black text-black uppercase tracking-tight">Capture Packing Proof</h3>
+                        <p class="text-[10px] text-gray-500 font-medium">Position the packed garment clearly in view</p>
+                    </div>
+                </div>
+                <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm transition-all cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <div class="relative w-full aspect-4/3 bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200">
+                <video x-ref="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+            </div>
+
+            <div class="flex gap-3 pt-1">
+                <button type="button" 
+                    @click="closeCameraModal()"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="takePhoto()"
+                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span>📸 Capture Photo</span>
+                </button>
             </div>
         </div>
     </div>
