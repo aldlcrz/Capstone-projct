@@ -454,7 +454,7 @@ class CreateOrderService
             }
 
             if ($isCod) {
-                $paymentReference = 'COD-' . strtoupper(Str::random(10));
+                $paymentReference = null;
                 $initialPaymentStatus = 'Pending Payment (COD)';
                 $transactionStatus = 'UNVERIFIED';
                 $verificationTier = 'COD';
@@ -540,9 +540,9 @@ class CreateOrderService
                 ]);
             }
 
-            // Create Payment Transaction & Claim active reference atomically
-            if ($paymentReference || $isCod) {
-                $notes = $isCod ? 'Cash on Delivery checkout.' : 'Receipt uploaded at checkout.';
+            // Create Payment Transaction & Claim active reference atomically (for digital payments)
+            if ($paymentReference && !$isCod) {
+                $notes = 'Receipt uploaded at checkout.';
                 if ($idempotencyKey) {
                     $notes .= " [idempotency:{$idempotencyKey}]";
                 }
@@ -552,8 +552,8 @@ class CreateOrderService
                     'customer_id'          => $customer->id,
                     'seller_id'            => $sellerId,
                     'reference_number'     => $paymentReference,
-                    'active_reference'     => $isCod ? null : $paymentReference,
-                    'wallet_type'          => $isCod ? 'COD' : ($isMaya ? 'Maya' : 'GCash'),
+                    'active_reference'     => $paymentReference,
+                    'wallet_type'          => $isMaya ? 'Maya' : 'GCash',
                     'expected_amount'      => $totalExpectedAmount,
                     'detected_amount'      => $screening['detected_amount'] ?? null,
                     'amount_confidence'    => $screening['amount_confidence'] ?? null,

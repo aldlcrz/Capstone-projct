@@ -636,7 +636,7 @@
                                     <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method</span>
                                     <span class="font-black text-black uppercase" x-text="selectedOrder.paymentMethod"></span>
                                 </div>
-                                <div class="pt-2 border-t border-gray-200/60" x-show="selectedOrder.paymentReference">
+                                <div class="pt-2 border-t border-gray-200/60" x-show="['GCASH', 'MAYA'].includes((selectedOrder.paymentMethod || '').toUpperCase()) && selectedOrder.paymentReference && !selectedOrder.paymentReference.startsWith('COD-')">
                                     <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider block mb-0.5">Reference No.</span>
                                     <span class="font-mono text-xs font-bold text-gray-700 bg-white px-2 py-1 rounded border border-gray-100 block truncate" x-text="selectedOrder.paymentReference"></span>
                                 </div>

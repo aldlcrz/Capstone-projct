@@ -73,8 +73,9 @@ function printSellerOrder(order) {
         + '</tr></thead><tbody>' + itemsHtml + '</tbody></table>'
         + '<div class="total">Total: ₱' + Number(order.totalAmount).toLocaleString() + '</div>'
         + '<h2>Payment Information</h2>'
-        + '<div class="box">Method: ' + (order.paymentMethod || 'N/A') + '<br>'
-        + 'Reference No: ' + (order.paymentReference || 'N/A') + '</div>'
+        + '<div class="box">Method: ' + (order.paymentMethod || 'N/A')
+        + (['GCASH', 'MAYA'].includes((order.paymentMethod || '').toUpperCase()) && order.paymentReference && !order.paymentReference.startsWith('COD-') ? '<br>Reference No: ' + order.paymentReference : '')
+        + '</div>'
         + '</body></html>';
 
     const win = window.open('', '_blank');
@@ -1749,10 +1750,12 @@ function sellerOrdersManager() {
                                 <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method</span>
                                 <span class="font-black text-black uppercase" x-text="detailsOrder.paymentMethod || 'COD'"></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Reference No.</span>
-                                <span class="font-mono text-xs font-bold text-gray-700" x-text="detailsOrder.paymentReference || 'N/A'"></span>
-                            </div>
+                            <template x-if="['GCASH', 'MAYA'].includes((detailsOrder.paymentMethod || '').toUpperCase()) && detailsOrder.paymentReference && !detailsOrder.paymentReference.startsWith('COD-')">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Reference No.</span>
+                                    <span class="font-mono text-xs font-bold text-gray-700" x-text="detailsOrder.paymentReference"></span>
+                                </div>
+                            </template>
                             <template x-if="detailsOrder.paymentProof">
                                 <div class="pt-2 border-t border-gray-200/60 flex items-center justify-between">
                                     <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Receipt File</span>

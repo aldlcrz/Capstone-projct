@@ -127,9 +127,11 @@
                                 <div class="flex items-center gap-2 text-[10px] font-extrabold text-[#C0420A] uppercase tracking-widest">PAYMENT</div>
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
                                     <div class="font-bold text-[#2A2A2A] text-sm mb-1" x-text="selectedOrder.paymentMethod"></div>
-                                    <div class="text-xs text-gray-500">
-                                        Reference: <span class="font-mono text-[#C0420A]" x-text="selectedOrder.paymentReference || 'N/A'"></span>
-                                    </div>
+                                    <template x-if="['GCASH', 'MAYA'].includes((selectedOrder.paymentMethod || '').toUpperCase()) && selectedOrder.paymentReference && !selectedOrder.paymentReference.startsWith('COD-')">
+                                        <div class="text-xs text-gray-500">
+                                            Reference: <span class="font-mono text-[#C0420A]" x-text="selectedOrder.paymentReference"></span>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>

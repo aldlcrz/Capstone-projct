@@ -429,7 +429,7 @@
                                 </span>
                             </div>
 
-                            @if($order->paymentReference)
+                            @if(in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-'))
                             <div class="pt-1">
                                 <div class="text-[9px] font-bold uppercase tracking-wider text-[#8C827A] mb-1">Reference Number</div>
                                 <div class="bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl px-3 py-2 flex items-center justify-between group">

@@ -1412,7 +1412,7 @@
                                             <td class="py-3 px-3.5 font-mono font-bold text-gray-900">#{{ substr($payment->id, 0, 8) }}</td>
                                             <td class="py-3 px-3.5 text-gray-600">{{ \Carbon\Carbon::parse($payment->createdAt)->format('M d, Y') }}</td>
                                             <td class="py-3 px-3.5 font-bold">{{ $payment->paymentMethod ?? 'GCash' }}</td>
-                                            <td class="py-3 px-3.5 font-mono font-semibold text-gray-700 select-all">{{ $payment->paymentReference ?? 'N/A' }}</td>
+                                            <td class="py-3 px-3.5 font-mono font-semibold text-gray-700 select-all">{{ in_array(strtoupper($payment->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($payment->paymentReference) && !str_starts_with($payment->paymentReference, 'COD-') ? $payment->paymentReference : '—' }}</td>
                                             <td class="py-3 px-3.5 font-extrabold text-[#C0422A]">₱{{ number_format($payment->totalAmount ?? 0, 2) }}</td>
                                             <td class="py-3 px-3.5">
                                                 @php

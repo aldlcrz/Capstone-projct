@@ -1099,7 +1099,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $this->assertNotNull($order);
         $this->assertEquals('COD', $order->paymentMethod);
         $this->assertEquals('Pending Payment (COD)', $order->paymentStatus);
-        $this->assertStringStartsWith('COD-', $order->paymentReference);
+        $this->assertNull($order->paymentReference);
     }
 
     public function test_cod_payment_is_strictly_rejected_for_non_local_destinations()
