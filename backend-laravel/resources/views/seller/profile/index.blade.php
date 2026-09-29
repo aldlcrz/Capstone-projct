@@ -1412,7 +1412,7 @@
                         {{-- Tablet & Desktop View (Horizontal Scrollable Clean Table) --}}
                         <div class="hidden sm:block border rounded-2xl overflow-hidden shadow-xs" style="border-color: #E8DECB;">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[640px]">
+                                <table class="w-full text-left border-collapse text-xs whitespace-nowrap" style="min-width: 640px;">
                                     <thead>
                                         <tr style="background: #1E1915; color: #FFFCF7;" class="text-[9px] uppercase tracking-widest">
                                             <th class="py-3.5 px-4 font-bold">Order ID</th>

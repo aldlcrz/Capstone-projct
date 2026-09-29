@@ -142,7 +142,7 @@ class CreateOrderService
         }
 
         // Execute inside single DB Transaction with row-level locks
-        return DB::transaction(function () use (
+        return DB::transaction(fn () => $this->processOrderCreation(
             $customer,
             $rawItems,
             $addressData,
@@ -156,8 +156,28 @@ class CreateOrderService
             $idempotencyKey,
             $requestHash,
             $params
-        ) {
-            // Atomic DB Claim on idempotency record to prevent concurrent races
+        ));
+    }
+
+    /**
+     * Internal atomic pipeline for order creation within the database transaction.
+     */
+    protected function processOrderCreation(
+        User $customer,
+        array $rawItems,
+        array $addressData,
+        string $paymentMethod,
+        bool $isCod,
+        bool $isGcash,
+        bool $isMaya,
+        ?string $quoteToken,
+        ?string $selectedProviderId,
+        ?string $visitorSessionId,
+        ?string $idempotencyKey,
+        string $requestHash,
+        array $params
+    ): Order {
+        // Atomic DB Claim on idempotency record to prevent concurrent races
             if ($idempotencyKey) {
                 $idempRecord = OrderIdempotencyRecord::lockForUpdate()
                     ->where('customer_id', $customer->id)
@@ -583,7 +603,6 @@ class CreateOrderService
             });
 
             return $order;
-        });
     }
 
     /**
