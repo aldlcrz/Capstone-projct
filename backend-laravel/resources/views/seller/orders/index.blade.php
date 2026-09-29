@@ -149,6 +149,7 @@ function sellerOrdersManager() {
         deliveryConfirmError: '',
         showVerifyModal: false,
         verifyOrderTarget: null,
+        verifyingPayment: false,
         showRejectModal: false,
         rejectOrderTarget: null,
         showCancelOrderModal: false,
@@ -207,7 +208,19 @@ function sellerOrdersManager() {
 
         openVerifyPaymentModal(order) {
             this.verifyOrderTarget = order || this.detailsOrder;
+            this.verifyingPayment = false;
             this.showVerifyModal = true;
+        },
+
+        async executeVerifyPayment() {
+            if (!this.verifyOrderTarget || this.verifyingPayment || this.statusUpdating) return;
+            this.verifyingPayment = true;
+            try {
+                await this.updateStatus(this.verifyOrderTarget, 'To Ship');
+                this.showVerifyModal = false;
+            } finally {
+                this.verifyingPayment = false;
+            }
         },
 
         openRejectPaymentModal(order) {
@@ -1926,12 +1939,17 @@ function sellerOrdersManager() {
                             </button>
                             <button type="button" 
                                 @click="openVerifyPaymentModal(detailsOrder)"
-                                :disabled="statusUpdating"
+                                :disabled="statusUpdating || verifyingPayment"
                                 style="background-color: #059669; color: #ffffff;"
                                 class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
-                                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                <span>Verify & Accept</span>
-                                <span class="text-xs">➔</span>
+                                <template x-if="statusUpdating || verifyingPayment">
+                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <template x-if="!statusUpdating && !verifyingPayment">
+                                    <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                </template>
+                                <span x-text="(statusUpdating || verifyingPayment) ? 'Verifying Payment...' : 'Verify & Accept'"></span>
+                                <span x-show="!statusUpdating && !verifyingPayment" class="text-xs">➔</span>
                             </button>
                         </div>
                     </template>
@@ -2284,10 +2302,14 @@ function sellerOrdersManager() {
                     Cancel
                 </button>
                 <button type="button" 
-                    @click="showVerifyModal = false; updateStatus(verifyOrderTarget, 'To Ship');"
+                    @click="executeVerifyPayment()"
+                    :disabled="statusUpdating || verifyingPayment"
                     style="background-color: #059669; color: #ffffff;"
-                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span>✓ Confirm & Accept Order</span>
+                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <template x-if="statusUpdating || verifyingPayment">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="(statusUpdating || verifyingPayment) ? 'Verifying & Accepting...' : '✓ Confirm & Accept Order'"></span>
                 </button>
             </div>
         </div>
