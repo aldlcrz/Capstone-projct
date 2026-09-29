@@ -282,8 +282,17 @@ class DashboardController extends Controller
         $now = Carbon::now();
         $newOrdersAlertCount = $allActiveOrders->filter(fn ($o) => Carbon::parse($o->createdAt)->gte($now->copy()->subHours(24)))->count();
 
-        $lowStockProducts = $products->filter(fn ($p) => (int) $p->stock > 0 && (int) $p->stock <= 5)->values();
-        $outOfStockProducts = $products->filter(fn ($p) => (int) $p->stock === 0)->values();
+        $resolveStock = function($p) {
+            $sStocks = is_array($p->size_stocks) ? $p->size_stocks : json_decode($p->size_stocks ?? '[]', true);
+            if (is_array($sStocks) && !empty($sStocks)) {
+                return (int) array_sum(array_map('intval', $sStocks));
+            }
+            return (int) ($p->stock ?? 0);
+        };
+
+        $lowStockProducts = $products->filter(fn ($p) => $resolveStock($p) > 0 && $resolveStock($p) <= 5)->values();
+        $outOfStockProducts = $products->filter(fn ($p) => $resolveStock($p) <= 0)->values();
+        $needsRestockProducts = $products->filter(fn ($p) => $resolveStock($p) <= 5)->values();
 
         $newReviewsCount = DB::table('reviews')
             ->join('products', 'reviews.productId', '=', 'products.id')
@@ -299,18 +308,20 @@ class DashboardController extends Controller
             'total' => $products->count(),
             'lowStock' => $lowStockProducts->count(),
             'outOfStock' => $outOfStockProducts->count(),
-            'healthy' => max(0, $products->count() - $lowStockProducts->count() - $outOfStockProducts->count()),
+            'needsRestock' => $needsRestockProducts->count(),
+            'healthy' => max(0, $products->count() - $needsRestockProducts->count()),
         ];
 
         return [
             'quickAlerts' => [
                 'newOrders' => $newOrdersAlertCount,
-                'lowStock' => $lowStockProducts->count(),
+                'lowStock' => $needsRestockProducts->count(),
+                'outOfStock' => $outOfStockProducts->count(),
                 'newReviews' => $newReviewsCount,
                 'messages' => $unreadMessagesCount,
             ],
             'inventoryHealth' => $inventoryHealth,
-            'lowStockProducts' => $lowStockProducts,
+            'lowStockProducts' => $needsRestockProducts,
         ];
     }
 
@@ -348,7 +359,7 @@ class DashboardController extends Controller
         $activeOrders = $orders->reject(fn ($order) => $this->isCancelledOrder($order->status));
 
         $products = Product::where('sellerId', $sellerId)
-            ->select('id', 'name', 'price', 'stock', 'status', 'views')
+            ->select('id', 'name', 'price', 'stock', 'status', 'views', 'size_stocks')
             ->get();
 
         $customerList = $this->compileSellerCustomerList($allActiveOrders);

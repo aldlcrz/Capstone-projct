@@ -106,7 +106,7 @@
                     @endif
                 </div>
                 <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $quickAlerts['lowStock'] ?? 0 }}</div>
-                <div class="text-[9px] font-bold uppercase tracking-wider mt-1" style="color: #766C60;">Low Stock Items</div>
+                <div class="text-[9px] font-bold uppercase tracking-wider mt-1" style="color: #766C60;">Low / Out of Stock</div>
             </a>
 
             <!-- New Reviews Alert -->
