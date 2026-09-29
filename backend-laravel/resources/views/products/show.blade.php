@@ -2731,7 +2731,7 @@
         id="mobile-bottom-action-bar"
         x-show="!showBuyNowSheet"
         x-cloak
-        class="lg:hidden"
+        class="lg:hidden fixed bottom-0 left-0 right-0 z-9999 bg-white border-t border-gray-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.10)] px-3 py-2 flex items-center gap-2 w-full box-border"
     >
         @if($isAdminUser)
             {{-- Store Icon Link --}}
@@ -2795,12 +2795,13 @@
             </button>
 
             {{-- When In Stock: Dual CTA Buttons --}}
-            <div x-show="stock > 0" style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px; min-width: 0;">
+            <div x-show="stock > 0" class="mobile-cta-group flex-1 flex items-center gap-2 ml-1 min-w-0" style="flex: 1 1 auto; display: flex; align-items: center; gap: 8px; margin-left: 4px; min-width: 0;">
                 {{-- Add to Cart Button (Luxury Onyx) --}}
                 <button 
                     type="button" 
                     @click="openBuyNowSheet('add_to_cart')" 
-                    style="flex: 1; height: 42px; border-radius: 8px; background-color: #1E1915; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease;"
+                    class="flex-1 h-10.5 rounded-lg bg-[#1E1915] text-white font-extrabold text-xs flex items-center justify-center cursor-pointer transition-all active:scale-[0.98] border-none shadow-xs"
+                    style="flex: 1 1 0%; height: 42px; border-radius: 8px; background-color: #1E1915; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease;"
                     onmouseover="this.style.backgroundColor='#000000'"
                     onmouseout="this.style.backgroundColor='#1E1915'"
                 >
@@ -2811,7 +2812,8 @@
                 <button 
                     type="button" 
                     @click="openBuyNowSheet('buy_now')" 
-                    style="flex: 1.15; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4);"
+                    class="flex-1.2 h-10.5 rounded-lg text-white font-extrabold flex flex-col items-center justify-center cursor-pointer transition-all active:scale-[0.98] border-none shadow-sm"
+                    style="flex: 1.15 1 0%; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4);"
                     onmouseover="this.style.opacity='0.92'"
                     onmouseout="this.style.opacity='1'"
                 >
@@ -2821,10 +2823,11 @@
             </div>
 
             {{-- When Out of Stock: Full-Width Gold Wishlist Button (Matching Buy Now) --}}
-            <div x-show="stock <= 0" x-cloak style="display: none; flex: 1; margin-left: 4px; min-width: 0;">
+            <div x-show="stock <= 0" x-cloak class="mobile-cta-group flex-1 ml-1 min-w-0" style="display: none; flex: 1 1 auto; margin-left: 4px; min-width: 0;">
                 <button 
                     type="button" 
                     @click="toggleWishlist()" 
+                    class="w-full h-10.5 rounded-lg text-white font-extrabold text-xs flex items-center justify-center cursor-pointer transition-all active:scale-[0.98] border-none shadow-sm"
                     style="width: 100%; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4); padding: 0 12px; box-sizing: border-box;"
                     onmouseover="this.style.opacity='0.92'"
                     onmouseout="this.style.opacity='1'"
@@ -2887,23 +2890,33 @@
 }
 @media (max-width: 1023px) {
     #mobile-bottom-action-bar {
-        display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 9999;
-        background: #FFFFFF;
-        border-top: 1px solid #E5E7EB;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
-        padding: 8px 12px;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        box-sizing: border-box;
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9999 !important;
+        background: #FFFFFF !important;
+        border-top: 1px solid #E5E7EB !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.10) !important;
+        padding: 8px 12px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     #mobile-bottom-action-bar[style*="display: none"],
     #mobile-bottom-action-bar[hidden] {
+        display: none !important;
+    }
+    #mobile-bottom-action-bar .mobile-cta-group {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+    #mobile-bottom-action-bar .mobile-cta-group[style*="display: none"] {
         display: none !important;
     }
 }
