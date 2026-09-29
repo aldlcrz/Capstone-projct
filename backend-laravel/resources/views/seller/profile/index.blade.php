@@ -1349,7 +1349,7 @@
              x-cloak 
              style="display: none;" 
              class="fixed inset-0 bg-black/60 backdrop-blur-xs z-55 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div class="w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            <div class="w-full sm:max-w-3xl md:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
                 <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB;">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C49520] border border-amber-200/60 flex items-center justify-center text-sm font-bold">
@@ -1365,45 +1365,93 @@
                     </button>
                 </div>
 
-                {{-- Table Body --}}
-                <div class="overflow-y-auto flex-1 p-5">
+                {{-- Table & Card View Body --}}
+                <div class="overflow-y-auto flex-1 p-3.5 sm:p-5">
                     @if(isset($recentPayments) && count($recentPayments) > 0)
-                        <div class="border rounded-2xl overflow-hidden shadow-xs" style="border-color: #E8DECB;">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr style="background: #1E1915; color: #FFFCF7;" class="text-[9px] uppercase tracking-widest">
-                                        <th class="py-3 px-3.5">Order ID</th>
-                                        <th class="py-3 px-3.5">Date</th>
-                                        <th class="py-3 px-3.5">Method</th>
-                                        <th class="py-3 px-3.5">Reference #</th>
-                                        <th class="py-3 px-3.5">Amount</th>
-                                        <th class="py-3 px-3.5">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y" style="border-color: #E8DECB;">
-                                    @foreach($recentPayments as $payment)
-                                        <tr class="hover:bg-[#FAF6EE] transition-colors">
-                                            <td class="py-3 px-3.5 font-mono font-bold text-gray-900">#{{ substr($payment->id, 0, 8) }}</td>
-                                            <td class="py-3 px-3.5 text-gray-600">{{ \Carbon\Carbon::parse($payment->createdAt)->format('M d, Y') }}</td>
-                                            <td class="py-3 px-3.5 font-bold">{{ $payment->paymentMethod ?? 'GCash' }}</td>
-                                            <td class="py-3 px-3.5 font-mono font-semibold text-gray-700 select-all">{{ in_array(strtoupper($payment->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($payment->paymentReference) && !str_starts_with($payment->paymentReference, 'COD-') ? $payment->paymentReference : '—' }}</td>
-                                            <td class="py-3 px-3.5 font-extrabold text-[#C0422A]">₱{{ number_format($payment->totalAmount ?? 0, 2) }}</td>
-                                            <td class="py-3 px-3.5">
-                                                @php
-                                                    $st = strtolower($payment->status ?? 'pending');
-                                                @endphp
-                                                @if(in_array($st, ['completed', 'delivered', 'shipped', 'ready_to_ship']))
-                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Paid / Confirmed</span>
-                                                @elseif($st === 'cancelled')
-                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-200 uppercase">Cancelled</span>
-                                                @else
-                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">{{ ucfirst($st) }}</span>
-                                                @endif
-                                            </td>
+                        {{-- Mobile View (Compact Responsive Cards) --}}
+                        <div class="block sm:hidden space-y-3">
+                            @foreach($recentPayments as $payment)
+                                @php
+                                    $st = strtolower($payment->status ?? 'pending');
+                                    $refNo = in_array(strtoupper($payment->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($payment->paymentReference) && !str_starts_with($payment->paymentReference, 'COD-') ? $payment->paymentReference : '—';
+                                @endphp
+                                <div class="p-3.5 rounded-2xl border space-y-2.5 shadow-2xs" style="background: #FFFFFF; border-color: #E8DECB;">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-mono font-bold text-xs text-gray-900 bg-[#FDF8EE] border border-[#E8DECB] px-2 py-0.5 rounded-md">#{{ substr($payment->id, 0, 8) }}</span>
+                                        @if(in_array($st, ['completed', 'delivered', 'shipped', 'ready_to_ship']))
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Paid / Confirmed</span>
+                                        @elseif($st === 'cancelled')
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-200 uppercase">Cancelled</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">{{ ucfirst($st) }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+                                        <div>
+                                            <span class="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">Method</span>
+                                            <span class="text-xs font-bold text-gray-800">{{ $payment->paymentMethod ?? 'GCash' }}</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">Total Amount</span>
+                                            <span class="text-sm font-black text-[#C0422A]">₱{{ number_format($payment->totalAmount ?? 0, 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2 text-[11px] pt-1 border-t border-dashed border-gray-100 text-gray-500">
+                                        <div>
+                                            <span class="text-[9px] uppercase font-bold text-gray-400">Ref:</span>
+                                            <span class="font-mono font-semibold text-gray-700 select-all">{{ $refNo }}</span>
+                                        </div>
+                                        <div>
+                                            <span>{{ \Carbon\Carbon::parse($payment->createdAt)->format('M d, Y') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Tablet & Desktop View (Horizontal Scrollable Clean Table) --}}
+                        <div class="hidden sm:block border rounded-2xl overflow-hidden shadow-xs" style="border-color: #E8DECB;">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[640px]">
+                                    <thead>
+                                        <tr style="background: #1E1915; color: #FFFCF7;" class="text-[9px] uppercase tracking-widest">
+                                            <th class="py-3.5 px-4 font-bold">Order ID</th>
+                                            <th class="py-3.5 px-4 font-bold">Date</th>
+                                            <th class="py-3.5 px-4 font-bold">Method</th>
+                                            <th class="py-3.5 px-4 font-bold">Reference #</th>
+                                            <th class="py-3.5 px-4 font-bold">Amount</th>
+                                            <th class="py-3.5 px-4 font-bold text-right">Status</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="divide-y" style="border-color: #E8DECB; background: #FFFFFF;">
+                                        @foreach($recentPayments as $payment)
+                                            <tr class="hover:bg-[#FAF6EE] transition-colors">
+                                                <td class="py-3 px-4 font-mono font-bold text-gray-900">#{{ substr($payment->id, 0, 8) }}</td>
+                                                <td class="py-3 px-4 text-gray-600">{{ \Carbon\Carbon::parse($payment->createdAt)->format('M d, Y') }}</td>
+                                                <td class="py-3 px-4 font-bold">
+                                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border {{ strtoupper($payment->paymentMethod ?? '') === 'GCASH' ? 'bg-blue-50 text-blue-700 border-blue-200' : (strtoupper($payment->paymentMethod ?? '') === 'MAYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-700 border-stone-200') }}">
+                                                        {{ $payment->paymentMethod ?? 'GCash' }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-4 font-mono font-semibold text-gray-700 select-all">{{ in_array(strtoupper($payment->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($payment->paymentReference) && !str_starts_with($payment->paymentReference, 'COD-') ? $payment->paymentReference : '—' }}</td>
+                                                <td class="py-3 px-4 font-extrabold text-[#C0422A] text-sm">₱{{ number_format($payment->totalAmount ?? 0, 2) }}</td>
+                                                <td class="py-3 px-4 text-right">
+                                                    @php
+                                                        $st = strtolower($payment->status ?? 'pending');
+                                                    @endphp
+                                                    @if(in_array($st, ['completed', 'delivered', 'shipped', 'ready_to_ship']))
+                                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Paid / Confirmed</span>
+                                                    @elseif($st === 'cancelled')
+                                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-200 uppercase">Cancelled</span>
+                                                    @else
+                                                        <span class="px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">{{ ucfirst($st) }}</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     @else
                         <div class="py-12 text-center space-y-2">
