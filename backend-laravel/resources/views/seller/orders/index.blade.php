@@ -684,13 +684,140 @@ function sellerOrdersManager() {
             }
         },
 
+        courierFormats: {
+            'J&T Express': {
+                name: 'J&T Express',
+                regex: /^(JT)?[0-9]{10,14}$/i,
+                placeholder: 'e.g. 781234567890 or JT123456789012',
+                hint: '10–14 numeric digits (e.g. 781234567890 or JT123456789012)',
+                link: 'https://www.jtexpress.ph/track'
+            },
+            'SPX Express': {
+                name: 'SPX Express',
+                regex: /^SPX(PH)?[0-9A-Z]{6,16}$/i,
+                placeholder: 'e.g. SPXPH0123456789',
+                hint: 'Starts with SPXPH or SPX followed by 6–16 characters',
+                link: 'https://spx.ph/#/track'
+            },
+            'LBC Express': {
+                name: 'LBC Express',
+                regex: /^(LBC)?[0-9]{5,15}$/i,
+                placeholder: 'e.g. 123456789012 (12-digit waybill)',
+                hint: '5–15 digit waybill number (e.g. 123456789012)',
+                link: 'https://www.lbcexpress.com/track'
+            },
+            'Flash Express': {
+                name: 'Flash Express',
+                regex: /^(PH|FPH|TH|FL|FLASH)?[0-9A-Z\-]{6,20}$/i,
+                placeholder: 'e.g. PH012345678901',
+                hint: 'Starts with PH / FPH / TH / FLASH (e.g. PH012345678901)',
+                link: 'https://www.flashexpress.ph/tracking/'
+            },
+            'Ninja Van': {
+                name: 'Ninja Van',
+                regex: /^(NVPH|NVP|NVA|SHP|NINJA)?[0-9A-Z\-]{6,18}$/i,
+                placeholder: 'e.g. NVPH0123456789',
+                hint: 'Starts with NVPH / NVP (e.g. NVPH0123456789)',
+                link: 'https://www.ninjavan.co/en-ph/tracking'
+            },
+            '2GO Express': {
+                name: '2GO Express',
+                regex: /^(2GO)?[0-9]{7,14}$/i,
+                placeholder: 'e.g. 12345678 (8–12 digits)',
+                hint: '7–12 numeric digits (e.g. 12345678)',
+                link: 'https://supplychain.2go.com.ph/customersupport/etrack.asp'
+            },
+            'JRS Express': {
+                name: 'JRS Express',
+                regex: /^(JRS)?[0-9]{6,14}$/i,
+                placeholder: 'e.g. 1234567 (7–12 digits)',
+                hint: '6–12 numeric digits (e.g. 1234567)',
+                link: 'https://www.jrs-express.com/tracking/'
+            },
+            'Lalamove': {
+                name: 'Lalamove',
+                regex: /^(LLM)?[0-9A-Z\-]{6,18}$/i,
+                placeholder: 'e.g. LLM12345678',
+                hint: 'Starts with LLM or 6–18 alphanumeric characters',
+                link: 'https://www.lalamove.com/en-ph/'
+            },
+            'GrabExpress': {
+                name: 'GrabExpress',
+                regex: /^(GRAB|DLV|A-)?[0-9A-Z\-]{6,22}$/i,
+                placeholder: 'e.g. A-123456789',
+                hint: 'Starts with A- / GRAB / DLV or 6–22 characters',
+                link: 'https://www.grab.com/ph/express/'
+            },
+            'Other Courier': {
+                name: 'Other Courier',
+                regex: /^[0-9A-Z\-]{6,30}$/i,
+                placeholder: 'e.g. TRK-123456789',
+                hint: '6–30 alphanumeric tracking characters',
+                link: 'https://www.google.com/search?q=track+package'
+            }
+        },
+
+        getCourierConfig(courier) {
+            const raw = (courier || '').trim();
+            if (this.courierFormats[raw]) return this.courierFormats[raw];
+            const lower = raw.toLowerCase();
+            for (const [key, cfg] of Object.entries(this.courierFormats)) {
+                if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+                    return cfg;
+                }
+            }
+            if (lower.includes('j&t') || lower.includes('jnt')) return this.courierFormats['J&T Express'];
+            if (lower.includes('spx') || lower.includes('shopee')) return this.courierFormats['SPX Express'];
+            if (lower.includes('lbc')) return this.courierFormats['LBC Express'];
+            if (lower.includes('flash')) return this.courierFormats['Flash Express'];
+            if (lower.includes('ninja')) return this.courierFormats['Ninja Van'];
+            if (lower.includes('2go')) return this.courierFormats['2GO Express'];
+            if (lower.includes('jrs')) return this.courierFormats['JRS Express'];
+            if (lower.includes('lalamove')) return this.courierFormats['Lalamove'];
+            if (lower.includes('grab')) return this.courierFormats['GrabExpress'];
+            return this.courierFormats['Other Courier'];
+        },
+
+        getCourierDefaultLink(courier) {
+            return this.getCourierConfig(courier).link || 'https://www.jtexpress.ph/track';
+        },
+
+        validateTrackingNumber(courier, tracking) {
+            const val = (tracking || '').trim().toUpperCase();
+            if (!val) {
+                return { valid: false, message: 'Please enter the official courier tracking number.' };
+            }
+            if (!/^[0-9A-Z\-]+$/.test(val)) {
+                return { valid: false, message: 'Tracking number can only contain letters, numbers, and hyphens.' };
+            }
+            const cleanNoDashes = val.replace(/-/g, '');
+            if (cleanNoDashes.length >= 4 && /^(.)\1+$/.test(cleanNoDashes)) {
+                return { valid: false, message: 'Invalid tracking number. Repeated single-character sequences are not allowed.' };
+            }
+            const cfg = this.getCourierConfig(courier);
+            if (cfg && cfg.regex && !cfg.regex.test(cleanNoDashes) && !cfg.regex.test(val)) {
+                return {
+                    valid: false,
+                    message: `Invalid format for ${cfg.name || courier}. Expected: ${cfg.hint}`
+                };
+            }
+            return { valid: true, message: `✓ Valid ${cfg.name || courier} format` };
+        },
+
+        get trackingValidationStatus() {
+            return this.validateTrackingNumber(this.courierName, this.trackingNumber);
+        },
+
         async saveShippingDetails(order) {
             const target = order || this.detailsOrder;
             if (!target || this.shippingUpdating) return;
-            if (!this.trackingNumber || !this.trackingNumber.trim()) {
-                this.shippingError = 'Please enter a valid tracking number.';
+            
+            const valRes = this.validateTrackingNumber(this.courierName, this.trackingNumber);
+            if (!valRes.valid) {
+                this.shippingError = valRes.message;
                 return;
             }
+
             this.shippingUpdating = true;
             this.shippingError = '';
 
@@ -698,7 +825,7 @@ function sellerOrdersManager() {
                 const payload = {
                     status: target.status,
                     courierName: this.courierName || 'J&T Express',
-                    trackingNumber: this.trackingNumber.trim(),
+                    trackingNumber: this.trackingNumber.trim().toUpperCase(),
                     trackingLink: this.trackingLink || null,
                     notes: 'Artisan updated shipping/tracking information.'
                 };
@@ -739,20 +866,6 @@ function sellerOrdersManager() {
 
         buyerPhone(order) {
             return buyerOrderPhone(order);
-        },
-
-        getCourierDefaultLink(courier) {
-            const map = {
-                'J&T Express': 'https://www.jtexpress.ph/track',
-                'LBC Express': 'https://www.lbcexpress.com/track',
-                'Flash Express': 'https://www.flashexpress.ph/tracking/',
-                'Ninja Van': 'https://www.ninjavan.co/en-ph/tracking',
-                '2GO Express': 'https://supplychain.2go.com.ph/customersupport/etrack.asp',
-                'JRS Express': 'https://www.jrs-express.com/tracking/',
-                'Lalamove': 'https://www.lalamove.com/en-ph/',
-                'GrabExpress': 'https://www.grab.com/ph/express/'
-            };
-            return map[courier] || '';
         },
 
         onCourierChange() {
@@ -1110,19 +1223,27 @@ function sellerOrdersManager() {
             this.statusUpdating = true;
 
             try {
-                const currentTracking = (this.trackingNumber || target.trackingNumber || '').trim();
+                const currentTracking = (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
+                const currentCourier = this.courierName || target.courierName || 'J&T Express';
 
-                if (this.normalizeStatus(statusVal) === 'in transit' && !currentTracking) {
-                    this.shippingError = 'Please enter the official courier tracking number in the field above before moving to In Transit.';
-                    this.statusUpdating = false;
-                    return;
+                if (this.normalizeStatus(statusVal) === 'in transit') {
+                    const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
+                    if (!valRes.valid) {
+                        this.shippingError = valRes.message;
+                        this.statusUpdating = false;
+                        return;
+                    }
+                } else if (currentTracking) {
+                    const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
+                    if (!valRes.valid) {
+                        this.shippingError = valRes.message;
+                        this.statusUpdating = false;
+                        return;
+                    }
                 }
 
-                let currentCourier = target.courierName || null;
                 let currentLink = target.trackingLink || null;
-
                 if (currentTracking) {
-                    currentCourier = this.courierName || target.courierName || 'J&T Express';
                     currentLink = this.trackingLink || target.trackingLink || this.getCourierDefaultLink(currentCourier) || '';
                 }
 
@@ -1679,6 +1800,7 @@ function sellerOrdersManager() {
                                      <select x-model="courierName" @change="onCourierChange()" :disabled="isShippingLocked(detailsOrder)"
                                          class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500 cursor-pointer">
                                          <option value="J&T Express">J&T Express (Default)</option>
+                                         <option value="SPX Express">SPX Express</option>
                                          <option value="LBC Express">LBC Express</option>
                                          <option value="Flash Express">Flash Express</option>
                                          <option value="Ninja Van">Ninja Van</option>
@@ -1690,9 +1812,36 @@ function sellerOrdersManager() {
                                      </select>
                                 </div>
                                 <div>
-                                     <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Tracking Number <span class="text-red-500">*</span></label>
-                                     <input type="text" x-model="trackingNumber" placeholder="e.g. JT-123456789PH" :disabled="isShippingLocked(detailsOrder)"
-                                         class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
+                                     <div class="flex items-center justify-between mb-1">
+                                         <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block">Tracking Number <span class="text-red-500">*</span></label>
+                                         <span class="text-[8px] font-mono text-gray-400" x-text="trackingNumber ? (trackingNumber.trim().length + ' chars') : ''"></span>
+                                     </div>
+                                     <input type="text" 
+                                         x-model="trackingNumber" 
+                                         @input="shippingError = ''"
+                                         :placeholder="getCourierConfig(courierName).placeholder" 
+                                         :disabled="isShippingLocked(detailsOrder)"
+                                         :class="{
+                                             'border-emerald-500 focus:border-emerald-600 bg-emerald-50/20 text-emerald-950': trackingNumber && trackingValidationStatus.valid,
+                                             'border-red-400 focus:border-red-500 bg-red-50/20 text-red-950': trackingNumber && !trackingValidationStatus.valid,
+                                             'border-gray-200 focus:border-[#C0420A] bg-white text-gray-900': !trackingNumber
+                                         }"
+                                         class="w-full h-9 px-3 border rounded-xl text-xs font-mono font-bold outline-none uppercase transition-colors disabled:bg-gray-100 disabled:text-gray-500">
+                                </div>
+                            </div>
+
+                            {{-- Live Tracking Format Feedback & Example Guide --}}
+                            <div class="space-y-1.5 pt-0.5">
+                                <div class="flex items-center justify-between flex-wrap gap-1 text-[10px]">
+                                    <div class="text-gray-500 flex items-center gap-1">
+                                        <span class="font-bold text-gray-700">Format Guide:</span>
+                                        <span class="italic text-gray-600" x-text="getCourierConfig(courierName).hint"></span>
+                                    </div>
+                                    <template x-if="trackingNumber">
+                                        <span :class="trackingValidationStatus.valid ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'"
+                                              class="px-2 py-0.5 rounded-md border font-bold text-[9px] inline-flex items-center gap-1 shadow-2xs"
+                                              x-text="trackingValidationStatus.message"></span>
+                                    </template>
                                 </div>
                             </div>
 
@@ -1977,7 +2126,15 @@ function sellerOrdersManager() {
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
-                                @click="if (!trackingNumber || !trackingNumber.trim()) { shippingError = 'Please enter the official courier tracking number in the field above before moving to In Transit.'; } else { updateStatus(detailsOrder, 'In Transit'); }"
+                                @click="(() => {
+                                    const valRes = validateTrackingNumber(courierName, trackingNumber);
+                                    if (!valRes.valid) {
+                                        shippingError = valRes.message;
+                                    } else {
+                                        shippingError = '';
+                                        updateStatus(detailsOrder, 'In Transit');
+                                    }
+                                })()"
                                 :disabled="statusUpdating"
                                 style="background-color: #000000; color: #ffffff;"
                                 class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">

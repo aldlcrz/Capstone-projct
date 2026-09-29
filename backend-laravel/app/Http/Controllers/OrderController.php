@@ -14,6 +14,7 @@ use App\Models\PaymentTransaction;
 use App\Models\ShippingProvider;
 use App\Models\OrderShipping;
 use App\Services\CreateOrderService;
+use App\Helpers\ValidationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -229,6 +230,15 @@ class OrderController extends Controller
         $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
         $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
 
+        // If tracking number was provided, validate its format against selected courier
+        if ($trackingNum !== '') {
+            $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $trackingNum);
+            if (!$valResult['valid']) {
+                return response()->json(['message' => $valResult['error']], 422);
+            }
+            $trackingNum = $valResult['cleaned'];
+        }
+
         if (!$trackingLink && $courier === 'J&T Express') {
             $trackingLink = 'https://www.jtexpress.ph/track';
         }
@@ -246,9 +256,17 @@ class OrderController extends Controller
             $shippingUpdated = true;
         }
 
-        // Strictly require manual tracking number before moving to In Transit
-        if (in_array($canonicalTarget, ['In Transit'], true) && empty($order->trackingNumber)) {
-            return response()->json(['message' => 'Please enter the official courier tracking number before moving to In Transit.'], 422);
+        // Strictly require valid manual tracking number before moving to In Transit
+        if (in_array($canonicalTarget, ['In Transit'], true)) {
+            $effectiveTracking = $trackingNum ?: $order->trackingNumber;
+            if (empty($effectiveTracking)) {
+                return response()->json(['message' => 'Please enter the official courier tracking number before moving to In Transit.'], 422);
+            }
+            $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $effectiveTracking);
+            if (!$valResult['valid']) {
+                return response()->json(['message' => $valResult['error']], 422);
+            }
+            $order->trackingNumber = $valResult['cleaned'];
         }
 
         $order->status = $canonicalTarget;
