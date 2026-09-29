@@ -1125,18 +1125,16 @@
                                 </span>
                             </div>
 
-                            {{-- Premium Luxury Wishlist CTA Button --}}
+                            {{-- Premium Luxury Wishlist CTA Button (Matching Buy Now Gold) --}}
                             <button 
                                 type="button" 
                                 @click="toggleWishlist()" 
-                                class="w-full h-12 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-[0.99]"
-                                :style="isWishlisted 
-                                    ? 'background: linear-gradient(135deg, #BE123C 0%, #9F1239 100%); color: #FFFFFF; box-shadow: 0 4px 14px rgba(190, 18, 60, 0.35); border: 1px solid #9F1239;' 
-                                    : 'background: linear-gradient(135deg, #1E1915 0%, #2B231D 100%); color: #FFFFFF; box-shadow: 0 4px 14px rgba(30, 25, 21, 0.25); border: 1px solid #3E342B;'"
+                                class="w-full h-12 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-[0.99]"
+                                style="background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(166, 124, 46, 0.35);"
                                 onmouseover="this.style.opacity='0.92'"
                                 onmouseout="this.style.opacity='1'"
                             >
-                                <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white scale-110' : 'fill-rose-400/30 text-rose-400 stroke-current'" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white scale-110' : 'fill-none stroke-current'" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                                 </svg>
                                 <span x-text="isWishlisted ? 'Saved in Your Wishlist' : 'Add to Wishlist (Restock Alert)'"></span>
@@ -2799,51 +2797,46 @@
             </button>
 
             {{-- When In Stock: Dual CTA Buttons --}}
-            <template x-if="stock > 0">
-                <div style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px;">
-                    {{-- Add to Cart Button (Luxury Onyx) --}}
-                    <button 
-                        type="button" 
-                        @click="openBuyNowSheet('add_to_cart')" 
-                        style="flex: 1; height: 42px; border-radius: 8px; background-color: #1E1915; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease;"
-                        onmouseover="this.style.backgroundColor='#000000'"
-                        onmouseout="this.style.backgroundColor='#1E1915'"
-                    >
-                        <span>Add to Cart</span>
-                    </button>
+            <div x-show="stock > 0" style="flex: 1; display: flex; align-items: stretch; gap: 8px; margin-left: 4px; min-width: 0;">
+                {{-- Add to Cart Button (Luxury Onyx) --}}
+                <button 
+                    type="button" 
+                    @click="openBuyNowSheet('add_to_cart')" 
+                    style="flex: 1; height: 42px; border-radius: 8px; background-color: #1E1915; color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.15s ease;"
+                    onmouseover="this.style.backgroundColor='#000000'"
+                    onmouseout="this.style.backgroundColor='#1E1915'"
+                >
+                    <span>Add to Cart</span>
+                </button>
 
-                    {{-- Buy Now Button (Dark Antique Gold Gradient) --}}
-                    <button 
-                        type="button" 
-                        @click="openBuyNowSheet('buy_now')" 
-                        style="flex: 1.15; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4);"
-                        onmouseover="this.style.opacity='0.92'"
-                        onmouseout="this.style.opacity='1'"
-                    >
-                        <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
-                        <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
-                    </button>
-                </div>
-            </template>
+                {{-- Buy Now Button (Dark Antique Gold Gradient) --}}
+                <button 
+                    type="button" 
+                    @click="openBuyNowSheet('buy_now')" 
+                    style="flex: 1.15; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4);"
+                    onmouseover="this.style.opacity='0.92'"
+                    onmouseout="this.style.opacity='1'"
+                >
+                    <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
+                    <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
+                </button>
+            </div>
 
-            {{-- When Out of Stock: Add to Wishlist Button --}}
-            <template x-if="stock <= 0">
-                <div style="flex: 1; display: flex; align-items: stretch; margin-left: 6px;">
-                    <button 
-                        type="button" 
-                        @click="toggleWishlist()" 
-                        style="flex: 1; height: 42px; border-radius: 8px; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: all 0.15s ease; border: none; white-space: nowrap; padding: 0 12px;"
-                        :style="isWishlisted 
-                            ? 'background: linear-gradient(135deg, #BE123C 0%, #9F1239 100%); color: #FFFFFF; box-shadow: 0 2px 10px rgba(190, 18, 60, 0.35);' 
-                            : 'background: linear-gradient(135deg, #1E1915 0%, #2B231D 100%); color: #FFFFFF; box-shadow: 0 2px 10px rgba(30, 25, 21, 0.25);'"
-                    >
-                        <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white' : 'fill-rose-400/40 text-rose-400 stroke-current'" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        <span style="letter-spacing: -0.01em;" x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist (Restock Notice)'"></span>
-                    </button>
-                </div>
-            </template>
+            {{-- When Out of Stock: Full-Width Gold Wishlist Button (Matching Buy Now) --}}
+            <div x-show="stock <= 0" x-cloak style="display: none; flex: 1; margin-left: 4px; min-width: 0;">
+                <button 
+                    type="button" 
+                    @click="toggleWishlist()" 
+                    style="width: 100%; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); color: #FFFFFF; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; border: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 2px 10px rgba(166, 124, 46, 0.4); padding: 0 12px; box-sizing: border-box;"
+                    onmouseover="this.style.opacity='0.92'"
+                    onmouseout="this.style.opacity='1'"
+                >
+                    <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isWishlisted ? 'fill-white text-white' : 'fill-none stroke-current'" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    <span style="font-size: 12px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap;" x-text="isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist (Restock Notice)'"></span>
+                </button>
+            </div>
         @endif
     </div>
 </div>
