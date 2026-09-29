@@ -1948,7 +1948,7 @@ function sellerOrdersManager() {
                                 <template x-if="!statusUpdating && !verifyingPayment">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
-                                <span x-text="(statusUpdating || verifyingPayment) ? 'Verifying Payment...' : 'Verify & Accept'"></span>
+                                <span x-text="(statusUpdating || verifyingPayment) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verifying Payment...' : 'Accepting Order...') : (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept' : 'Accept Order')"></span>
                                 <span x-show="!statusUpdating && !verifyingPayment" class="text-xs">➔</span>
                             </button>
                         </div>
@@ -2243,12 +2243,14 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-linear-to-r from-emerald-500 to-teal-600 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0">
-                    💳
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0"
+                     x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '💳' : '📦'">
                 </div>
                 <div>
-                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Verify Payment & Accept Order</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Verify that the payment was credited to your account.</p>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight"
+                        x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify Payment & Accept Order' : 'Accept Order (Cash on Delivery)'"></h3>
+                    <p class="text-[10px] text-gray-500 font-medium"
+                       x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify that the payment was credited to your account.' : 'Confirm and accept this Cash on Delivery order for fulfillment.'"></p>
                 </div>
             </div>
 
@@ -2257,20 +2259,22 @@ function sellerOrdersManager() {
                     <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 font-bold text-[10px] uppercase">Payment Method</span>
-                            <span class="font-black text-black uppercase" x-text="verifyOrderTarget.paymentMethod || 'GCash'"></span>
+                            <span class="font-black text-black uppercase" x-text="(verifyOrderTarget.paymentMethod || 'COD').toUpperCase() === 'COD' ? 'Cash on Delivery (COD)' : verifyOrderTarget.paymentMethod"></span>
                         </div>
+                        <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase()) && verifyOrderTarget.paymentReference && !verifyOrderTarget.paymentReference.startsWith('COD-')">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 font-bold text-[10px] uppercase">Reference Number</span>
+                                <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 bg-indigo-50 rounded-md select-all" x-text="verifyOrderTarget.paymentReference"></span>
+                            </div>
+                        </template>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold text-[10px] uppercase">Reference Number</span>
-                            <span class="font-mono font-bold text-indigo-700 text-xs px-2 py-0.5 bg-indigo-50 rounded-md" x-text="verifyOrderTarget.paymentReference || 'N/A'"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold text-[10px] uppercase">Expected Amount</span>
+                            <span class="text-gray-400 font-bold text-[10px] uppercase" x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase()) ? 'Expected Amount' : 'Amount to Collect'"></span>
                             <span class="font-black text-emerald-700 text-sm" x-text="'₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span>
                         </div>
                     </div>
 
-                    {{-- Mini receipt preview thumbnail --}}
-                    <template x-if="verifyOrderTarget.paymentProof">
+                    {{-- Mini receipt preview thumbnail (only for electronic payment methods) --}}
+                    <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase()) && verifyOrderTarget.paymentProof">
                         <div class="space-y-1">
                             <span class="text-gray-400 font-bold text-[10px] uppercase">Customer Receipt Proof</span>
                             <div class="p-2 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
@@ -2288,10 +2292,21 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] text-amber-900 leading-relaxed">
-                        <span class="font-black uppercase tracking-wider block mb-0.5">⚠️ Artisan Verification Check</span>
-                        Please confirm in your <strong x-text="verifyOrderTarget.paymentMethod || 'GCash'"></strong> mobile app that you received <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> with reference <strong x-text="verifyOrderTarget.paymentReference"></strong> before proceeding.
-                    </div>
+                    {{-- Electronic Payment Verification Alert --}}
+                    <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] text-amber-900 leading-relaxed">
+                            <span class="font-black uppercase tracking-wider block mb-0.5">⚠️ Artisan Verification Check</span>
+                            Please confirm in your <strong x-text="verifyOrderTarget.paymentMethod || 'GCash'"></strong> mobile app that you received <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> with reference <strong x-text="verifyOrderTarget.paymentReference || 'N/A'"></strong> before proceeding.
+                        </div>
+                    </template>
+
+                    {{-- COD Order Acceptance Info --}}
+                    <template x-if="!['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
+                            <span class="font-black uppercase tracking-wider block mb-0.5">ℹ️ Cash on Delivery (COD) Order</span>
+                            Payment of <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> will be collected in cash from the customer upon delivery/pickup. No payment reference verification is required. Please proceed to accept and prepare the order for dispatch.
+                        </div>
+                    </template>
                 </div>
             </template>
 
@@ -2309,7 +2324,9 @@ function sellerOrdersManager() {
                     <template x-if="statusUpdating || verifyingPayment">
                         <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="(statusUpdating || verifyingPayment) ? 'Verifying & Accepting...' : '✓ Confirm & Accept Order'"></span>
+                    <span x-text="(statusUpdating || verifyingPayment) 
+                        ? (['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verifying & Accepting...' : 'Accepting Order...') 
+                        : (['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '✓ Confirm & Accept Order' : '✓ Accept & Prepare Order')"></span>
                 </button>
             </div>
         </div>

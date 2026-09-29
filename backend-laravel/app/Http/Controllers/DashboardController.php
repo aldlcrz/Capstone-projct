@@ -72,7 +72,7 @@ class DashboardController extends Controller
                     $items,
                     $order->totalAmount,
                     $order->paymentMethod ?? 'N/A',
-                    $order->paymentReference ?? 'N/A',
+                    (!empty($order->paymentMethod) && in_array(strtoupper($order->paymentMethod), ['GCASH', 'MAYA']) && !empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-')) ? $order->paymentReference : 'N/A',
                 ]);
             }
 

@@ -358,11 +358,12 @@ class OrderController extends Controller
         fputcsv($handle, ['Type', 'ID', 'Title', 'Details', 'Amount', 'Status', 'Date']);
 
         foreach ($orders as $o) {
+            $refDisplay = in_array(strtoupper($o->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($o->paymentReference) && !str_starts_with($o->paymentReference, 'COD-') ? " | Ref: {$o->paymentReference}" : '';
             fputcsv($handle, [
                 'ORDER',
                 $o->id,
                 "Order from " . ($o->customer->name ?? 'Unknown'),
-                "Pay: {$o->paymentMethod} | Ref: {$o->paymentReference}",
+                "Pay: {$o->paymentMethod}{$refDisplay}",
                 number_format($o->totalAmount, 2),
                 $o->status,
                 $o->createdAt
