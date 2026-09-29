@@ -31,7 +31,6 @@
          "
          x-data="{ 
              showAccountSettingsModal: false,
-            showShippingProvidersModal: false,
              showEditModal: false,
              showPaymentModal: false,
              showPaymentHistoryModal: false,
@@ -580,32 +579,7 @@
                         </svg>
                     </a>
 
-                    {{-- Couriers & Logistics Settings --}}
-                    <button type="button"
-                            @click="showShippingProvidersModal = true"
-                            style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
-                            class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div style="display:flex;align-items:center;gap:7px;">
-                                    <div style="font-size:14px;font-weight:700;color:#1E1915;">Couriers &amp; Logistics</div>
-                                </div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Configure Store Pickup, Special Delivery, and Couriers</div>
-                            </div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Configure</span>
-                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </div>
-                    </button>
+
 
                     {{-- Verified LumBarong Artisan Shop Banner --}}
                     <div style="padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
@@ -1823,135 +1797,7 @@
             </div>
         </div>
 
-        {{-- Shipping / Couriers & Logistics Modal --}}
-        <div x-show="showShippingProvidersModal"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-             style="display: none;"
-             x-cloak>
-            <div @click.away="showShippingProvidersModal = false"
-                 class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#ECE3D2] relative max-h-[90vh] overflow-y-auto">
-                <button type="button"
-                        @click="showShippingProvidersModal = false"
-                        class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors">
-                    ✕
-                </button>
 
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="font-serif text-xl font-bold text-[#1E1915]">Couriers &amp; Logistics</h3>
-                        <p class="text-xs text-stone-500">Configure logistics couriers available for your shop</p>
-                    </div>
-                </div>
-
-                <form action="{{ route('seller.shipping-providers.update') }}" method="POST">
-                    @csrf
-                    <div class="space-y-4 mb-6">
-                        @forelse($shippingProviders as $provider)
-                            @php
-                                $sellerRecord = $sellerShippingProviders[$provider->id] ?? null;
-                                $isEnabled = $sellerRecord ? (is_object($sellerRecord) ? $sellerRecord->is_enabled : (bool)$sellerRecord) : true;
-                                $customFee = is_object($sellerRecord) && $sellerRecord->custom_fee !== null ? $sellerRecord->custom_fee : ($provider->code === 'seller_direct' ? 25.00 : null);
-                            @endphp
-                            <div class="p-4 rounded-2xl border transition-all select-none hover:border-[#C49520] hover:bg-[#FAF8F5] {{ $isEnabled ? 'border-[#C49520] bg-[#FAF8F5]' : 'border-[#EAE1D0] bg-white' }}"
-                                 x-data="{ enabled: {{ $isEnabled ? 'true' : 'false' }} }">
-                                <div class="flex items-start gap-3.5">
-                                    <input type="checkbox"
-                                           name="providers[]"
-                                           value="{{ $provider->id }}"
-                                           x-model="enabled"
-                                           class="mt-1 w-4 h-4 rounded text-[#996515] border-[#D1C7B7] focus:ring-[#C49520] cursor-pointer">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                                            <div class="font-bold text-sm text-[#1E1915]">
-                                                @if($provider->code === 'store_pickup')
-                                                    Store Pickup (In-Shop Collection)
-                                                @elseif($provider->code === 'seller_direct')
-                                                    Special Delivery (Local Artisan Rider)
-                                                @else
-                                                    {{ $provider->name }}
-                                                @endif
-                                            </div>
-                                            @if($provider->code === 'store_pickup')
-                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                    FREE (In-Store)
-                                                </span>
-                                            @elseif($provider->code === 'seller_direct')
-                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                                                    Local Special Delivery
-                                                </span>
-                                            @else
-                                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">
-                                                    Divisor: {{ $provider->volumetric_divisor }}
-                                                </span>
-                                            @endif
-                                        </div>
-
-                                        <div class="text-xs text-stone-500 mt-1">
-                                            @if($provider->code === 'store_pickup')
-                                                Allow nearby customers to pick up orders directly at your physical workshop location.
-                                            @elseif($provider->code === 'seller_direct')
-                                                Special local delivery handled directly by your shop or assigned local rider for local cluster orders.
-                                            @else
-                                                {{ $provider->tracking_url_template ? 'Automated tracking integrated' : 'Standard national logistics dispatch' }}
-                                            @endif
-                                        </div>
-
-                                        {{-- Special Delivery Custom Fee Configuration --}}
-                                        @if($provider->code === 'seller_direct')
-                                            <div x-show="enabled" x-collapse class="mt-3 pt-3 border-t border-[#ECE3D2]/80">
-                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                                    <div>
-                                                        <label class="block text-[11px] font-bold text-[#1E1915]">Custom Special Delivery Fee</label>
-                                                        <p class="text-[10px] text-stone-500">Set the delivery fee charged to local customers</p>
-                                                    </div>
-                                                    <div class="relative w-full sm:w-36">
-                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-600">₱</span>
-                                                        <input type="number"
-                                                               step="0.01"
-                                                               min="0"
-                                                               max="10000"
-                                                               name="custom_fees[{{ $provider->id }}]"
-                                                               value="{{ number_format($customFee ?? 25.00, 2, '.', '') }}"
-                                                               placeholder="25.00"
-                                                               class="w-full pl-7 pr-3 py-1.5 text-xs font-bold text-stone-900 bg-white border border-[#D1C7B7] rounded-xl focus:border-[#C49520] focus:ring-1 focus:ring-[#C49520]">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-xs text-stone-500 italic text-center py-4">No active shipping providers configured on the platform.</p>
-                        @endforelse
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#ECE3D2]">
-                        <button type="button"
-                                @click="showShippingProvidersModal = false"
-                                class="px-5 py-2.5 rounded-xl border border-[#E2D9C8] text-[#78716C] hover:bg-[#FAF6EE] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit"
-                                class="px-6 py-2.5 rounded-xl bg-[#1E1915] text-[#DFC97A] hover:bg-black text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer">
-                            Save Settings
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
 
     </div>
 
@@ -2070,7 +1916,7 @@
             [
                 'target' => '#tour-profile-col-operations',
                 'title' => '📦 Creations & Logistics Center',
-                'content' => 'Manage your Products Catalogue and Orders & Dispatch pipeline. Click "Couriers & Logistics" to enable in-shop Store Pickup and set custom Special Delivery shipping fees!',
+                'content' => 'Manage your Products Catalogue and Orders & Dispatch pipeline.',
                 'position' => 'bottom'
             ],
             [
