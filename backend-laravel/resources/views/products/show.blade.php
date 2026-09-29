@@ -708,12 +708,9 @@
 
             {{-- ═══ Mobile-Only: Product Title, Tags, Metrics & Social Action Row ═══ --}}
             <div class="lg:hidden bg-white px-3.5 py-3 border-b border-gray-100">
-                <div class="flex items-start justify-between gap-2">
-                    <h1 class="text-sm sm:text-base font-bold text-gray-900 leading-snug flex-1">
-                        {{ $product->name }}
-                    </h1>
-                    <svg class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
+                <h1 class="text-sm sm:text-base font-bold text-gray-900 leading-snug">
+                    {{ $product->name }}
+                </h1>
 
                 {{-- Ratings & Sold Count Row --}}
                 <div class="flex items-center justify-between pt-3 mt-2.5 border-t border-gray-50 text-xs">
