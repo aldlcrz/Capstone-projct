@@ -78,12 +78,26 @@
         var styleList = Array.isArray(styleVariants) ? styleVariants : [];
         var cardsList = Array.isArray(variantCards) ? variantCards : [];
 
+        var sStocks = (sizeStocks && typeof sizeStocks === 'object') ? sizeStocks : {};
+        var sizeKeys = Object.keys(sStocks);
+        var initialStock = parseInt(defaultStock);
+        if (isNaN(initialStock)) initialStock = 0;
+
+        // If size stocks are explicitly defined, calculate total available stock across all sizes
+        if (sizeKeys.length > 0) {
+            var totalAvailableInSizes = 0;
+            sizeKeys.forEach(function(k) {
+                totalAvailableInSizes += Math.max(0, parseInt(sStocks[k]) || 0);
+            });
+            initialStock = totalAvailableInSizes;
+        }
+
         return {
             selectedSize: '',
             quantity: 1,
-            defaultStock: defaultStock || 1,
-            stock: defaultStock || 1,
-            sizeStocks: sizeStocks || {},
+            defaultStock: initialStock,
+            stock: initialStock,
+            sizeStocks: sStocks,
             activeImage: 0,
             galleryImages: galleryList,
             styleVariants: styleList,
@@ -329,7 +343,8 @@
             },
             toggleWishlist: async function() {
                 var hasSizes = Object.keys(this.sizeStocks || {}).length > 0;
-                if (hasSizes && !this.selectedSize) {
+                // Only require selecting a size if the product is currently in stock
+                if (this.stock > 0 && hasSizes && !this.selectedSize) {
                     if (window.Alpine && Alpine.store('toast')) {
                         Alpine.store('toast').trigger('Please select your preferred size first before saving to your wishlist.', 'info');
                     } else {
@@ -393,7 +408,9 @@
                 } else {
                     this.stock = this.defaultStock;
                 }
-                if (this.quantity > this.stock) {
+                if (this.stock <= 0) {
+                    this.quantity = 1;
+                } else if (this.quantity > this.stock) {
                     this.quantity = Math.max(1, this.stock);
                 }
             },
@@ -454,7 +471,20 @@
         };
     }
 </script>
-<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ (int)($product->stock ?? 1) }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}', @js($variantCards))">
+@php
+    $effectiveStock = (int)($product->stock ?? 0);
+    if (!empty($product->size_stocks) && (is_array($product->size_stocks) || is_object($product->size_stocks))) {
+        $sizeStocksArray = (array)$product->size_stocks;
+        if (count($sizeStocksArray) > 0) {
+            $sumSizeStock = 0;
+            foreach ($sizeStocksArray as $szVal) {
+                $sumSizeStock += max(0, (int)$szVal);
+            }
+            $effectiveStock = $sumSizeStock;
+        }
+    }
+@endphp
+<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ $effectiveStock }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}', @js($variantCards))">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -850,7 +880,7 @@
                         <div class="flex items-center gap-2.5 mb-6 text-xs text-gray-700">
                             <span class="font-bold">Total Stock Inventory:</span>
                             <span class="px-3 py-1 rounded-xl bg-stone-100 font-extrabold text-stone-900 border border-stone-200">
-                                {{ $product->stock > 0 ? $product->stock . ' pieces available' : 'Out of Stock' }}
+                                {{ $effectiveStock > 0 ? $effectiveStock . ' pieces available' : 'Out of Stock' }}
                             </span>
                         </div>
                     @else
@@ -2657,7 +2687,7 @@
                 <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                     <div>
                         <div class="text-xs font-bold text-gray-800">Quantity</div>
-                        <div class="text-[10px] text-gray-400" x-text="'Stock: ' + stock + ' available'"></div>
+                        <div class="text-[10px]" :class="stock > 0 ? 'text-gray-400' : 'text-red-500 font-bold'" x-text="stock > 0 ? 'Stock: ' + stock + ' available' : 'Out of Stock'"></div>
                     </div>
                     <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                         <button type="button" @click="if(quantity > 1) quantity--" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">-</button>
