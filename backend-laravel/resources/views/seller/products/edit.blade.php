@@ -203,7 +203,7 @@
                         <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Price (₱)</label>
                         <input type="number" name="price" required min="1" max="10000" step="0.01"
                             value="{{ old('price', $product->price) }}"
-                            oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
+                            oninput="if(this.value.startsWith('0') && !this.value.startsWith('0.')) this.value = this.value.replace(/^0+/, ''); if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview();"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none border-b border-transparent focus:border-[#C49520] transition-all">
                         <p class="text-[8px] text-stone-400 font-medium">Item base price</p>
                     </div>

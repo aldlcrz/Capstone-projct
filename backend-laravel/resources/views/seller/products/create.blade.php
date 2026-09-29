@@ -648,12 +648,9 @@
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
             <div id="tour-create-step2-sizing" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
-                        <div>
-                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#DC2626;">*</span></h3>
-                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
-                        </div>
+                    <div>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#DC2626;">*</span></h3>
+                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
                     </div>
                     <span class="rounded-full"
                           style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;"
@@ -694,12 +691,9 @@
             {{-- 2. Pricing & Logistics Grid --}}
             <div id="tour-create-step2-pricing" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;flex-wrap:wrap;gap:10px;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
-                        <div>
-                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Price & Shipping Information <span style="color:#DC2626;">*</span></h3>
-                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
-                        </div>
+                    <div>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Price & Shipping Information <span style="color:#DC2626;">*</span></h3>
+                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Define fair artisan pricing and realistic delivery estimates</p>
                     </div>
                     <span class="rounded-full"
                           style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;"
@@ -723,7 +717,8 @@
                                step="0.01" 
                                placeholder="0.00"
                                x-model="price"
-                               oninput="if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate(); document.getElementById('price-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
+                               oninput="if(this.value.startsWith('0') && !this.value.startsWith('0.')) this.value = this.value.replace(/^0+/, ''); if(parseFloat(this.value) > 10000) this.value = 10000; updateDiscountPreview(); calculateFillRate(); document.getElementById('price-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400'); this.classList.remove('border-red-500');"
+                               @input="if($event.target.value.startsWith('0') && !$event.target.value.startsWith('0.')) { $event.target.value = $event.target.value.replace(/^0+/, ''); price = $event.target.value; }"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;">
                         <p style="font-size:9px;color:#A8A096;margin:0;">Item base price</p>
                     </div>
@@ -874,8 +869,7 @@
             {{-- 1. Payment Methods Card --}}
             <div id="tour-create-step3-payment" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
+                    <div>
                         <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Payment Methods <span style="color:#DC2626;">*</span></h3>
                     </div>
                     <button type="button" @click="openPaymentModal('gcash')" style="font-size:12px;font-weight:700;color:#7A5505;text-decoration:none;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#C49520'" onmouseout="this.style.color='#7A5505'">
@@ -1091,12 +1085,9 @@
             {{-- 2. Artisan Description & Storytelling Card --}}
             <div id="tour-create-step3-story" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:32px;height:32px;border-radius:50%;background-color:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:center;color:#7A5505;font-family:ui-serif,Georgia,serif;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
-                        <div>
-                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Artisan Description & Story <span style="color:#DC2626;">*</span></h3>
-                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Highlight the craftsmanship, weaving techniques, and care instructions</p>
-                        </div>
+                    <div>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Artisan Description & Story <span style="color:#DC2626;">*</span></h3>
+                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                     </div>
 
                     {{-- AI Auto-Write Story Button --}}
