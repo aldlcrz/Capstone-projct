@@ -636,10 +636,10 @@
                     <template x-if="step === 2">
                         <div class="hidden lg:block">
                             <button type="button" 
-                                    @click="requestPlaceOrder()" 
-                                    :disabled="aiChecking || isPlacingOrder"
-                                    :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-[0.99] cursor-pointer shadow-md'"
-                                    class="w-full bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                    @click="if (canPlaceOrder()) requestPlaceOrder()" 
+                                    :disabled="!canPlaceOrder()"
+                                    :class="!canPlaceOrder() ? 'opacity-40 cursor-not-allowed bg-[#1E1915]/60 text-[#DFC97A]/40 border-transparent shadow-none' : 'bg-[#1E1915] text-[#DFC97A] border-[#D4AF37]/30 hover:bg-black active:scale-[0.99] cursor-pointer shadow-md'"
+                                    class="w-full border py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2">
                                 <span x-show="!aiChecking && !isPlacingOrder" class="inline-flex items-center gap-2">
                                     <span>Place Order</span>
                                     <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -734,10 +734,10 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
                         <button type="button" 
-                                @click="requestPlaceOrder()" 
-                                :disabled="aiChecking || isPlacingOrder"
-                                :class="(aiChecking || isPlacingOrder) ? 'opacity-60 cursor-not-allowed bg-[#1E1915]/80' : 'hover:bg-black active:scale-95 cursor-pointer shadow-md'"
-                                class="px-6 sm:px-8 py-3 bg-[#1E1915] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border border-[#D4AF37]/30 transition-all flex items-center gap-1.5">
+                                @click="if (canPlaceOrder()) requestPlaceOrder()" 
+                                :disabled="!canPlaceOrder()"
+                                :class="!canPlaceOrder() ? 'opacity-40 cursor-not-allowed bg-[#1E1915]/60 text-white/40 border-transparent shadow-none' : 'bg-[#1E1915] text-white border-[#D4AF37]/30 hover:bg-black active:scale-95 cursor-pointer shadow-md'"
+                                class="px-6 sm:px-8 py-3 text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border transition-all flex items-center gap-1.5">
                             <span x-show="!aiChecking && !isPlacingOrder">Place Order</span>
                             <span x-show="aiChecking && !isPlacingOrder" x-cloak class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
@@ -1650,6 +1650,17 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             return this.isVerificationSuccess();
         },
 
+        canPlaceOrder() {
+            if (this.isPlacingOrder || this.aiChecking) return false;
+            if (this.paymentMethod === 'COD') {
+                return true;
+            }
+            if (!this.fileName || !this.paymentRef || this.isRefDuplicate || this.refError) {
+                return false;
+            }
+            return this.isVerificationSuccess() && this.isRefValid();
+        },
+
         locationDropdownOpen: false,
         activeTab: 'region',
         regionsList: [],
@@ -2546,7 +2557,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         requestPlaceOrder() {
-            if (this.isPlacingOrder) return;
+            if (this.isPlacingOrder || !this.canPlaceOrder()) return;
             
             if (this.paymentMethod !== 'COD') {
                 const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
@@ -2582,7 +2593,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.showConfirmModal = true;
         },
         confirmPlaceOrder() {
-            if (this.isPlacingOrder) return;
+            if (this.isPlacingOrder || !this.canPlaceOrder()) return;
             if (this.paymentMethod !== 'COD') {
                 const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
                 if (!this.fileName) {
