@@ -124,7 +124,7 @@
                             <!-- Category & Artisan -->
                             <div class="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                                 <span>{{ $product->category->name ?? 'Barong Tagalog' }}</span>
-                                <span class="text-[#996515] font-extrabold truncate max-w-28">by {{ $product->artisan ?? $product->seller->shopName ?? 'Artisan' }}</span>
+                                <span class="text-[#996515] font-extrabold truncate max-w-28">by {{ $product->artisan ?? $product->seller?->shopName ?? 'Artisan' }}</span>
                             </div>
 
                             <!-- Title -->

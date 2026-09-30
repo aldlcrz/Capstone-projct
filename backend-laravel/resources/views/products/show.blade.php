@@ -768,9 +768,9 @@
                     <div class="flex items-center gap-3 text-xs mb-4">
                         <div class="flex items-center gap-1.5">
                             <span class="text-gray-500 font-medium">by</span>
-                            <a href="/shops/{{ $product->sellerId }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
-                                <img src="{{ $product->seller->profile_photo_url ?? '/uploads/products/default.jpg' }}" onerror="this.src='/uploads/products/default.jpg'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
-                                <span>{{ $product->artisan ?? $product->seller->shopName ?? 'BarongniJuan' }}</span>
+                            <a href="/shops/{{ $product->sellerId ?? ($product->seller?->id ?? '') }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
+                                <img src="{{ $product->seller?->profile_photo_url ?? '/uploads/products/default.jpg' }}" onerror="this.src='/uploads/products/default.jpg'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
+                                <span>{{ $product->artisan ?? $product->seller?->shopName ?? $product->seller?->name ?? 'BarongniJuan' }}</span>
                             </a>
                         </div>
                         <span class="text-gray-300">•</span>
@@ -1142,8 +1142,8 @@
 
         <!-- Bottom Delivery Feature Bar (Authoritative Logistics Calculation) -->
         @php
-            $locationParts = array_filter([$product->seller->shopCity ?? null, $product->seller->shopProvince ?? null]);
-            $shipsFrom = !empty($locationParts) ? implode(', ', $locationParts) : ($product->seller->shopAddress ?? $product->artisan_region ?? 'Lumban, Laguna');
+            $locationParts = array_filter([$product->seller?->shopCity ?? null, $product->seller?->shopProvince ?? null]);
+            $shipsFrom = !empty($locationParts) ? implode(', ', $locationParts) : ($product->seller?->shopAddress ?? $product->artisan_region ?? 'Lumban, Laguna');
             $hasAddress = Auth::check() && !empty($customerAddress);
             $feeDisplay = $estimatedShipping ? '₱' . number_format($estimatedShipping['shipping_fee'], 2) : ($hasAddress ? 'Unavailable' : 'Calculated at checkout');
             $daysDisplay = $estimatedShipping ? ($estimatedShipping['delivery_estimate_display'] ?? ($estimatedShipping['estimated_days_min'] . '–' . $estimatedShipping['estimated_days_max'] . ' days')) : '2–4 business days';
@@ -1302,7 +1302,7 @@
                     'comment' => $rev->comment,
                     'seller_reply' => $rev->seller_reply,
                     'seller_reply_date' => $rev->seller_reply_at ? ($rev->seller_reply_at instanceof \Carbon\Carbon ? $rev->seller_reply_at->format('M d, Y') : \Carbon\Carbon::parse($rev->seller_reply_at)->format('M d, Y')) : null,
-                    'seller_name' => $product->seller->name ?? 'Artisan Store',
+                    'seller_name' => $product->seller?->name ?? 'Artisan Store',
                     'date' => $rev->createdAt ? ($rev->createdAt instanceof \Carbon\Carbon ? $rev->createdAt->format('F d, Y') : \Carbon\Carbon::parse($rev->createdAt)->format('F d, Y')) : '',
                     'customerName' => $customerName,
                     'initial' => $initial,
@@ -1590,7 +1590,7 @@
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
                                             <span>💬 Seller's Response</span>
-                                            <span class="text-gray-400 font-medium">• {{ $product->seller->name ?? 'Artisan Store' }}</span>
+                                            <span class="text-gray-400 font-medium">• {{ $product->seller?->name ?? 'Artisan Store' }}</span>
                                         </span>
                                         @if($review->seller_reply_at)
                                             <span class="text-[9px] text-gray-400 font-medium">{{ \Carbon\Carbon::parse($review->seller_reply_at)->diffForHumans() }}</span>
@@ -1872,11 +1872,11 @@
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-stone-200 shadow-2xs shrink-0 ring-2 ring-amber-100/60">
-                            <img src="{{ $product->seller->profile_photo_url ?? asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
+                            <img src="{{ $product->seller?->profile_photo_url ?? asset('uploads/products/default.jpg') }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <h4 class="text-sm font-extrabold text-stone-900 truncate">{{ $product->artisan ?? $product->seller->shopName ?? $product->seller->name ?? 'Artisan Store' }}</h4>
+                                <h4 class="text-sm font-extrabold text-stone-900 truncate">{{ $product->artisan ?? $product->seller?->shopName ?? $product->seller?->name ?? 'Artisan Store' }}</h4>
                                 <svg class="w-4 h-4 text-[#B8860B] shrink-0" fill="currentColor" viewBox="0 0 20 20" title="Verified Artisan">
                                     <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
@@ -1897,7 +1897,7 @@
                             </div>
                         </div>
                     </div>
-                    <a href="/shops/{{ $product->sellerId ?? ($product->seller->id ?? '') }}" class="px-3 py-1.5 bg-[#1E1915] hover:bg-[#A67C2E] text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center gap-1 shrink-0 ml-2">
+                    <a href="/shops/{{ $product->sellerId ?? ($product->seller?->id ?? '') }}" class="px-3 py-1.5 bg-[#1E1915] hover:bg-[#A67C2E] text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center gap-1 shrink-0 ml-2">
                         <span>Visit Store</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                     </a>
@@ -1920,7 +1920,7 @@
                     <div class="bg-stone-50/80 rounded-xl p-2.5 border border-stone-100">
                         <div class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Origin</div>
                         <div class="text-xs font-black text-stone-900 mt-0.5 truncate">
-                            {{ $product->seller->shopCity ?? $product->seller->city ?? 'Lumban' }}
+                            {{ $product->seller?->shopCity ?? $product->seller?->city ?? 'Lumban' }}
                         </div>
                     </div>
                 </div>
@@ -2355,7 +2355,7 @@
 
                 <!-- Size Guide Reference with Men / Women / Kids Tabs -->
                 @php
-                    $sellerSizeGuides = $product->seller->size_guides ?? [];
+                    $sellerSizeGuides = $product->seller?->size_guides ?? [];
                     $resolveSgUrl = function($targetGroup, $defaultPath) use ($sellerSizeGuides) {
                         if (!empty($sellerSizeGuides[$targetGroup])) {
                             $path = $sellerSizeGuides[$targetGroup];

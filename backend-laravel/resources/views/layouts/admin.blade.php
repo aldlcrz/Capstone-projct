@@ -51,6 +51,34 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
     </style>
+    <script>
+        (function() {
+            var origFetch = window.fetch;
+            if (origFetch) {
+                window.fetch = function() {
+                    return origFetch.apply(this, arguments).then(function(res) {
+                        if (res && res.status === 419) {
+                            window.location.reload();
+                        }
+                        return res;
+                    });
+                };
+            }
+            var origOpen = XMLHttpRequest.prototype.open;
+            var origSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function() {
+                return origOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function() {
+                this.addEventListener('load', function() {
+                    if (this.status === 419) {
+                        window.location.reload();
+                    }
+                });
+                return origSend.apply(this, arguments);
+            };
+        })();
+    </script>
 </head>
 <body class="antialiased text-[#1F2937]">
     <div x-data="{ isMobileMenuOpen: false }" class="flex h-screen overflow-hidden">

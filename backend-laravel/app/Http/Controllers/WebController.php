@@ -32,114 +32,129 @@ class WebController extends Controller
             }
         }
 
-        $query = Product::where('status', 'approved')
-            ->select('products.*')
-            ->selectSub(function($q) {
-                $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
-                    ->from('order_items')
-                    ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                    ->whereColumn('order_items.productId', 'products.id')
-                    ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered']);
-            }, 'sold_count')
-            ->with(['seller'])
-            ->withAvg('reviews as avgRating', 'rating')
-            ->withCount('reviews as reviewCount');
+        try {
+            $query = Product::where('status', 'approved')
+                ->select('products.*')
+                ->selectSub(function($q) {
+                    $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
+                        ->from('order_items')
+                        ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                        ->whereColumn('order_items.productId', 'products.id')
+                        ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered']);
+                }, 'sold_count')
+                ->with(['seller'])
+                ->withAvg('reviews as avgRating', 'rating')
+                ->withCount('reviews as reviewCount');
 
-        if ($request->filled('category')) {
-            $catVal = $request->category;
+            if ($request->filled('category')) {
+                $catVal = $request->category;
 
-            // Save selected category to session saved categories list
-            $savedCats = session()->get('saved_categories', []);
-            $filteredCats = array_filter($savedCats, function($c) use ($catVal) {
-                return strtolower($c) !== strtolower($catVal);
-            });
-            array_unshift($filteredCats, $catVal);
-            session()->put('saved_categories', array_slice(array_values($filteredCats), 0, 8));
+                // Save selected category to session saved categories list
+                $savedCats = session()->get('saved_categories', []);
+                $filteredCats = array_filter($savedCats, function($c) use ($catVal) {
+                    return strtolower($c) !== strtolower($catVal);
+                });
+                array_unshift($filteredCats, $catVal);
+                session()->put('saved_categories', array_slice(array_values($filteredCats), 0, 8));
 
-            $demographics = ['men', 'male', 'women', 'female', 'kids'];
+                $demographics = ['men', 'male', 'women', 'female', 'kids'];
 
-            if (in_array(strtolower($catVal), $demographics)) {
-                $normalised = match(strtolower($catVal)) {
-                    'male', 'men'     => 'Men',
-                    'female', 'women' => 'Women',
-                    'kids'            => 'Kids',
-                    default           => $catVal,
-                };
-                $query->where('target_group', $normalised);
-            } else {
-                $query->where(function($q) use ($catVal) {
-                    $q->where('CategoryId', $catVal)
-                      ->orWhereHas('category', function($cq) use ($catVal) {
-                          $cq->where('name', 'like', '%' . $catVal . '%')->orWhere('id', $catVal);
-                      })
-                      ->orWhere('name', 'like', '%' . $catVal . '%')
-                      ->orWhere('description', 'like', '%' . $catVal . '%');
+                if (in_array(strtolower($catVal), $demographics)) {
+                    $normalised = match(strtolower($catVal)) {
+                        'male', 'men'     => 'Men',
+                        'female', 'women' => 'Women',
+                        'kids'            => 'Kids',
+                        default           => $catVal,
+                    };
+                    $query->where('target_group', $normalised);
+                } else {
+                    $query->where(function($q) use ($catVal) {
+                        $q->where('CategoryId', $catVal)
+                          ->orWhereHas('category', function($cq) use ($catVal) {
+                              $cq->where('name', 'like', '%' . $catVal . '%')->orWhere('id', $catVal);
+                          })
+                          ->orWhere('name', 'like', '%' . $catVal . '%')
+                          ->orWhere('description', 'like', '%' . $catVal . '%');
+                    });
+                }
+            }
+
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                      ->orWhere('description', 'like', '%' . $search . '%')
+                      ->orWhereHas('seller', function($sq) use ($search) {
+                          $sq->where('name', 'like', '%' . $search . '%')
+                             ->orWhere('shopName', 'like', '%' . $search . '%');
+                      });
                 });
             }
-        }
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%')
-                  ->orWhereHas('seller', function($sq) use ($search) {
-                      $sq->where('name', 'like', '%' . $search . '%')
-                         ->orWhere('shopName', 'like', '%' . $search . '%');
-                  });
-            });
-        }
+            if ($request->has('lumban_special') || $request->sort === 'lumban_special') {
+                $query->where('is_on_sale', true)->where('discount_percentage', '>', 0);
+            }
 
-        if ($request->has('lumban_special') || $request->sort === 'lumban_special') {
-            $query->where('is_on_sale', true)->where('discount_percentage', '>', 0);
-        }
-
-        if ($request->has('sort')) {
-            if (in_array($request->sort, ['trending', 'best_sellers', 'most_sold'])) {
-                // Real-time: only products with confirmed sales are shown
-                $query->whereExists(function($q) {
-                    $q->select(DB::raw(1))
-                      ->from('order_items')
-                      ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                      ->whereColumn('order_items.productId', 'products.id')
-                      ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
-                      ->where('order_items.quantity', '>', 0);
-                })
-                ->orderBy('sold_count', 'desc')
-                ->orderBy('views', 'desc')
-                ->orderBy('createdAt', 'desc');
-            } elseif ($request->sort === 'newest') {
-                $query->orderBy('createdAt', 'desc');
-            } elseif ($request->sort === 'price_asc' || $request->sort === 'price_low') {
-                $query->orderBy('price', 'asc');
-            } elseif ($request->sort === 'price_desc' || $request->sort === 'price_high') {
-                $query->orderBy('price', 'desc');
+            if ($request->has('sort')) {
+                if (in_array($request->sort, ['trending', 'best_sellers', 'most_sold'])) {
+                    // Real-time: only products with confirmed sales are shown
+                    $query->whereExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('order_items')
+                          ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                          ->whereColumn('order_items.productId', 'products.id')
+                          ->whereIn('orders.status', ['Delivered', 'Completed', 'completed', 'delivered'])
+                          ->where('order_items.quantity', '>', 0);
+                    })
+                    ->orderBy('sold_count', 'desc')
+                    ->orderBy('views', 'desc')
+                    ->orderBy('createdAt', 'desc');
+                } elseif ($request->sort === 'newest') {
+                    $query->orderBy('createdAt', 'desc');
+                } elseif ($request->sort === 'price_asc' || $request->sort === 'price_low') {
+                    $query->orderBy('price', 'asc');
+                } elseif ($request->sort === 'price_desc' || $request->sort === 'price_high') {
+                    $query->orderBy('price', 'desc');
+                } else {
+                    $query->inRandomOrder();
+                }
             } else {
                 $query->inRandomOrder();
             }
-        } else {
-            $query->inRandomOrder();
+
+            $products = $query->paginate(100);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('WebController index products query error: ' . $e->getMessage());
+            $products = Product::where('status', 'approved')->paginate(100);
         }
 
-        $products = $query->paginate(100);
-        $categories = Category::withCount('products')->get();
-        $banners = Banner::live()
-            ->orderBy('order_index', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        try {
+            $categories = Category::withCount('products')->get();
+        } catch (\Throwable $e) {
+            $categories = collect();
+        }
 
-        // Enforce strictly one product per shop in hero banner display
-        $seenSellerIds = [];
-        $banners = $banners->filter(function (Banner $banner) use (&$seenSellerIds) {
-            $sellerId = $banner->getAssociatedSellerId();
-            if ($sellerId !== null) {
-                if (in_array($sellerId, $seenSellerIds, true)) {
-                    return false; // Deduplicate: only 1 product per shop
+        try {
+            $banners = Banner::live()
+                ->orderBy('order_index', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Enforce strictly one product per shop in hero banner display
+            $seenSellerIds = [];
+            $banners = $banners->filter(function (Banner $banner) use (&$seenSellerIds) {
+                $sellerId = $banner->getAssociatedSellerId();
+                if ($sellerId !== null) {
+                    if (in_array($sellerId, $seenSellerIds, true)) {
+                        return false; // Deduplicate: only 1 product per shop
+                    }
+                    $seenSellerIds[] = $sellerId;
                 }
-                $seenSellerIds[] = $sellerId;
-            }
-            return true;
-        })->values();
+                return true;
+            })->values();
+        } catch (\Throwable $e) {
+            $banners = collect();
+        }
 
         if ($banners->isEmpty()) {
             $defaultBanner = new Banner([

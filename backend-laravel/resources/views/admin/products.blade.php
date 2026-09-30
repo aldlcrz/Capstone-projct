@@ -398,10 +398,10 @@
                             <td class="px-4 py-2 hidden md:table-cell">
                                 <div class="min-w-0">
                                     <div class="text-[11px] font-bold text-gray-800 truncate leading-tight">
-                                        {{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}
+                                        {{ $product->seller?->shopName ?? $product->seller?->name ?? 'Artisan' }}
                                     </div>
                                     <div class="text-[10px] text-gray-400 truncate leading-tight mt-0.5">
-                                        {{ $product->seller->email ?? 'Artisan Partner' }}
+                                        {{ $product->seller?->email ?? 'Artisan Partner' }}
                                     </div>
                                 </div>
                             </td>
@@ -566,7 +566,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[10px] text-gray-500 font-medium line-clamp-1">
-                                    By <strong class="text-gray-800">{{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}</strong>
+                                    By <strong class="text-gray-800">{{ $product->seller?->shopName ?? $product->seller?->name ?? 'Artisan' }}</strong>
                                 </p>
                             </div>
 

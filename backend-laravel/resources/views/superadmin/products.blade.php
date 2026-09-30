@@ -239,8 +239,8 @@
 
                                 <!-- Seller Info -->
                                 <td class="px-6 py-4">
-                                    <div class="text-xs font-bold text-gray-900">{{ $product->seller->shopName ?? $product->seller->name ?? 'Artisan' }}</div>
-                                    <div class="text-[10px] text-gray-400">{{ $product->seller->email ?? 'No email' }}</div>
+                                    <div class="text-xs font-bold text-gray-900">{{ $product->seller?->shopName ?? $product->seller?->name ?? 'Artisan' }}</div>
+                                    <div class="text-[10px] text-gray-400">{{ $product->seller?->email ?? 'No email' }}</div>
                                 </td>
 
                                 <!-- Category -->

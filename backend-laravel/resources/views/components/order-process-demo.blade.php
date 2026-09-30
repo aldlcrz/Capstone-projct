@@ -36,11 +36,11 @@
             'image' => $p->image_url ?? $p->getImageUrl(),
             'sizes' => $sizes,
             'fabric' => $p->fabric_type ?: 'Piña-Seda / Heritage Weave',
-            'seller_name' => $seller->shopName ?: ($seller->name ?? 'Lumban Master Tailor'),
-            'seller_photo' => $seller->profilePhoto ? (str_starts_with($seller->profilePhoto, 'http') ? $seller->profilePhoto : url($seller->profilePhoto)) : null,
-            'seller_gcash' => $seller->gcashNumber ?: '09123456789',
-            'seller_maya'  => $seller->mayaNumber ?: '09987654321',
-            'artisan_region' => $p->artisan_region ?: ($seller->shopCity ? $seller->shopCity . ', ' . $seller->shopProvince : 'Lumban, Laguna'),
+            'seller_name' => $seller?->shopName ?: ($seller?->name ?? 'Lumban Master Tailor'),
+            'seller_photo' => ($seller && $seller->profilePhoto) ? (str_starts_with($seller->profilePhoto, 'http') ? $seller->profilePhoto : url($seller->profilePhoto)) : null,
+            'seller_gcash' => $seller?->gcashNumber ?: '09123456789',
+            'seller_maya'  => $seller?->mayaNumber ?: '09987654321',
+            'artisan_region' => $p->artisan_region ?: (($seller && $seller->shopCity) ? $seller->shopCity . ', ' . ($seller->shopProvince ?? 'Laguna') : 'Lumban, Laguna'),
             'shipping_fee' => (float)($p->shippingFee ?? 0),
         ];
     })->values()->toArray();

@@ -536,28 +536,28 @@
                     <div>
                         <div class="flex items-center justify-between pb-2" style="border-bottom:1px solid #EAE1D0;">
                             <div class="text-[11px] font-bold uppercase tracking-wider text-[#78716C]">Sold By</div>
-                            <a href="{{ route('shops.show', $order->seller->id) }}" class="text-[11px] font-bold text-[#C0422A] hover:underline flex items-center gap-0.5">
+                            <a href="{{ $order->seller ? route('shops.show', $order->seller->id) : '#' }}" class="text-[11px] font-bold text-[#C0422A] hover:underline flex items-center gap-0.5">
                                 <span>Visit shop</span>
                             </a>
                         </div>
 
                         <div class="flex items-center gap-3 pt-3">
                             <div class="w-11 h-11 rounded-xl bg-linear-to-tr from-[#3D2B1F] to-[#C0422A] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs border border-[#ECE3D2]">
-                                @if($order->seller->profile_photo_url)
+                                @if($order->seller?->profile_photo_url)
                                     <img src="{{ $order->seller->profile_photo_url }}"
-                                         alt="{{ $order->seller->display_name }}"
+                                         alt="{{ $order->seller->display_name ?? 'Artisan' }}"
                                          class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                                 @else
                                     <img src="{{ asset('uploads/products/default.jpg') }}"
-                                         alt="{{ $order->seller->display_name }}"
+                                         alt="{{ $order->seller?->display_name ?? 'Artisan' }}"
                                          class="w-full h-full object-cover">
                                 @endif
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate">{{ $order->seller->display_name }}</div>
+                                <div class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate">{{ $order->seller?->display_name ?? 'Artisan Shop' }}</div>
                                 <div class="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
                                     <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    <span>{{ $order->seller->isVerified ? 'Verified artisan' : 'Artisan seller' }}</span>
+                                    <span>{{ $order->seller?->isVerified ? 'Verified artisan' : 'Artisan seller' }}</span>
                                 </div>
                             </div>
                         </div>

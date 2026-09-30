@@ -30,6 +30,34 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var origFetch = window.fetch;
+            if (origFetch) {
+                window.fetch = function() {
+                    return origFetch.apply(this, arguments).then(function(res) {
+                        if (res && res.status === 419) {
+                            window.location.reload();
+                        }
+                        return res;
+                    });
+                };
+            }
+            var origOpen = XMLHttpRequest.prototype.open;
+            var origSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function() {
+                return origOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function() {
+                this.addEventListener('load', function() {
+                    if (this.status === 419) {
+                        window.location.reload();
+                    }
+                });
+                return origSend.apply(this, arguments);
+            };
+        })();
+    </script>
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <style>

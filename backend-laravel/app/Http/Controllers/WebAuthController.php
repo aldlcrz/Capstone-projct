@@ -763,19 +763,19 @@ class WebAuthController extends Controller
 
     public function logout(Request $request)
     {
-        $cart = $request->session()->get('cart', []);
-
-        // Persist final cart state to DB for the authenticated user before logging out
-        $user = Auth::user();
-        if ($user instanceof User && !empty($cart)) {
-            $user->update(['cart' => json_encode($cart)]);
+        try {
+            $cart = $request->session()->get('cart', []);
+            $user = Auth::user();
+            if ($user instanceof User && !empty($cart)) {
+                $user->update(['cart' => json_encode($cart)]);
+            }
+        } catch (\Throwable $e) {
+            // Guard against any session/cart serialization issues during logout
         }
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        // Cart is intentionally NOT restored to the session — guests must log in to see/add to cart
 
         return redirect('/');
     }
