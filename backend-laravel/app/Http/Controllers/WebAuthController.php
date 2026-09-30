@@ -15,6 +15,8 @@ use App\Mail\PasswordChangeVerificationMail;
 use App\Mail\EmailChangeOldVerificationMail;
 use App\Mail\EmailChangeNewVerificationMail;
 use App\Services\EmailNotificationService;
+use App\Support\CartHelper;
+use App\Support\VariationFormatter;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -206,23 +208,12 @@ class WebAuthController extends Controller
             $user->save();
             session(['login_session_version' => $user->sessionVersion]);
 
-            // Restore cart: merge saved DB cart with any current guest session cart
+            // Restore cart: merge saved DB cart with any current guest session cart authoritatively
             $guestCart    = session()->get('cart', []);
             $savedCartRaw = $user->cart;
             $savedCart    = $savedCartRaw ? (json_decode($savedCartRaw, true) ?? []) : [];
 
-            // Guest cart items take precedence (higher qty) over saved items
-            $mergedCart = $savedCart;
-            foreach ($guestCart as $key => $item) {
-                if (isset($mergedCart[$key])) {
-                    $mergedCart[$key]['quantity'] = max(
-                        (int) ($mergedCart[$key]['quantity'] ?? 1),
-                        (int) ($item['quantity'] ?? 1)
-                    );
-                } else {
-                    $mergedCart[$key] = $item;
-                }
-            }
+            $mergedCart = CartHelper::mergeCarts($savedCart, $guestCart);
             session()->put('cart', $mergedCart);
             // Persist merged cart back to DB
             if ($user instanceof User) {
@@ -2080,34 +2071,42 @@ class WebAuthController extends Controller
                 $product = Product::with('seller')->find($productId);
                 if ($product) {
                     if ($action === 'add_to_cart' || $action === 'buy_now') {
-                        $cart = session()->get('cart', []);
-                        $key  = $productId . '_' . ($size ?? '') . '_' . ($variation ?? '');
+                        $normSize = CartHelper::normalizeSize($size);
+                        $normVar = CartHelper::normalizeVariation($variation, $product);
+                        $cart = CartHelper::consolidateCart(session()->get('cart', []));
+                        $key  = CartHelper::getCanonicalKey($product->id, $normSize, $normVar, $product);
 
-                        $availableStock = $product->stock;
-                        if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
-                            $availableStock = (int) $product->size_stocks[$size];
+                        $availableStock = (int) $product->stock;
+                        if ($normSize && !empty($product->size_stocks) && isset($product->size_stocks[$normSize])) {
+                            $availableStock = (int) $product->size_stocks[$normSize];
                         }
+
+                        $image = VariationFormatter::getImageForVariation($normVar, $product) ?: $product->getImageUrl();
+                        $seller = $product->seller;
 
                         $newItem = [
                             'key'                 => $key,
                             'id'                  => $product->id,
                             'name'                => $product->name,
-                            'price'               => $product->sale_price,
-                            'image'               => $product->getImageUrl(),
+                            'price'               => (float) $product->sale_price,
+                            'image'               => $image,
                             'quantity'            => min(max($quantity, 1), max($availableStock, 1)),
-                            'size'                => $size,
-                            'variation'           => $variation,
+                            'size'                => $normSize,
+                            'variation'           => $normVar,
                             'sellerId'            => $product->sellerId,
-                            'shippingFee'         => $product->shippingFee ?? 0,
-                            'original_price'      => $product->price,
-                            'discount_percentage' => $product->discount_percentage,
+                            'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                            'original_price'      => (float) $product->price,
+                            'discount_percentage' => (float) $product->discount_percentage,
                             'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
                             'category_name'       => $product->category->name ?? 'Traditional',
-                            'shop_name'           => $product->seller ? ($product->seller->shopName ?: $product->seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                            'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
                         ];
 
                         if (isset($cart[$key])) {
                             $cart[$key]['quantity'] = min($cart[$key]['quantity'] + $quantity, max($availableStock, 1));
+                            $cart[$key]['price'] = (float) $product->sale_price;
+                            $cart[$key]['image'] = $image;
+                            $cart[$key]['name'] = $product->name;
                         } else {
                             $cart[$key] = $newItem;
                         }

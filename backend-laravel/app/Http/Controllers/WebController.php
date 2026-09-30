@@ -568,7 +568,7 @@ class WebController extends Controller
     {
         $order = Order::where('id', $id)
             ->where('customerId', Auth::id())
-            ->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests', 'shipping'])
+            ->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests', 'shipping.provider'])
             ->firstOrFail();
 
         $recommended = $this->getRecommendedProductsForOrder($order);

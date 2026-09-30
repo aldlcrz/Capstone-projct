@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Wishlist;
 use App\Models\Notification;
 use App\Mail\WishlistRestockedMail;
+use App\Support\CartHelper;
 use Illuminate\Support\Facades\Log;
 
 class WishlistService
@@ -111,7 +112,9 @@ class WishlistService
                 }
             }
 
-            $key = $product->id . '_' . ($targetSize ?? '') . '_';
+            $normSize = CartHelper::normalizeSize($targetSize);
+            $cart = CartHelper::consolidateCart($cart);
+            $key = CartHelper::getCanonicalKey($product->id, $normSize, null, $product);
 
             // If not already in cart, insert 1 unit
             if (!isset($cart[$key])) {
@@ -119,15 +122,15 @@ class WishlistService
                     'key'                 => $key,
                     'id'                  => $product->id,
                     'name'                => $product->name,
-                    'price'               => $product->sale_price,
+                    'price'               => (float) $product->sale_price,
                     'image'               => $imageUrl,
                     'quantity'            => 1,
-                    'size'                => $targetSize,
+                    'size'                => $normSize,
                     'variation'           => null,
                     'sellerId'            => $product->sellerId,
-                    'shippingFee'         => $product->shippingFee ?? 0,
-                    'original_price'      => $product->price,
-                    'discount_percentage' => $product->discount_percentage,
+                    'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                    'original_price'      => (float) $product->price,
+                    'discount_percentage' => (float) $product->discount_percentage,
                     'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
                     'category_name'       => $product->category->name ?? 'Traditional',
                     'shop_name'           => $shopName,

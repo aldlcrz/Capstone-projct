@@ -414,7 +414,9 @@
                     this.quantity = Math.max(1, this.stock);
                 }
             },
+            isAddingToCart: false,
             submitAddToCart: async function(e) {
+                if (this.isAddingToCart) return;
                 if (!window.isLoggedIn) {
                     const intent = {
                         action: 'add_to_cart',
@@ -428,6 +430,7 @@
                     window.location.href = window.loginUrl;
                     return;
                 }
+                this.isAddingToCart = true;
                 try {
                     var formData = new FormData(e.target);
                     var response = await fetch('/cart/add', {
@@ -450,6 +453,8 @@
                     }
                 } catch(err) {
                     Alpine.store('toast').trigger('Something went wrong. Please try again.', 'error');
+                } finally {
+                    this.isAddingToCart = false;
                 }
             },
             chatWithSeller: function(sellerId, sellerName) {

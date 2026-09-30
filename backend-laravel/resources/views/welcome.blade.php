@@ -919,16 +919,17 @@
                             <input type="hidden" name="productId" :value="product.id">
                             <input type="hidden" name="size" :value="selectedSize">
                             <input type="hidden" name="quantity" :value="quantity">
+                            <input type="hidden" name="variation" :value="product.variation || ''">
                             
                             <button 
                                 type="submit"
-                                :disabled="(product.sizes && product.sizes.length > 0 && !selectedSize) || stock <= 0"
+                                :disabled="(product.sizes && product.sizes.length > 0 && !selectedSize) || stock <= 0 || isSubmitting"
                                 class="w-full h-12 bg-[#2A2A28] text-white rounded-xl font-bold uppercase tracking-widest hover:bg-[#C0422A] transition-all shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                 </svg>
-                                <span x-text="(product.sizes && product.sizes.length > 0 && !selectedSize) ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart')"></span>
+                                <span x-text="isSubmitting ? 'Adding...' : ((product.sizes && product.sizes.length > 0 && !selectedSize) ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : 'Add to Cart'))"></span>
                             </button>
                         </form>
                     </div>
@@ -943,6 +944,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('quickAddModal', () => ({
             open: false,
+            isSubmitting: false,
             product: {
                 id: '',
                 name: '',
@@ -950,7 +952,8 @@
                 image: '',
                 sizes: [],
                 sizeStocks: {},
-                defaultStock: 0
+                defaultStock: 0,
+                variation: ''
             },
             selectedSize: '',
             quantity: 1,
@@ -962,6 +965,7 @@
                     this.selectedSize = '';
                     this.quantity = 1;
                     this.stock = this.product.defaultStock || 1;
+                    this.isSubmitting = false;
                     
                     if (!this.product.sizes || this.product.sizes.length === 0) {
                         this.stock = this.product.defaultStock || 1;
@@ -982,19 +986,21 @@
                 }
             },
             async submitAddToCart(e) {
+                if (this.isSubmitting) return;
                 if (!window.isLoggedIn) {
                     const intent = {
                         action: 'add_to_cart',
                         productId: this.product ? this.product.id : null,
                         quantity: this.quantity || 1,
                         size: this.selectedSize || null,
-                        variation: 'Original',
+                        variation: this.product?.variation || null,
                         redirectUrl: window.location.href
                     };
                     try { localStorage.setItem('lumbarong_pending_intent', JSON.stringify(intent)); } catch(err) {}
                     window.location.href = window.loginUrl;
                     return;
                 }
+                this.isSubmitting = true;
                 try {
                     const formData = new FormData(e.target);
                     const response = await fetch('/cart/add', {
@@ -1018,6 +1024,8 @@
                     }
                 } catch(err) {
                     Alpine.store('toast').trigger('Something went wrong. Please try again.', 'error');
+                } finally {
+                    this.isSubmitting = false;
                 }
             }
         }));

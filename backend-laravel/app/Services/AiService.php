@@ -1130,12 +1130,14 @@ STRICT DOMAIN LIMITS & SECURITY:
     /**
      * Check if a payment reference number is active or previously verified in payment_transactions.
      */
-    public static function isDuplicateReference(string $referenceNumber, ?string $excludeOrderId = null): array
+    public static function isDuplicateReference(string $referenceNumber, ?string $excludeOrderId = null, string $paymentMethod = 'GCash'): array
     {
         $clean = preg_replace('/\D/', '', trim($referenceNumber));
         if (!$clean) {
             return ['is_duplicate' => false, 'message' => ''];
         }
+
+        $walletName = trim($paymentMethod) ?: 'Payment';
 
         try {
             $query = \App\Models\PaymentTransaction::where('active_reference', $clean);
@@ -1150,7 +1152,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                         'is_duplicate' => true,
                         'status' => 'VERIFIED',
                         'collision_type' => 'VERIFIED_DUPLICATE',
-                        'message' => '❌ Security Alert: This payment reference number has already been verified for another completed order.'
+                        'message' => "❌ Security Alert: This payment reference number has already been verified for another completed order ({$walletName} reference is already used)."
                     ];
                 }
                 if ($existing->status === 'UNVERIFIED') {
@@ -1158,7 +1160,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                         'is_duplicate' => true,
                         'status' => 'UNVERIFIED',
                         'collision_type' => 'ACTIVE_REFERENCE_COLLISION',
-                        'message' => '⚠️ Notice: This payment reference number is currently claimed by another ongoing checkout awaiting manual seller verification.'
+                        'message' => "⚠️ Notice: This payment reference number is currently claimed by another ongoing checkout awaiting manual seller verification ({$walletName} reference is already used)."
                     ];
                 }
             }
@@ -1174,7 +1176,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 return [
                     'is_duplicate' => true,
                     'status' => 'VERIFIED',
-                    'message' => '❌ Security Alert: This payment reference number has already been used in another order.'
+                    'message' => "❌ Security Alert: This payment reference number has already been used in another order ({$walletName} reference is already used)."
                 ];
             }
         }
@@ -1182,7 +1184,7 @@ STRICT DOMAIN LIMITS & SECURITY:
         return [
             'is_duplicate' => false,
             'status' => 'AVAILABLE',
-            'message' => '✓ Payment reference is unique and available.'
+            'message' => "✓ Payment reference is unique and available."
         ];
     }
 
@@ -1363,6 +1365,7 @@ STRICT DOMAIN LIMITS & SECURITY:
         if (!$isReceipt) {
             return [
                 'status'                    => 'REJECT',
+                'reason_code'               => 'FAKE_OR_INVALID_IMAGE',
                 'is_receipt'                => false,
                 'wallet'                    => $wallet,
                 'ref_matched'               => false,
@@ -1373,17 +1376,18 @@ STRICT DOMAIN LIMITS & SECURITY:
                 'reference_confidence'      => 0.0,
                 'confidence'                => $overallConf,
                 'needs_seller_verification' => true,
-                'message'                   => $evidence['message'] ?? 'The attached file does not appear to be a mobile payment receipt screenshot. Please upload an authentic transaction confirmation.'
+                'message'                   => $evidence['message'] ?? 'The attached file appears to be a general photo/product image rather than a receipt screenshot. Please upload an authentic transaction confirmation.'
             ];
         }
 
         // Rule 2: Check database active_reference (concurrency & replay protection)
         $refToCheck = $cleanEnteredRef ?: $cleanDetectedRef;
         if ($refToCheck) {
-            $dupCheck = self::isDuplicateReference($refToCheck, $excludeOrderId);
+            $dupCheck = self::isDuplicateReference($refToCheck, $excludeOrderId, $wallet);
             if ($dupCheck['is_duplicate']) {
                 return [
                     'status'                    => 'REJECT',
+                    'reason_code'               => 'REFERENCE_ALREADY_USED',
                     'collision_type'            => $dupCheck['collision_type'] ?? 'REFERENCE_COLLISION',
                     'is_receipt'                => true,
                     'wallet'                    => $wallet,
@@ -1431,6 +1435,7 @@ STRICT DOMAIN LIMITS & SECURITY:
         if ($amountStatus === 'REJECT_UNDERPAY') {
             return [
                 'status'                    => 'REJECT',
+                'reason_code'               => 'AMOUNT_UNDERPAY',
                 'is_receipt'                => true,
                 'wallet'                    => $wallet,
                 'ref_matched'               => ($cleanEnteredRef && $cleanDetectedRef && $cleanEnteredRef === $cleanDetectedRef),
@@ -1459,24 +1464,31 @@ STRICT DOMAIN LIMITS & SECURITY:
         // Rule 5: Final Tier Determination (PASS vs REVIEW)
         if ($hasDetectedRef && $refMatched && $amountStatus === 'MATCH') {
             $status = 'PASS';
+            $reasonCode = 'REFERENCE_SUCCESS';
             $msg = "✓ Receipt verified ({$wallet} Ref: " . ($cleanDetectedRef) . " · Amount: ₱" . number_format($detectedAmount ?? $expectedAmount, 2) . ").";
         } else {
             $status = 'REVIEW';
             if (!$hasDetectedRef) {
+                $reasonCode = 'UNREADABLE_REFERENCE';
                 $msg = "Receipt reference could not be automatically extracted from image. Manual artisan verification is required.";
             } elseif (!$refMatched) {
+                $reasonCode = 'REFERENCE_MISMATCH';
                 $msg = "Reference mismatch: Receipt shows \"{$cleanDetectedRef}\", but entered \"{$cleanEnteredRef}\". Manual seller review required.";
             } elseif ($amountStatus === 'UNCLEAR') {
+                $reasonCode = 'AMOUNT_UNCLEAR';
                 $msg = "Receipt amount is unreadable or uncertain. Seller will manually verify payment in their wallet before fulfillment.";
             } elseif ($amountStatus === 'REVIEW_OVERPAY') {
+                $reasonCode = 'AMOUNT_OVERPAY';
                 $msg = "Amount overpayment detected: Receipt shows ₱" . number_format((float)$detectedAmount, 2) . " vs order total ₱" . number_format($expectedAmount, 2) . ". Manual seller review required.";
             } else {
+                $reasonCode = 'AMOUNT_DISCREPANCY';
                 $msg = "Amount discrepancy: Receipt shows ₱" . number_format((float)$detectedAmount, 2) . " vs order total ₱" . number_format($expectedAmount, 2) . ". Manual seller review required.";
             }
         }
 
         return [
             'status'                    => $status,
+            'reason_code'               => $reasonCode,
             'is_receipt'                => true,
             'wallet'                    => $wallet,
             'ref_matched'               => $refMatched,
@@ -1513,6 +1525,7 @@ STRICT DOMAIN LIMITS & SECURITY:
             if (str_contains($filename, $kw)) {
                 return [
                     'status'                    => 'REJECT',
+                    'reason_code'               => 'FAKE_OR_INVALID_IMAGE',
                     'is_receipt'                => false,
                     'wallet'                    => $method,
                     'ref_matched'               => false,
@@ -1523,7 +1536,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                     'reference_confidence'      => 0.0,
                     'confidence'                => 0.95,
                     'needs_seller_verification' => true,
-                    'message'                   => 'The attached file appears to be a general photo/product image, not a ' . $method . ' transaction receipt screenshot. Please attach your actual payment confirmation screenshot.'
+                    'message'                   => 'Fake image uploaded. Please upload again.'
                 ];
             }
         }
@@ -1531,10 +1544,11 @@ STRICT DOMAIN LIMITS & SECURITY:
         // Check duplicate reference in database
         $cleanRef = preg_replace('/\D/', '', trim($ref));
         if ($cleanRef) {
-            $dupCheck = self::isDuplicateReference($cleanRef, $excludeOrderId);
+            $dupCheck = self::isDuplicateReference($cleanRef, $excludeOrderId, $method);
             if ($dupCheck['is_duplicate']) {
                 return [
                     'status'                    => 'REJECT',
+                    'reason_code'               => 'REFERENCE_ALREADY_USED',
                     'is_receipt'                => true,
                     'wallet'                    => $method,
                     'ref_matched'               => false,
@@ -1545,7 +1559,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                     'reference_confidence'      => 0.0,
                     'confidence'                => 0.95,
                     'needs_seller_verification' => true,
-                    'message'                   => $dupCheck['message']
+                    'message'                   => "{$method} reference is already used."
                 ];
             }
         }
@@ -1555,20 +1569,43 @@ STRICT DOMAIN LIMITS & SECURITY:
             $detectedRef = $m[1];
         }
 
-        // Heuristic fallback: image passed geometry screening, but reference/amount match requires artisan check
+        $isGcash = (strcasecmp($method, 'GCash') === 0);
+        $expectedLen = $isGcash ? 13 : 12;
+        $isValidRef = !empty($detectedRef) && strlen($detectedRef) === $expectedLen && !preg_match('/^(\d)\1+$/', $detectedRef);
+
+        if ($isValidRef) {
+            return [
+                'status'                    => 'PASS',
+                'reason_code'               => 'REFERENCE_SUCCESS',
+                'is_receipt'                => true,
+                'wallet'                    => $method,
+                'ref_matched'               => true,
+                'amount_matched'            => false,
+                'detected_ref'              => $detectedRef,
+                'detected_amount'           => null,
+                'amount_confidence'         => 0.50,
+                'reference_confidence'      => 0.50,
+                'confidence'                => 0.55,
+                'needs_seller_verification' => true,
+                'message'                   => "{$method} reference successfully read. Wait for seller confirmation, but you may now proceed."
+            ];
+        }
+
+        // Unreadable reference fallback
         return [
             'status'                    => 'REVIEW',
+            'reason_code'               => 'UNREADABLE_REFERENCE',
             'is_receipt'                => true,
             'wallet'                    => $method,
-            'ref_matched'               => !empty($detectedRef),
+            'ref_matched'               => false,
             'amount_matched'            => false,
-            'detected_ref'              => $detectedRef ?: '',
+            'detected_ref'              => '',
             'detected_amount'           => null,
-            'amount_confidence'         => 0.50,
-            'reference_confidence'      => 0.50,
-            'confidence'                => 0.55,
+            'amount_confidence'         => 0.0,
+            'reference_confidence'      => 0.0,
+            'confidence'                => 0.50,
             'needs_seller_verification' => true,
-            'message'                   => "Image geometry is consistent with a vertical mobile screenshot. The artisan will verify the {$method} reference number and amount in their wallet before proceeding."
+            'message'                   => "Can't read reference. Please upload again."
         ];
     }
 

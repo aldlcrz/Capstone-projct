@@ -227,18 +227,10 @@
                         <p class="text-[8px] text-stone-400 font-medium">Packed unit weight</p>
                     </div>
 
-                    {{-- Package Dimensions (L x W x H in cm) --}}
-                    <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26 sm:col-span-2">
-                        <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Dimensions L × W × H (cm) <span class="text-red-500">*</span></label>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" name="package_length_per_unit" placeholder="L" min="1" step="0.1" value="{{ old('package_length_per_unit', $product->package_length_per_unit ?? '30') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
-                            <span class="text-stone-400 text-xs">×</span>
-                            <input type="number" name="package_width_per_unit" placeholder="W" min="1" step="0.1" value="{{ old('package_width_per_unit', $product->package_width_per_unit ?? '20') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
-                            <span class="text-stone-400 text-xs">×</span>
-                            <input type="number" name="package_height_per_unit" placeholder="H" min="1" step="0.1" value="{{ old('package_height_per_unit', $product->package_height_per_unit ?? '5') }}" required class="w-1/3 bg-white border border-[#D6CEBE] rounded-lg px-2 py-1 text-xs font-bold text-gray-900">
-                        </div>
-                        <p class="text-[8px] text-stone-400 font-medium">Packed unit dimensions</p>
-                    </div>
+                    {{-- Hidden Default Package Dimensions (30 x 20 x 5 cm) --}}
+                    <input type="hidden" name="package_length_per_unit" value="{{ old('package_length_per_unit', $product->package_length_per_unit ?? '30') }}">
+                    <input type="hidden" name="package_width_per_unit" value="{{ old('package_width_per_unit', $product->package_width_per_unit ?? '20') }}">
+                    <input type="hidden" name="package_height_per_unit" value="{{ old('package_height_per_unit', $product->package_height_per_unit ?? '5') }}">
 
                     {{-- Handling / Prep Days --}}
                     <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26">
@@ -2010,20 +2002,7 @@ function validateProductForm(e, isEdit = true) {
         }
     }
 
-    const pkgLenInput = document.querySelector('input[name="package_length_per_unit"]');
-    const pkgWidInput = document.querySelector('input[name="package_width_per_unit"]');
-    const pkgHgtInput = document.querySelector('input[name="package_height_per_unit"]');
-    if (pkgLenInput && pkgWidInput && pkgHgtInput) {
-        const lenVal = parseFloat(pkgLenInput.value) || 0;
-        const widVal = parseFloat(pkgWidInput.value) || 0;
-        const hgtVal = parseFloat(pkgHgtInput.value) || 0;
-        if (lenVal < 1 || widVal < 1 || hgtVal < 1) {
-            errors.push('Package Dimensions (Length, Width, Height) must be at least 1 cm each.');
-            pkgLenInput.classList.add('border-red-500');
-            pkgWidInput.classList.add('border-red-500');
-            pkgHgtInput.classList.add('border-red-500');
-        }
-    }
+
 
     const handlingDaysInput = document.querySelector('input[name="handling_days"]');
     if (handlingDaysInput) {

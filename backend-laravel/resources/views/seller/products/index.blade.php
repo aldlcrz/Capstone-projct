@@ -252,6 +252,14 @@ document.addEventListener('alpine:init', () => {
                                 </span>
                             </div>
 
+                            @if($product->is_on_sale && $product->discount_percentage > 0)
+                                <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex flex-col items-end gap-1">
+                                    <span class="px-1.5 py-0.5 text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-xs" style="background: #1E1915; border: 1px solid #C49520;">
+                                        -{{ number_format($product->discount_percentage, 0) }}%
+                                    </span>
+                                </div>
+                            @endif
+
                             {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Resume Editing Draft" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
@@ -279,7 +287,13 @@ document.addEventListener('alpine:init', () => {
                             <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
                                 <div>
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
+                                        @if($product->is_on_sale && (float)$product->discount_percentage > 0)
+                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
+                                            <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
@@ -402,7 +416,13 @@ document.addEventListener('alpine:init', () => {
                             <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
                                 <div>
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
+                                        @if($product->is_on_sale && (float)$product->discount_percentage > 0)
+                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
+                                            <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
@@ -522,10 +542,11 @@ document.addEventListener('alpine:init', () => {
                             <div class="flex items-center justify-between pt-2 border-t" style="border-color: #E8DECB;">
                                 <div>
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->salePrice) }}</span>
-                                        @if($product->is_on_sale && $product->discount_percentage > 0)
-                                            <span class="text-[9px] line-through font-sans" style="color: #A09585;">₱{{ number_format($product->price) }}</span>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
+                                        @if($product->is_on_sale && (float)$product->discount_percentage > 0)
+                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
+                                            <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
                                         @endif
                                     </div>
                                 </div>
@@ -598,6 +619,14 @@ document.addEventListener('alpine:init', () => {
                                 </span>
                             </div>
 
+                            @if($product->is_on_sale && $product->discount_percentage > 0)
+                                <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex flex-col items-end gap-1">
+                                    <span class="px-1.5 py-0.5 text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-xs" style="background: #1E1915; border: 1px solid #C49520;">
+                                        -{{ number_format($product->discount_percentage, 0) }}%
+                                    </span>
+                                </div>
+                            @endif
+
                             {{-- Desktop Hover Action Buttons (Edit + Delete) --}}
                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-xs">
                                 <a href="/seller/products/{{ $product->id }}/edit" title="Edit & Fix Product" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-900 transition-all shadow-xl" onmouseover="this.style.background='#C49520'; this.style.color='#FFF';" onmouseout="this.style.background='#FFF'; this.style.color='#1E1915';">
@@ -633,7 +662,13 @@ document.addEventListener('alpine:init', () => {
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Price</div>
-                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format($product->price) }}</div>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
+                                            @if($product->is_on_sale && (float)$product->discount_percentage > 0)
+                                                <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
+                                                <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="text-right">
                                         <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>

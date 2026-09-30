@@ -190,30 +190,38 @@ class AiController extends Controller
             return response()->json([
                 'is_valid' => false,
                 'is_duplicate' => false,
-                'message' => '❌ Reference number must be exactly 13 digits.'
+                'message' => "Can't read reference. Please upload again."
             ]);
         } elseif (!$isGcash && !preg_match('/^\d{12}$/', $ref)) {
             return response()->json([
                 'is_valid' => false,
                 'is_duplicate' => false,
-                'message' => '❌ Reference number must be exactly 12 digits.'
+                'message' => "Can't read reference. Please upload again."
+            ]);
+        }
+
+        if (preg_match('/^(\d)\1+$/', $ref)) {
+            return response()->json([
+                'is_valid' => false,
+                'is_duplicate' => false,
+                'message' => "Fake image uploaded. Please upload again."
             ]);
         }
 
         // Duplicate check in database
-        $dupCheck = AiService::isDuplicateReference($ref);
+        $dupCheck = AiService::isDuplicateReference($ref, null, $method);
         if ($dupCheck['is_duplicate']) {
             return response()->json([
                 'is_valid' => false,
                 'is_duplicate' => true,
-                'message' => $dupCheck['message']
+                'message' => "{$method} reference is already used."
             ]);
         }
 
         return response()->json([
             'is_valid' => true,
             'is_duplicate' => false,
-            'message' => "✓ Valid and unique {$method} reference number."
+            'message' => "{$method} reference successfully read. Wait for seller confirmation, but you may now proceed."
         ]);
     }
 

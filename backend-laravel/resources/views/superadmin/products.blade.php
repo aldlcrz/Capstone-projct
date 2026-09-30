@@ -252,7 +252,15 @@
 
                                 <!-- Price & Stock -->
                                 <td class="px-6 py-4">
-                                    <div class="text-xs font-bold text-gray-900 font-mono">₱{{ number_format((float)$product->price, 2) }}</div>
+                                    @if($product->is_on_sale && $product->discount_percentage > 0)
+                                        <div class="flex items-baseline gap-1.5 flex-wrap">
+                                            <span class="text-xs font-black text-[#C0422A] font-mono">₱{{ number_format((float)$product->sale_price, 2) }}</span>
+                                            <span class="text-[10px] text-gray-400 line-through font-mono">₱{{ number_format((float)$product->price, 2) }}</span>
+                                            <span class="text-[9px] font-bold text-red-600 bg-red-50 border border-red-100 px-1 py-0.5 rounded">-{{ round($product->discount_percentage) }}%</span>
+                                        </div>
+                                    @else
+                                        <div class="text-xs font-bold text-gray-900 font-mono">₱{{ number_format((float)$product->price, 2) }}</div>
+                                    @endif
                                     <div class="text-[10px] text-gray-500 font-medium">Stock: {{ $product->stock }} pcs</div>
                                 </td>
 
@@ -416,8 +424,17 @@
                             </div>
 
                             {{-- Price and Inventory --}}
-                            <div class="flex items-baseline gap-3 pb-3 border-b border-gray-100 flex-wrap">
-                                <span class="text-2xl font-extrabold text-gray-900" x-text="'₱' + formatPrice(inspectProduct.price)"></span>
+                            <div class="flex items-center gap-3 pb-3 border-b border-gray-100 flex-wrap">
+                                <template x-if="inspectProduct.is_on_sale && inspectProduct.discount_percentage > 0">
+                                    <div class="flex items-baseline gap-2 flex-wrap">
+                                        <span class="text-2xl font-extrabold text-[#C0422A]" x-text="'₱' + formatPrice(inspectProduct.price * (1 - inspectProduct.discount_percentage / 100))"></span>
+                                        <span class="text-sm font-semibold line-through text-gray-400" x-text="'₱' + formatPrice(inspectProduct.price)"></span>
+                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-lg" x-text="'-' + Math.round(inspectProduct.discount_percentage) + '% OFF'"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!(inspectProduct.is_on_sale && inspectProduct.discount_percentage > 0)">
+                                    <span class="text-2xl font-extrabold text-gray-900" x-text="'₱' + formatPrice(inspectProduct.price)"></span>
+                                </template>
                                 <span class="px-2.5 py-1 rounded-xl text-xs font-bold"
                                       :class="(inspectProduct.stock > 0) ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'"
                                       x-text="inspectProduct.stock > 0 ? inspectProduct.stock + ' pieces in stock' : 'Out of Stock'">

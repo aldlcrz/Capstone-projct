@@ -224,55 +224,67 @@ class OrderController extends Controller
             $order->packingProof = 'uploads/packing-proofs/' . $filename;
         }
 
-        // Shipping info: courier and tracking assignment (must be manually entered by seller)
+        // Shipping info: courier and tracking assignment
         $shippingUpdated = false;
-        $courier = trim($request->courierName ?? $order->courierName ?? 'J&T Express');
-        $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
-        $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
+        $isStorePickup = $order->isStorePickup();
 
-        // If tracking number was provided, validate its format against selected courier
-        if ($trackingNum !== '') {
-            $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $trackingNum);
-            if (!$valResult['valid']) {
-                return response()->json(['message' => $valResult['error']], 422);
+        if ($isStorePickup) {
+            $courier = 'Store Pickup';
+            $trackingNum = null;
+            $trackingLink = null;
+            if ($order->courierName !== 'Store Pickup') {
+                $order->courierName = 'Store Pickup';
+                $shippingUpdated = true;
             }
-            $trackingNum = $valResult['cleaned'];
-        }
+        } else {
+            $courier = trim($request->courierName ?? $order->courierName ?? 'J&T Express');
+            $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
+            $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
 
-        if (!$trackingLink && $courier === 'J&T Express') {
-            $trackingLink = 'https://www.jtexpress.ph/track';
-        }
-
-        if ($courier && $order->courierName !== $courier) {
-            $order->courierName = $courier;
-            $shippingUpdated = true;
-        }
-        if ($trackingNum !== '' && $order->trackingNumber !== $trackingNum) {
-            $order->trackingNumber = $trackingNum;
-            $shippingUpdated = true;
-        }
-        if ($trackingLink && $order->trackingLink !== $trackingLink) {
-            $order->trackingLink = $trackingLink;
-            $shippingUpdated = true;
-        }
-
-        // Strictly require valid manual tracking number before moving to In Transit
-        if (in_array($canonicalTarget, ['In Transit'], true)) {
-            $effectiveTracking = $trackingNum ?: $order->trackingNumber;
-            if (empty($effectiveTracking)) {
-                return response()->json(['message' => 'Please enter the official courier tracking number before moving to In Transit.'], 422);
+            // If tracking number was provided, validate its format against selected courier
+            if ($trackingNum !== '') {
+                $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $trackingNum);
+                if (!$valResult['valid']) {
+                    return response()->json(['message' => $valResult['error']], 422);
+                }
+                $trackingNum = $valResult['cleaned'];
             }
-            $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $effectiveTracking);
-            if (!$valResult['valid']) {
-                return response()->json(['message' => $valResult['error']], 422);
+
+            if (!$trackingLink && $courier === 'J&T Express') {
+                $trackingLink = 'https://www.jtexpress.ph/track';
             }
-            $order->trackingNumber = $valResult['cleaned'];
+
+            if ($courier && $order->courierName !== $courier) {
+                $order->courierName = $courier;
+                $shippingUpdated = true;
+            }
+            if ($trackingNum !== '' && $order->trackingNumber !== $trackingNum) {
+                $order->trackingNumber = $trackingNum;
+                $shippingUpdated = true;
+            }
+            if ($trackingLink && $order->trackingLink !== $trackingLink) {
+                $order->trackingLink = $trackingLink;
+                $shippingUpdated = true;
+            }
+
+            // Strictly require valid manual tracking number before moving to In Transit (only for courier delivery)
+            if (in_array($canonicalTarget, ['In Transit'], true)) {
+                $effectiveTracking = $trackingNum ?: $order->trackingNumber;
+                if (empty($effectiveTracking)) {
+                    return response()->json(['message' => 'Please enter the official courier tracking number before moving to In Transit.'], 422);
+                }
+                $valResult = ValidationHelper::validateCourierTrackingNumber($courier, $effectiveTracking);
+                if (!$valResult['valid']) {
+                    return response()->json(['message' => $valResult['error']], 422);
+                }
+                $order->trackingNumber = $valResult['cleaned'];
+            }
         }
 
         $order->status = $canonicalTarget;
         if ($canonicalTarget === 'To Ship') {
             if (strcasecmp($order->paymentMethod, 'COD') === 0 || strcasecmp($order->paymentMethod, 'Cash on Delivery') === 0) {
-                // COD payment remains pending until delivered
+                // COD payment remains pending until delivered/claimed
                 $order->paymentStatus = 'Pending';
             } else {
                 // If payment was rejected, block transition to To Ship without re-verification
@@ -302,7 +314,7 @@ class OrderController extends Controller
         // Synchronize mutable fulfillment state on OrderShipping snapshot
         if ($order->shipping) {
             $shippingAttrs = ['shipping_status' => $canonicalTarget];
-            if ($order->trackingNumber) {
+            if (!$isStorePickup && $order->trackingNumber) {
                 $shippingAttrs['tracking_number'] = $order->trackingNumber;
             }
             if (!empty($order->courierName)) {
@@ -328,20 +340,31 @@ class OrderController extends Controller
             ]);
         }
 
-        $statusMsgMap = [
-            'To Ship' => 'Your order is being processed and prepared for shipping.',
-            'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
-            'In Transit' => 'Your order is in transit with the courier.',
-            'Out for Delivery' => 'Your order is out for delivery today!',
-            'Delivered' => 'Your order has been delivered. Please inspect your item and rate your purchase.',
-            'Completed' => 'Your order has been marked as completed.',
-        ];
+        if ($isStorePickup) {
+            $statusMsgMap = [
+                'To Ship' => 'Your order is being processed and prepared for in-shop pickup.',
+                'Shipped' => 'Your handcrafted order is packed and ready for in-shop pickup at our Lumban workshop!',
+                'Delivered' => 'Your order has been claimed and picked up. Please inspect your item and rate your purchase.',
+                'Completed' => 'Your store pickup order has been marked as completed.',
+            ];
+        } else {
+            $statusMsgMap = [
+                'To Ship' => 'Your order is being processed and prepared for shipping.',
+                'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
+                'In Transit' => 'Your order is in transit with the courier.',
+                'Out for Delivery' => 'Your order is out for delivery today!',
+                'Delivered' => 'Your order has been delivered. Please inspect your item and rate your purchase.',
+                'Completed' => 'Your order has been marked as completed.',
+            ];
+        }
 
         if ($canonicalCurrent === $canonicalTarget && $shippingUpdated) {
             $notifTitle = "Shipping Info Updated";
-            $statusMsg = "Your order shipping details have been updated: {$order->courierName} (Tracking: {$order->trackingNumber}).";
+            $statusMsg = $isStorePickup 
+                ? "Your order fulfillment method is confirmed for Store Pickup."
+                : "Your order shipping details have been updated: {$order->courierName} (Tracking: {$order->trackingNumber}).";
         } else {
-            $notifTitle = "Order {$canonicalTarget}";
+            $notifTitle = ($isStorePickup && $canonicalTarget === 'Shipped') ? "Ready for Pickup" : "Order {$canonicalTarget}";
             $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
         }
 

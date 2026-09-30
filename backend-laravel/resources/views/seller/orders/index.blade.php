@@ -198,6 +198,17 @@ function sellerOrdersManager() {
             this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3500);
         },
 
+        formatPaymentMethod(order) {
+            if (!order) return 'Cash on Delivery';
+            const method = (order.paymentMethod || '').trim().toUpperCase();
+            if (method === 'COD' || method === '') {
+                return 'Cash on Delivery';
+            }
+            if (method === 'GCASH') return 'GCash';
+            if (method === 'MAYA') return 'Maya';
+            return order.paymentMethod;
+        },
+
         paymentBadge(order) {
             const ps = String(order?.paymentStatus || '').toLowerCase();
             if (ps.includes('rejected')) return { text: '✕ Payment Rejected', class: 'bg-red-50 text-red-700 border-red-200' };
@@ -630,13 +641,14 @@ function sellerOrdersManager() {
             this.deliveryConfirmError = '';
 
             const target = this.deliveryConfirmOrder;
+            const isPickup = this.isStorePickup(target);
 
             try {
                 const payload = {
                     status: 'Delivered',
-                    courierName: this.courierName || target.courierName || 'J&T Express',
-                    trackingNumber: (this.trackingNumber || target.trackingNumber || '').trim() || null,
-                    trackingLink: this.trackingLink || target.trackingLink || null
+                    courierName: isPickup ? 'Store Pickup' : (this.courierName || target.courierName || 'J&T Express'),
+                    trackingNumber: isPickup ? null : ((this.trackingNumber || target.trackingNumber || '').trim() || null),
+                    trackingLink: isPickup ? null : (this.trackingLink || target.trackingLink || null)
                 };
 
                 const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
@@ -878,9 +890,15 @@ function sellerOrdersManager() {
         openDetails(order) {
             this.detailsOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
-            this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
+            if (this.isStorePickup(order)) {
+                this.courierName = 'Store Pickup';
+                this.trackingNumber = '';
+                this.trackingLink = '';
+            } else {
+                this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
+                this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
+                this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
+            }
             this.shippingError = '';
             this.packingPhotoFile = null;
             let proof = order.packingProofUrl || order.packingProof || null;
@@ -898,9 +916,15 @@ function sellerOrdersManager() {
         openStatus(order) {
             this.activeOrder = order;
             this.newStatus = order.status;
-            this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
-            this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
-            this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
+            if (this.isStorePickup(order)) {
+                this.courierName = 'Store Pickup';
+                this.trackingNumber = '';
+                this.trackingLink = '';
+            } else {
+                this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
+                this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
+                this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
+            }
             this.shippingError = '';
             this.statusModal = true;
         },
@@ -994,7 +1018,9 @@ function sellerOrdersManager() {
             }
 
             // 3. No photo selected yet: alert seller and trigger file picker
-            this.packingUploadError = 'Please upload or capture a packing proof photo before confirming shipment.';
+            this.packingUploadError = this.isStorePickup(this.detailsOrder)
+                ? 'Please upload or capture a packing proof photo before marking as Ready for Pickup.'
+                : 'Please upload or capture a packing proof photo before confirming shipment.';
             this.shippingError = this.packingUploadError;
             this.showToast('⚠️ Please select or take a packing proof photo first.');
 
@@ -1007,6 +1033,20 @@ function sellerOrdersManager() {
             if (inputEl) {
                 inputEl.click();
             }
+        },
+
+        isStorePickup(currentOrder) {
+            const order = currentOrder || this.detailsOrder || this.activeOrder;
+            if (!order) return false;
+            if (order.is_store_pickup === true) return true;
+            const pCode = (order.shipping?.provider?.code || order.shipping?.provider_code || '').toLowerCase();
+            const pName = (order.shipping?.provider_name || order.shipping?.pricing_provider_name || order.shipping?.fulfillment_provider_name || '').toLowerCase();
+            const courier = (order.courierName || '').toLowerCase();
+            return pCode === 'store_pickup' || 
+                   pName.includes('store pickup') || 
+                   pName.includes('in-shop') || 
+                   courier.includes('store pickup') || 
+                   courier.includes('in-shop');
         },
 
         async openCameraModal() {
@@ -1108,6 +1148,7 @@ function sellerOrdersManager() {
         isShippingLocked(currentOrder) {
             const order = currentOrder || this.detailsOrder || this.activeOrder;
             if (!order) return false;
+            if (this.isStorePickup(order)) return true;
             const s = this.normalizeStatus(order.status);
             return s === 'in transit' || s === 'delivered' || s === 'completed' || s === 'cancelled';
         },
@@ -1223,27 +1264,30 @@ function sellerOrdersManager() {
             this.statusUpdating = true;
 
             try {
-                const currentTracking = (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
-                const currentCourier = this.courierName || target.courierName || 'J&T Express';
+                const isPickup = this.isStorePickup(target);
+                const currentTracking = isPickup ? null : (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
+                const currentCourier = isPickup ? 'Store Pickup' : (this.courierName || target.courierName || 'J&T Express');
 
-                if (this.normalizeStatus(statusVal) === 'in transit') {
-                    const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
-                    if (!valRes.valid) {
-                        this.shippingError = valRes.message;
-                        this.statusUpdating = false;
-                        return;
-                    }
-                } else if (currentTracking) {
-                    const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
-                    if (!valRes.valid) {
-                        this.shippingError = valRes.message;
-                        this.statusUpdating = false;
-                        return;
+                if (!isPickup) {
+                    if (this.normalizeStatus(statusVal) === 'in transit') {
+                        const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
+                        if (!valRes.valid) {
+                            this.shippingError = valRes.message;
+                            this.statusUpdating = false;
+                            return;
+                        }
+                    } else if (currentTracking) {
+                        const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
+                        if (!valRes.valid) {
+                            this.shippingError = valRes.message;
+                            this.statusUpdating = false;
+                            return;
+                        }
                     }
                 }
 
-                let currentLink = target.trackingLink || null;
-                if (currentTracking) {
+                let currentLink = null;
+                if (!isPickup && currentTracking) {
                     currentLink = this.trackingLink || target.trackingLink || this.getCourierDefaultLink(currentCourier) || '';
                 }
 
@@ -1481,7 +1525,13 @@ function sellerOrdersManager() {
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
-                                  x-text="normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status"></span>
+                                  x-text="isStorePickup(order) && normalizeStatus(order.status) === 'shipped' ? 'Ready for Pickup' : (normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status)"></span>
+                            <template x-if="isStorePickup(order)">
+                                <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
+                                    <span>🏬</span>
+                                    <span>Store Pickup</span>
+                                </span>
+                            </template>
                             <template x-if="hasPendingReturn(order)">
                                 <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 animate-pulse"
                                       style="background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;">
@@ -1563,7 +1613,7 @@ function sellerOrdersManager() {
                 
                 <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">
                     <span>Status:</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="normalizeStatus(detailsOrder?.status) === 'to ship' ? 'To Ship' : detailsOrder?.status"></span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="isStorePickup(detailsOrder) && normalizeStatus(detailsOrder?.status) === 'shipped' ? 'Ready for Pickup' : (normalizeStatus(detailsOrder?.status) === 'to ship' ? 'To Ship' : detailsOrder?.status)"></span>
                 </div>
             </div>
 
@@ -1775,8 +1825,8 @@ function sellerOrdersManager() {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — hidden when Pending, To Ship, Cancellation Pending, or Return Request --}}
-                        <div x-show="normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- COURIER & SHIPPING CARD — hidden when Store Pickup, Pending, To Ship, Cancellation Pending, or Return Request --}}
+                        <div x-show="!isStorePickup(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
@@ -1853,6 +1903,41 @@ function sellerOrdersManager() {
                             </div>
                         </div>
 
+                        {{-- STORE PICKUP & WORKSHOP CLAIM CARD — shown when Store Pickup order is past pending/to ship --}}
+                        <div x-show="isStorePickup(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-1.5">
+                                    <span>🏬 Store Pickup & Workshop Claim Details</span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                    In-Shop Collection
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-white rounded-xl border border-amber-100/80">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pickup Workshop / Studio</span>
+                                    <p class="font-extrabold text-gray-900 text-xs flex items-center gap-1">
+                                        <span>📍</span>
+                                        <span x-text="detailsOrder.seller?.shop_name || detailsOrder.seller?.name || 'Artisan Workshop Studio'"></span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5 font-medium">Lumban, Laguna, Philippines</p>
+                                </div>
+                                <div class="p-3 bg-white rounded-xl border border-amber-100/80">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Logistics / Delivery Status</span>
+                                    <p class="font-extrabold text-emerald-800 text-xs flex items-center gap-1">
+                                        <span>✓</span>
+                                        <span>Free Store Pickup (₱0.00)</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5 font-medium">No courier delivery or tracking required</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-amber-100/60 rounded-xl border border-amber-200/70 text-[11px] text-amber-950 leading-relaxed font-medium">
+                                <span class="font-bold">Claiming Guide:</span> The buyer will personally collect their order from your workshop. Once the customer verifies the garment and receives their package, click <strong>"Mark as Picked Up / Claimed"</strong> below.
+                            </div>
+                        </div>
+
 
                         {{-- Order Status History Timeline Audit Trail --}}
                         <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">
@@ -1920,7 +2005,7 @@ function sellerOrdersManager() {
 
                         {{-- Buyer & Shipping Info Card --}}
                         <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-3">
-                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Buyer & Shipping Details</div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]" x-text="isStorePickup(detailsOrder) ? 'Buyer & In-Shop Pickup Details' : 'Buyer & Shipping Details'"></div>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
@@ -1941,10 +2026,22 @@ function sellerOrdersManager() {
                                 </div>
                             </div>
 
-                            <div class="pt-2 border-t border-gray-200/60 text-xs">
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
-                                <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
-                            </div>
+                            <template x-if="isStorePickup(detailsOrder)">
+                                <div class="pt-2 border-t border-gray-200/60 text-xs space-y-1">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Method & Location</div>
+                                    <div class="text-gray-800 font-medium mt-0.5 leading-relaxed flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">🏬 In-Shop Store Pickup</span>
+                                        <span>· Lumban, Laguna Workshop</span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="!isStorePickup(detailsOrder)">
+                                <div class="pt-2 border-t border-gray-200/60 text-xs">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
+                                    <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                                </div>
+                            </template>
                         </div>
 
                         {{-- Purchased Product Items --}}
@@ -1982,13 +2079,18 @@ function sellerOrdersManager() {
                                 </div>
                                 <div class="flex items-center justify-between text-gray-500">
                                     <span class="flex items-center gap-1.5">
-                                        <span>Shipping Logistics</span>
-                                        <template x-if="detailsOrder.shipping">
+                                        <span x-text="isStorePickup(detailsOrder) ? 'Fulfillment' : 'Shipping Logistics'"></span>
+                                        <template x-if="isStorePickup(detailsOrder)">
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 bg-amber-50 border border-amber-200 rounded text-amber-800">
+                                                Store Pickup (Free)
+                                            </span>
+                                        </template>
+                                        <template x-if="!isStorePickup(detailsOrder) && detailsOrder.shipping">
                                             <span class="text-[9px] font-bold px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-700" 
                                                   x-text="detailsOrder.shipping.provider_name + ' (' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg)'"></span>
                                         </template>
                                     </span>
-                                    <span class="font-bold text-black" x-text="'₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                    <span class="font-bold text-black" x-text="isStorePickup(detailsOrder) ? '₱0.00' : ('₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}))"></span>
                                 </div>
                                 <div class="flex items-center justify-between pt-2 border-t border-dashed border-gray-200">
                                     <span class="font-bold text-gray-700 uppercase tracking-wider text-[11px]">Grand Total Amount</span>
@@ -2002,7 +2104,7 @@ function sellerOrdersManager() {
                             <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]">Payment Details</div>
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Method</span>
-                                <span class="font-black text-black uppercase" x-text="detailsOrder.paymentMethod || 'COD'"></span>
+                                <span class="font-black text-black" x-text="formatPaymentMethod(detailsOrder)"></span>
                             </div>
                             <template x-if="['GCASH', 'MAYA'].includes((detailsOrder.paymentMethod || '').toUpperCase()) && detailsOrder.paymentReference && !detailsOrder.paymentReference.startsWith('COD-')">
                                 <div class="flex items-center justify-between">
@@ -2103,7 +2205,7 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment --}}
+                    {{-- Button for To Ship status: Upload Packing Proof & Confirm Shipment / Ready for Pickup --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'">
                         <div class="flex-1 flex justify-end">
                             <button type="button"
@@ -2117,35 +2219,52 @@ function sellerOrdersManager() {
                                 <template x-if="!packingUploading && !statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </template>
-                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))"></span>
+                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : 'Confirm Shipment (Mark Shipped) ➔') : (packingPhotoFile ? (isStorePickup(detailsOrder) ? 'Upload & Mark Ready for Pickup ➔' : 'Upload & Confirm Shipment ➔') : (isStorePickup(detailsOrder) ? 'Upload Proof & Mark Ready ➔' : 'Upload Proof & Confirm Shipment ➔'))))"></span>
                             </button>
                         </div>
                     </template>
 
-                    {{-- Button for Shipped status: Mark In Transit (requires seller to input tracking number) --}}
+                    {{-- Button for Shipped status: For Store Pickup (Mark as Picked Up / Claimed) vs Courier (Mark In Transit) --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
                         <div class="flex-1 flex justify-end">
-                            <button type="button"
-                                @click="(() => {
-                                    const valRes = validateTrackingNumber(courierName, trackingNumber);
-                                    if (!valRes.valid) {
-                                        shippingError = valRes.message;
-                                    } else {
-                                        shippingError = '';
-                                        updateStatus(detailsOrder, 'In Transit');
-                                    }
-                                })()"
-                                :disabled="statusUpdating"
-                                style="background-color: #000000; color: #ffffff;"
-                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                                <template x-if="statusUpdating">
-                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                                </template>
-                                <template x-if="!statusUpdating">
-                                    <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                </template>
-                                <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
-                            </button>
+                            <template x-if="isStorePickup(detailsOrder)">
+                                <button type="button"
+                                    @click="confirmMarkAsDelivered(detailsOrder)"
+                                    :disabled="statusUpdating"
+                                    style="background-color: #059669; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                    <template x-if="statusUpdating">
+                                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    </template>
+                                    <template x-if="!statusUpdating">
+                                        <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    </template>
+                                    <span x-text="statusUpdating ? 'Updating...' : 'Mark as Picked Up / Claimed ➔'"></span>
+                                </button>
+                            </template>
+                            <template x-if="!isStorePickup(detailsOrder)">
+                                <button type="button"
+                                    @click="(() => {
+                                        const valRes = validateTrackingNumber(courierName, trackingNumber);
+                                        if (!valRes.valid) {
+                                            shippingError = valRes.message;
+                                        } else {
+                                            shippingError = '';
+                                            updateStatus(detailsOrder, 'In Transit');
+                                        }
+                                    })()"
+                                    :disabled="statusUpdating"
+                                    style="background-color: #000000; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                    <template x-if="statusUpdating">
+                                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    </template>
+                                    <template x-if="!statusUpdating">
+                                        <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </template>
+                                    <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
+                                </button>
+                            </template>
                         </div>
                     </template>
 

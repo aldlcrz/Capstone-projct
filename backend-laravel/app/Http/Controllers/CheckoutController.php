@@ -227,9 +227,11 @@ class CheckoutController extends Controller
             }
         }
 
-        if (empty($cart) || empty($cart[0])) {
+        $cartValues = array_values(array_filter((array)$cart, fn($i) => !empty($i)));
+        if (empty($cartValues)) {
             return response()->json(['success' => false, 'message' => 'Cart is empty.'], 422);
         }
+        $cart = $cartValues;
 
         $address = Address::where('id', $request->address_id)
             ->where('userId', Auth::id())
@@ -367,9 +369,11 @@ class CheckoutController extends Controller
                 $cart = session()->get('cart', []);
             }
 
-            if (empty($cart) || empty($cart[0])) {
+            $cartValues = array_values(array_filter((array)$cart, fn($i) => !empty($i)));
+            if (empty($cartValues)) {
                 throw new \Exception('Cart is empty');
             }
+            $cart = $cartValues;
 
             // 2. Handle Receipt Upload & Screening for Online Payments
             $screening = null;

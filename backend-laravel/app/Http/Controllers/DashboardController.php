@@ -687,7 +687,7 @@ class DashboardController extends Controller
             $status = strtolower($request->input('status', 'all'));
 
             $query = Order::where('sellerId', $sellerId)
-                ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests', 'shipping']);
+                ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests', 'shipping.provider', 'seller']);
 
             if ($request->filled('search')) {
                 $s = strtolower($request->search);

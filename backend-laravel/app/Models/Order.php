@@ -36,6 +36,17 @@ class Order extends Model
     ];
 
     /**
+     * The accessors to append to the model's array and JSON form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'is_store_pickup',
+        'packing_proof_url',
+        'resolved_payment_status',
+    ];
+
+    /**
      * The primary key type.
      *
      * @var string
@@ -282,5 +293,53 @@ class Order extends Model
     public function scopeActive($query)
     {
         return $query->whereNotIn('status', ['Cancelled', 'cancelled', 'cancellation pending', 'cancellation requested']);
+    }
+
+    /**
+     * Check if this order uses Store Pickup / Workshop collection.
+     */
+    public function isStorePickup(): bool
+    {
+        if ($this->relationLoaded('shipping') && $this->shipping) {
+            $pCode = strtolower((string) ($this->shipping->provider?->code ?? ''));
+            $pName = strtolower((string) ($this->shipping->provider_name ?? ''));
+            $pricingName = strtolower((string) ($this->shipping->pricing_provider_name ?? ''));
+            $fulfillName = strtolower((string) ($this->shipping->fulfillment_provider_name ?? ''));
+
+            if ($pCode === 'store_pickup' || 
+                str_contains($pName, 'store pickup') || 
+                str_contains($pName, 'in-shop') ||
+                str_contains($pricingName, 'store pickup') || 
+                str_contains($fulfillName, 'store pickup')) {
+                return true;
+            }
+        } elseif (!$this->relationLoaded('shipping')) {
+            $shipping = $this->shipping()->with('provider')->first();
+            if ($shipping) {
+                $pCode = strtolower((string) ($shipping->provider?->code ?? ''));
+                $pName = strtolower((string) ($shipping->provider_name ?? ''));
+                $pricingName = strtolower((string) ($shipping->pricing_provider_name ?? ''));
+                $fulfillName = strtolower((string) ($shipping->fulfillment_provider_name ?? ''));
+
+                if ($pCode === 'store_pickup' || 
+                    str_contains($pName, 'store pickup') || 
+                    str_contains($pName, 'in-shop') ||
+                    str_contains($pricingName, 'store pickup') || 
+                    str_contains($fulfillName, 'store pickup')) {
+                    return true;
+                }
+            }
+        }
+
+        $courier = strtolower((string) ($this->courierName ?? ''));
+        return str_contains($courier, 'store pickup') || str_contains($courier, 'in-shop');
+    }
+
+    /**
+     * Accessor for is_store_pickup.
+     */
+    public function getIsStorePickupAttribute(): bool
+    {
+        return $this->isStorePickup();
     }
 }

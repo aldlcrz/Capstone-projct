@@ -753,18 +753,10 @@
                         <p style="font-size:9px;color:#A8A096;margin:0;">Packed unit weight</p>
                     </div>
 
-                    {{-- Package Dimensions (L x W x H in cm) --}}
-                    <div id="package-dimensions-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);grid-column:span 2;">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Package Dimensions L × W × H (cm) <span style="color:#DC2626;">*</span></label>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <input type="number" name="package_length_per_unit" placeholder="L (30)" min="1" step="0.1" value="{{ old('package_length_per_unit', '30') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
-                            <span style="color:#A8A096;font-size:12px;">×</span>
-                            <input type="number" name="package_width_per_unit" placeholder="W (20)" min="1" step="0.1" value="{{ old('package_width_per_unit', '20') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
-                            <span style="color:#A8A096;font-size:12px;">×</span>
-                            <input type="number" name="package_height_per_unit" placeholder="H (5)" min="1" step="0.1" value="{{ old('package_height_per_unit', '5') }}" required style="width:33%;background:#fff;border:1px solid #D6CEBE;border-radius:8px;padding:4px 8px;font-size:14px;font-weight:700;color:#1E1915;">
-                        </div>
-                        <p style="font-size:9px;color:#A8A096;margin:0;">Length × Width × Height (per unit)</p>
-                    </div>
+                    {{-- Hidden Default Package Dimensions (30 x 20 x 5 cm) --}}
+                    <input type="hidden" name="package_length_per_unit" value="{{ old('package_length_per_unit', '30') }}">
+                    <input type="hidden" name="package_width_per_unit" value="{{ old('package_width_per_unit', '20') }}">
+                    <input type="hidden" name="package_height_per_unit" value="{{ old('package_height_per_unit', '5') }}">
 
                     {{-- Handling / Prep Days --}}
                     <div id="handling-days-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
@@ -2736,16 +2728,8 @@ function addProductManager() {
                 return;
             }
 
-            const len = parseFloat(document.querySelector('input[name="package_length_per_unit"]')?.value || 0);
-            const wid = parseFloat(document.querySelector('input[name="package_width_per_unit"]')?.value || 0);
-            const hgt = parseFloat(document.querySelector('input[name="package_height_per_unit"]')?.value || 0);
-            if (isNaN(len) || len < 1 || isNaN(wid) || wid < 1 || isNaN(hgt) || hgt < 1) {
-                const dimCard = document.getElementById('package-dimensions-card');
-                if (dimCard) dimCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                if (dimCard) dimCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                triggerAppModal('Package Dimensions Required', 'Please enter valid package dimensions (Length, Width, Height) of at least 1 cm each.', 'warning');
-                return;
-            }
+            // Package dimensions default to 30x20x5 automatically
+
 
             const handlingDaysVal = parseInt(document.getElementById('handlingDaysInput')?.value || 0);
             if (isNaN(handlingDaysVal) || handlingDaysVal < 1 || handlingDaysVal > 30) {
@@ -3190,17 +3174,7 @@ function validateProductForm(e, isEdit = false) {
         if (pkgWeightInput) pkgWeightInput.classList.add('border-red-500');
     }
 
-    const pkgLenInput = document.querySelector('input[name="package_length_per_unit"]');
-    const pkgWidInput = document.querySelector('input[name="package_width_per_unit"]');
-    const pkgHgtInput = document.querySelector('input[name="package_height_per_unit"]');
-    const dimCard = document.getElementById('package-dimensions-card');
-    const lenVal = parseFloat(pkgLenInput ? pkgLenInput.value : 0);
-    const widVal = parseFloat(pkgWidInput ? pkgWidInput.value : 0);
-    const hgtVal = parseFloat(pkgHgtInput ? pkgHgtInput.value : 0);
-    if (isNaN(lenVal) || lenVal < 1 || isNaN(widVal) || widVal < 1 || isNaN(hgtVal) || hgtVal < 1) {
-        errors.push('Package Dimensions (Length, Width, Height) must be at least 1 cm each.');
-        if (dimCard) dimCard.classList.add('border-red-500');
-    }
+
 
     const handlingDaysInput = document.querySelector('input[name="handling_days"]');
     const handlingDaysCard = document.getElementById('handling-days-card');

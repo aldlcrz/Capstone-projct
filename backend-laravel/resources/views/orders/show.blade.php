@@ -80,18 +80,21 @@
         {{-- Order Status Header Card --}}
         @php
             $statusLower = strtolower(trim($order->status ?? ''));
-            $customerStatusDisplay = match($statusLower) {
-                'completed' => 'Completed',
-                'delivered' => 'Delivered',
-                'in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery' => 'To Receive',
-                'to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped' => 'To Ship',
-                'cancellation pending', 'cancellation requested' => 'Cancellation Pending',
-                'cancelled' => 'Cancelled',
+            $isStorePickup = $order->isStorePickup();
+            $customerStatusDisplay = match(true) {
+                $statusLower === 'completed' => 'Completed',
+                $statusLower === 'delivered' => ($isStorePickup ? 'Picked Up / Claimed' : 'Delivered'),
+                $isStorePickup && $statusLower === 'shipped' => 'Ready for Pickup',
+                in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'To Receive',
+                in_array($statusLower, ['to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped'], true) => 'To Ship',
+                in_array($statusLower, ['cancellation pending', 'cancellation requested'], true) => 'Cancellation Pending',
+                $statusLower === 'cancelled' => 'Cancelled',
                 default => 'Order Placed',
             };
             $statusPillClass = match($customerStatusDisplay) {
                 'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                'Delivered' => 'bg-teal-50 text-teal-700 border border-teal-200',
+                'Delivered', 'Picked Up / Claimed' => 'bg-teal-50 text-teal-700 border border-teal-200',
+                'Ready for Pickup' => 'bg-amber-50 text-amber-800 border border-amber-200',
                 'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
                 'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
                 'Cancellation Pending' => 'bg-orange-50 text-orange-700 border border-orange-200',
@@ -117,6 +120,11 @@
                         <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:10px;color:#DFC97A;font-weight:800;font-size:11px;">
                             #LB-OR-{{ strtoupper(substr($order->id, -8)) }}
                         </span>
+                        @if($isStorePickup)
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
+                                🏬 Store Pickup
+                            </span>
+                        @endif
                     </div>
                     <p style="font-size:12px;color:#78716C;margin:2px 0 0 0;">
                         Placed {{ $order->createdAt ? $order->createdAt->format('M d, Y \a\t g:i A') : 'Recently' }}
@@ -141,16 +149,38 @@
             </div>
         </div>
 
-        {{-- Shipment Tracking Card (4 Standard Customer Steps) --}}
+        {{-- Fulfillment Tracking Card --}}
         @php
-            $steps = [
+            $steps = $isStorePickup ? [
+                ['label' => 'Order Placed',  'status' => 'pending'],
+                ['label' => 'Preparing',     'status' => 'to ship'],
+                ['label' => 'Ready for Pickup', 'status' => 'shipped'],
+                ['label' => 'Picked Up',    'status' => 'delivered'],
+            ] : [
                 ['label' => 'Order Placed',  'status' => 'pending'],
                 ['label' => 'To Ship',       'status' => 'to ship'],
                 ['label' => 'To Receive',    'status' => 'to receive'],
                 ['label' => 'Delivered',     'status' => 'delivered'],
             ];
 
-            $statusRanks = [
+            $statusRanks = $isStorePickup ? [
+                'pending'          => 0,
+                'processing'       => 1,
+                'to ship'          => 1,
+                'ready to ship'    => 1,
+                'ready_to_ship'    => 1,
+                'shipped'          => 2,
+                'in transit'       => 2,
+                'in_transit'       => 2,
+                'to receive'       => 2,
+                'out for delivery' => 2,
+                'out_for_delivery' => 2,
+                'delivered'        => 3,
+                'completed'        => 3,
+                'cancelled'        => -1,
+                'cancellation pending'   => 0,
+                'cancellation requested' => 0,
+            ] : [
                 'pending'          => 0,
                 'processing'       => 1,
                 'to ship'          => 1,
@@ -212,7 +242,9 @@
             <div class="flex items-center justify-between mb-4 pb-2.5" style="border-bottom:1px solid #EAE1D0;">
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2m-6 0a1 1 0 01-1-1m8 1a1 1 0 001-1m-6 0h4"/></svg>
-                    <span style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">Shipment Tracking</span>
+                    <span style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
+                        {{ $isStorePickup ? 'Store Pickup Fulfillment Progress' : 'Shipment Tracking' }}
+                    </span>
                 </div>
             </div>
 
@@ -369,15 +401,19 @@
                             </div>
                             <div class="flex items-center justify-between text-[#78716C]">
                                 <span class="flex items-center gap-1.5">
-                                    <span>Shipping</span>
-                                    @if($order->shipping)
+                                    <span>{{ $isStorePickup ? 'Fulfillment' : 'Shipping' }}</span>
+                                    @if($isStorePickup)
+                                        <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800">
+                                            Store Pickup (Free)
+                                        </span>
+                                    @elseif($order->shipping)
                                         <span class="text-[9px] font-bold px-1.5 py-0.2 bg-[#FAF8F5] border border-[#ECE3D2] rounded text-[#1E1915]">
                                             {{ $order->shipping->pricing_provider_name ?? $order->shipping->provider_name }} ({{ number_format($order->shipping->chargeable_weight, 2) }} kg)
                                         </span>
                                     @endif
                                 </span>
                                 <span class="font-bold text-[#1E1915]">
-                                    ₱{{ number_format($order->shipping?->shipping_fee ?? ($order->shippingFee ?? 0), 2) }}
+                                    ₱{{ number_format($isStorePickup ? 0 : ($order->shipping?->shipping_fee ?? ($order->shippingFee ?? 0)), 2) }}
                                 </span>
                             </div>
                         </div>
@@ -403,7 +439,7 @@
                         <div class="space-y-3 pt-2">
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-bold text-[#8C827A] uppercase tracking-wider text-[10px]">Method</span>
-                                <span class="font-black text-[#1E1915] text-xs px-2.5 py-1 bg-[#FAF8F5] rounded-lg border border-[#ECE3D2] uppercase">{{ $order->paymentMethod ?? 'GCash' }}</span>
+                                <span class="font-black text-[#1E1915] text-xs px-2.5 py-1 bg-[#FAF8F5] rounded-lg border border-[#ECE3D2]">{{ strtoupper($order->paymentMethod ?? '') === 'COD' ? 'Cash on Delivery' : ($order->paymentMethod ?? 'GCash') }}</span>
                             </div>
 
                             <div class="flex items-center justify-between text-xs">
@@ -477,9 +513,9 @@
             </div>
         </div>
 
-        {{-- ROW 2: Ship To & Sold By --}}
+        {{-- ROW 2: Ship To / Pickup & Sold By --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
-            {{-- Left: Ship To (7 cols) --}}
+            {{-- Left: Ship To / Pickup Point (7 cols) --}}
             <div class="{{ $order->seller ? 'lg:col-span-7' : 'lg:col-span-12' }} flex flex-col">
                 @php
                     $addr = $order->normalized_shipping_address;
@@ -501,19 +537,29 @@
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;" class="space-y-2 h-full flex flex-col justify-between">
                     <div>
                         <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#78716C] pb-2" style="border-bottom:1px solid #EAE1D0;">
-                            <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>Ship To</span>
+                            @if($isStorePickup)
+                                <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span>Pickup Point & Customer</span>
+                            @else
+                                <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Ship To</span>
+                            @endif
                         </div>
 
                         <div class="space-y-1 pt-2">
                             <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
-                            @if($streetLine)
-                                <p class="text-xs text-[#78716C] leading-relaxed font-medium">{{ $streetLine }}</p>
-                            @endif
-                            @if($locality || !empty($addr['postalCode']))
-                                <p class="text-xs text-[#78716C] leading-relaxed font-medium">
-                                    {{ $locality }}@if(!empty($addr['postalCode'])) · {{ $addr['postalCode'] }}@endif
-                                </p>
+                            @if($isStorePickup)
+                                <p class="text-xs text-emerald-800 font-bold leading-relaxed">🏬 Self-Pickup at Workshop (Lumban, Laguna)</p>
+                                <p class="text-[11px] text-[#78716C] leading-relaxed">Present your Order ID (#{{ $order->trackingNumber ?? $order->orderID }}) upon claiming.</p>
+                            @else
+                                @if($streetLine)
+                                    <p class="text-xs text-[#78716C] leading-relaxed font-medium">{{ $streetLine }}</p>
+                                @endif
+                                @if($locality || !empty($addr['postalCode']))
+                                    <p class="text-xs text-[#78716C] leading-relaxed font-medium">
+                                        {{ $locality }}@if(!empty($addr['postalCode'])) · {{ $addr['postalCode'] }}@endif
+                                    </p>
+                                @endif
                             @endif
                         </div>
                     </div>

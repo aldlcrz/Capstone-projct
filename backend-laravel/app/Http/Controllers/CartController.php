@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Support\CartHelper;
 use App\Support\VariationFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,53 +18,11 @@ class CartController extends Controller
                 ->with('info', 'Administrators do not have a customer shopping cart.');
         }
 
-        $cart = session()->get('cart', []);
-        $updated = false;
+        $rawCart = session()->get('cart', []);
+        $cart = CartHelper::consolidateCart($rawCart);
 
-        foreach ($cart as $key => &$item) {
-            $item['key'] = (string) $key;
-            $product = Product::with('seller')->find($item['id']);
-            if (!$product) {
-                unset($cart[$key]);
-                $updated = true;
-                continue;
-            }
-
-            // Sync current price in case it changed
-            if ($item['price'] != $product->sale_price) {
-                $item['price'] = $product->sale_price;
-                $updated = true;
-            }
-
-            // Sync current stock limits
-            $size = $item['size'] ?? null;
-            $availableStock = $product->stock;
-            if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
-                $availableStock = (int) $product->size_stocks[$size];
-            }
-
-            if ($item['quantity'] > $availableStock) {
-                if ($availableStock <= 0) {
-                    unset($cart[$key]);
-                } else {
-                    $item['quantity'] = $availableStock;
-                }
-                $updated = true;
-            }
-
-            // Dynamic detail injection for UI rendering
-            $seller = $product->seller;
-            $item['name'] = $product->name;
-            $item['image'] = VariationFormatter::getImageForVariation($item['variation'] ?? null, $product) ?: $product->getImageUrl();
-            $item['original_price'] = $product->price;
-            $item['discount_percentage'] = $product->discount_percentage;
-            $item['is_on_sale'] = $product->is_on_sale && ($product->discount_percentage > 0);
-            $item['category_name'] = $product->category->name ?? 'Traditional';
-            $item['sellerId'] = $product->sellerId ?? ($seller->id ?? 'unknown');
-            $item['shop_name'] = $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop';
-        }
-
-        if ($updated) {
+        // Check if consolidation or product state change caused cart to update
+        if ($cart !== $rawCart) {
             session()->put('cart', $cart);
             $user = Auth::user();
             if ($user instanceof User) {
@@ -111,9 +70,8 @@ class CartController extends Controller
                 ->with('info', 'Please log in or register to complete adding this item to your cart.');
         }
 
-        $productId = $request->input('productId');
-        $quantity = (int) $request->input('quantity', 1);
-        $size = $request->input('size');
+        $productId = (string) $request->input('productId');
+        $quantity = max(1, (int) $request->input('quantity', 1));
         $product = Product::with('seller')->findOrFail($productId);
 
         // Guard: Administrators cannot purchase or add items to cart
@@ -156,48 +114,63 @@ class CartController extends Controller
             }
         }
 
-        $variation = VariationFormatter::label($request->input('variation'), $product->image)
-            ?? $request->input('variation');
+        $size = CartHelper::normalizeSize($request->input('size'));
+        $variation = CartHelper::normalizeVariation($request->input('variation'), $product);
 
         // Get available stock for selected size or overall product
-        $availableStock = $product->stock;
+        $availableStock = (int) $product->stock;
         if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
             $availableStock = (int) $product->size_stocks[$size];
         }
 
-        $cart = session()->get('cart', []);
+        if ($availableStock <= 0) {
+            $errMsg = $size ? "Size {$size} is currently out of stock." : "This product is currently out of stock.";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errMsg], 422);
+            }
+            return redirect()->back()->with('error', $errMsg);
+        }
 
-        $key = $productId . '_' . ($size ?? '') . '_' . ($variation ?? '');
+        // Consolidate current cart first to ensure existing items have canonical keys
+        $cart = CartHelper::consolidateCart(session()->get('cart', []));
+        $key = CartHelper::getCanonicalKey($product->id, $size, $variation, $product);
 
         // Safe image resolution for selected variation
         $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
+        $seller = $product->seller;
 
         if (isset($cart[$key])) {
+            // Merge quantity onto existing item
             $newQuantity = $cart[$key]['quantity'] + $quantity;
             $updatedItem = $cart[$key];
             $updatedItem['key'] = $key;
             $updatedItem['quantity'] = min($newQuantity, $availableStock);
+            $updatedItem['price'] = (float) $product->sale_price;
             $updatedItem['image'] = $image;
             $updatedItem['name'] = $product->name;
+            $updatedItem['size'] = $size;
+            $updatedItem['variation'] = $variation;
+
+            // Re-insert at top of cart preserving order
             unset($cart[$key]);
             $cart = [$key => $updatedItem] + $cart;
         } else {
             $newItem = [
-                'key' => $key,
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->sale_price,
-                'image' => $image,
-                'quantity' => min($quantity, $availableStock),
-                'size' => $size,
-                'variation' => $variation,
-                'sellerId' => $product->sellerId,
-                'shippingFee' => $product->shippingFee ?? 0,
-                'original_price' => $product->price,
-                'discount_percentage' => $product->discount_percentage,
-                'is_on_sale' => $product->is_on_sale && ($product->discount_percentage > 0),
-                'category_name' => $product->category->name ?? 'Traditional',
-                'shop_name' => $product->seller ? ($product->seller->shopName ?: $product->seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                'key'                 => $key,
+                'id'                  => $product->id,
+                'name'                => $product->name,
+                'price'               => (float) $product->sale_price,
+                'image'               => $image,
+                'quantity'            => min($quantity, $availableStock),
+                'size'                => $size,
+                'variation'           => $variation,
+                'sellerId'            => $product->sellerId,
+                'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                'original_price'      => (float) $product->price,
+                'discount_percentage' => (float) $product->discount_percentage,
+                'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
+                'category_name'       => $product->category->name ?? 'Traditional',
+                'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
             ];
             $cart = [$key => $newItem] + $cart;
         }
@@ -210,10 +183,10 @@ class CartController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Product added to cart!',
+                'success'    => true,
+                'message'    => 'Product added to cart!',
                 'cart_count' => count($cart),
-                'cart' => $cart
+                'cart'       => $cart
             ]);
         }
 
@@ -222,7 +195,7 @@ class CartController extends Controller
 
     public function update(Request $request)
     {
-        $key = $request->input('key');
+        $key = (string) $request->input('key');
         $quantity = (int) $request->input('quantity');
 
         $cart = session()->get('cart', []);
@@ -236,7 +209,7 @@ class CartController extends Controller
                 $product = Product::find($productId);
                 if ($product) {
                     $size = $cart[$key]['size'] ?? null;
-                    $availableStock = $product->stock;
+                    $availableStock = (int) $product->stock;
                     if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
                         $availableStock = (int) $product->size_stocks[$size];
                     }
@@ -254,9 +227,9 @@ class CartController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
+                'success'    => true,
                 'cart_count' => count($cart),
-                'cart' => $cart
+                'cart'       => $cart
             ]);
         }
 

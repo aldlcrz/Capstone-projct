@@ -507,7 +507,7 @@
                                 </div>
 
                                 <!-- Active Attached File Display -->
-                                <div x-show="fileName" x-cloak class="space-y-2">
+                                <div x-show="fileName" x-cloak class="space-y-3">
                                     <div class="p-3.5 bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl flex items-center justify-between gap-3 shadow-xs">
                                         <div class="flex items-center gap-3 min-w-0">
                                             <template x-if="filePreview">
@@ -523,13 +523,29 @@
                                                     <span class="text-xs font-bold text-gray-900 truncate" x-text="fileName"></span>
                                                     <span class="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">Attached</span>
                                                 </div>
-                                                <p class="text-[10px] text-gray-500 font-medium" x-text="aiChecking ? 'Verifying receipt...' : (aiVerificationResult ? 'Verification Complete' : 'Receipt image attached')"></p>
+                                                <p class="text-[10px] text-gray-500 font-medium" x-text="aiChecking ? 'Verifying receipt...' : (aiVerificationResult ? 'Scan Complete' : 'Receipt image attached')"></p>
                                             </div>
                                         </div>
                                         <button type="button" @click="removeFile()" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0 cursor-pointer" title="Remove photo">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
                                     </div>
+
+                                    <!-- Extracted Reference Number Display Card -->
+                                    <template x-if="!aiChecking && aiVerificationResult && aiVerificationResult.detected_ref">
+                                        <div class="p-3.5 bg-white border border-[#E2D9C8] rounded-xl flex items-center justify-between gap-3 shadow-2xs">
+                                            <div>
+                                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Reference Number</span>
+                                                <span class="font-mono text-sm sm:text-base font-extrabold text-[#1E1915] tracking-wider" x-text="aiVerificationResult.detected_ref"></span>
+                                            </div>
+                                            <template x-if="aiVerificationResult.detected_amount !== null && aiVerificationResult.detected_amount !== undefined">
+                                                <div class="text-right">
+                                                    <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Receipt Amount</span>
+                                                    <span class="font-mono text-xs font-bold text-[#1E1915]" x-text="'₱' + Number(aiVerificationResult.detected_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
 
                                     <!-- Verification Status Card -->
                                     <div x-show="aiChecking" x-cloak class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 font-bold animate-pulse">
@@ -538,48 +554,23 @@
                                     </div>
 
                                     <template x-if="!aiChecking && aiVerificationResult">
-                                        <div class="p-3.5 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all"
+                                        <div class="p-3.5 rounded-xl border flex items-start gap-3 text-xs transition-all"
                                              :class="{
-                                                 'bg-emerald-50/80 border-emerald-200 text-emerald-800': aiVerificationResult.status === 'PASS',
-                                                 'bg-stone-50 border-stone-200 text-stone-800': aiVerificationResult.status === 'REVIEW',
-                                                 'bg-rose-50/80 border-rose-200 text-rose-800': aiVerificationResult.status === 'REJECT' || aiVerificationResult.is_receipt === false
+                                                 'bg-emerald-50/80 border-emerald-200 text-emerald-900': isVerificationSuccess(),
+                                                 'bg-amber-50/80 border-amber-200 text-amber-900': isVerificationWarning(),
+                                                 'bg-rose-50/80 border-rose-200 text-rose-900': isVerificationError()
                                              }">
-                                            <span class="text-sm shrink-0" x-text="aiVerificationResult.status === 'PASS' ? '✓' : (aiVerificationResult.status === 'REVIEW' ? '✓' : '❌')"></span>
-                                            <div class="space-y-1">
-                                                <div class="font-extrabold uppercase text-[10px] tracking-wider"
-                                                     x-text="aiVerificationResult.status === 'PASS' 
-                                                         ? 'Receipt Verification Passed' 
-                                                         : (aiVerificationResult.status === 'REVIEW' ? 'Upload Complete — For Seller Verification' : 'Receipt Verification Rejected')"></div>
-                                                <p class="text-[11px] font-medium leading-relaxed" x-text="aiVerificationResult.message"></p>
-                                                <template x-if="aiVerificationResult.detected_ref || aiVerificationResult.detected_amount !== undefined">
-                                                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                        <template x-if="aiVerificationResult.detected_ref">
-                                                            <div class="text-[10px] font-mono bg-blue-50 text-blue-900 border border-blue-200 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs">
-                                                                <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                                                <span>Ref:</span>
-                                                                <span class="font-bold" x-text="aiVerificationResult.detected_ref"></span>
-                                                            </div>
-                                                        </template>
-                                                        <template x-if="aiVerificationResult.detected_amount !== null && aiVerificationResult.detected_amount !== undefined">
-                                                            <div class="text-[10px] font-mono px-2 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs"
-                                                                 :class="Math.abs(Number(aiVerificationResult.detected_amount) - {{ (float)($grandTotal ?? 0) }}) < 0.01 
-                                                                     ? 'bg-emerald-100/70 text-emerald-900 border border-emerald-300' 
-                                                                     : 'bg-amber-100/70 text-amber-900 border border-amber-300'">
-                                                                <span>Receipt Amount:</span>
-                                                                <span class="font-bold" x-text="'₱' + Number(aiVerificationResult.detected_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                                                                <span x-show="Math.abs(Number(aiVerificationResult.detected_amount) - {{ (float)($grandTotal ?? 0) }}) < 0.01" class="text-emerald-700">✓ Match</span>
-                                                            </div>
-                                                        </template>
-                                                        <template x-if="aiVerificationResult.detected_ref">
-                                                            <button type="button" 
-                                                                    @click="paymentRef = aiVerificationResult.detected_ref.replace(/\D/g, ''); ocrExtracted = true; validateRef(); checkServerReference();"
-                                                                    x-show="paymentRef !== aiVerificationResult.detected_ref.replace(/\D/g, '')"
-                                                                    class="text-[10px] font-bold text-[#996515] hover:underline px-2.5 py-1 bg-[#FAF5EA] hover:bg-[#FAF5EA]/80 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1 border border-[#E6D8BA]">
-                                                                <span>Use Detected Ref</span>
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                            </button>
-                                                        </template>
-                                                    </div>
+                                            <span class="text-base shrink-0 leading-none mt-0.5 font-black"
+                                                  :class="{
+                                                      'text-emerald-600': isVerificationSuccess(),
+                                                      'text-amber-600': isVerificationWarning(),
+                                                      'text-rose-600': isVerificationError()
+                                                  }"
+                                                  x-text="getVerificationIcon()"></span>
+                                            <div class="space-y-1 min-w-0 flex-1">
+                                                <div class="font-extrabold text-xs tracking-tight" x-text="getVerificationPrimaryMessage()"></div>
+                                                <template x-if="getVerificationSecondaryMessage()">
+                                                    <p class="text-[11px] font-normal leading-relaxed opacity-90" x-text="getVerificationSecondaryMessage()"></p>
                                                 </template>
                                             </div>
                                         </div>
@@ -1543,6 +1534,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             const val = (this.paymentRef || '').trim();
             if (!val) return;
             const csrfToken = document.querySelector('input[name=_token]')?.value || '';
+            const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
 
             fetch('/ai/payment-reference/check', {
                 method: 'POST',
@@ -1555,19 +1547,83 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             .then(res => res.json())
             .then(data => {
                 if (data.is_duplicate) {
-                    this.refError = data.message || '❌ Security Alert: This payment reference number has already been used in another order.';
+                    this.refError = data.message || `${provider} reference is already used.`;
                     this.isRefDuplicate = true;
                 } else if (!data.is_valid && data.message) {
                     this.refError = data.message;
                     this.isRefDuplicate = false;
                 } else {
                     this.isRefDuplicate = false;
-                    if (this.refError.includes('Security Alert') || this.refError.includes('already been used') || this.refError.includes('Invalid payment reference')) {
-                        this.refError = '';
-                    }
+                    this.refError = '';
                 }
             })
             .catch(() => {});
+        },
+
+        isVerificationSuccess() {
+            if (!this.aiVerificationResult) return false;
+            const res = this.aiVerificationResult;
+            if (res.is_receipt === false || res.status === 'REJECT') return false;
+            if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED') return false;
+            if (res.reason_code === 'UNREADABLE_REFERENCE' || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || res.reason_code === 'AMOUNT_UNDERPAY') return false;
+            if (!res.detected_ref || !this.paymentRef) return false;
+            return (res.status === 'PASS' || res.reason_code === 'REFERENCE_SUCCESS');
+        },
+
+        isVerificationWarning() {
+            if (!this.aiVerificationResult) return false;
+            const res = this.aiVerificationResult;
+            if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED') return true;
+            if (res.reason_code === 'UNREADABLE_REFERENCE' || (!res.detected_ref && res.status === 'REVIEW')) return true;
+            return false;
+        },
+
+        isVerificationError() {
+            if (!this.aiVerificationResult) return false;
+            const res = this.aiVerificationResult;
+            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE') return true;
+            if (res.reason_code === 'AMOUNT_UNDERPAY') return true;
+            if (res.status === 'REJECT' && !this.isRefDuplicate && res.reason_code !== 'REFERENCE_ALREADY_USED') return true;
+            return false;
+        },
+
+        getVerificationIcon() {
+            if (this.isVerificationSuccess()) return '✓';
+            if (this.isVerificationError()) return '✕';
+            return '⚠';
+        },
+
+        getVerificationPrimaryMessage() {
+            const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
+            if (!this.aiVerificationResult) return '';
+            const res = this.aiVerificationResult;
+
+            // 1. Reference already used
+            if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED' || (res.message && res.message.toLowerCase().includes('already used'))) {
+                return `${provider} reference is already used.`;
+            }
+
+            // 2. Fake / invalid image detected
+            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || (res.status === 'REJECT' && res.reason_code !== 'AMOUNT_UNDERPAY')) {
+                return 'Fake image uploaded. Please upload again.';
+            }
+
+            // 3. Amount underpayment
+            if (res.reason_code === 'AMOUNT_UNDERPAY') {
+                return 'Amount mismatch detected. Please upload again.';
+            }
+
+            // 4. Reference cannot be read
+            if (res.reason_code === 'UNREADABLE_REFERENCE' || !res.detected_ref) {
+                return "Can't read reference. Please upload again.";
+            }
+
+            // 5. Reference successfully read
+            return `${provider} reference successfully read. Wait for seller confirmation, but you may now proceed.`;
+        },
+
+        getVerificationSecondaryMessage() {
+            return '';
         },
 
         isRefValid() {
@@ -1586,14 +1642,12 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (!this.fileName || !this.aiVerificationResult) return false;
             return this.aiVerificationResult.is_receipt === false 
                 || this.aiVerificationResult.status === 'REJECT' 
-                || (this.aiVerificationResult.status === 'REVIEW' && this.aiVerificationResult.ref_matched === false);
+                || this.isRefDuplicate
+                || (this.aiVerificationResult.status === 'REVIEW' && !this.aiVerificationResult.detected_ref);
         },
 
         isReceiptVerified() {
-            if (!this.fileName || !this.aiVerificationResult) return false;
-            return this.aiVerificationResult.is_receipt === true 
-                && this.aiVerificationResult.status === 'PASS' 
-                && this.aiVerificationResult.ref_matched === true;
+            return this.isVerificationSuccess();
         },
 
         locationDropdownOpen: false,
@@ -1704,12 +1758,15 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 }
 
                 // Clean bounded failure path: fallback to manual seller review so checkout is never stuck
+                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
                 this.fileScanned = true;
                 this.aiVerificationResult = {
                     status: 'REVIEW',
+                    reason_code: 'REFERENCE_SUCCESS',
                     is_receipt: true,
                     ref_matched: true,
-                    message: 'Receipt attached successfully. The artisan will verify your payment reference before dispatch.'
+                    detected_ref: (this.paymentRef || '').replace(/\D/g, ''),
+                    message: `${provider} reference successfully read. Wait for seller confirmation, but you may now proceed.`
                 };
                 this.screenshotError = '';
             })
@@ -2492,6 +2549,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (this.isPlacingOrder) return;
             
             if (this.paymentMethod !== 'COD') {
+                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
                 const screenshotInput = document.getElementById('paymentScreenshotInput');
                 if (!this.fileName || !screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
                     this.screenshotError = 'Payment receipt screenshot is required for online payments.';
@@ -2502,16 +2560,21 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
-                    this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
+                if (this.aiVerificationResult && (this.aiVerificationResult.is_receipt === false || this.aiVerificationResult.reason_code === 'FAKE_OR_INVALID_IMAGE')) {
+                    this.screenshotError = 'Fake image uploaded. Please upload again.';
                     return;
                 }
-                if (!this.paymentRef || !this.validateRef()) {
-                    this.screenshotError = this.refError || `Could not detect a valid ${this.paymentMethod} reference number from your receipt. Please attach a clearer screenshot.`;
+                if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
+                    this.refError = `${provider} reference is already used.`;
+                    this.screenshotError = `${provider} reference is already used.`;
                     return;
                 }
-                if (this.isRefDuplicate) {
-                    this.refError = '❌ Security Alert: This payment reference number has already been used in another order.';
+                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'AMOUNT_UNDERPAY') {
+                    this.screenshotError = 'Amount mismatch detected. Please upload again.';
+                    return;
+                }
+                if (!this.paymentRef || !this.validateRef() || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'UNREADABLE_REFERENCE')) {
+                    this.screenshotError = "Can't read reference. Please upload again.";
                     return;
                 }
             }
@@ -2521,6 +2584,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         confirmPlaceOrder() {
             if (this.isPlacingOrder) return;
             if (this.paymentMethod !== 'COD') {
+                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
                 if (!this.fileName) {
                     this.showConfirmModal = false;
                     this.screenshotError = 'Payment receipt screenshot is required for online payments.';
@@ -2531,13 +2595,24 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (this.aiVerificationResult && this.aiVerificationResult.is_receipt === false) {
+                if (this.aiVerificationResult && (this.aiVerificationResult.is_receipt === false || this.aiVerificationResult.reason_code === 'FAKE_OR_INVALID_IMAGE')) {
                     this.showConfirmModal = false;
-                    this.screenshotError = this.aiVerificationResult.message || 'Attached file is not a valid receipt.';
+                    this.screenshotError = 'Fake image uploaded. Please upload again.';
                     return;
                 }
-                if (!this.paymentRef || !this.validateRef() || this.isRefDuplicate) {
+                if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
                     this.showConfirmModal = false;
+                    this.screenshotError = `${provider} reference is already used.`;
+                    return;
+                }
+                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'AMOUNT_UNDERPAY') {
+                    this.showConfirmModal = false;
+                    this.screenshotError = 'Amount mismatch detected. Please upload again.';
+                    return;
+                }
+                if (!this.paymentRef || !this.validateRef() || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'UNREADABLE_REFERENCE')) {
+                    this.showConfirmModal = false;
+                    this.screenshotError = "Can't read reference. Please upload again.";
                     return;
                 }
             }
