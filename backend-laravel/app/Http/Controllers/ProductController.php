@@ -67,6 +67,14 @@ class ProductController extends Controller
         $data['reviewCount'] = (int)($product->reviewCount ?? 0);
         $data['soldCount'] = (int)($product->soldCount ?? 0);
 
+        // Authoritative sale/discount state
+        $isOnSale = $productModel ? $productModel->isSaleActive() : (!empty($data['is_on_sale']) && (empty($data['sale_ends_at']) || \Carbon\Carbon::parse($data['sale_ends_at'])->isFuture()));
+        $data['is_on_sale'] = $isOnSale;
+        $data['discount_percentage'] = $isOnSale ? (float)($data['discount_percentage'] ?? 0) : 0;
+        $data['sale_price'] = $isOnSale 
+            ? round((float)$data['price'] * (1 - ($data['discount_percentage'] / 100)), 2)
+            : (float)$data['price'];
+
         return $data;
     }
 
@@ -103,6 +111,10 @@ class ProductController extends Controller
                 ->whereColumn('order_items.productId', 'products.id')
                 ->whereIn('orders.status', ['Delivered', 'Completed']);
         }]);
+
+        if ($request->has('lumban_special') || $request->sort === 'lumban_special' || $request->has('on_sale')) {
+            $query->onSale();
+        }
 
         if ($request->has('category') && $request->category !== 'All') {
             $query->where('CategoryId', $request->category);

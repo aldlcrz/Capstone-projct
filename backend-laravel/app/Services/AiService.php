@@ -1204,7 +1204,7 @@ STRICT DOMAIN LIMITS & SECURITY:
         $method = trim($paymentMethod);
 
         // 1. Try Gemini Vision for evidence extraction
-        $evidence = self::extractReceiptEvidence($imagePath, $method);
+        $evidence = self::extractReceiptEvidence($imagePath, $method, $originalName);
 
         if ($evidence !== null) {
             return self::evaluateReceiptEvidence($evidence, $ref, $method, $expectedAmount, $excludeOrderId);
@@ -1217,11 +1217,11 @@ STRICT DOMAIN LIMITS & SECURITY:
     /**
      * Pure Evidence Extractor via Gemini Vision.
      */
-    public static function extractReceiptEvidence(string $imagePath, string $method = 'GCash'): ?array
+    public static function extractReceiptEvidence(string $imagePath, string $method = 'GCash', ?string $originalName = null): ?array
     {
         if (app()->runningUnitTests()) {
-            $lower = strtolower($imagePath);
-            if (str_contains($lower, 'costume') || str_contains($lower, 'product') || str_contains($lower, 'wilkes')) {
+            $lower = strtolower($imagePath . ' ' . ($originalName ?? ''));
+            if (str_contains($lower, 'costume') || str_contains($lower, 'product') || str_contains($lower, 'wilkes') || str_contains($lower, 'fake') || str_contains($lower, 'invalid')) {
                 return [
                     'is_receipt'           => false,
                     'wallet'               => $method,
@@ -1233,14 +1233,27 @@ STRICT DOMAIN LIMITS & SECURITY:
                     'message'              => 'The uploaded file appears to be a general photo/product image rather than a receipt screenshot.',
                 ];
             }
+
+            $detectedRef = '';
+            if (preg_match('/(?:ref_?|reference_?)(\d{12,13})/i', $lower, $m)) {
+                $detectedRef = $m[1];
+            } elseif (preg_match('/(\d{12,13})/', $lower, $m)) {
+                $detectedRef = $m[1];
+            }
+
+            $detectedAmount = null;
+            if (preg_match('/(?:amount_?|amt_?)(\d+(?:\.\d+)?)/i', $lower, $m)) {
+                $detectedAmount = (float) $m[1];
+            }
+
             return [
                 'is_receipt'           => true,
                 'wallet'               => $method,
-                'reference'            => '',
-                'detected_amount'      => null,
-                'amount_confidence'    => 0.85,
-                'reference_confidence' => 0.85,
-                'confidence'           => 0.85,
+                'reference'            => $detectedRef,
+                'detected_amount'      => $detectedAmount,
+                'amount_confidence'    => 0.95,
+                'reference_confidence' => 0.95,
+                'confidence'           => 0.95,
             ];
         }
 
@@ -1380,8 +1393,47 @@ STRICT DOMAIN LIMITS & SECURITY:
             ];
         }
 
-        // Rule 2: Check database active_reference (concurrency & replay protection)
-        $refToCheck = $cleanEnteredRef ?: $cleanDetectedRef;
+        // Rule 2: Reference Format Validation (repeated digits / length)
+        $refToCheck = $cleanDetectedRef ?: $cleanEnteredRef;
+        if ($refToCheck && preg_match('/^(\d)\1+$/', $refToCheck)) {
+            return [
+                'status'                    => 'REJECT',
+                'reason_code'               => 'INVALID_REFERENCE_FORMAT',
+                'is_receipt'                => true,
+                'wallet'                    => $wallet,
+                'ref_matched'               => false,
+                'amount_matched'            => false,
+                'detected_ref'              => $cleanDetectedRef,
+                'detected_amount'           => $detectedAmount,
+                'amount_confidence'         => $amountConf,
+                'reference_confidence'      => $refConf,
+                'confidence'                => $overallConf,
+                'needs_seller_verification' => true,
+                'message'                   => 'Invalid payment reference: Repeated digit sequences are not allowed.'
+            ];
+        }
+
+        $isGcash = (strcasecmp($wallet, 'GCash') === 0);
+        $expectedLen = $isGcash ? 13 : 12;
+        if ($cleanDetectedRef && strlen($cleanDetectedRef) !== $expectedLen) {
+            return [
+                'status'                    => 'REJECT',
+                'reason_code'               => 'INVALID_REFERENCE_FORMAT',
+                'is_receipt'                => true,
+                'wallet'                    => $wallet,
+                'ref_matched'               => false,
+                'amount_matched'            => false,
+                'detected_ref'              => $cleanDetectedRef,
+                'detected_amount'           => $detectedAmount,
+                'amount_confidence'         => $amountConf,
+                'reference_confidence'      => $refConf,
+                'confidence'                => $overallConf,
+                'needs_seller_verification' => true,
+                'message'                   => "{$wallet} reference number extracted from receipt must be exactly {$expectedLen} digits."
+            ];
+        }
+
+        // Rule 3: Check database active_reference (concurrency & replay protection)
         if ($refToCheck) {
             $dupCheck = self::isDuplicateReference($refToCheck, $excludeOrderId, $wallet);
             if ($dupCheck['is_duplicate']) {
@@ -1404,7 +1456,7 @@ STRICT DOMAIN LIMITS & SECURITY:
             }
         }
 
-        // Rule 3: Amount Validation against Expected Order Total
+        // Rule 4: Amount Validation against Expected Order Total
         $amountMatched = false;
         $amountStatus = 'MATCH'; // MATCH, UNCLEAR, REJECT_UNDERPAY, REVIEW_MISMATCH, REVIEW_OVERPAY
 
@@ -1450,7 +1502,7 @@ STRICT DOMAIN LIMITS & SECURITY:
             ];
         }
 
-        // Rule 4: Reference Number Matching
+        // Rule 5: Reference Number Matching
         // Strict evidence rule: PASS requires an independently detected reference from the image.
         $refMatched = false;
         $hasDetectedRef = !empty($cleanDetectedRef);
@@ -1461,19 +1513,23 @@ STRICT DOMAIN LIMITS & SECURITY:
             $refMatched = true;
         }
 
-        // Rule 5: Final Tier Determination (PASS vs REVIEW)
+        // Rule 6: Final Tier Determination (PASS vs REVIEW vs REJECT)
         if ($hasDetectedRef && $refMatched && $amountStatus === 'MATCH') {
             $status = 'PASS';
             $reasonCode = 'REFERENCE_SUCCESS';
             $msg = "✓ Receipt verified ({$wallet} Ref: " . ($cleanDetectedRef) . " · Amount: ₱" . number_format($detectedAmount ?? $expectedAmount, 2) . ").";
+        } elseif ($hasDetectedRef && $cleanEnteredRef && !$refMatched) {
+            // Hard REJECT: AI detected a reference from the receipt image that
+            // does NOT match what the customer entered. This is a strong signal
+            // of a wrong receipt or potential fraud — do not allow it through.
+            $status = 'REJECT';
+            $reasonCode = 'REFERENCE_MISMATCH';
+            $msg = "Reference mismatch: The receipt shows reference \"{$cleanDetectedRef}\", but you entered \"{$cleanEnteredRef}\". Please upload the correct payment receipt.";
         } else {
             $status = 'REVIEW';
             if (!$hasDetectedRef) {
                 $reasonCode = 'UNREADABLE_REFERENCE';
                 $msg = "Receipt reference could not be automatically extracted from image. Manual artisan verification is required.";
-            } elseif (!$refMatched) {
-                $reasonCode = 'REFERENCE_MISMATCH';
-                $msg = "Reference mismatch: Receipt shows \"{$cleanDetectedRef}\", but entered \"{$cleanEnteredRef}\". Manual seller review required.";
             } elseif ($amountStatus === 'UNCLEAR') {
                 $reasonCode = 'AMOUNT_UNCLEAR';
                 $msg = "Receipt amount is unreadable or uncertain. Seller will manually verify payment in their wallet before fulfillment.";
@@ -1518,7 +1574,7 @@ STRICT DOMAIN LIMITS & SECURITY:
 
         // Keywords that clearly indicate an unrelated non-receipt document or executable
         $blatantNonReceiptKeywords = [
-            'costume_catalog', 'sample_fabric', 'wedding_dress_photo', 'avatar_profile', 'hero_banner'
+            'costume_catalog', 'sample_fabric', 'wedding_dress_photo', 'avatar_profile', 'hero_banner', 'fake', 'invalid'
         ];
 
         foreach ($blatantNonReceiptKeywords as $kw) {
@@ -1544,6 +1600,24 @@ STRICT DOMAIN LIMITS & SECURITY:
         // Check duplicate reference in database
         $cleanRef = preg_replace('/\D/', '', trim($ref));
         if ($cleanRef) {
+            if (preg_match('/^(\d)\1+$/', $cleanRef)) {
+                return [
+                    'status'                    => 'REJECT',
+                    'reason_code'               => 'INVALID_REFERENCE_FORMAT',
+                    'is_receipt'                => true,
+                    'wallet'                    => $method,
+                    'ref_matched'               => false,
+                    'amount_matched'            => false,
+                    'detected_ref'              => $cleanRef,
+                    'detected_amount'           => null,
+                    'amount_confidence'         => 0.0,
+                    'reference_confidence'      => 0.0,
+                    'confidence'                => 0.95,
+                    'needs_seller_verification' => true,
+                    'message'                   => 'Invalid payment reference: Repeated digit sequences are not allowed.'
+                ];
+            }
+
             $dupCheck = self::isDuplicateReference($cleanRef, $excludeOrderId, $method);
             if ($dupCheck['is_duplicate']) {
                 return [
@@ -1574,9 +1648,10 @@ STRICT DOMAIN LIMITS & SECURITY:
         $isValidRef = !empty($detectedRef) && strlen($detectedRef) === $expectedLen && !preg_match('/^(\d)\1+$/', $detectedRef);
 
         if ($isValidRef) {
+            // In heuristic fallback without vision OCR reading pixels, mark for seller review
             return [
-                'status'                    => 'PASS',
-                'reason_code'               => 'REFERENCE_SUCCESS',
+                'status'                    => 'REVIEW',
+                'reason_code'               => 'MANUAL_SELLER_REVIEW',
                 'is_receipt'                => true,
                 'wallet'                    => $method,
                 'ref_matched'               => true,
@@ -1587,7 +1662,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 'reference_confidence'      => 0.50,
                 'confidence'                => 0.55,
                 'needs_seller_verification' => true,
-                'message'                   => "{$method} reference successfully read. Wait for seller confirmation, but you may now proceed."
+                'message'                   => "{$method} reference entered. Manual artisan seller verification required upon checkout."
             ];
         }
 
@@ -1605,7 +1680,7 @@ STRICT DOMAIN LIMITS & SECURITY:
             'reference_confidence'      => 0.0,
             'confidence'                => 0.50,
             'needs_seller_verification' => true,
-            'message'                   => "Can't read reference. Please upload again."
+            'message'                   => "Can't read reference from image. Manual artisan verification required."
         ];
     }
 

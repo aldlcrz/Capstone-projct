@@ -15,6 +15,7 @@ use App\Models\ShippingProvider;
 use App\Models\OrderShipping;
 use App\Services\CreateOrderService;
 use App\Helpers\ValidationHelper;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -159,8 +160,10 @@ class OrderController extends Controller
             $courier = trim($request->courierName ?? '');
             $trackingNum = trim($request->trackingNumber ?? '');
             $trackingLink = trim($request->trackingLink ?? '');
-            if (($courier && $courier !== $order->courierName) || ($trackingNum && $trackingNum !== $order->trackingNumber) || ($trackingLink && $trackingLink !== $order->trackingLink)) {
-                return response()->json(['message' => 'Shipping information is locked and cannot be edited after order is in transit or delivered.'], 400);
+            if (!$order->isStorePickup() && !$order->isSpecialDelivery()) {
+                if (($courier && $courier !== $order->courierName) || ($trackingNum && $trackingNum !== $order->trackingNumber) || ($trackingLink && $trackingLink !== $order->trackingLink)) {
+                    return response()->json(['message' => 'Shipping information is locked and cannot be edited after order is in transit or delivered.'], 400);
+                }
             }
             if (($normalizedCurrent === 'completed' || $normalizedCurrent === 'cancelled') && $normalizedTarget !== $normalizedCurrent) {
                 return response()->json(['message' => "Order is already {$order->status} and cannot be modified."], 400);
@@ -227,8 +230,15 @@ class OrderController extends Controller
         // Shipping info: courier and tracking assignment
         $shippingUpdated = false;
         $isStorePickup = $order->isStorePickup();
+        $isSpecialDelivery = $order->isSpecialDelivery();
 
         if ($isStorePickup) {
+            // Guard: Store pickup orders cannot transition to courier-only in-transit states
+            if (in_array($canonicalTarget, ['In Transit', 'Out for Delivery'], true)) {
+                return response()->json(['message' => 'Store pickup orders do not use physical courier shipment and cannot transition to in-transit states.'], 400);
+            }
+
+            // Strictly sanitize & nullify courier data for Store Pickup orders regardless of what was submitted
             $courier = 'Store Pickup';
             $trackingNum = null;
             $trackingLink = null;
@@ -236,7 +246,35 @@ class OrderController extends Controller
                 $order->courierName = 'Store Pickup';
                 $shippingUpdated = true;
             }
+            if ($order->trackingNumber !== null) {
+                $order->trackingNumber = null;
+                $shippingUpdated = true;
+            }
+            if ($order->trackingLink !== null) {
+                $order->trackingLink = null;
+                $shippingUpdated = true;
+            }
+        } elseif ($isSpecialDelivery) {
+            // Special Delivery workflow: local direct / nearby artisan rider delivery
+            // No third-party courier tracking numbers or URLs are required or accepted.
+            $courier = 'Special Delivery (Local Artisan Rider)';
+            $trackingNum = null;
+            $trackingLink = null;
+
+            if ($order->courierName !== $courier) {
+                $order->courierName = $courier;
+                $shippingUpdated = true;
+            }
+            if ($order->trackingNumber !== null) {
+                $order->trackingNumber = null;
+                $shippingUpdated = true;
+            }
+            if ($order->trackingLink !== null) {
+                $order->trackingLink = null;
+                $shippingUpdated = true;
+            }
         } else {
+            // Standard Third-Party Courier Workflow (J&T, SPX, LBC, etc.)
             $courier = trim($request->courierName ?? $order->courierName ?? 'J&T Express');
             $trackingNum = trim($request->trackingNumber ?? $order->trackingNumber ?? '');
             $trackingLink = trim($request->trackingLink ?? $order->trackingLink ?? '');
@@ -267,7 +305,7 @@ class OrderController extends Controller
                 $shippingUpdated = true;
             }
 
-            // Strictly require valid manual tracking number before moving to In Transit (only for courier delivery)
+            // Strictly require valid manual tracking number before moving to In Transit (only for standard courier delivery)
             if (in_array($canonicalTarget, ['In Transit'], true)) {
                 $effectiveTracking = $trackingNum ?: $order->trackingNumber;
                 if (empty($effectiveTracking)) {
@@ -314,16 +352,24 @@ class OrderController extends Controller
         // Synchronize mutable fulfillment state on OrderShipping snapshot
         if ($order->shipping) {
             $shippingAttrs = ['shipping_status' => $canonicalTarget];
-            if (!$isStorePickup && $order->trackingNumber) {
-                $shippingAttrs['tracking_number'] = $order->trackingNumber;
-            }
-            if (!empty($order->courierName)) {
-                $shippingAttrs['fulfillment_provider_name'] = $order->courierName;
-                $matchedProvider = ShippingProvider::where('name', $order->courierName)
-                    ->orWhere('code', strtolower(str_replace([' ', '&'], ['_', 'and'], $order->courierName)))
-                    ->first();
-                if ($matchedProvider) {
-                    $shippingAttrs['fulfillment_provider_id'] = $matchedProvider->id;
+            if ($isStorePickup) {
+                $shippingAttrs['tracking_number'] = null;
+                $shippingAttrs['fulfillment_provider_name'] = 'Store Pickup';
+            } elseif ($isSpecialDelivery) {
+                $shippingAttrs['tracking_number'] = null;
+                $shippingAttrs['fulfillment_provider_name'] = 'Special Delivery (Local Artisan Rider)';
+            } else {
+                if ($order->trackingNumber) {
+                    $shippingAttrs['tracking_number'] = $order->trackingNumber;
+                }
+                if (!empty($order->courierName)) {
+                    $shippingAttrs['fulfillment_provider_name'] = $order->courierName;
+                    $matchedProvider = ShippingProvider::where('name', $order->courierName)
+                        ->orWhere('code', strtolower(str_replace([' ', '&'], ['_', 'and'], $order->courierName)))
+                        ->first();
+                    if ($matchedProvider) {
+                        $shippingAttrs['fulfillment_provider_id'] = $matchedProvider->id;
+                    }
                 }
             }
             $order->shipping->update($shippingAttrs);
@@ -465,6 +511,57 @@ class OrderController extends Controller
         );
 
         return redirect()->back()->with('success', 'Thank you! Delivery confirmed and order marked as Completed. You can now rate your purchase.');
+    }
+
+    /**
+     * Download or view Store Pickup Receipt PDF.
+     */
+    public function pickupReceipt(Request $request, string $id)
+    {
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        $order = Order::with(['customer', 'seller', 'items.product', 'shipping', 'statusHistories'])->findOrFail($id);
+
+        // Security check: Buyer can only access their own receipt, seller their own orders, admin/superadmin anytime
+        $isBuyer = ($order->customerId === $user->id);
+        $isSeller = ($order->sellerId === $user->id);
+        $isAdmin = in_array(strtolower($user->role), ['admin', 'superadmin'], true);
+
+        if (!$isBuyer && !$isSeller && !$isAdmin) {
+            abort(403, 'Unauthorized. You do not have permission to view or download this order pickup receipt.');
+        }
+
+        if (!$order->isStorePickup()) {
+            abort(400, 'Pickup receipts are only available for Store Pickup orders.');
+        }
+
+        $readyStatusHistory = $order->statusHistories
+            ->whereIn('newStatus', ['Shipped', 'Ready for Pickup', 'ready to ship', 'shipped'])
+            ->first();
+
+        $readyDate = $readyStatusHistory?->createdAt ?? $order->updatedAt ?? $order->createdAt;
+        $pickupCode = 'LB-PU-' . strtoupper(substr(hash('crc32b', 'LUMBAN_PICKUP_' . $order->id), 0, 6));
+        $generatedAt = now();
+
+        $pdf = Pdf::loadView('orders.pickup-receipt-pdf', [
+            'order'       => $order,
+            'pickupCode'  => $pickupCode,
+            'readyDate'   => $readyDate,
+            'generatedAt' => $generatedAt,
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'Pickup-Receipt-LB-OR-' . strtoupper(substr($order->id, -8)) . '.pdf';
+
+        if ($request->query('download') === '1' || $request->is('*download*')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
     }
 
     /**

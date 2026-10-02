@@ -151,6 +151,65 @@ document.addEventListener('alpine:init', () => {
                 const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric', ...(isThisYear ? {} : { year: 'numeric' }) });
                 return `${datePart} • ${timeStr}`;
             } catch { return ''; }
+        },
+
+        formatChatMessage(rawText) {
+            if (!rawText) return '';
+            let text = String(rawText);
+            
+            // Strip internal metadata comments
+            text = text.replace(/<!--[\s\S]*?-->/g, '');
+            
+            // Escape HTML special characters for XSS protection
+            text = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
+            text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {
+                const safeImg = imgUrl.replace(/"/g, '&quot;');
+                const safeLink = linkUrl.replace(/"/g, '&quot;');
+                const safeAlt = alt.replace(/"/g, '&quot;');
+                return '<a href="' + safeLink + '" class="block my-2 group"><img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 shadow-xs group-hover:opacity-90 group-hover:ring-2 group-hover:ring-[#C0422A] transition-all cursor-pointer" onerror="this.style.display=\'none\'"></a>';
+            });
+
+            // Parse standalone markdown image: ![alt](imgUrl)
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(match, alt, imgUrl) {
+                const safeImg = imgUrl.replace(/"/g, '&quot;');
+                const safeAlt = alt.replace(/"/g, '&quot;');
+                return '<img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 my-2 shadow-xs" onerror="this.style.display=\'none\'">';
+            });
+
+            // Parse markdown link: [Text](url)
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, label, linkUrl) {
+                const safeLink = linkUrl.replace(/"/g, '&quot;');
+                return '<a href="' + safeLink + '" class="text-[#C0422A] underline font-bold transition-colors inline-flex items-center gap-1 hover:text-[#A33520] cursor-pointer">' + label + ' &rarr;</a>';
+            });
+
+            // Bold **text**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // Italic *text*
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Newlines
+            text = text.replace(/\n/g, '<br>');
+
+            return text;
+        },
+
+        formatPreviewText(raw) {
+            if (!raw) return '';
+            return String(raw)
+                .replace(/<!--[\s\S]*?-->/g, '')
+                .replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, '[Image]')
+                .replace(/!\[.*?\]\(.*?\)/g, '[Image]')
+                .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+                .replace(/[*_#`]/g, '')
+                .trim();
         }
     }));
 });
@@ -185,7 +244,7 @@ document.addEventListener('alpine:init', () => {
                         </div>
                         <div class="min-w-0">
                             <div class="text-xs font-bold text-black truncate" x-text="conv.otherUser && conv.otherUser.name ? conv.otherUser.name : 'Customer'"></div>
-                            <p class="text-[10px] text-gray-400 truncate leading-relaxed mt-0.5" x-text="typeof conv.lastMessage === 'object' ? (conv.lastMessage.content || conv.lastMessage.body || '') : (conv.lastMessage || '')"></p>
+                            <p class="text-[10px] text-gray-400 truncate leading-relaxed mt-0.5" x-text="formatPreviewText(typeof conv.lastMessage === 'object' ? (conv.lastMessage.content || conv.lastMessage.body || '') : (conv.lastMessage || ''))"></p>
                         </div>
                     </div>
                     <div class="text-right shrink-0 ml-2 flex flex-col items-end gap-1.5">
@@ -250,7 +309,7 @@ document.addEventListener('alpine:init', () => {
                                  :class="msg.senderId === currentUserId
                                      ? 'bg-[#C0422A] text-white rounded-tr-none'
                                      : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200/50'"
-                                 x-text="msg.content"></div>
+                                 x-html="formatChatMessage(msg.content || msg.body || '')"></div>
                             <span class="text-[9px] font-medium text-gray-400 mt-1" x-text="formatDateTime(msg.createdAt)"></span>
                         </div>
                     </template>

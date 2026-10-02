@@ -126,15 +126,36 @@
                             <div class="flex items-center gap-2 text-[10px] font-extrabold text-[#C0420A] uppercase tracking-widest">PURCHASED ITEMS</div>
                             <div class="space-y-3">
                                 <template x-for="item in selectedOrder.items" :key="item.id">
-                                    <div class="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm items-center">
-                                        <div class="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 relative shrink-0 overflow-hidden">
-                                            <img :src="getItemImage(item.product)" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
+                                    <div class="flex gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm items-center justify-between">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 relative shrink-0 overflow-hidden">
+                                                <img :src="getItemImage(item.product)" class="object-cover w-full h-full" x-on:error="$event.target.src='/uploads/products/default.jpg'" />
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-bold text-[#2A2A2A] text-sm truncate" x-text="item.product?.name"></div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider" x-text="'Qty: ' + item.quantity + ' • Size: ' + item.size"></div>
+                                            </div>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-bold text-[#2A2A2A] text-sm truncate" x-text="item.product?.name"></div>
-                                            <div class="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider" x-text="'Qty: ' + item.quantity + ' • Size: ' + item.size"></div>
+                                        <div class="flex items-center gap-3 shrink-0">
+                                            <div class="text-sm font-black text-[#C0420A]" x-text="'₱' + parseFloat(item.price).toLocaleString()"></div>
+                                            <button type="button"
+                                                @click="window.dispatchEvent(new CustomEvent('open-report', { 
+                                                    detail: { 
+                                                        reportedId: selectedOrder.sellerId, 
+                                                        reportedName: selectedOrder.seller?.shopName || selectedOrder.seller?.name || 'Artisan', 
+                                                        productId: item.productId, 
+                                                        productName: item.product?.name || 'Purchased Item', 
+                                                        referenceId: selectedOrder.id, 
+                                                        orderItemId: item.id, 
+                                                        variant: item.size || item.variation || '', 
+                                                        reportType: 'product' 
+                                                    } 
+                                                }))"
+                                                class="px-2.5 py-1 bg-gray-50 hover:bg-red-50 text-[9px] font-bold uppercase tracking-wider text-gray-600 hover:text-red-700 rounded-lg border border-gray-200 hover:border-red-200 transition-all cursor-pointer shadow-2xs"
+                                                title="Report issue with this item">
+                                                🚩 Report
+                                            </button>
                                         </div>
-                                        <div class="text-sm font-black text-[#C0420A]" x-text="'₱' + parseFloat(item.price).toLocaleString()"></div>
                                     </div>
                                 </template>
                             </div>

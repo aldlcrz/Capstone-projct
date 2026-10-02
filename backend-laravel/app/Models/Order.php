@@ -42,6 +42,7 @@ class Order extends Model
      */
     protected $appends = [
         'is_store_pickup',
+        'is_special_delivery',
         'packing_proof_url',
         'resolved_payment_status',
     ];
@@ -341,5 +342,62 @@ class Order extends Model
     public function getIsStorePickupAttribute(): bool
     {
         return $this->isStorePickup();
+    }
+
+    /**
+     * Check if this order uses Special Delivery / Local Artisan Rider delivery.
+     */
+    public function isSpecialDelivery(): bool
+    {
+        if ($this->relationLoaded('shipping') && $this->shipping) {
+            $pCode = strtolower((string) ($this->shipping->provider?->code ?? ''));
+            $pName = strtolower((string) ($this->shipping->provider_name ?? ''));
+            $pricingName = strtolower((string) ($this->shipping->pricing_provider_name ?? ''));
+            $fulfillName = strtolower((string) ($this->shipping->fulfillment_provider_name ?? ''));
+
+            if ($pCode === 'seller_direct' || 
+                $pCode === 'special_delivery' ||
+                str_contains($pName, 'special delivery') || 
+                str_contains($pName, 'local direct') || 
+                str_contains($pName, 'artisan rider') ||
+                str_contains($pName, 'seller direct') ||
+                str_contains($pricingName, 'special delivery') || 
+                str_contains($fulfillName, 'special delivery')) {
+                return true;
+            }
+        } elseif (!$this->relationLoaded('shipping')) {
+            $shipping = $this->shipping()->with('provider')->first();
+            if ($shipping) {
+                $pCode = strtolower((string) ($shipping->provider?->code ?? ''));
+                $pName = strtolower((string) ($shipping->provider_name ?? ''));
+                $pricingName = strtolower((string) ($shipping->pricing_provider_name ?? ''));
+                $fulfillName = strtolower((string) ($shipping->fulfillment_provider_name ?? ''));
+
+                if ($pCode === 'seller_direct' || 
+                    $pCode === 'special_delivery' ||
+                    str_contains($pName, 'special delivery') || 
+                    str_contains($pName, 'local direct') || 
+                    str_contains($pName, 'artisan rider') ||
+                    str_contains($pName, 'seller direct') ||
+                    str_contains($pricingName, 'special delivery') || 
+                    str_contains($fulfillName, 'special delivery')) {
+                    return true;
+                }
+            }
+        }
+
+        $courier = strtolower((string) ($this->courierName ?? ''));
+        return str_contains($courier, 'special delivery') || 
+               str_contains($courier, 'local direct') || 
+               str_contains($courier, 'artisan rider') ||
+               str_contains($courier, 'seller direct');
+    }
+
+    /**
+     * Accessor for is_special_delivery.
+     */
+    public function getIsSpecialDeliveryAttribute(): bool
+    {
+        return $this->isSpecialDelivery();
     }
 }

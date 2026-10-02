@@ -81,10 +81,13 @@
         @php
             $statusLower = strtolower(trim($order->status ?? ''));
             $isStorePickup = $order->isStorePickup();
+            $isSpecialDelivery = $order->isSpecialDelivery();
             $customerStatusDisplay = match(true) {
                 $statusLower === 'completed' => 'Completed',
                 $statusLower === 'delivered' => ($isStorePickup ? 'Picked Up / Claimed' : 'Delivered'),
                 $isStorePickup && $statusLower === 'shipped' => 'Ready for Pickup',
+                $isSpecialDelivery && $statusLower === 'shipped' => 'Special Delivery Processing',
+                $isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'Out for Special Delivery',
                 in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'To Receive',
                 in_array($statusLower, ['to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped'], true) => 'To Ship',
                 in_array($statusLower, ['cancellation pending', 'cancellation requested'], true) => 'Cancellation Pending',
@@ -95,6 +98,8 @@
                 'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
                 'Delivered', 'Picked Up / Claimed' => 'bg-teal-50 text-teal-700 border border-teal-200',
                 'Ready for Pickup' => 'bg-amber-50 text-amber-800 border border-amber-200',
+                'Out for Special Delivery' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                'Special Delivery Processing' => 'bg-sky-50 text-sky-700 border border-sky-200',
                 'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
                 'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
                 'Cancellation Pending' => 'bg-orange-50 text-orange-700 border border-orange-200',
@@ -123,6 +128,10 @@
                         @if($isStorePickup)
                             <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
                                 🏬 Store Pickup
+                            </span>
+                        @elseif($isSpecialDelivery)
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
+                                🏍️ Special Delivery
                             </span>
                         @endif
                     </div>
@@ -156,20 +165,25 @@
                 ['label' => 'Preparing',     'status' => 'to ship'],
                 ['label' => 'Ready for Pickup', 'status' => 'shipped'],
                 ['label' => 'Picked Up',    'status' => 'delivered'],
+            ] : ($isSpecialDelivery ? [
+                ['label' => 'Order Placed',  'status' => 'pending'],
+                ['label' => 'Preparing',     'status' => 'to ship'],
+                ['label' => 'Out for Delivery', 'status' => 'in transit'],
+                ['label' => 'Delivered',     'status' => 'delivered'],
             ] : [
                 ['label' => 'Order Placed',  'status' => 'pending'],
                 ['label' => 'To Ship',       'status' => 'to ship'],
                 ['label' => 'To Receive',    'status' => 'to receive'],
                 ['label' => 'Delivered',     'status' => 'delivered'],
-            ];
+            ]);
 
-            $statusRanks = $isStorePickup ? [
+            $statusRanks = ($isStorePickup || $isSpecialDelivery) ? [
                 'pending'          => 0,
                 'processing'       => 1,
                 'to ship'          => 1,
                 'ready to ship'    => 1,
                 'ready_to_ship'    => 1,
-                'shipped'          => 2,
+                'shipped'          => $isSpecialDelivery ? 1 : 2,
                 'in transit'       => 2,
                 'in_transit'       => 2,
                 'to receive'       => 2,
@@ -243,7 +257,7 @@
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2m-6 0a1 1 0 01-1-1m8 1a1 1 0 001-1m-6 0h4"/></svg>
                     <span style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
-                        {{ $isStorePickup ? 'Store Pickup Fulfillment Progress' : 'Shipment Tracking' }}
+                        {{ $isStorePickup ? 'Store Pickup Fulfillment Progress' : ($isSpecialDelivery ? 'Special Delivery Fulfillment Progress' : 'Shipment Tracking') }}
                     </span>
                 </div>
             </div>
@@ -356,9 +370,9 @@
                                     </div>
                                 </div>
 
-                                {{-- Rate / Review control if eligible --}}
-                                @if($canRate)
-                                    <div class="pl-16 pb-2">
+                                {{-- Item Actions: Rate Product & Report Product --}}
+                                <div class="pl-16 pb-2 flex flex-wrap items-center gap-2">
+                                    @if($canRate)
                                         @if($existingReview)
                                             <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 text-xs">
                                                 <div class="flex items-center justify-between gap-2">
@@ -378,12 +392,32 @@
                                             <button type="button"
                                                 @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgSrc }}'"
                                                 style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                class="inline-flex items-center gap-1.5 px-4 py-1.5 hover:bg-[#C0422A] rounded-full text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer active:scale-95">
+                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 hover:bg-[#C0422A] rounded-full text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer active:scale-95">
                                                 <span>⭐ Rate Product</span>
                                             </button>
                                         @endif
-                                    </div>
-                                @endif
+                                    @endif
+
+                                    {{-- Report Product Button for damaged/defective/incorrect items --}}
+                                    <button type="button"
+                                        @click="window.dispatchEvent(new CustomEvent('open-report', { 
+                                            detail: { 
+                                                reportedId: '{{ $order->sellerId }}', 
+                                                reportedName: '{{ e($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', 
+                                                productId: '{{ $item->productId }}', 
+                                                productName: '{{ e($item->product->name ?? $itemTitle) }}', 
+                                                referenceId: '{{ $order->id }}', 
+                                                orderItemId: '{{ $item->id }}', 
+                                                variant: '{{ e($variationLabel ?? $item->size ?? '') }}', 
+                                                reportType: 'product' 
+                                            } 
+                                        }))"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 hover:bg-red-50 text-[10px] font-extrabold uppercase tracking-wider text-gray-600 hover:text-red-700 rounded-full border border-gray-200 hover:border-red-200 transition-all shadow-2xs cursor-pointer active:scale-95"
+                                        title="Report an issue with this received product">
+                                        <svg class="w-3 h-3 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>Report Product</span>
+                                    </button>
+                                </div>
                             @endforeach
                             @endif
                         </div>
@@ -540,6 +574,9 @@
                             @if($isStorePickup)
                                 <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 <span>Pickup Point & Customer</span>
+                            @elseif($isSpecialDelivery)
+                                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Special Delivery Address</span>
                             @else
                                 <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>Ship To</span>
@@ -550,8 +587,11 @@
                             <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
                             @if($isStorePickup)
                                 <p class="text-xs text-emerald-800 font-bold leading-relaxed">🏬 Self-Pickup at Workshop (Lumban, Laguna)</p>
-                                <p class="text-[11px] text-[#78716C] leading-relaxed">Present your Order ID (#{{ $order->trackingNumber ?? $order->orderID }}) upon claiming.</p>
+                                <p class="text-[11px] text-[#78716C] leading-relaxed">Present your Order ID (#LB-OR-{{ strtoupper(substr($order->id, -8)) }}) upon claiming.</p>
                             @else
+                                @if($isSpecialDelivery)
+                                    <p class="text-xs text-blue-800 font-bold leading-relaxed">🏍️ Local Special Delivery (Artisan Rider)</p>
+                                @endif
                                 @if($streetLine)
                                     <p class="text-xs text-[#78716C] leading-relaxed font-medium">{{ $streetLine }}</p>
                                 @endif
@@ -570,6 +610,21 @@
                                 <svg class="w-3 h-3 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                                 <span>{{ $addr['phone'] }}</span>
                             </div>
+                        </div>
+                    @endif
+
+                    @if($isStorePickup)
+                        <div class="pt-3 border-t border-[#ECE3D2] flex flex-wrap items-center gap-2">
+                            <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
+                               style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
+                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-[#C0422A] hover:border-[#C0422A] transition-all shadow-2xs">
+                                <svg class="w-3.5 h-3.5 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span>Download Pickup Receipt</span>
+                            </a>
+                            <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[#ECE3D2] bg-[#FAF8F5] text-[#78716C] hover:text-[#1E1915] text-[10px] font-bold uppercase tracking-wider transition-all">
+                                <span>View Pass ↗</span>
+                            </a>
                         </div>
                     @endif
                 </div>
@@ -616,7 +671,8 @@
         {{-- ROW 3: Packing Proof & Courier Tracking --}}
         @php
             $isPendingWithoutProof = in_array($statusLower, ['pending', 'order placed', 'order_placed']) && empty($order->packingProof);
-            $hasCourierTracking = in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+            $hasCourierTracking = !$isStorePickup && !$isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+            $hasSpecialDeliveryActive = $isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status)), ['shipped', 'in transit', 'out for delivery', 'delivered', 'completed']);
         @endphp
 
         @if(!$isCancelled && !$isPendingWithoutProof)
@@ -720,6 +776,75 @@
                                     <p class="text-[9px] text-[#8C827A] text-center">Click to open courier portal and paste your copied tracking number.</p>
                                 </div>
                             @endif
+                        </div>
+                    </div>
+                </div>
+            @elseif($hasSpecialDeliveryActive)
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+                    {{-- Packing Proof --}}
+                    <div class="lg:col-span-7 flex flex-col">
+                        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;" class="space-y-3 h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between pb-2" style="border-bottom:1px solid #EAE1D0;">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">📦</span>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-[#1E1915]">Artisan Packing Proof</span>
+                                    </div>
+                                    @if($order->packingProof)
+                                        <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                            <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                            Verified by Artisan
+                                        </span>
+                                    @endif
+                                </div>
+
+                                @if($order->packingProof)
+                                    <div class="mt-3 relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-[#FAF8F5] cursor-pointer group flex items-center justify-center max-h-56"
+                                         @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
+                                        <img src="{{ $order->packing_proof_url }}" class="w-full h-full max-h-56 object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof photo">
+                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="px-3 py-1.5 bg-black/80 text-white rounded-lg text-xs font-bold backdrop-blur-xs flex items-center gap-1">
+                                                🔍 Click to zoom
+                                            </span>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="p-4 bg-blue-50/80 border border-blue-200 rounded-xl mt-3 text-xs text-blue-900 leading-relaxed font-medium">
+                                        The artisan is preparing and securing your heritage piece for direct local delivery.
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Special Delivery Status --}}
+                    <div class="lg:col-span-5 flex flex-col">
+                        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;" class="space-y-3 text-xs h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between pb-2" style="border-bottom:1px solid #EAE1D0;">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-base">🏍️</span>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-[#1E1915]">Special Delivery</span>
+                                    </div>
+                                    <span class="text-[9px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Local Rider</span>
+                                </div>
+
+                                <div class="space-y-2.5 pt-2">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-[#8C827A] font-bold uppercase tracking-wider text-[9px]">Fulfillment Mode</span>
+                                        <span class="font-black text-[#1E1915]">Local Artisan Rider</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-[#8C827A] font-bold uppercase tracking-wider text-[9px]">Delivery Status</span>
+                                        <span class="font-bold text-blue-700 text-[11px]">
+                                            {{ in_array($statusLower, ['in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true) ? 'Out for Direct Delivery' : ($statusLower === 'shipped' ? 'Special Delivery Processing' : ucfirst($statusLower)) }}
+                                        </span>
+                                    </div>
+                                    <div class="p-3 bg-blue-50/80 rounded-xl border border-blue-100 text-xs text-blue-900 leading-relaxed font-medium">
+                                        Your order is delivered directly by the artisan's local rider to your address. No 3rd-party tracking number is required.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

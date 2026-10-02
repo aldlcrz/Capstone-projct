@@ -57,7 +57,8 @@ class UserController extends Controller
             return response()->json(['message' => 'Validation error', 'errors' => $validator->errors()], 400);
         }
 
-        $user->update($request->all());
+        $allowed = $request->only(['name', 'mobileNumber', 'username', 'bio', 'gender', 'birthday']);
+        $user->update($allowed);
 
         return response()->json([
             'message' => 'Profile updated successfully',

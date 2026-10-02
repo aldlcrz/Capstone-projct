@@ -535,8 +535,11 @@
                                     <template x-if="!aiChecking && aiVerificationResult && aiVerificationResult.detected_ref">
                                         <div class="p-3.5 bg-white border border-[#E2D9C8] rounded-xl flex items-center justify-between gap-3 shadow-2xs">
                                             <div>
-                                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Reference Number</span>
-                                                <span class="font-mono text-sm sm:text-base font-extrabold text-[#1E1915] tracking-wider" x-text="aiVerificationResult.detected_ref"></span>
+                                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Extracted Reference Number</span>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <span class="font-mono text-sm sm:text-base font-extrabold text-[#1E1915] tracking-wider" x-text="'Extracted Reference Number: ' + aiVerificationResult.detected_ref"></span>
+                                                    <span x-show="isVerificationSuccess()" class="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">✓ Scanned</span>
+                                                </div>
                                             </div>
                                             <template x-if="aiVerificationResult.detected_amount !== null && aiVerificationResult.detected_amount !== undefined">
                                                 <div class="text-right">
@@ -1565,16 +1568,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             const res = this.aiVerificationResult;
             if (res.is_receipt === false || res.status === 'REJECT') return false;
             if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED') return false;
-            if (res.reason_code === 'UNREADABLE_REFERENCE' || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || res.reason_code === 'AMOUNT_UNDERPAY') return false;
+            if (res.reason_code === 'UNREADABLE_REFERENCE' || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || res.reason_code === 'AMOUNT_UNDERPAY' || res.reason_code === 'INVALID_REFERENCE_FORMAT') return false;
             if (!res.detected_ref || !this.paymentRef) return false;
-            return (res.status === 'PASS' || res.reason_code === 'REFERENCE_SUCCESS');
+            return (res.status === 'PASS' && res.reason_code === 'REFERENCE_SUCCESS');
         },
 
         isVerificationWarning() {
             if (!this.aiVerificationResult) return false;
             const res = this.aiVerificationResult;
-            if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED') return true;
-            if (res.reason_code === 'UNREADABLE_REFERENCE' || (!res.detected_ref && res.status === 'REVIEW')) return true;
+            if (this.isVerificationError()) return false;
+            if (res.status === 'REVIEW' || res.reason_code === 'UNREADABLE_REFERENCE' || res.reason_code === 'AMOUNT_UNCLEAR' || res.reason_code === 'AMOUNT_OVERPAY' || res.reason_code === 'REFERENCE_MISMATCH' || res.reason_code === 'MANUAL_SELLER_REVIEW') return true;
             return false;
         },
 
@@ -1582,8 +1585,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (!this.aiVerificationResult) return false;
             const res = this.aiVerificationResult;
             if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE') return true;
-            if (res.reason_code === 'AMOUNT_UNDERPAY') return true;
-            if (res.status === 'REJECT' && !this.isRefDuplicate && res.reason_code !== 'REFERENCE_ALREADY_USED') return true;
+            if (res.reason_code === 'AMOUNT_UNDERPAY' || res.reason_code === 'INVALID_REFERENCE_FORMAT') return true;
+            if (res.reason_code === 'REFERENCE_MISMATCH') return true;
+            if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED') return true;
+            if (res.status === 'REJECT') return true;
             return false;
         },
 
@@ -1603,23 +1608,41 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 return `${provider} reference is already used.`;
             }
 
-            // 2. Fake / invalid image detected
-            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || (res.status === 'REJECT' && res.reason_code !== 'AMOUNT_UNDERPAY')) {
+            // 2. Reference mismatch (new: backend now REJECTs this)
+            if (res.reason_code === 'REFERENCE_MISMATCH') {
+                return res.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
+            }
+
+            // 3. Fake / invalid image detected
+            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || (res.status === 'REJECT' && res.reason_code !== 'AMOUNT_UNDERPAY' && res.reason_code !== 'INVALID_REFERENCE_FORMAT' && res.reason_code !== 'REFERENCE_MISMATCH')) {
                 return 'Fake image uploaded. Please upload again.';
             }
 
-            // 3. Amount underpayment
+            // 3. Invalid reference format
+            if (res.reason_code === 'INVALID_REFERENCE_FORMAT') {
+                return res.message || 'Invalid reference number format detected in receipt.';
+            }
+
+            // 4. Amount underpayment
             if (res.reason_code === 'AMOUNT_UNDERPAY') {
                 return 'Amount mismatch detected. Please upload again.';
             }
 
-            // 4. Reference cannot be read
+            // 5. Reference cannot be read
             if (res.reason_code === 'UNREADABLE_REFERENCE' || !res.detected_ref) {
-                return "Can't read reference. Please upload again.";
+                return "Can't read reference from image. Manual artisan verification required.";
             }
 
-            // 5. Reference successfully read
-            return `${provider} reference successfully read. Wait for seller confirmation, but you may now proceed.`;
+            if (res.reason_code === 'REFERENCE_MISMATCH') {
+                return `Reference mismatch. Manual seller review required.`;
+            }
+
+            if (res.status === 'REVIEW') {
+                return res.message || `Manual ${provider} verification required by artisan seller.`;
+            }
+
+            // 6. Reference successfully read
+            return `${provider} reference successfully read: ${res.detected_ref}`;
         },
 
         getVerificationSecondaryMessage() {
@@ -1655,10 +1678,13 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (this.paymentMethod === 'COD') {
                 return true;
             }
-            if (!this.fileName || !this.paymentRef || this.isRefDuplicate || this.refError) {
+            if (!this.fileName || !this.paymentRef || this.isRefDuplicate || this.refError || this.isVerificationError()) {
                 return false;
             }
-            return this.isVerificationSuccess() && this.isRefValid();
+            if (this.aiVerificationResult && this.aiVerificationResult.status === 'REJECT') {
+                return false;
+            }
+            return this.isRefValid();
         },
 
         locationDropdownOpen: false,
@@ -1768,16 +1794,16 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     return;
                 }
 
-                // Clean bounded failure path: fallback to manual seller review so checkout is never stuck
+                // Bounded failure path: fallback to manual seller review so checkout is not permanently blocked
                 const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
                 this.fileScanned = true;
                 this.aiVerificationResult = {
                     status: 'REVIEW',
-                    reason_code: 'REFERENCE_SUCCESS',
+                    reason_code: 'UNREADABLE_REFERENCE',
                     is_receipt: true,
-                    ref_matched: true,
-                    detected_ref: (this.paymentRef || '').replace(/\D/g, ''),
-                    message: `${provider} reference successfully read. Wait for seller confirmation, but you may now proceed.`
+                    ref_matched: false,
+                    detected_ref: '',
+                    message: `${provider} scan timed out or reference is unreadable. Manual artisan seller verification will be required upon placing order.`
                 };
                 this.screenshotError = '';
             })
@@ -2575,6 +2601,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Fake image uploaded. Please upload again.';
                     return;
                 }
+                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_MISMATCH') {
+                    this.screenshotError = this.aiVerificationResult.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
+                    return;
+                }
                 if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
                     this.refError = `${provider} reference is already used.`;
                     this.screenshotError = `${provider} reference is already used.`;
@@ -2584,7 +2614,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Amount mismatch detected. Please upload again.';
                     return;
                 }
-                if (!this.paymentRef || !this.validateRef() || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'UNREADABLE_REFERENCE')) {
+                if (!this.paymentRef || !this.validateRef()) {
                     this.screenshotError = "Can't read reference. Please upload again.";
                     return;
                 }
@@ -2611,6 +2641,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Fake image uploaded. Please upload again.';
                     return;
                 }
+                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_MISMATCH') {
+                    this.showConfirmModal = false;
+                    this.screenshotError = this.aiVerificationResult.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
+                    return;
+                }
                 if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
                     this.showConfirmModal = false;
                     this.screenshotError = `${provider} reference is already used.`;
@@ -2621,7 +2656,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Amount mismatch detected. Please upload again.';
                     return;
                 }
-                if (!this.paymentRef || !this.validateRef() || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'UNREADABLE_REFERENCE')) {
+                if (!this.paymentRef || !this.validateRef()) {
                     this.showConfirmModal = false;
                     this.screenshotError = "Can't read reference. Please upload again.";
                     return;

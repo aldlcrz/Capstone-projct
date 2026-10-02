@@ -467,4 +467,143 @@ class PaymentVerificationTest extends TestCase
         // The backend computes ₱1,000 + ₱100 shipping = ₱1,100 total expected
         $this->assertEquals(1100.00, 1000.00 + 100.00);
     }
+
+    public function test_invalid_repeated_digit_reference_is_rejected()
+    {
+        $evaluation = AiService::evaluateReceiptEvidence([
+            'is_receipt' => true,
+            'wallet' => 'GCash',
+            'reference' => '1111111111111',
+            'detected_amount' => 1000.00,
+        ], '1111111111111', 'GCash', 1000.00);
+
+        $this->assertEquals('REJECT', $evaluation['status']);
+        $this->assertEquals('INVALID_REFERENCE_FORMAT', $evaluation['reason_code']);
+        $this->assertStringContainsString('Repeated digit sequences are not allowed', $evaluation['message']);
+    }
+
+    public function test_incorrect_reference_length_is_rejected()
+    {
+        // GCash requires 13 digits, passing 10 digits
+        $evaluation = AiService::evaluateReceiptEvidence([
+            'is_receipt' => true,
+            'wallet' => 'GCash',
+            'reference' => '1001234567',
+            'detected_amount' => 1000.00,
+        ], '1001234567', 'GCash', 1000.00);
+
+        $this->assertEquals('REJECT', $evaluation['status']);
+        $this->assertEquals('INVALID_REFERENCE_FORMAT', $evaluation['reason_code']);
+        $this->assertStringContainsString('13 digits', $evaluation['message']);
+    }
+
+    public function test_missing_reference_evaluation_triggers_review_not_pass()
+    {
+        $evaluation = AiService::evaluateReceiptEvidence([
+            'is_receipt' => true,
+            'wallet' => 'GCash',
+            'reference' => '',
+            'detected_amount' => 1000.00,
+        ], '', 'GCash', 1000.00);
+
+        $this->assertEquals('REVIEW', $evaluation['status']);
+        $this->assertEquals('UNREADABLE_REFERENCE', $evaluation['reason_code']);
+        $this->assertStringContainsString('could not be automatically extracted', $evaluation['message']);
+    }
+
+    public function test_fake_or_non_receipt_image_triggers_reject()
+    {
+        $evaluation = AiService::evaluateReceiptEvidence([
+            'is_receipt' => false,
+            'wallet' => 'GCash',
+            'reference' => '1001234567890',
+            'detected_amount' => 1000.00,
+            'message' => 'The uploaded file appears to be a general photo/product image rather than a receipt screenshot.',
+        ], '1001234567890', 'GCash', 1000.00);
+
+        $this->assertEquals('REJECT', $evaluation['status']);
+        $this->assertEquals('FAKE_OR_INVALID_IMAGE', $evaluation['reason_code']);
+        $this->assertFalse($evaluation['is_receipt']);
+    }
+
+    public function test_offline_heuristic_requires_manual_seller_review_and_does_not_auto_pass()
+    {
+        // Calling verifyReceipt without vision OCR (fallback)
+        // With manual reference entered, it must NOT return PASS
+        $result = AiService::verifyReceipt(
+            'dummy_path.jpg',
+            '1001234567890',
+            'GCash',
+            1000.00,
+            'regular_receipt_screenshot.jpg'
+        );
+
+        $this->assertEquals('REVIEW', $result['status']);
+        $this->assertNotEquals('PASS', $result['status']);
+    }
+
+    public function test_ai_controller_verify_receipt_endpoint()
+    {
+        $this->actingAs($this->customer);
+
+        $fakeImage = \Illuminate\Http\UploadedFile::fake()->create('gcash_ref_1001234567890_amount_1000.jpg', 200, 'image/jpeg');
+
+        $response = $this->postJson('/ai/receipt/verify', [
+            'receipt' => $fakeImage,
+            'reference' => '1001234567890',
+            'method' => 'GCash',
+            'amount' => 1000.00,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'is_receipt' => true,
+            'status' => 'PASS',
+            'detected_ref' => '1001234567890',
+        ]);
+    }
+
+    public function test_rejected_payment_cannot_create_a_falsely_verified_order()
+    {
+        $this->actingAs($this->customer);
+
+        $address = \App\Models\Address::create([
+            'id' => (string) Str::uuid(),
+            'userId' => $this->customer->id,
+            'recipientName' => 'Juan Customer',
+            'phone' => '09171112222',
+            'houseNo' => '123',
+            'street' => 'Rizal St',
+            'barangay' => 'Poblacion',
+            'city' => 'Lumban',
+            'province' => 'Laguna',
+            'region' => 'Region IV-A (CALABARZON)',
+            'postalCode' => '4014',
+            'isDefault' => true,
+        ]);
+
+        session()->put('cart', [
+            'item_1' => [
+                'id' => $this->product->id,
+                'sellerId' => $this->seller->id,
+                'name' => $this->product->name,
+                'price' => 1000.00,
+                'quantity' => 1,
+                'size' => 'M',
+            ]
+        ]);
+
+        // Attempt checkout with a fake/non-receipt image
+        $fakeNonReceipt = \Illuminate\Http\UploadedFile::fake()->create('fake_costume_catalog.jpg', 200, 'image/jpeg');
+
+        $response = $this->post('/checkout', [
+            'address_id' => $address->id,
+            'paymentMethod' => 'GCash',
+            'paymentReference' => '1001234567890',
+            'paymentScreenshot' => $fakeNonReceipt,
+        ]);
+
+        // Should be rejected and not create order
+        $this->assertEquals(0, Order::count());
+    }
 }

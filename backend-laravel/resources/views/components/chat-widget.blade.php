@@ -258,6 +258,65 @@
                 return text;
             },
 
+            formatChatMessage(rawText) {
+                if (!rawText) return '';
+                let text = String(rawText);
+                
+                // Strip internal metadata comments
+                text = text.replace(/<!--[\s\S]*?-->/g, '');
+                
+                // Escape HTML special characters for XSS protection
+                text = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+
+                // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
+                text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {
+                    const safeImg = imgUrl.replace(/"/g, '&quot;');
+                    const safeLink = linkUrl.replace(/"/g, '&quot;');
+                    const safeAlt = alt.replace(/"/g, '&quot;');
+                    return '<a href="' + safeLink + '" class="block my-2 group"><img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 shadow-xs group-hover:opacity-90 group-hover:ring-2 group-hover:ring-[#C0422A] transition-all cursor-pointer" onerror="this.style.display=\'none\'"></a>';
+                });
+
+                // Parse standalone markdown image: ![alt](imgUrl)
+                text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(match, alt, imgUrl) {
+                    const safeImg = imgUrl.replace(/"/g, '&quot;');
+                    const safeAlt = alt.replace(/"/g, '&quot;');
+                    return '<img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 my-2 shadow-xs" onerror="this.style.display=\'none\'">';
+                });
+
+                // Parse markdown link: [Text](url)
+                text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, label, linkUrl) {
+                    const safeLink = linkUrl.replace(/"/g, '&quot;');
+                    return '<a href="' + safeLink + '" class="text-[#C0422A] underline font-bold transition-colors inline-flex items-center gap-1 hover:text-[#A33520] cursor-pointer">' + label + ' &rarr;</a>';
+                });
+
+                // Bold **text**
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // Italic *text*
+                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                // Newlines
+                text = text.replace(/\n/g, '<br>');
+
+                return text;
+            },
+
+            formatPreviewText(raw) {
+                if (!raw) return '';
+                return String(raw)
+                    .replace(/<!--[\s\S]*?-->/g, '')
+                    .replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, '[Image]')
+                    .replace(/!\[.*?\]\(.*?\)/g, '[Image]')
+                    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+                    .replace(/[*_#`]/g, '')
+                    .trim();
+            },
+
             scrollAiToBottom() {
                 this.$nextTick(() => {
                     const box = this.$refs.aiMsgBox;
@@ -785,7 +844,7 @@ body.chat-open {
                                          x-text="(conv.otherUser.name || 'A').charAt(0)"></div>
                                     <div class="min-w-0">
                                         <div class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name || 'Artisan'"></div>
-                                        <div class="text-[11px] text-gray-500 truncate" x-text="conv.lastMessage ? (conv.lastMessage.body || conv.lastMessage.content || conv.lastMessage || '') : ''"></div>
+                                        <div class="text-[11px] text-gray-500 truncate" x-text="formatPreviewText(conv.lastMessage ? (conv.lastMessage.body || conv.lastMessage.content || conv.lastMessage || '') : '')"></div>
                                     </div>
                                 </div>
                                 <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
@@ -808,7 +867,7 @@ body.chat-open {
                                  :class="String(msg.senderId) === String(currentUserId) 
                                      ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                      : 'bg-white text-gray-900 rounded-tl-none border border-gray-200 shadow-xs'"
-                                 x-text="msg.content || msg.body || ''">
+                                 x-html="formatChatMessage(msg.content || msg.body || '')">
                             </div>
                             <span class="text-[9px] text-gray-400 mt-1 px-1 font-medium" 
                                   x-text="formatMessageTime(msg.createdAt || msg.created_at || msg.timestamp)"></span>

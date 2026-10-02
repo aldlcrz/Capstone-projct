@@ -81,12 +81,18 @@
 
             <!-- ══ STEP 1: Select Reason ══════════════════════════════════ -->
             <div x-show="currentStep === 1" class="space-y-4">
-                <div class="p-3.5 rounded-2xl border border-gray-200" style="background-color: #FAF7F2 !important;">
+                <div class="p-3.5 rounded-2xl border border-gray-200 space-y-1" style="background-color: #FAF7F2 !important;">
                     <div class="text-[9px] font-black uppercase tracking-widest text-gray-400">Reporting Target</div>
-                    <div class="text-sm font-bold text-gray-900 mt-0.5 flex items-center gap-2">
+                    <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
                         <span x-text="reportedName"></span>
                         <span x-show="productName" class="text-xs font-normal text-gray-500" x-text="'(' + productName + ')'"></span>
                     </div>
+                    <template x-if="referenceId || variant">
+                        <div class="flex items-center gap-2 pt-1 text-[10px] font-semibold text-gray-500">
+                            <span x-show="referenceId" class="px-2 py-0.5 bg-white rounded-md border border-gray-200 font-mono text-gray-800" x-text="'Order #' + (String(referenceId).length > 8 ? String(referenceId).slice(-8).toUpperCase() : referenceId)"></span>
+                            <span x-show="variant" class="px-2 py-0.5 bg-white rounded-md border border-gray-200" x-text="'Variant: ' + variant"></span>
+                        </div>
+                    </template>
                 </div>
 
                 <div class="space-y-2">
@@ -166,12 +172,21 @@
                 <div class="p-4 rounded-2xl border border-gray-200 space-y-3" style="background-color: #FAF7F2 !important;">
                     <div>
                         <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Report Type</span>
-                        <span class="text-xs font-bold text-gray-900" x-text="reportType === 'product' ? 'Product Listing Report' : 'Seller Account Report'"></span>
+                        <span class="text-xs font-bold text-gray-900" x-text="reportType === 'product' ? 'Product Issue / Dispute Report' : 'Seller Account Report'"></span>
                     </div>
                     <div class="border-t border-gray-200 pt-2">
                         <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Reported Target</span>
                         <span class="text-xs font-bold text-gray-900" x-text="reportedName + (productName ? ' • ' + productName : '')"></span>
                     </div>
+                    <template x-if="referenceId || variant">
+                        <div class="border-t border-gray-200 pt-2">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Purchase Transaction Reference</span>
+                            <div class="flex items-center gap-2 mt-0.5 text-xs">
+                                <span x-show="referenceId" class="font-bold text-gray-900" x-text="'Order #' + (String(referenceId).length > 8 ? String(referenceId).slice(-8).toUpperCase() : referenceId)"></span>
+                                <span x-show="variant" class="text-gray-500" x-text="'(' + variant + ')'"></span>
+                            </div>
+                        </div>
+                    </template>
                     <div class="border-t border-gray-200 pt-2">
                         <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Reason</span>
                         <span class="text-xs font-bold text-red-600" x-text="selectedReason"></span>
@@ -244,6 +259,9 @@ function trustSafetyReportModal() {
         reportedName: '',
         productId: null,
         productName: '',
+        referenceId: null,
+        orderItemId: null,
+        variant: '',
         selectedReason: '',
         description: '',
         evidenceFiles: [],
@@ -266,12 +284,14 @@ function trustSafetyReportModal() {
         ],
 
         productReasons: [
+            "Wrong item received",
+            "Damaged item",
+            "Defective product",
+            "Product differs from listing",
+            "Missing item",
+            "Quality issue",
             "Counterfeit / Fake Item",
             "Misleading Product Details or Images",
-            "Prohibited / Illegal Product",
-            "Damaged or Defective Listing",
-            "Inappropriate Content",
-            "Pricing or Listing Manipulation",
             "Policy Violation",
             "Other"
         ],
@@ -283,6 +303,9 @@ function trustSafetyReportModal() {
             this.reportedName = data.reportedName || 'Seller Account';
             this.productId = data.productId || null;
             this.productName = data.productName || '';
+            this.referenceId = data.referenceId || data.orderId || null;
+            this.orderItemId = data.orderItemId || null;
+            this.variant = data.variant || data.size || '';
             this.reportType = data.productId || data.reportType === 'product' ? 'product' : 'account';
             this.selectedReason = '';
             this.description = '';
@@ -341,6 +364,13 @@ function trustSafetyReportModal() {
             const file = event.target.files[0];
             if (!file) return;
 
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+            if (file.type && !allowedTypes.includes(file.type.toLowerCase())) {
+                this.errorMessage = 'Invalid file type. Please upload a valid image (JPEG, PNG, JPG, WEBP, GIF).';
+                event.target.value = '';
+                return;
+            }
+
             if (file.size > 10 * 1024 * 1024) {
                 this.errorMessage = 'File size exceeds 10MB limit. Please choose a smaller image.';
                 event.target.value = '';
@@ -352,13 +382,14 @@ function trustSafetyReportModal() {
 
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('folder', 'reports');
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
                 || document.querySelector('input[name="_token"]')?.value 
                 || '';
 
             try {
-                const res = await fetch('/api/v1/upload', {
+                let res = await fetch('/api/v1/upload', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -367,14 +398,24 @@ function trustSafetyReportModal() {
                     body: formData
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.url) {
-                        this.evidenceFiles.push(data.url);
-                    }
+                if (!res.ok && res.status === 404) {
+                    res = await fetch('/upload', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                }
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.url) {
+                    this.evidenceFiles.push(data.url);
                 } else {
-                    const err = await res.json().catch(() => ({}));
-                    this.errorMessage = err.message || 'Failed to upload evidence image.';
+                    const firstError = data.errors ? Object.values(data.errors).flat()[0] : null;
+                    this.errorMessage = firstError || data.message || 'Failed to upload evidence image.';
                 }
             } catch (e) {
                 this.errorMessage = 'Network error while uploading evidence.';
@@ -396,30 +437,48 @@ function trustSafetyReportModal() {
                 || document.querySelector('input[name="_token"]')?.value 
                 || '';
 
+            const payload = {
+                reportedId: this.reportedId,
+                reportType: this.reportType,
+                productId: this.productId,
+                referenceId: this.referenceId,
+                orderItemId: this.orderItemId,
+                variant: this.variant,
+                reason: this.selectedReason,
+                description: this.description,
+                evidence: this.evidenceFiles
+            };
+
             try {
-                const res = await fetch('/api/v1/reports', {
+                let res = await fetch('/api/v1/reports', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify({
-                        reportedId: this.reportedId,
-                        reportType: this.reportType,
-                        productId: this.productId,
-                        reason: this.selectedReason,
-                        description: this.description,
-                        evidence: this.evidenceFiles
-                    })
+                    body: JSON.stringify(payload)
                 });
 
-                const data = await res.json();
+                if (!res.ok && res.status === 404) {
+                    res = await fetch('/reports', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
 
-                if (res.ok && (data.status === 'success' || data.id)) {
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && (data.status === 'success' || data.id || data.report_id)) {
                     this.currentStep = 5;
                 } else {
-                    this.errorMessage = data.message || 'Failed to submit report. Please try again.';
+                    const firstError = data.errors ? Object.values(data.errors).flat()[0] : null;
+                    this.errorMessage = firstError || data.message || 'Failed to submit report. Please check required fields and try again.';
                 }
             } catch (e) {
                 this.errorMessage = 'A network error occurred. Please check your connection and try again.';

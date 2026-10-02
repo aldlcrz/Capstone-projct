@@ -203,14 +203,12 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Google authentication failed'], 401);
             }
 
-            $email = strtolower($payload['email']);
-            $googleId = $payload['sub'];
+            $email = strtolower(trim($payload['email']));
+            $googleId = $payload['sub'] ?? null;
             $name = $payload['name'] ?? explode('@', $email)[0];
             $picture = $payload['picture'] ?? null;
 
-            $user = User::where('googleId', $googleId)
-                ->orWhere('email', $email)
-                ->first();
+            $user = User::where('email', $email)->first();
 
             $isNewUser = false;
 
@@ -239,8 +237,8 @@ class AuthController extends Controller
                     ], 403);
                 }
 
-                // Link googleId if not already linked
-                if (!$user->googleId) {
+                // Link/update googleId if not already matching
+                if ($googleId && $user->googleId !== $googleId) {
                     $user->googleId = $googleId;
                     if ($picture && !$user->profilePhoto) {
                         $user->profilePhoto = $picture;

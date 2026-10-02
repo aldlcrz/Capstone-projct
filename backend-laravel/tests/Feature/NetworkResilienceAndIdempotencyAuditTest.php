@@ -272,7 +272,7 @@ class NetworkResilienceAndIdempotencyAuditTest extends TestCase
         $eval = AiService::evaluateReceiptEvidence($evidence, '1001234567890', 'GCash', 1500.00);
         $this->assertEquals('REJECT', $eval['status']);
 
-        // Reference mismatch evidence must result in REVIEW, never PASS
+        // Reference mismatch evidence must result in REJECT, never PASS
         $mismatchedEvidence = [
             'is_receipt' => true,
             'wallet'     => 'GCash',
@@ -280,7 +280,7 @@ class NetworkResilienceAndIdempotencyAuditTest extends TestCase
             'detected_amount' => 1500.00,
         ];
         $evalMismatch = AiService::evaluateReceiptEvidence($mismatchedEvidence, '1001111111111', 'GCash', 1500.00);
-        $this->assertEquals('REVIEW', $evalMismatch['status']);
+        $this->assertEquals('REJECT', $evalMismatch['status']);
         $this->assertFalse($evalMismatch['ref_matched']);
     }
 

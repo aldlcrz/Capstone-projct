@@ -72,7 +72,8 @@ class EmailNotificationService
      */
     public static function verifyCode(string $email, string $code, string $type = 'registration'): bool
     {
-        $verification = EmailVerification::where('email', strtolower($email))
+        $normalizedEmail = strtolower(trim($email));
+        $verification = EmailVerification::where('email', $normalizedEmail)
             ->where('type', $type)
             ->first();
 
@@ -86,7 +87,7 @@ class EmailNotificationService
 
         // Lockout if already reached 5 failed attempts
         if ((int) $verification->failed_attempts >= 5) {
-            EmailVerification::where('email', strtolower($email))->where('type', $type)->delete();
+            EmailVerification::where('email', $normalizedEmail)->where('type', $type)->delete();
             return false;
         }
 
@@ -94,9 +95,9 @@ class EmailNotificationService
         $matches = ($verification->code === $inputCode) || \Illuminate\Support\Facades\Hash::check($inputCode, $verification->code);
 
         if (!$matches) {
-            EmailVerification::where('email', strtolower($email))->where('type', $type)->increment('failed_attempts');
+            EmailVerification::where('email', $normalizedEmail)->where('type', $type)->increment('failed_attempts');
             if (((int) $verification->failed_attempts + 1) >= 5) {
-                EmailVerification::where('email', strtolower($email))->where('type', $type)->delete();
+                EmailVerification::where('email', $normalizedEmail)->where('type', $type)->delete();
             }
             return false;
         }
@@ -109,7 +110,8 @@ class EmailNotificationService
      */
     public static function consumeCode(string $email, string $type = 'registration'): void
     {
-        EmailVerification::where('email', strtolower($email))
+        $normalizedEmail = strtolower(trim($email));
+        EmailVerification::where('email', $normalizedEmail)
             ->where('type', $type)
             ->delete();
     }

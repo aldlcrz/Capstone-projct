@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('email')->index();
             $table->string('code', 6);
-            $table->enum('type', ['registration', 'password_reset'])->default('registration');
+            $table->string('type', 50)->default('registration');
             $table->timestamp('expires_at');
             $table->integer('resend_count')->default(0);
             $table->timestamp('last_sent_at')->nullable();

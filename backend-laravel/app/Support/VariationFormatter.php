@@ -377,9 +377,14 @@ class VariationFormatter
 
     private static function looksLikeImagePath(string $value): bool
     {
-        return str_contains($value, '/')
-            || str_contains($value, '\\')
-            || (bool) preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $value);
+        $v = trim($value);
+        if (preg_match('/\.(jpg|jpeg|png|webp|gif|svg)$/i', $v)) {
+            return true;
+        }
+        if (str_starts_with($v, 'storage/') || str_starts_with($v, '/storage/') || str_starts_with($v, 'uploads/') || str_starts_with($v, '/uploads/')) {
+            return true;
+        }
+        return false;
     }
 
     private static function pathsMatch(string $a, string $b): bool

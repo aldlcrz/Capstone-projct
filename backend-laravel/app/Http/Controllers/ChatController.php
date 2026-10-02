@@ -38,7 +38,7 @@ class ChatController extends Controller
             'read' => false,
         ]);
 
-        $msg = Message::with('sender:id,name,role,profilePhoto')->find($message->id);
+        $msg = Message::with('sender:id,name,shopName,role,profilePhoto')->find($message->id);
         $res = $msg ? $msg->toArray() : [
             'id' => $message->id,
             'senderId' => $senderId,
@@ -66,7 +66,7 @@ class ChatController extends Controller
                 $query->where('senderId', $otherUserId)->where('receiverId', $userId);
             })
             ->orderBy('createdAt', 'asc')
-            ->with(['sender:id,name,profilePhoto,role', 'receiver:id,name,profilePhoto,role'])
+            ->with(['sender:id,name,shopName,profilePhoto,role', 'receiver:id,name,shopName,profilePhoto,role'])
             ->get()
             ->map(function (\App\Models\Message $m) {
                 $arr = $m->toArray();
@@ -105,7 +105,7 @@ class ChatController extends Controller
                     $q->where('senderId', $otherId)->where('receiverId', $userId);
                 })
                 ->orderBy('createdAt', 'desc')
-                ->with(['sender:id,name,profilePhoto,role', 'receiver:id,name,profilePhoto,role'])
+                ->with(['sender:id,name,shopName,profilePhoto,role', 'receiver:id,name,shopName,profilePhoto,role'])
                 ->first();
 
             if (!$lastMessage) continue;
@@ -118,10 +118,14 @@ class ChatController extends Controller
             $isSender = $lastMessage->senderId === $userId;
             $otherUser = $isSender ? $lastMessage->receiver : $lastMessage->sender;
 
+            $displayName = ($otherUser && $otherUser->role === 'seller' && !empty($otherUser->shopName)) 
+                ? $otherUser->shopName 
+                : ($otherUser->name ?? 'Artisan');
+
             $conversations[] = [
                 'otherUser' => [
                     'id' => $otherUser->id ?? $otherId,
-                    'name' => $otherUser->name ?? 'Artisan',
+                    'name' => $displayName,
                     'profileImage' => $otherUser ? ($otherUser->profile_photo_url ?? ($otherUser->profilePhoto ? (str_starts_with($otherUser->profilePhoto, 'http') || str_starts_with($otherUser->profilePhoto, '/') ? $otherUser->profilePhoto : asset('storage/' . $otherUser->profilePhoto)) : null)) : null,
                     'role' => $otherUser->role ?? 'seller',
                 ],

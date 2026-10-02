@@ -335,6 +335,137 @@ class StorePickupFulfillmentFlowTest extends TestCase
     }
 
     /**
+     * Test Store Pickup with Maya Payment:
+     * Payment is Verified, Store Pickup fulfillment proceeds without courier waybill.
+     */
+    public function test_store_pickup_with_maya_flow(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'orderID' => 'LB-' . strtoupper(Str::random(8)),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'shippingAddress' => json_encode([
+                'fullName' => 'Juan dela Cruz',
+                'phone' => '09171234567',
+                'address' => 'Barangay 1',
+                'city' => 'Lumban',
+                'province' => 'Laguna',
+            ]),
+            'totalAmount' => 3500.00,
+            'shippingFee' => 0.00,
+            'paymentMethod' => 'Maya',
+            'paymentStatus' => 'Verified',
+            'paymentReference' => 'MAYA-12345678',
+            'status' => 'To Ship',
+        ]);
+
+        $this->attachShipping($order, $this->storePickupProvider);
+
+        $this->actingAs($this->seller);
+
+        // Transition To Ship -> Shipped (Ready for Pickup)
+        $response = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'shipped',
+        ]);
+
+        $response->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals('shipped', strtolower($order->status));
+        $this->assertTrue($order->is_store_pickup);
+        $this->assertEquals('Store Pickup', $order->courierName);
+        $this->assertNull($order->trackingNumber);
+    }
+
+    /**
+     * Test Store Pickup submitted with courier fields:
+     * Must ignore/sanitize inappropriate courier data and not fail on courier validation.
+     */
+    public function test_store_pickup_ignores_and_sanitizes_submitted_courier_fields(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'orderID' => 'LB-' . strtoupper(Str::random(8)),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'shippingAddress' => json_encode([
+                'fullName' => 'Juan dela Cruz',
+                'phone' => '09171234567',
+                'address' => 'Barangay 1',
+                'city' => 'Lumban',
+                'province' => 'Laguna',
+            ]),
+            'totalAmount' => 3500.00,
+            'shippingFee' => 0.00,
+            'paymentMethod' => 'COD',
+            'paymentStatus' => 'Unpaid',
+            'status' => 'To Ship',
+        ]);
+
+        $this->attachShipping($order, $this->storePickupProvider);
+
+        $this->actingAs($this->seller);
+
+        // Submit extraneous/invalid courier data with Store Pickup
+        $response = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'shipped',
+            'courierName' => 'J&T Express',
+            'trackingNumber' => 'INVALID_TRACKING_123',
+            'trackingLink' => 'https://example.com/track',
+        ]);
+
+        // Should succeed without courier validation errors, and courier data must be sanitized to null / 'Store Pickup'
+        $response->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals('shipped', strtolower($order->status));
+        $this->assertEquals('Store Pickup', $order->courierName);
+        $this->assertNull($order->trackingNumber);
+        $this->assertNull($order->trackingLink);
+    }
+
+    /**
+     * Test Store Pickup cannot transition to courier-only in-transit states.
+     */
+    public function test_store_pickup_cannot_transition_to_courier_in_transit_states(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'orderID' => 'LB-' . strtoupper(Str::random(8)),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'shippingAddress' => json_encode([
+                'fullName' => 'Juan dela Cruz',
+                'phone' => '09171234567',
+                'address' => 'Barangay 1',
+                'city' => 'Lumban',
+                'province' => 'Laguna',
+            ]),
+            'totalAmount' => 3500.00,
+            'shippingFee' => 0.00,
+            'paymentMethod' => 'COD',
+            'paymentStatus' => 'Unpaid',
+            'status' => 'shipped',
+        ]);
+
+        $this->attachShipping($order, $this->storePickupProvider);
+
+        $this->actingAs($this->seller);
+
+        // Attempting to move Store Pickup to In Transit must fail
+        $response = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'In Transit',
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJsonFragment([
+            'message' => 'Store pickup orders do not use physical courier shipment and cannot transition to in-transit states.',
+        ]);
+
+        $order->refresh();
+        $this->assertEquals('shipped', strtolower($order->status));
+    }
+
+    /**
      * Test Customer Order Show view renders Store Pickup details.
      */
     public function test_customer_order_show_view_renders_store_pickup(): void
@@ -378,3 +509,4 @@ class StorePickupFulfillmentFlowTest extends TestCase
         $response->assertSee('Self-Pickup at Workshop');
     }
 }
+

@@ -61,7 +61,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password', [WebAuthController::class, 'showResetPassword'])->name('password.reset.new');
     Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.update.submit');
 
-    Route::post('/login', [WebAuthController::class, 'login']);
+    Route::post('/login', [WebAuthController::class, 'login'])->name('login.post');
     Route::post('/account/restore', [WebAuthController::class, 'restoreAccount'])->name('account.restore');
     Route::post('/account/restore/cancel', [WebAuthController::class, 'cancelRestore'])->name('account.restore.cancel');
     Route::post('/register', [WebAuthController::class, 'register']);
@@ -154,6 +154,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/seller/api/orders/{id}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
     Route::post('/api/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment'])->name('orders.resubmit-payment');
     Route::post('/seller/api/orders/{id}/packing-proof', [OrderController::class, 'uploadPackingProof'])->name('orders.packing-proof');
+    Route::get('/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt');
+    Route::get('/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt.download');
+    Route::get('/seller/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt');
+    Route::get('/seller/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt.download');
 
 
     // Notifications
@@ -546,7 +550,15 @@ Route::prefix('ai')->middleware(['throttle:60,1'])->group(function () {
 // Web Upload & Report Routes (For Session-Authenticated Users)
 Route::middleware(['auth'])->group(function () {
     Route::post('/upload', [UploadController::class, 'uploadImage'])->name('web.upload');
+    Route::post('/api/upload', [UploadController::class, 'uploadImage']);
+    Route::post('/api/v1/upload', [UploadController::class, 'uploadImage']);
+    
     Route::post('/reports', [ReportController::class, 'createReport'])->name('web.reports.create');
+    Route::post('/api/reports', [ReportController::class, 'createReport']);
+    Route::post('/api/v1/reports', [ReportController::class, 'createReport']);
+    Route::get('/api/v1/reports/{id}', [ReportController::class, 'getSellerReportDetail']);
+    Route::get('/api/v1/seller/reports/{id}', [ReportController::class, 'getSellerReportDetail']);
+    Route::post('/api/v1/reports/{id}/response', [ReportController::class, 'submitSellerResponse']);
 });
 
 

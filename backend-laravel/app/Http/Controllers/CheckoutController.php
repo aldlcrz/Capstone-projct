@@ -63,9 +63,9 @@ class CheckoutController extends Controller
                 'variation' => $variation,
                 'sellerId' => $product->sellerId,
                 'shippingFee' => $product->shippingFee ?? 0,
-                'original_price' => $product->price,
-                'discount_percentage' => $product->discount_percentage,
-                'is_on_sale' => $product->is_on_sale && ($product->discount_percentage > 0),
+                'original_price' => (float) $product->price,
+                'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                'is_on_sale' => $product->isSaleActive(),
                 'category_name' => $product->category->name ?? 'Traditional',
             ];
             session()->put('buy_now_item', $directItem);
@@ -91,7 +91,10 @@ class CheckoutController extends Controller
                 if ($p) {
                     $item['image'] = VariationFormatter::getImageForVariation($item['variation'] ?? null, $p) ?: $p->getImageUrl();
                     $item['name'] = $p->name;
-                    $item['price'] = $p->sale_price;
+                    $item['price'] = (float) $p->sale_price;
+                    $item['original_price'] = (float) $p->price;
+                    $item['is_on_sale'] = $p->isSaleActive();
+                    $item['discount_percentage'] = $p->isSaleActive() ? (float) $p->discount_percentage : 0;
                 }
             }
         }
@@ -380,6 +383,9 @@ class CheckoutController extends Controller
             $paymentProofPath = null;
             if (!$isCod) {
                 if (!$request->hasFile('paymentScreenshot')) {
+                    if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                        return response()->json(['success' => false, 'message' => 'Payment receipt screenshot is required for online payments.'], 422);
+                    }
                     return redirect()->back()->withInput()->with('error', 'Payment receipt screenshot is required for online payments.');
                 }
 
@@ -392,16 +398,28 @@ class CheckoutController extends Controller
                 $storedPath = $file->storeAs('payments', $storedFileName, 'local');
                 $paymentProofPath = 'private/' . $storedPath;
 
+                // Calculate authoritative expected total from database products
+                $authoritativeSubtotal = 0.0;
+                foreach ($cart as $cItem) {
+                    $p = Product::find($cItem['id'] ?? null);
+                    if ($p) {
+                        $authoritativeSubtotal += ((float)$p->sale_price) * (int)($cItem['quantity'] ?? 1);
+                    }
+                }
+
                 $screening = \App\Services\AiService::verifyReceipt(
                     $tempPath,
                     (string) $request->input('paymentReference', ''),
                     $paymentMethod,
-                    0.0,
+                    $authoritativeSubtotal,
                     $origName
                 );
 
                 if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
                     $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
+                    if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                        return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                    }
                     return redirect()->back()->withInput()->with('error', $errorMessage);
                 }
             }

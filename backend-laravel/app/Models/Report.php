@@ -60,6 +60,11 @@ class Report extends Model
         return $this->belongsTo(Product::class, 'productId');
     }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'referenceId');
+    }
+
     public function assignedAdmin()
     {
         return $this->belongsTo(User::class, 'assignedAdminId');

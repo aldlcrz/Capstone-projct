@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Address;
+use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderIdempotencyRecord;
@@ -421,6 +422,17 @@ class CreateOrderService
             $receiptPath = $params['paymentProof'] ?? null;
 
             if (!$isCod) {
+                if ($screening && (($screening['status'] ?? '') === 'REJECT' || ($screening['is_receipt'] ?? true) === false)) {
+                    throw new DomainException($screening['message'] ?? 'Payment receipt verification failed. Please attach an authentic payment confirmation.');
+                }
+
+                if ($screening && isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])) {
+                    $detectedAmt = (float) $screening['detected_amount'];
+                    if ($totalExpectedAmount > 0 && $detectedAmt < ($totalExpectedAmount * 0.90)) {
+                        throw new DomainException("Amount mismatch: The receipt shows ₱" . number_format($detectedAmt, 2) . ", but the required order total is ₱" . number_format($totalExpectedAmount, 2) . ". Payment cannot be accepted.");
+                    }
+                }
+
                 $rawSubmittedRef = trim((string)($params['paymentReference'] ?? ''));
                 $cleanSubmittedRef = preg_replace('/\D/', '', $rawSubmittedRef);
 
@@ -606,7 +618,7 @@ class CreateOrderService
     }
 
     /**
-     * Dispatch non-blocking in-app notifications and queued email jobs.
+     * Dispatch non-blocking in-app notifications, automatic seller chat message, and queued email jobs.
      */
     protected function dispatchPostOrderNotifications(
         Order $order,
@@ -616,6 +628,9 @@ class CreateOrderService
         float $totalExpectedAmount
     ): void {
         try {
+            // 1. Send Idempotent Automatic Purchase Message from Seller to Buyer
+            $this->sendAutomaticPurchaseMessage($order, $customer, $sellerUser, $preparedItems, $totalExpectedAmount);
+
             // Check low/out-of-stock for products
             foreach ($preparedItems as $pItem) {
                 /** @var Product $freshProd */
@@ -702,6 +717,92 @@ class CreateOrderService
             }
         } catch (\Throwable $e) {
             Log::warning("Post-order notification failed for order {$order->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send an idempotent automatic purchase notification/message from seller to buyer.
+     */
+    protected function sendAutomaticPurchaseMessage(
+        Order $order,
+        User $customer,
+        User $sellerUser,
+        array $preparedItems,
+        float $totalExpectedAmount
+    ): void {
+        try {
+            $orderShortId = strtoupper(substr($order->id, -8));
+            $idTag = "[order:{$order->id}]";
+
+            // Idempotency check: prevent duplicate auto messages for the same order
+            $alreadySent = Message::where('senderId', $sellerUser->id)
+                ->where('receiverId', $customer->id)
+                ->where(function ($q) use ($idTag, $orderShortId) {
+                    $q->where('content', 'like', "%{$idTag}%")
+                      ->orWhere('content', 'like', "%#LB-{$orderShortId}%");
+                })
+                ->exists();
+
+            if ($alreadySent) {
+                return;
+            }
+
+            $shopName = $sellerUser->shopName ?: $sellerUser->name ?: 'Artisan Shop';
+            $dateStr = ($order->createdAt ?: now())->format('M d, Y h:i A');
+            $statusStr = ucfirst($order->status ?: 'Pending');
+            $orderLink = "/orders/{$order->id}";
+
+            $lines = [];
+            $lines[] = "✨ **Thank you for your order!**";
+            $lines[] = "Your order **#LB-{$orderShortId}** from **{$shopName}** has been placed successfully.";
+            $lines[] = "";
+            $lines[] = "📅 **Purchase Date:** {$dateStr}";
+            $lines[] = "📦 **Order Status:** {$statusStr}";
+            $lines[] = "💰 **Total Amount:** ₱" . number_format($totalExpectedAmount, 2);
+            $lines[] = "";
+            $lines[] = "**Purchased Item(s):**";
+
+            foreach ($preparedItems as $item) {
+                $pName = $item['product_name'] ?? ($item['product']->name ?? 'Heritage Piece');
+                $pQty = $item['quantity'] ?? 1;
+                $pVar = $item['variation'] ?? null;
+                $pPrice = number_format((float)($item['price'] ?? 0), 2);
+
+                $itemLine = "• **{$pName}**";
+                if ($pVar && strcasecmp($pVar, 'Original') !== 0) {
+                    $itemLine .= " ({$pVar})";
+                }
+                $itemLine .= " — Qty: {$pQty} × ₱{$pPrice}";
+                $lines[] = $itemLine;
+
+                // Resolve product image with fallback chain
+                $pImg = $item['product_image']
+                    ?? ($item['product']?->getImageUrl() ?? null);
+
+                if ($pImg) {
+                    // Ensure absolute URL for image rendering in chat
+                    if (!str_starts_with($pImg, 'http') && !str_starts_with($pImg, '//')) {
+                        $pImg = rtrim(config('app.url', ''), '/') . '/' . ltrim($pImg, '/');
+                    }
+                    // Clickable image linking directly to order details
+                    $lines[] = "[![{$pName}]({$pImg})]({$orderLink})";
+                }
+            }
+
+            $lines[] = "";
+            $lines[] = "👉 [View Order & Track Status]({$orderLink})";
+            $lines[] = "<!-- {$idTag} -->";
+
+            $content = implode("\n", $lines);
+
+            Message::create([
+                'senderId'   => $sellerUser->id,
+                'receiverId' => $customer->id,
+                'content'    => $content,
+                'read'       => false,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Automatic purchase message failed for order {$order->id}: " . $e->getMessage());
         }
     }
 }

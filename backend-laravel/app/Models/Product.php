@@ -196,13 +196,46 @@ class Product extends Model
      */
     public function isSaleActive(): bool
     {
-        if (!$this->is_on_sale || (float)($this->discount_percentage ?? 0) <= 0) {
+        $rawOnSale = $this->attributes['is_on_sale'] ?? false;
+        if (!$rawOnSale || (float)($this->discount_percentage ?? 0) <= 0) {
             return false;
         }
-        if ($this->sale_ends_at && $this->sale_ends_at->isPast()) {
+        if (!empty($this->sale_starts_at) && $this->sale_starts_at->isFuture()) {
+            return false;
+        }
+        if ($this->sale_ends_at && ($this->sale_ends_at->isPast() || $this->sale_ends_at->lte(now()))) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Dynamically determine if the product is on sale based on active validity period.
+     */
+    public function getIsOnSaleAttribute($value): bool
+    {
+        return $this->isSaleActive();
+    }
+
+    /**
+     * Scope query to products with active valid sales/discounts (Lumban Special).
+     */
+    public function scopeOnSale($query)
+    {
+        return $query->where('is_on_sale', true)
+            ->where('discount_percentage', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('sale_ends_at')
+                  ->orWhere('sale_ends_at', '>', now());
+            });
+    }
+
+    /**
+     * Scope query for Lumban Special items.
+     */
+    public function scopeLumbanSpecial($query)
+    {
+        return $this->scopeOnSale($query);
     }
 
     /**
@@ -294,7 +327,9 @@ class Product extends Model
             return '/uploads/products/default.jpg';
         }
 
+        $img = trim((string)$img, "\"' \t\n\r\0\x0B");
         $img = str_replace('\\', '/', $img);
+        $img = preg_replace('#/{2,}#', '/', $img);
         $img = ltrim($img, '/');
 
         if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) {

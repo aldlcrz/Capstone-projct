@@ -103,6 +103,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Mutator to ensure email is always trimmed and lowercase.
+     */
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value !== null ? strtolower(trim((string) $value)) : null;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

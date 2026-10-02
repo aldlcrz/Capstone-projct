@@ -92,7 +92,7 @@ class WebController extends Controller
             }
 
             if ($request->has('lumban_special') || $request->sort === 'lumban_special') {
-                $query->where('is_on_sale', true)->where('discount_percentage', '>', 0);
+                $query->onSale();
             }
 
             if ($request->has('sort')) {

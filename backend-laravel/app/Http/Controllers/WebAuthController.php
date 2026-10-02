@@ -798,7 +798,6 @@ class WebAuthController extends Controller
 
             $user = User::withTrashed()
                 ->where('email', $email)
-                ->orWhere('googleId', $googleId)
                 ->first();
 
             // Check if account is in PENDING_DELETION or soft-deleted
@@ -838,8 +837,8 @@ class WebAuthController extends Controller
                 return redirect()->route('register')->with('info', 'No account found with this Google email. Please complete the form below and set a password to create your account.');
             }
 
-            // If user exists, attach googleId if not yet set
-            if (!$user->googleId && $googleId) {
+            // If user exists, attach/update googleId if needed
+            if ($googleId && $user->googleId !== $googleId) {
                 $user->googleId = $googleId;
                 $user->save();
             }
@@ -970,7 +969,6 @@ class WebAuthController extends Controller
 
             $user = User::withTrashed()
                 ->where('email', $email)
-                ->orWhere('googleId', $googleId)
                 ->first();
 
             // If account is in PENDING_DELETION or soft-deleted
@@ -1033,7 +1031,6 @@ class WebAuthController extends Controller
 
             $user = User::withTrashed()
                 ->where('email', $email)
-                ->orWhere('googleId', $googleId)
                 ->first();
 
             // If account is in PENDING_DELETION or soft-deleted
@@ -1681,6 +1678,9 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
+        $newEmail = strtolower(trim((string) $request->input('new_email')));
+        $request->merge(['new_email' => $newEmail]);
+
         $validator = Validator::make($request->all(), [
             'new_email' => ['required', 'email', 'max:255'],
         ], [
@@ -1695,17 +1695,17 @@ class WebAuthController extends Controller
             ], 422);
         }
 
-        $newEmail = strtolower(trim($request->input('new_email')));
+        $currentEmail = strtolower(trim($user->email));
 
-        if ($newEmail === strtolower($user->email)) {
+        if ($newEmail === $currentEmail) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'The new email address cannot be the same as your current registered email.',
             ], 422);
         }
 
-        // Ensure new email is not already taken
-        if (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+        // Ensure new email is not already taken by any active or deleted account
+        if (User::withTrashed()->where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'This email address is already registered to another account.',
@@ -1713,7 +1713,7 @@ class WebAuthController extends Controller
         }
 
         // 60-second cooldown check on old email
-        $existing = EmailVerification::where('email', strtolower($user->email))
+        $existing = EmailVerification::where('email', $currentEmail)
             ->where('type', 'email_change_old')
             ->first();
 
@@ -1730,10 +1730,11 @@ class WebAuthController extends Controller
         }
 
         // Generate 6-digit OTP for the CURRENT/OLD email
-        $verification = EmailNotificationService::createVerificationCode($user->email, 'email_change_old');
+        $verification = EmailNotificationService::createVerificationCode($currentEmail, 'email_change_old');
 
-        // Store request in session
+        // Store request in session bound to user ID
         session([
+            'email_change_user_id'        => $user->id,
             'email_change_pending_new'    => $newEmail,
             'email_change_old_verified'   => false,
             'email_change_initiated_at'   => now()->timestamp,
@@ -1741,16 +1742,16 @@ class WebAuthController extends Controller
 
         // Send OTP to existing email
         $mailable = new EmailChangeOldVerificationMail($user->name, $verification->code, $newEmail);
-        EmailNotificationService::sendNotification($user->email, $mailable, 'email_change_old', $user->id, 'User', $user->id);
+        EmailNotificationService::sendNotification($currentEmail, $mailable, 'email_change_old', $user->id, 'User', $user->id);
 
-        Log::info("User ID {$user->id} ({$user->name}) initiated email change to {$newEmail}. Step 1 OTP sent to existing email {$user->email}.");
+        Log::info("User ID {$user->id} ({$user->name}) initiated email change to {$newEmail}. Step 1 OTP sent to existing email {$currentEmail}.");
 
         return response()->json([
             'status'         => 'success',
-            'message'        => "We've sent a verification code to your existing email address (" . $user->email . ").",
+            'message'        => "We've sent a verification code to your existing email address (" . $currentEmail . ").",
             'step'           => 2,
             'cooldown'       => 60,
-            'existing_email' => $user->email,
+            'existing_email' => $currentEmail,
             'new_email'      => $newEmail,
         ]);
     }
@@ -1767,8 +1768,9 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
+        $sessionUserId   = session('email_change_user_id');
         $pendingNewEmail = session('email_change_pending_new');
-        if (!$pendingNewEmail) {
+        if (!$pendingNewEmail || ($sessionUserId && $sessionUserId !== $user->id)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Your email change session has expired or was not initiated. Please start over.',
@@ -1783,7 +1785,8 @@ class WebAuthController extends Controller
             ], 422);
         }
 
-        $record = EmailVerification::where('email', strtolower($user->email))
+        $currentEmail = strtolower(trim($user->email));
+        $record = EmailVerification::where('email', $currentEmail)
             ->where('type', 'email_change_old')
             ->first();
 
@@ -1794,7 +1797,7 @@ class WebAuthController extends Controller
             ], 422);
         }
 
-        $isValid = EmailNotificationService::verifyCode($user->email, $code, 'email_change_old');
+        $isValid = EmailNotificationService::verifyCode($currentEmail, $code, 'email_change_old');
         if (!$isValid) {
             $rem = max(0, 5 - ((int) ($record->failed_attempts ?? 0)));
             return response()->json([
@@ -1804,7 +1807,7 @@ class WebAuthController extends Controller
         }
 
         // Consume old email OTP
-        EmailNotificationService::consumeCode($user->email, 'email_change_old');
+        EmailNotificationService::consumeCode($currentEmail, 'email_change_old');
 
         // Mark existing email verified in session
         session([
@@ -1841,12 +1844,14 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
+        $sessionUserId   = session('email_change_user_id');
         $pendingNewEmail = session('email_change_pending_new');
-        if (!$pendingNewEmail) {
+        if (!$pendingNewEmail || ($sessionUserId && $sessionUserId !== $user->id)) {
             return response()->json(['status' => 'error', 'message' => 'Session expired. Please start over.'], 422);
         }
 
-        $existing = EmailVerification::where('email', strtolower($user->email))
+        $currentEmail = strtolower(trim($user->email));
+        $existing = EmailVerification::where('email', $currentEmail)
             ->where('type', 'email_change_old')
             ->first();
 
@@ -1862,9 +1867,9 @@ class WebAuthController extends Controller
             }
         }
 
-        $verification = EmailNotificationService::createVerificationCode($user->email, 'email_change_old');
+        $verification = EmailNotificationService::createVerificationCode($currentEmail, 'email_change_old');
         $mailable = new EmailChangeOldVerificationMail($user->name, $verification->code, $pendingNewEmail);
-        EmailNotificationService::sendNotification($user->email, $mailable, 'email_change_old', $user->id, 'User', $user->id);
+        EmailNotificationService::sendNotification($currentEmail, $mailable, 'email_change_old', $user->id, 'User', $user->id);
 
         return response()->json([
             'status'   => 'success',
@@ -1884,21 +1889,14 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
+        $sessionUserId   = session('email_change_user_id');
         $pendingNewEmail = strtolower(trim($request->input('new_email') ?: (session('email_change_pending_new') ?? '')));
-        $oldVerified     = session('email_change_old_verified');
+        $oldVerified     = session('email_change_old_verified') === true;
 
-        // Check if there is an active valid email_change_new verification record in database for this email
-        $hasActiveNewVerification = false;
-        if ($pendingNewEmail) {
-            $hasActiveNewVerification = EmailVerification::where('email', $pendingNewEmail)
-                ->where('type', 'email_change_new')
-                ->exists();
-        }
-
-        if (!$pendingNewEmail || (!$oldVerified && !$hasActiveNewVerification)) {
+        if (!$pendingNewEmail || !$oldVerified || ($sessionUserId && $sessionUserId !== $user->id)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Security verification session expired. Please restart the email change process.',
+                'message' => 'Security verification session expired or unverified. Please restart the email change process.',
             ], 422);
         }
 
@@ -1910,16 +1908,22 @@ class WebAuthController extends Controller
             ], 422);
         }
 
-        // Re-check uniqueness
-        if (User::where('email', $pendingNewEmail)->where('id', '!=', $user->id)->exists()) {
-            session()->forget(['email_change_pending_new', 'email_change_old_verified', 'email_change_old_at']);
+        // Re-check uniqueness at database level
+        if (User::withTrashed()->where('email', $pendingNewEmail)->where('id', '!=', $user->id)->exists()) {
+            session()->forget([
+                'email_change_user_id',
+                'email_change_pending_new',
+                'email_change_old_verified',
+                'email_change_old_at',
+                'email_change_initiated_at',
+            ]);
             return response()->json([
                 'status'  => 'error',
-                'message' => 'This email address was recently registered by another user. Email change cancelled.',
+                'message' => 'This email address is already registered to another account. Email change cancelled.',
             ], 422);
         }
 
-        $record = EmailVerification::where('email', strtolower($pendingNewEmail))
+        $record = EmailVerification::where('email', $pendingNewEmail)
             ->where('type', 'email_change_new')
             ->first();
 
@@ -1943,18 +1947,40 @@ class WebAuthController extends Controller
         EmailNotificationService::consumeCode($pendingNewEmail, 'email_change_new');
 
         // Apply email update
-        $oldEmail = $user->email;
+        $oldEmail = strtolower(trim($user->email));
         $user->email = $pendingNewEmail;
+        $user->email_verified_at = now();
         $user->isVerified = true;
+        // Invalidate stale third-party link (Google OAuth ID was linked to old email)
+        $user->googleId = null;
+        // Invalidate remember-me tokens across all devices
+        $user->remember_token = Str::random(60);
+        // Increment sessionVersion to terminate sessions on other devices
+        $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
+        // Revoke Sanctum / personal access tokens if table and relation present
+        if (\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
         $user->save();
+
+        // Bind new session version to current active session
+        session(['login_session_version' => $user->sessionVersion]);
+
+        // Clean up any remaining verification records for the old email
+        EmailVerification::where('email', $oldEmail)->delete();
 
         // Clear session flags
         session()->forget([
+            'email_change_user_id',
             'email_change_pending_new',
             'email_change_old_verified',
             'email_change_old_at',
             'email_change_initiated_at',
         ]);
+
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         Log::info("SUCCESSFUL SECURITY EVENT: User ID {$user->id} ({$user->name}) changed email address from [{$oldEmail}] to [{$pendingNewEmail}].");
 
@@ -1977,21 +2003,15 @@ class WebAuthController extends Controller
             return response()->json(['status' => 'unauthenticated', 'message' => 'Please log in to proceed.'], 401);
         }
 
+        $sessionUserId   = session('email_change_user_id');
         $pendingNewEmail = strtolower(trim($request->input('new_email') ?: (session('email_change_pending_new') ?? '')));
-        $oldVerified     = session('email_change_old_verified');
+        $oldVerified     = session('email_change_old_verified') === true;
 
-        $hasActiveNewVerification = false;
-        if ($pendingNewEmail) {
-            $hasActiveNewVerification = EmailVerification::where('email', $pendingNewEmail)
-                ->where('type', 'email_change_new')
-                ->exists();
-        }
-
-        if (!$pendingNewEmail || (!$oldVerified && !$hasActiveNewVerification)) {
+        if (!$pendingNewEmail || !$oldVerified || ($sessionUserId && $sessionUserId !== $user->id)) {
             return response()->json(['status' => 'error', 'message' => 'Session expired. Please start over.'], 422);
         }
 
-        $existing = EmailVerification::where('email', strtolower($pendingNewEmail))
+        $existing = EmailVerification::where('email', $pendingNewEmail)
             ->where('type', 'email_change_new')
             ->first();
 
@@ -2027,13 +2047,14 @@ class WebAuthController extends Controller
         $user = Auth::user();
         if ($user) {
             $pendingNewEmail = session('email_change_pending_new');
-            EmailVerification::where('email', strtolower($user->email))->where('type', 'email_change_old')->delete();
+            EmailVerification::where('email', strtolower(trim($user->email)))->where('type', 'email_change_old')->delete();
             if ($pendingNewEmail) {
-                EmailVerification::where('email', strtolower($pendingNewEmail))->where('type', 'email_change_new')->delete();
+                EmailVerification::where('email', strtolower(trim($pendingNewEmail)))->where('type', 'email_change_new')->delete();
             }
         }
 
         session()->forget([
+            'email_change_user_id',
             'email_change_pending_new',
             'email_change_old_verified',
             'email_change_old_at',
@@ -2096,8 +2117,8 @@ class WebAuthController extends Controller
                             'sellerId'            => $product->sellerId,
                             'shippingFee'         => (float) ($product->shippingFee ?? 0),
                             'original_price'      => (float) $product->price,
-                            'discount_percentage' => (float) $product->discount_percentage,
-                            'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
+                            'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                            'is_on_sale'          => $product->isSaleActive(),
                             'category_name'       => $product->category->name ?? 'Traditional',
                             'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
                         ];

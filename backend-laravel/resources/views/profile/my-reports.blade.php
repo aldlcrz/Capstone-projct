@@ -78,11 +78,15 @@
                             <div class="text-sm font-bold text-[#1E1915] truncate group-hover:text-[#996515] transition-colors">
                                 {{ $report->reason }}
                             </div>
-                            <div class="text-[11px] text-[#766C60] truncate mt-0.5 flex items-center gap-1.5">
+                            <div class="text-[11px] text-[#766C60] truncate mt-0.5 flex items-center gap-1.5 flex-wrap">
                                 @if($report->product)
                                     <span class="truncate">Product: <strong class="text-[#1E1915]">{{ $report->product->name }}</strong></span>
                                 @elseif($report->reported)
                                     <span class="truncate">Shop: <strong class="text-[#1E1915]">{{ $report->reported->shopName ?: $report->reported->name }}</strong></span>
+                                @endif
+                                @if($report->referenceId)
+                                    <span class="text-[#D8CEBE] shrink-0">&bull;</span>
+                                    <span class="font-mono text-[10px] text-gray-700 font-bold bg-[#FAF6EE] px-1.5 py-0.2 rounded border border-[#E8DECB]">Order #{{ strtoupper(substr($report->referenceId, -8)) }}</span>
                                 @endif
                                 <span class="text-[#D8CEBE] shrink-0">&bull;</span>
                                 <span class="shrink-0">{{ $report->createdAt->format('M d, Y') }}</span>
@@ -203,7 +207,13 @@
                                      alt="{{ $report->product->name }}">
                                 <div class="min-w-0 flex-1">
                                     <span class="text-xs font-bold text-[#1E1915] block truncate">{{ $report->product->name }}</span>
-                                    <span class="text-[11px] text-[#766C60] block mt-0.5">Product ID: {{ $report->productId }}</span>
+                                    <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                                        <span class="text-[11px] text-[#766C60]">Product ID: {{ $report->productId }}</span>
+                                        @if($report->referenceId)
+                                            <span class="text-[#D8CEBE]">&bull;</span>
+                                            <span class="font-mono text-[10px] text-gray-700 font-bold bg-[#FAF6EE] px-1.5 py-0.2 rounded border border-[#E8DECB]">Order #{{ strtoupper(substr($report->referenceId, -8)) }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @elseif($report->reported)

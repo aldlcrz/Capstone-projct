@@ -174,8 +174,8 @@ class CartHelper
                     'sellerId'            => $product->sellerId,
                     'shippingFee'         => (float) ($product->shippingFee ?? 0),
                     'original_price'      => (float) $product->price,
-                    'discount_percentage' => (float) $product->discount_percentage,
-                    'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
+                    'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                    'is_on_sale'          => $product->isSaleActive(),
                     'category_name'       => $product->category->name ?? 'Traditional',
                     'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
                 ];
@@ -238,8 +238,8 @@ class CartHelper
                     'sellerId'            => $product->sellerId,
                     'shippingFee'         => (float) ($product->shippingFee ?? 0),
                     'original_price'      => (float) $product->price,
-                    'discount_percentage' => (float) $product->discount_percentage,
-                    'is_on_sale'          => $product->is_on_sale && ($product->discount_percentage > 0),
+                    'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                    'is_on_sale'          => $product->isSaleActive(),
                     'category_name'       => $product->category->name ?? 'Traditional',
                     'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
                 ];

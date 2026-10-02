@@ -142,6 +142,11 @@ function sellerOrdersManager() {
         packingUploadError: '',
         showCameraModal: false,
         cameraStream: null,
+        showStatusConfirmModal: false,
+        statusConfirmTarget: null,
+        statusConfirmNewStatus: '',
+        statusConfirmLoading: false,
+        statusConfirmError: '',
         showDeliveryConfirmModal: false,
         deliveryConfirmOrder: null,
         deliveryConfirmLoading: false,
@@ -642,13 +647,14 @@ function sellerOrdersManager() {
 
             const target = this.deliveryConfirmOrder;
             const isPickup = this.isStorePickup(target);
+            const isSpecial = this.isSpecialDelivery(target);
 
             try {
                 const payload = {
                     status: 'Delivered',
-                    courierName: isPickup ? 'Store Pickup' : (this.courierName || target.courierName || 'J&T Express'),
-                    trackingNumber: isPickup ? null : ((this.trackingNumber || target.trackingNumber || '').trim() || null),
-                    trackingLink: isPickup ? null : (this.trackingLink || target.trackingLink || null)
+                    courierName: isPickup ? 'Store Pickup' : (isSpecial ? 'Special Delivery (Local Artisan Rider)' : (this.courierName || target.courierName || 'J&T Express')),
+                    trackingNumber: (isPickup || isSpecial) ? null : ((this.trackingNumber || target.trackingNumber || '').trim() || null),
+                    trackingLink: (isPickup || isSpecial) ? null : (this.trackingLink || target.trackingLink || null)
                 };
 
                 const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
@@ -894,6 +900,10 @@ function sellerOrdersManager() {
                 this.courierName = 'Store Pickup';
                 this.trackingNumber = '';
                 this.trackingLink = '';
+            } else if (this.isSpecialDelivery(order)) {
+                this.courierName = 'Special Delivery (Local Artisan Rider)';
+                this.trackingNumber = '';
+                this.trackingLink = '';
             } else {
                 this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
                 this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
@@ -918,6 +928,10 @@ function sellerOrdersManager() {
             this.newStatus = order.status;
             if (this.isStorePickup(order)) {
                 this.courierName = 'Store Pickup';
+                this.trackingNumber = '';
+                this.trackingLink = '';
+            } else if (this.isSpecialDelivery(order)) {
+                this.courierName = 'Special Delivery (Local Artisan Rider)';
                 this.trackingNumber = '';
                 this.trackingLink = '';
             } else {
@@ -998,21 +1012,21 @@ function sellerOrdersManager() {
         },
 
         async confirmShipmentWithProof() {
-            if (!this.detailsOrder || this.statusUpdating || this.packingUploading) return;
+            if (!this.detailsOrder || this.statusUpdating || this.packingUploading || this.statusConfirmLoading) return;
             this.shippingError = '';
             this.packingUploadError = '';
 
-            // 1. If proof already recorded or successfully uploaded, proceed to update status to Shipped
+            // 1. If proof already recorded or successfully uploaded, prompt confirmation before updating status to Shipped
             if (this.packingUploadSuccess || this.detailsOrder.packingProof) {
-                await this.updateStatus(this.detailsOrder, 'Shipped');
+                this.requestStatusUpdate(this.detailsOrder, 'Shipped');
                 return;
             }
 
-            // 2. If photo is selected, upload it first then mark as Shipped
+            // 2. If photo is selected, upload it first then prompt confirmation to mark as Shipped
             if (this.packingPhotoFile) {
                 const uploaded = await this.uploadPackingProof();
                 if (uploaded) {
-                    await this.updateStatus(this.detailsOrder, 'Shipped');
+                    this.requestStatusUpdate(this.detailsOrder, 'Shipped');
                 }
                 return;
             }
@@ -1020,7 +1034,9 @@ function sellerOrdersManager() {
             // 3. No photo selected yet: alert seller and trigger file picker
             this.packingUploadError = this.isStorePickup(this.detailsOrder)
                 ? 'Please upload or capture a packing proof photo before marking as Ready for Pickup.'
-                : 'Please upload or capture a packing proof photo before confirming shipment.';
+                : (this.isSpecialDelivery(this.detailsOrder)
+                    ? 'Please upload or capture a packing proof photo before processing Special Delivery.'
+                    : 'Please upload or capture a packing proof photo before confirming shipment.');
             this.shippingError = this.packingUploadError;
             this.showToast('⚠️ Please select or take a packing proof photo first.');
 
@@ -1038,7 +1054,7 @@ function sellerOrdersManager() {
         isStorePickup(currentOrder) {
             const order = currentOrder || this.detailsOrder || this.activeOrder;
             if (!order) return false;
-            if (order.is_store_pickup === true) return true;
+            if (order.is_store_pickup === true || order.isStorePickup === true) return true;
             const pCode = (order.shipping?.provider?.code || order.shipping?.provider_code || '').toLowerCase();
             const pName = (order.shipping?.provider_name || order.shipping?.pricing_provider_name || order.shipping?.fulfillment_provider_name || '').toLowerCase();
             const courier = (order.courierName || '').toLowerCase();
@@ -1047,6 +1063,23 @@ function sellerOrdersManager() {
                    pName.includes('in-shop') || 
                    courier.includes('store pickup') || 
                    courier.includes('in-shop');
+        },
+
+        isSpecialDelivery(currentOrder) {
+            const order = currentOrder || this.detailsOrder || this.activeOrder;
+            if (!order) return false;
+            if (order.is_special_delivery === true || order.isSpecialDelivery === true) return true;
+            const pCode = (order.shipping?.provider?.code || order.shipping?.provider_code || '').toLowerCase();
+            const pName = (order.shipping?.provider_name || order.shipping?.pricing_provider_name || order.shipping?.fulfillment_provider_name || '').toLowerCase();
+            const courier = (order.courierName || '').toLowerCase();
+            return pCode === 'seller_direct' ||
+                   pCode === 'special_delivery' ||
+                   pName.includes('special delivery') ||
+                   pName.includes('artisan rider') ||
+                   pName.includes('local direct') ||
+                   courier.includes('special delivery') ||
+                   courier.includes('artisan rider') ||
+                   courier.includes('local direct');
         },
 
         async openCameraModal() {
@@ -1148,7 +1181,7 @@ function sellerOrdersManager() {
         isShippingLocked(currentOrder) {
             const order = currentOrder || this.detailsOrder || this.activeOrder;
             if (!order) return false;
-            if (this.isStorePickup(order)) return true;
+            if (this.isStorePickup(order) || this.isSpecialDelivery(order)) return true;
             const s = this.normalizeStatus(order.status);
             return s === 'in transit' || s === 'delivered' || s === 'completed' || s === 'cancelled';
         },
@@ -1255,39 +1288,117 @@ function sellerOrdersManager() {
             }).length;
         },
 
-        async updateStatus(targetOrder, statusToSave) {
+        getStatusDisplayName(order, statusKey) {
+            const target = order || this.detailsOrder || this.activeOrder;
+            const norm = this.normalizeStatus(statusKey || target?.status || '');
+            if (this.isStorePickup(target)) {
+                if (norm === 'shipped') return 'Ready for In-Shop Pickup';
+                if (norm === 'delivered') return 'Picked Up / Claimed';
+            }
+            if (this.isSpecialDelivery(target)) {
+                if (norm === 'shipped') return 'Special Delivery Processing';
+                if (norm === 'in transit') return 'Out for Special Delivery';
+            }
+            if (norm === 'pending') return 'Pending Acceptance';
+            if (norm === 'to ship') return 'To Ship';
+            if (norm === 'shipped') return 'Shipped';
+            if (norm === 'in transit') return 'In Transit';
+            if (norm === 'delivered') return 'Delivered';
+            if (norm === 'completed') return 'Completed';
+            if (norm === 'cancelled') return 'Cancelled';
+            return statusKey || target?.status || 'Unknown';
+        },
+
+        requestStatusUpdate(targetOrder, statusToSave) {
             const target = targetOrder || this.detailsOrder || this.activeOrder;
             const statusVal = statusToSave || this.newStatus;
             if (!target || !statusVal) return;
+
+            // Pre-validate standard courier tracking if transitioning to In Transit
+            const isPickup = this.isStorePickup(target);
+            const isSpecial = this.isSpecialDelivery(target);
+            const isLocal = isPickup || isSpecial;
+            if (!isLocal && this.normalizeStatus(statusVal) === 'in transit') {
+                const currentCourier = this.courierName || target.courierName || 'J&T Express';
+                const currentTracking = (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
+                const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
+                if (!valRes.valid) {
+                    this.shippingError = valRes.message;
+                    return;
+                }
+            }
+
+            this.shippingError = '';
+            this.statusConfirmError = '';
+            this.statusConfirmTarget = target;
+            this.statusConfirmNewStatus = statusVal;
+            this.statusConfirmLoading = false;
+            this.showStatusConfirmModal = true;
+        },
+
+        cancelStatusConfirm() {
+            this.showStatusConfirmModal = false;
+            this.statusConfirmTarget = null;
+            this.statusConfirmNewStatus = '';
+            this.statusConfirmError = '';
+            this.statusConfirmLoading = false;
+        },
+
+        async executeConfirmedStatusUpdate() {
+            if (!this.statusConfirmTarget || !this.statusConfirmNewStatus || this.statusConfirmLoading || this.statusUpdating) return;
+            this.statusConfirmLoading = true;
+            this.statusConfirmError = '';
+            try {
+                const success = await this.updateStatus(this.statusConfirmTarget, this.statusConfirmNewStatus);
+                if (success) {
+                    this.showStatusConfirmModal = false;
+                    this.statusConfirmTarget = null;
+                    this.statusConfirmNewStatus = '';
+                } else {
+                    this.statusConfirmError = this.shippingError || 'Failed to update order status. Please try again.';
+                }
+            } catch(e) {
+                this.statusConfirmError = e.message || 'An error occurred while updating status.';
+            } finally {
+                this.statusConfirmLoading = false;
+            }
+        },
+
+        async updateStatus(targetOrder, statusToSave) {
+            const target = targetOrder || this.detailsOrder || this.activeOrder;
+            const statusVal = statusToSave || this.newStatus;
+            if (!target || !statusVal) return false;
 
             this.shippingError = '';
             this.statusUpdating = true;
 
             try {
                 const isPickup = this.isStorePickup(target);
-                const currentTracking = isPickup ? null : (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
-                const currentCourier = isPickup ? 'Store Pickup' : (this.courierName || target.courierName || 'J&T Express');
+                const isSpecial = this.isSpecialDelivery(target);
+                const isLocal = isPickup || isSpecial;
+                const currentTracking = isLocal ? null : (this.trackingNumber || target.trackingNumber || '').trim().toUpperCase();
+                const currentCourier = isPickup ? 'Store Pickup' : (isSpecial ? 'Special Delivery (Local Artisan Rider)' : (this.courierName || target.courierName || 'J&T Express'));
 
-                if (!isPickup) {
+                if (!isLocal) {
                     if (this.normalizeStatus(statusVal) === 'in transit') {
                         const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
                         if (!valRes.valid) {
                             this.shippingError = valRes.message;
                             this.statusUpdating = false;
-                            return;
+                            return false;
                         }
                     } else if (currentTracking) {
                         const valRes = this.validateTrackingNumber(currentCourier, currentTracking);
                         if (!valRes.valid) {
                             this.shippingError = valRes.message;
                             this.statusUpdating = false;
-                            return;
+                            return false;
                         }
                     }
                 }
 
                 let currentLink = null;
-                if (!isPickup && currentTracking) {
+                if (!isLocal && currentTracking) {
                     currentLink = this.trackingLink || target.trackingLink || this.getCourierDefaultLink(currentCourier) || '';
                 }
 
@@ -1329,11 +1440,14 @@ function sellerOrdersManager() {
                     this.activeOrder = null;
                     this.shippingError = '';
                     this.showToast('✓ Order status updated to ' + (data.status || statusVal));
+                    return true;
                 } else {
                     this.shippingError = data.message || 'Failed to update status. Please check fields and try again.';
+                    return false;
                 }
             } catch(e) {
                 this.shippingError = 'Network error: ' + (e.message || 'Please try again.');
+                return false;
             } finally {
                 this.statusUpdating = false;
             }
@@ -1525,11 +1639,17 @@ function sellerOrdersManager() {
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
-                                  x-text="isStorePickup(order) && normalizeStatus(order.status) === 'shipped' ? 'Ready for Pickup' : (normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status)"></span>
+                                  x-text="isStorePickup(order) && normalizeStatus(order.status) === 'shipped' ? 'Ready for Pickup' : (isSpecialDelivery(order) && normalizeStatus(order.status) === 'shipped' ? 'Special Delivery Processing' : (isSpecialDelivery(order) && normalizeStatus(order.status) === 'in transit' ? 'Out for Special Delivery' : (normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status)))"></span>
                             <template x-if="isStorePickup(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
                                     <span>🏬</span>
                                     <span>Store Pickup</span>
+                                </span>
+                            </template>
+                            <template x-if="isSpecialDelivery(order)">
+                                <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-blue-50 text-blue-900 border border-blue-200 shadow-2xs">
+                                    <span>🏍️</span>
+                                    <span>Special Delivery</span>
                                 </span>
                             </template>
                             <template x-if="hasPendingReturn(order)">
@@ -1613,7 +1733,7 @@ function sellerOrdersManager() {
                 
                 <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">
                     <span>Status:</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="isStorePickup(detailsOrder) && normalizeStatus(detailsOrder?.status) === 'shipped' ? 'Ready for Pickup' : (normalizeStatus(detailsOrder?.status) === 'to ship' ? 'To Ship' : detailsOrder?.status)"></span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase" :class="statusColor(detailsOrder?.status)" x-text="isStorePickup(detailsOrder) && normalizeStatus(detailsOrder?.status) === 'shipped' ? 'Ready for Pickup' : (isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder?.status) === 'shipped' ? 'Special Delivery Processing' : (isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder?.status) === 'in transit' ? 'Out for Special Delivery' : (normalizeStatus(detailsOrder?.status) === 'to ship' ? 'To Ship' : detailsOrder?.status)))"></span>
                 </div>
             </div>
 
@@ -1825,8 +1945,8 @@ function sellerOrdersManager() {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — hidden when Store Pickup, Pending, To Ship, Cancellation Pending, or Return Request --}}
-                        <div x-show="!isStorePickup(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        {{-- COURIER & SHIPPING CARD — hidden when Store Pickup, Special Delivery, Pending, To Ship, Cancellation Pending, or Return Request --}}
+                        <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
                                     <span>🚚 Courier & Shipping Information</span>
@@ -1903,6 +2023,41 @@ function sellerOrdersManager() {
                             </div>
                         </div>
 
+                        {{-- SPECIAL DELIVERY & LOCAL ARTISAN RIDER CARD — shown when Special Delivery order is past pending/to ship --}}
+                        <div x-show="isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-blue-50/70 p-4 rounded-2xl border border-blue-200/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-[9px] font-black uppercase tracking-widest text-blue-900 flex items-center gap-1.5">
+                                    <span>🏍️ Special Delivery (Local Artisan Rider)</span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                                    Local Direct Delivery
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-white rounded-xl border border-blue-100/80">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Fulfillment Mode</span>
+                                    <p class="font-extrabold text-gray-900 text-xs flex items-center gap-1">
+                                        <span>🏍️</span>
+                                        <span>Nearby / Local Direct Courier</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5 font-medium">Handled directly by seller's artisan rider</p>
+                                </div>
+                                <div class="p-3 bg-white rounded-xl border border-blue-100/80">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Tracking Requirement</span>
+                                    <p class="font-extrabold text-emerald-800 text-xs flex items-center gap-1">
+                                        <span>✓</span>
+                                        <span>Direct Local Delivery</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5 font-medium">No 3rd-party courier tracking number needed</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-blue-100/60 rounded-xl border border-blue-200/70 text-[11px] text-blue-950 leading-relaxed font-medium">
+                                <span class="font-bold">Workflow Guide:</span> Special Delivery is dispatched via your local rider directly to the client's nearby address. Click <strong>"Out for Special Delivery ➔"</strong> when dispatched, then <strong>"Mark as Delivered ➔"</strong> upon successful drop-off.
+                            </div>
+                        </div>
+
                         {{-- STORE PICKUP & WORKSHOP CLAIM CARD — shown when Store Pickup order is past pending/to ship --}}
                         <div x-show="isStorePickup(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200/80 space-y-3">
                             <div class="flex items-center justify-between">
@@ -1935,6 +2090,18 @@ function sellerOrdersManager() {
 
                             <div class="p-3 bg-amber-100/60 rounded-xl border border-amber-200/70 text-[11px] text-amber-950 leading-relaxed font-medium">
                                 <span class="font-bold">Claiming Guide:</span> The buyer will personally collect their order from your workshop. Once the customer verifies the garment and receives their package, click <strong>"Mark as Picked Up / Claimed"</strong> below.
+                            </div>
+
+                            <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
+                                <a :href="'/seller/orders/' + detailsOrder.id + '/pickup-receipt/download'" target="_blank"
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-900 text-white text-[10px] font-black uppercase tracking-wider hover:bg-black transition-all shadow-xs">
+                                    <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span>Download Pickup Receipt (PDF)</span>
+                                </a>
+                                <a :href="'/seller/orders/' + detailsOrder.id + '/pickup-receipt'" target="_blank"
+                                   class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 hover:underline">
+                                    <span>View Receipt PDF ↗</span>
+                                </a>
                             </div>
                         </div>
 
@@ -1977,7 +2144,7 @@ function sellerOrdersManager() {
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex items-center text-amber-400 text-sm">
                                                         <template x-for="star in 5" :key="star">
-                                                            <span :class="star <= rev.rating ? 'text-amber-400' : 'text-gray-200'">★</span>
+                                                             <span :class="star <= rev.rating ? 'text-amber-400' : 'text-gray-200'">★</span>
                                                         </template>
                                                     </div>
                                                     <span class="text-xs font-black text-black" x-text="rev.rating + '.0'"></span>
@@ -2005,7 +2172,7 @@ function sellerOrdersManager() {
 
                         {{-- Buyer & Shipping Info Card --}}
                         <div class="bg-gray-50/80 p-4 rounded-2xl border border-gray-100 space-y-3">
-                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]" x-text="isStorePickup(detailsOrder) ? 'Buyer & In-Shop Pickup Details' : 'Buyer & Shipping Details'"></div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-[#C0420A]" x-text="isStorePickup(detailsOrder) ? 'Buyer & In-Shop Pickup Details' : (isSpecialDelivery(detailsOrder) ? 'Buyer & Special Delivery Details' : 'Buyer & Shipping Details')"></div>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
@@ -2036,7 +2203,17 @@ function sellerOrdersManager() {
                                 </div>
                             </template>
 
-                            <template x-if="!isStorePickup(detailsOrder)">
+                            <template x-if="isSpecialDelivery(detailsOrder)">
+                                <div class="pt-2 border-t border-gray-200/60 text-xs space-y-1">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Method & Destination</div>
+                                    <div class="text-gray-800 font-medium mt-0.5 leading-relaxed flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px]">🏍️ Special Delivery (Local Artisan Rider)</span>
+                                    </div>
+                                    <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                                </div>
+                            </template>
+
+                            <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
                                 <div class="pt-2 border-t border-gray-200/60 text-xs">
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
                                     <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
@@ -2219,12 +2396,12 @@ function sellerOrdersManager() {
                                 <template x-if="!packingUploading && !statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </template>
-                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : 'Confirm Shipment (Mark Shipped) ➔') : (packingPhotoFile ? (isStorePickup(detailsOrder) ? 'Upload & Mark Ready for Pickup ➔' : 'Upload & Confirm Shipment ➔') : (isStorePickup(detailsOrder) ? 'Upload Proof & Mark Ready ➔' : 'Upload Proof & Confirm Shipment ➔'))))"></span>
+                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery ➔' : 'Confirm Shipment (Mark Shipped) ➔')) : (packingPhotoFile ? (isStorePickup(detailsOrder) ? 'Upload & Mark Ready for Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Upload & Process Special Delivery ➔' : 'Upload & Confirm Shipment ➔')) : (isStorePickup(detailsOrder) ? 'Upload Proof & Mark Ready ➔' : (isSpecialDelivery(detailsOrder) ? 'Upload Proof & Process ➔' : 'Upload Proof & Confirm Shipment ➔')))))"></span>
                             </button>
                         </div>
                     </template>
 
-                    {{-- Button for Shipped status: For Store Pickup (Mark as Picked Up / Claimed) vs Courier (Mark In Transit) --}}
+                    {{-- Button for Shipped status: For Store Pickup (Mark as Picked Up / Claimed) vs Special Delivery (Out for Special Delivery) vs Courier (Mark In Transit) --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
                         <div class="flex-1 flex justify-end">
                             <template x-if="isStorePickup(detailsOrder)">
@@ -2242,7 +2419,22 @@ function sellerOrdersManager() {
                                     <span x-text="statusUpdating ? 'Updating...' : 'Mark as Picked Up / Claimed ➔'"></span>
                                 </button>
                             </template>
-                            <template x-if="!isStorePickup(detailsOrder)">
+                            <template x-if="!isStorePickup(detailsOrder) && isSpecialDelivery(detailsOrder)">
+                                <button type="button"
+                                    @click="requestStatusUpdate(detailsOrder, 'In Transit')"
+                                    :disabled="statusUpdating || statusConfirmLoading"
+                                    style="background-color: #1D4ED8; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                    <template x-if="statusUpdating || statusConfirmLoading">
+                                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    </template>
+                                    <template x-if="!statusUpdating && !statusConfirmLoading">
+                                        <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </template>
+                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for Special Delivery ➔'"></span>
+                                </button>
+                            </template>
+                            <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
                                 <button type="button"
                                     @click="(() => {
                                         const valRes = validateTrackingNumber(courierName, trackingNumber);
@@ -2250,19 +2442,19 @@ function sellerOrdersManager() {
                                             shippingError = valRes.message;
                                         } else {
                                             shippingError = '';
-                                            updateStatus(detailsOrder, 'In Transit');
+                                            requestStatusUpdate(detailsOrder, 'In Transit');
                                         }
                                     })()"
-                                    :disabled="statusUpdating"
+                                    :disabled="statusUpdating || statusConfirmLoading"
                                     style="background-color: #000000; color: #ffffff;"
                                     class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                                    <template x-if="statusUpdating">
+                                    <template x-if="statusUpdating || statusConfirmLoading">
                                         <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                     </template>
-                                    <template x-if="!statusUpdating">
+                                    <template x-if="!statusUpdating && !statusConfirmLoading">
                                         <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                     </template>
-                                    <span x-text="statusUpdating ? 'Updating...' : 'Mark In Transit ➔'"></span>
+                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Mark In Transit ➔'"></span>
                                 </button>
                             </template>
                         </div>
@@ -2444,13 +2636,7 @@ function sellerOrdersManager() {
     {{-- Delivery Confirmation Modal --}}
     <div x-show="showDeliveryConfirmModal" 
          x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         style="display: none;"
-         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+            class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
          @click.self="showDeliveryConfirmModal = false"
          x-cloak>
         
@@ -2459,12 +2645,18 @@ function sellerOrdersManager() {
 
             <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner mt-2 transition-all"
                  :class="deliveryConfirmSuccess ? 'bg-emerald-100 text-emerald-700 ring-4 ring-emerald-200' : 'bg-emerald-50 text-emerald-600'">
-                <span x-text="deliveryConfirmSuccess ? '✓' : '🚚'"></span>
+                <span x-text="deliveryConfirmSuccess ? '✓' : (isStorePickup(deliveryConfirmOrder) ? '🏬' : (isSpecialDelivery(deliveryConfirmOrder) ? '🏍️' : '🚚'))"></span>
             </div>
 
             <div>
-                <h3 class="text-base font-black text-black uppercase tracking-tight" x-text="deliveryConfirmSuccess ? 'Order Marked as Delivered!' : 'Confirm Order Delivery'"></h3>
-                <p class="text-xs text-gray-500 font-medium mt-1" x-text="deliveryConfirmSuccess ? 'Status updated. Closing in 2 seconds...' : 'Are you sure this order has been delivered?'"></p>
+                <h3 class="text-base font-black text-black uppercase tracking-tight" 
+                    x-text="deliveryConfirmSuccess 
+                        ? (isStorePickup(deliveryConfirmOrder) ? 'Order Marked as Picked Up / Claimed!' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Special Delivery Completed!' : 'Order Marked as Delivered!')) 
+                        : (isStorePickup(deliveryConfirmOrder) ? 'Confirm Order Claim / Pickup' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Confirm Special Delivery Completion' : 'Confirm Order Delivery'))"></h3>
+                <p class="text-xs text-gray-500 font-medium mt-1" 
+                   x-text="deliveryConfirmSuccess 
+                        ? 'Status updated. Closing in 2 seconds...' 
+                        : (isStorePickup(deliveryConfirmOrder) ? 'Are you sure this order has been claimed by the customer at your workshop?' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Are you sure this order has been delivered by your artisan rider?' : 'Are you sure this order has been delivered?'))"></p>
                 <template x-if="deliveryConfirmOrder">
                     <div class="mt-2 py-1.5 px-3 bg-gray-50 rounded-xl text-[11px] font-bold text-gray-700 inline-block border border-gray-100">
                         <span x-text="'#LB-' + deliveryConfirmOrder.id.slice(-8).toUpperCase()"></span>
@@ -2494,11 +2686,111 @@ function sellerOrdersManager() {
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
                     <template x-if="!deliveryConfirmLoading && !deliveryConfirmSuccess">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <svg class="w-3.5 h-3.5 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     </template>
                     <template x-if="deliveryConfirmSuccess">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        <svg class="w-3.5 h-3.5 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     </template>
+                    <span x-text="deliveryConfirmSuccess ? 'Saved' : (isStorePickup(deliveryConfirmOrder) ? 'Confirm Picked Up / Claimed' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Confirm Special Delivery' : 'Confirm Delivered'))"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Universal Order Status Update Confirmation Modal --}}
+    <div x-show="showStatusConfirmModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="cancelStatusConfirm()"
+         x-cloak>
+        
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden"
+             @click.stop>
+            <div class="h-1.5 w-full bg-linear-to-r from-[#C49520] via-amber-500 to-emerald-600 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 shadow-xs"
+                     style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
+                    <span>⚡</span>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Confirm Order Status Update</h3>
+                    <p class="text-[10px] text-gray-500 font-medium">Please review the details before proceeding.</p>
+                </div>
+            </div>
+
+            <template x-if="statusConfirmTarget">
+                <div class="space-y-3">
+                    {{-- Order & Customer Capsule --}}
+                    <div class="p-3.5 bg-[#FFFCF7] rounded-2xl border border-[#E8DECB] space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Order</span>
+                            <span class="font-extrabold text-xs text-[#1E1915]" x-text="'#LB-' + statusConfirmTarget.id.slice(-8).toUpperCase()"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Customer</span>
+                            <span class="font-bold text-xs text-gray-800 truncate max-w-50" x-text="statusConfirmTarget.customer?.name || 'Customer'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Fulfillment</span>
+                            <span class="font-bold text-[11px] px-2 py-0.5 rounded-full"
+                                  :class="isStorePickup(statusConfirmTarget) ? 'bg-amber-50 text-amber-900 border border-amber-200' : (isSpecialDelivery(statusConfirmTarget) ? 'bg-blue-50 text-blue-900 border border-blue-200' : 'bg-gray-100 text-gray-800')">
+                                <span x-text="isStorePickup(statusConfirmTarget) ? '🏬 Store Pickup' : (isSpecialDelivery(statusConfirmTarget) ? '🏍️ Special Delivery' : ('🚚 ' + (courierName || statusConfirmTarget.courierName || 'Standard Courier')))"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Status Transition Visual --}}
+                    <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Status Progression</div>
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="flex-1 text-center py-2 px-2.5 rounded-xl border border-gray-200 bg-white">
+                                <div class="text-[9px] text-gray-400 font-bold uppercase">Current Status</div>
+                                <div class="text-xs font-black text-gray-700 mt-0.5" x-text="getStatusDisplayName(statusConfirmTarget, statusConfirmTarget.status)"></div>
+                            </div>
+                            <div class="text-gray-400 font-bold text-sm shrink-0">➔</div>
+                            <div class="flex-1 text-center py-2 px-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
+                                <div class="text-[9px] text-emerald-600 font-bold uppercase">New Status</div>
+                                <div class="text-xs font-black text-emerald-900 mt-0.5" x-text="getStatusDisplayName(statusConfirmTarget, statusConfirmNewStatus)"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Contextual Prompt / Notice --}}
+                    <div class="text-center px-2">
+                        <p class="text-xs font-bold text-gray-800">Are you sure you want to update this order?</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">This action will update the buyer's fulfillment tracker in real time.</p>
+                    </div>
+
+                    <template x-if="statusConfirmError">
+                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600 text-center" x-text="statusConfirmError"></div>
+                    </template>
+                </div>
+            </template>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="cancelStatusConfirm()"
+                    :disabled="statusConfirmLoading || statusUpdating"
+                    class="flex-1 py-3 rounded-full border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="executeConfirmedStatusUpdate()"
+                    :disabled="statusConfirmLoading || statusUpdating"
+                    style="background-color: #059669; color: #ffffff;"
+                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="statusConfirmLoading || statusUpdating">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="(statusConfirmLoading || statusUpdating) ? 'Updating...' : 'Confirm Update'"></span>
+                </button>
             </div>
         </div>
     </div>
