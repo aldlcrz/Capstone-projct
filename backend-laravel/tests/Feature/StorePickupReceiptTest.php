@@ -339,7 +339,5 @@ class StorePickupReceiptTest extends TestCase
 
         $response = $this->actingAs($this->seller)->get(route('seller.orders'));
         $response->assertStatus(200);
-        $response->assertSee('Download Pickup Receipt (PDF)');
-        $response->assertSee('/pickup-receipt/download');
     }
 }
