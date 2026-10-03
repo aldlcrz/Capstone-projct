@@ -828,6 +828,49 @@ class DashboardController extends Controller
         return redirect()->route('seller.profile')->with('success', 'Couriers & Logistics settings updated successfully!');
     }
 
+    /**
+     * Updates only the seller's Special Delivery (seller_direct) settings:
+     * whether it's offered and the flat shipping fee charged to nearby buyers.
+     */
+    public function updateSpecialDelivery(Request $request)
+    {
+        $seller = $request->user();
+
+        $validated = $request->validate([
+            'special_delivery_enabled' => 'nullable|boolean',
+            'special_delivery_fee'     => 'required|numeric|min:0|max:10000',
+        ]);
+
+        $provider = \App\Models\ShippingProvider::where('code', 'seller_direct')->first();
+        if (!$provider) {
+            return redirect()->back()->with('error', 'Special Delivery is not available on the platform yet.');
+        }
+
+        // If the seller has no per-provider rows yet, all active providers are implicitly enabled.
+        // Seed them as enabled first so saving Special Delivery doesn't disable other couriers.
+        if (!\App\Models\SellerShippingProvider::where('seller_id', $seller->id)->exists()) {
+            foreach (\App\Models\ShippingProvider::where('is_active', true)->get() as $p) {
+                \App\Models\SellerShippingProvider::create([
+                    'seller_id'   => $seller->id,
+                    'provider_id' => $p->id,
+                    'is_enabled'  => true,
+                ]);
+            }
+        }
+
+        $updateData = ['is_enabled' => $request->boolean('special_delivery_enabled')];
+        if (Schema::hasColumn('seller_shipping_providers', 'custom_fee')) {
+            $updateData['custom_fee'] = round((float) $validated['special_delivery_fee'], 2);
+        }
+
+        \App\Models\SellerShippingProvider::updateOrCreate(
+            ['seller_id' => $seller->id, 'provider_id' => $provider->id],
+            $updateData
+        );
+
+        return redirect()->route('seller.profile')->with('success', 'Special Delivery settings updated successfully!');
+    }
+
     public function updateSellerProfile(Request $request)
     {
         $user = $request->user();

@@ -302,6 +302,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/profile', [DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::match(['post', 'put'], '/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
     Route::post('/shipping-providers', [DashboardController::class, 'updateShippingProviders'])->name('seller.shipping-providers.update');
+    Route::post('/special-delivery', [DashboardController::class, 'updateSpecialDelivery'])->name('seller.special-delivery.update');
     Route::get('/policies', [DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
     Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
     Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');
