@@ -263,9 +263,10 @@
                 text = text.replace(/<!--[\s\S]*?-->/g, '');
                 
                 // Escape HTML special characters for XSS protection
-                const escapeEl = document.createElement('div');
-                escapeEl.textContent = text;
-                text = escapeEl.innerHTML;
+                text = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
 
                 // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
                 text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {

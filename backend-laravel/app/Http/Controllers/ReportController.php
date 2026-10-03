@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Report;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,7 @@ class ReportController extends Controller
     /**
      * Submit a new Account or Product Report.
      */
-    public function createReport(Request $request)
+    public function createReport(Request $request): JsonResponse
     {
         $userId = Auth::id() ?? $request->user()?->id;
         if (!$userId) {
