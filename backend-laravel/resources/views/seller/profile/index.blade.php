@@ -25,6 +25,391 @@
             ->count();
     @endphp
 
+    <script>
+    function sellerProfileState() {
+        return {
+            showAccountSettingsModal: false,
+            showEditModal: false,
+            showPaymentModal: false,
+            showPaymentHistoryModal: false,
+            showLegalModal: false,
+            showWorkshopLocationModal: false,
+            showDocPreview: false,
+            showDeleteAccountModal: false,
+            showDownloadInfoModal: false,
+            deleteAccountConfirmation: '',
+            previewDocUrl: '',
+            previewDocTitle: '',
+            paymentEditing: false,
+            legalEditing: false,
+            shopName: @js(old('name', $user->name ?? '')),
+            mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
+            shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+
+            // Workshop & Store Pickup Location State
+            shopHouseNo: @js(old('shopHouseNo', $user->shopHouseNo ?? '')),
+            shopStreet: @js(old('shopStreet', $user->shopStreet ?? '')),
+            shopBarangay: @js(old('shopBarangay', $user->shopBarangay ?? '')),
+            shopCity: @js(old('shopCity', $user->shopCity ?? 'Lumban')),
+            shopProvince: @js(old('shopProvince', $user->shopProvince ?? 'Laguna')),
+            shopPostalCode: @js(old('shopPostalCode', $user->shopPostalCode ?? '4014')),
+            shopLatitude: @js((float)(old('shopLatitude', $user->shopLatitude ?? 14.2952))),
+            shopLongitude: @js((float)(old('shopLongitude', $user->shopLongitude ?? 121.4647))),
+            locatingGps: false,
+            reverseGeocoding: false,
+            gpsMessage: '',
+
+            computedShopAddress() {
+                const parts = [
+                    this.shopHouseNo,
+                    this.shopStreet,
+                    this.shopBarangay,
+                    this.shopCity || 'Lumban',
+                    this.shopProvince || 'Laguna',
+                    this.shopPostalCode || '4014'
+                ].filter(Boolean);
+                return parts.length ? parts.join(', ') : 'Lumban, Laguna, Philippines';
+            },
+
+            openWorkshopLocationModal() {
+                this.showAccountSettingsModal = false;
+                this.showWorkshopLocationModal = true;
+                setTimeout(() => {
+                    this.initWorkshopMap();
+                }, 150);
+            },
+
+            initWorkshopMap() {
+                this.$nextTick(() => {
+                    const container = document.getElementById('seller-workshop-leaflet-map');
+                    if (!container || typeof L === 'undefined') return;
+
+                    const lat = Number(this.shopLatitude) || 14.2952;
+                    const lng = Number(this.shopLongitude) || 121.4647;
+
+                    if (window._sellerWorkshopMap) {
+                        try {
+                            window._sellerWorkshopMap.remove();
+                        } catch (e) {}
+                        window._sellerWorkshopMap = null;
+                        window._sellerWorkshopMarker = null;
+                    }
+
+                    const map = L.map('seller-workshop-leaflet-map', {
+                        zoomControl: true,
+                        attributionControl: false
+                    }).setView([lat, lng], 16);
+
+                    window._sellerWorkshopMap = map;
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19
+                    }).addTo(map);
+
+                    const shopPinIcon = L.divIcon({
+                        className: 'lumbarong-workshop-pin-icon',
+                        html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
+                        iconSize: [38, 38],
+                        iconAnchor: [19, 38],
+                        popupAnchor: [0, -38]
+                    });
+
+                    const marker = L.marker([lat, lng], {
+                        draggable: true,
+                        icon: shopPinIcon
+                    }).addTo(map);
+
+                    window._sellerWorkshopMarker = marker;
+
+                    marker.bindPopup('<b>' + (this.shopName || 'Artisan Workshop') + '</b><br><span style="font-size:11px;color:#666;">Drag pin or click map to set exact workshop location</span>');
+
+                    marker.on('dragend', (e) => {
+                        const pos = e.target.getLatLng();
+                        this.shopLatitude = Number(pos.lat.toFixed(6));
+                        this.shopLongitude = Number(pos.lng.toFixed(6));
+                        this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
+                    });
+
+                    map.on('click', (e) => {
+                        const pos = e.latlng;
+                        this.shopLatitude = Number(pos.lat.toFixed(6));
+                        this.shopLongitude = Number(pos.lng.toFixed(6));
+                        if (window._sellerWorkshopMarker) {
+                            window._sellerWorkshopMarker.setLatLng(pos);
+                        }
+                        this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
+                    });
+
+                    setTimeout(() => {
+                        if (window._sellerWorkshopMap) {
+                            window._sellerWorkshopMap.invalidateSize();
+                            if (window._sellerWorkshopMarker) {
+                                window._sellerWorkshopMarker.openPopup();
+                            }
+                        }
+                    }, 250);
+                });
+            },
+
+            async reverseGeocodeWorkshop(lat, lng) {
+                this.reverseGeocoding = true;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data && data.address) {
+                        const addr = data.address;
+                        if (addr.road || addr.street || addr.pedestrian) {
+                            this.shopStreet = addr.road || addr.street || addr.pedestrian;
+                        }
+                        if (addr.suburb || addr.quarter || addr.neighbourhood || addr.village) {
+                            this.shopBarangay = addr.suburb || addr.quarter || addr.neighbourhood || addr.village;
+                        }
+                        if (addr.city || addr.town || addr.municipality) {
+                            this.shopCity = addr.city || addr.town || addr.municipality;
+                        }
+                        if (addr.state || addr.province || addr.region) {
+                            let prov = addr.state || addr.province || addr.region;
+                            prov = prov.replace(/^Province of\s+/i, '');
+                            this.shopProvince = prov;
+                        }
+                        if (addr.postcode) {
+                            this.shopPostalCode = addr.postcode;
+                        }
+                        this.gpsMessage = '📍 Pin & address updated in real-time!';
+                        setTimeout(() => {
+                            if (this.gpsMessage === '📍 Pin & address updated in real-time!') {
+                                this.gpsMessage = '';
+                            }
+                        }, 4000);
+                    }
+                } catch (e) {
+                    // Non-blocking fallback
+                } finally {
+                    this.reverseGeocoding = false;
+                }
+            },
+
+            locateCurrentGps() {
+                if (!navigator.geolocation) {
+                    this.gpsMessage = 'Geolocation is not supported by your browser.';
+                    return;
+                }
+                this.locatingGps = true;
+                this.gpsMessage = '';
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        this.locatingGps = false;
+                        this.shopLatitude = Number(position.coords.latitude.toFixed(6));
+                        this.shopLongitude = Number(position.coords.longitude.toFixed(6));
+                        if (window._sellerWorkshopMap) {
+                            window._sellerWorkshopMap.setView([this.shopLatitude, this.shopLongitude], 17);
+                            if (window._sellerWorkshopMarker) {
+                                window._sellerWorkshopMarker.setLatLng([this.shopLatitude, this.shopLongitude]);
+                                window._sellerWorkshopMarker.openPopup();
+                            }
+                        }
+                        this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
+                        this.gpsMessage = '📍 Location pinned from device GPS!';
+                        setTimeout(() => {
+                            if (this.gpsMessage === '📍 Location pinned from device GPS!') {
+                                this.gpsMessage = '';
+                            }
+                        }, 4000);
+                    },
+                    (error) => {
+                        this.locatingGps = false;
+                        this.gpsMessage = 'Could not get GPS location. Please allow permissions or drag the pin on map.';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            },
+
+            // Secure Email Change Manager
+            showChangeEmailModal: false,
+            emailStep: 1,
+            currentEmailDisplay: @js($user->email),
+            newEmailInput: '',
+            oldEmailOtp: '',
+            newEmailOtp: '',
+            emailLoading: false,
+            emailError: '',
+            emailSuccessMsg: '',
+            emailCooldown: 0,
+            emailTimer: null,
+
+            openChangeEmailModal() {
+                this.showAccountSettingsModal = false;
+                this.showChangeEmailModal = true;
+                this.emailStep = 1;
+                this.newEmailInput = '';
+                this.oldEmailOtp = '';
+                this.newEmailOtp = '';
+                this.emailError = '';
+                this.emailSuccessMsg = '';
+                this.emailLoading = false;
+            },
+
+            closeChangeEmailModal() {
+                if (this.emailStep > 1 && this.emailStep < 4) {
+                    fetch('{{ route('profile.email.cancel') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    }).catch(() => {});
+                }
+                this.showChangeEmailModal = false;
+                this.emailStep = 1;
+                this.emailError = '';
+            },
+
+            startEmailCooldown(seconds) {
+                this.emailCooldown = seconds;
+                if (this.emailTimer) clearInterval(this.emailTimer);
+                this.emailTimer = setInterval(() => {
+                    if (this.emailCooldown > 0) {
+                        this.emailCooldown--;
+                    } else {
+                        clearInterval(this.emailTimer);
+                    }
+                }, 1000);
+            },
+
+            async submitNewEmail() {
+                this.emailError = '';
+                if (!this.newEmailInput || !this.newEmailInput.includes('@')) {
+                    this.emailError = 'Please enter a valid new email address.';
+                    return;
+                }
+                this.emailLoading = true;
+                try {
+                    const res = await fetch('{{ route('profile.email.initiate') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ new_email: this.newEmailInput })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        this.emailStep = 2;
+                        this.emailSuccessMsg = data.message;
+                        this.startEmailCooldown(data.cooldown || 60);
+                    } else {
+                        this.emailError = data.message || 'Unable to initiate email change.';
+                    }
+                } catch (err) {
+                    this.emailError = 'Network error. Please try again.';
+                } finally {
+                    this.emailLoading = false;
+                }
+            },
+
+            async verifyOldEmailOtp() {
+                this.emailError = '';
+                if (this.oldEmailOtp.length !== 6) {
+                    this.emailError = 'Please enter the complete 6-digit verification code.';
+                    return;
+                }
+                this.emailLoading = true;
+                try {
+                    const res = await fetch('{{ route('profile.email.verify-old') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ code: this.oldEmailOtp })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        this.emailStep = 3;
+                        this.emailSuccessMsg = data.message;
+                        this.startEmailCooldown(data.cooldown || 60);
+                    } else {
+                        this.emailError = data.message || 'Incorrect or expired verification code.';
+                    }
+                } catch (err) {
+                    this.emailError = 'Network error. Please try again.';
+                } finally {
+                    this.emailLoading = false;
+                }
+            },
+
+            async resendOldEmailOtp() {
+                if (this.emailCooldown > 0) return;
+                this.emailLoading = true;
+                this.emailError = '';
+                try {
+                    const res = await fetch('{{ route('profile.email.resend-old') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        this.emailSuccessMsg = data.message;
+                        this.startEmailCooldown(data.cooldown || 60);
+                    } else {
+                        this.emailError = data.message || 'Unable to resend code.';
+                    }
+                } catch (err) {
+                    this.emailError = 'Network error. Please try again.';
+                } finally {
+                    this.emailLoading = false;
+                }
+            },
+
+            async verifyNewEmailOtp() {
+                this.emailError = '';
+                if (this.newEmailOtp.length !== 6) {
+                    this.emailError = 'Please enter the complete 6-digit verification code.';
+                    return;
+                }
+                this.emailLoading = true;
+                try {
+                    const res = await fetch('{{ route('profile.email.verify-new') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ code: this.newEmailOtp, new_email: this.newEmailInput })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        this.emailStep = 4;
+                        this.currentEmailDisplay = data.new_email || this.newEmailInput;
+                        this.emailSuccessMsg = data.message;
+                    } else {
+                        this.emailError = data.message || 'Incorrect or expired verification code.';
+                    }
+                } catch (err) {
+                    this.emailError = 'Network error. Please try again.';
+                } finally {
+                    this.emailLoading = false;
+                }
+            },
+
+            async resendNewEmailOtp() {
+                if (this.emailCooldown > 0) return;
+                this.emailLoading = true;
+                this.emailError = '';
+                try {
+                    const res = await fetch('{{ route('profile.email.resend-new') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ new_email: this.newEmailInput })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        this.emailSuccessMsg = data.message;
+                        this.startEmailCooldown(data.cooldown || 60);
+                    } else {
+                        this.emailError = data.message || 'Unable to resend code.';
+                    }
+                } catch (err) {
+                    this.emailError = 'Network error. Please try again.';
+                } finally {
+                    this.emailLoading = false;
+                }
+            }
+        };
+    }
+    </script>
+
     <div class="min-h-[calc(100vh-120px)] px-3 py-4 sm:px-6 sm:py-8 pb-28 lg:pb-12" 
          @open-payment-modal.window="showPaymentModal = true"
          x-init="
@@ -32,386 +417,7 @@
                  showPaymentModal = true;
              }
          "
-         x-data="{ 
-             showAccountSettingsModal: false,
-             showEditModal: false,
-             showPaymentModal: false,
-             showPaymentHistoryModal: false,
-             showLegalModal: false,
-             showWorkshopLocationModal: false,
-             showDocPreview: false,
-             showDeleteAccountModal: false,
-             showDownloadInfoModal: false,
-             deleteAccountConfirmation: '',
-             previewDocUrl: '',
-             previewDocTitle: '',
-             paymentEditing: false,
-             legalEditing: false,
-             shopName: @js(old('name', $user->name ?? '')),
-             mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
-             shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
-
-             // Workshop & Store Pickup Location State
-             shopHouseNo: @js(old('shopHouseNo', $user->shopHouseNo ?? '')),
-             shopStreet: @js(old('shopStreet', $user->shopStreet ?? '')),
-             shopBarangay: @js(old('shopBarangay', $user->shopBarangay ?? '')),
-             shopCity: @js(old('shopCity', $user->shopCity ?? 'Lumban')),
-             shopProvince: @js(old('shopProvince', $user->shopProvince ?? 'Laguna')),
-             shopPostalCode: @js(old('shopPostalCode', $user->shopPostalCode ?? '4014')),
-             shopLatitude: @js((float)(old('shopLatitude', $user->shopLatitude ?? 14.2952))),
-             shopLongitude: @js((float)(old('shopLongitude', $user->shopLongitude ?? 121.4647))),
-             locatingGps: false,
-             reverseGeocoding: false,
-             gpsMessage: '',
-
-             computedShopAddress() {
-                 const parts = [
-                     this.shopHouseNo,
-                     this.shopStreet,
-                     this.shopBarangay,
-                     this.shopCity || 'Lumban',
-                     this.shopProvince || 'Laguna',
-                     this.shopPostalCode || '4014'
-                 ].filter(Boolean);
-                 return parts.length ? parts.join(', ') : 'Lumban, Laguna, Philippines';
-             },
-
-             openWorkshopLocationModal() {
-                 this.showAccountSettingsModal = false;
-                 this.showWorkshopLocationModal = true;
-                 setTimeout(() => {
-                     this.initWorkshopMap();
-                 }, 150);
-             },
-
-             initWorkshopMap() {
-                 this.$nextTick(() => {
-                     const container = document.getElementById('seller-workshop-leaflet-map');
-                     if (!container || typeof L === 'undefined') return;
-
-                     const lat = Number(this.shopLatitude) || 14.2952;
-                     const lng = Number(this.shopLongitude) || 121.4647;
-
-                     if (window._sellerWorkshopMap) {
-                         try {
-                             window._sellerWorkshopMap.remove();
-                         } catch (e) {}
-                         window._sellerWorkshopMap = null;
-                         window._sellerWorkshopMarker = null;
-                     }
-
-                     const map = L.map('seller-workshop-leaflet-map', {
-                         zoomControl: true,
-                         attributionControl: false
-                     }).setView([lat, lng], 16);
-
-                     window._sellerWorkshopMap = map;
-
-                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                         maxZoom: 19
-                     }).addTo(map);
-
-                     const shopPinIcon = L.divIcon({
-                         className: 'lumbarong-workshop-pin-icon',
-                         html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
-                         iconSize: [38, 38],
-                         iconAnchor: [19, 38],
-                         popupAnchor: [0, -38]
-                     });
-
-                     const marker = L.marker([lat, lng], {
-                         draggable: true,
-                         icon: shopPinIcon
-                     }).addTo(map);
-
-                     window._sellerWorkshopMarker = marker;
-
-                     marker.bindPopup('<b>' + (this.shopName || 'Artisan Workshop') + '</b><br><span style="font-size:11px;color:#666;">Drag pin or click map to set exact workshop location</span>');
-
-                     marker.on('dragend', (e) => {
-                         const pos = e.target.getLatLng();
-                         this.shopLatitude = Number(pos.lat.toFixed(6));
-                         this.shopLongitude = Number(pos.lng.toFixed(6));
-                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
-                     });
-
-                     map.on('click', (e) => {
-                         const pos = e.latlng;
-                         this.shopLatitude = Number(pos.lat.toFixed(6));
-                         this.shopLongitude = Number(pos.lng.toFixed(6));
-                         if (window._sellerWorkshopMarker) {
-                             window._sellerWorkshopMarker.setLatLng(pos);
-                         }
-                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
-                     });
-
-                     setTimeout(() => {
-                         if (window._sellerWorkshopMap) {
-                             window._sellerWorkshopMap.invalidateSize();
-                             if (window._sellerWorkshopMarker) {
-                                 window._sellerWorkshopMarker.openPopup();
-                             }
-                         }
-                     }, 250);
-                 });
-             },
-
-             async reverseGeocodeWorkshop(lat, lng) {
-                 this.reverseGeocoding = true;
-                 try {
-                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-                         headers: { 'Accept': 'application/json' }
-                     });
-                     if (!res.ok) return;
-                     const data = await res.json();
-                     if (data && data.address) {
-                         const addr = data.address;
-                         if (addr.road || addr.street || addr.pedestrian) {
-                             this.shopStreet = addr.road || addr.street || addr.pedestrian;
-                         }
-                         if (addr.suburb || addr.quarter || addr.neighbourhood || addr.village) {
-                             this.shopBarangay = addr.suburb || addr.quarter || addr.neighbourhood || addr.village;
-                         }
-                         if (addr.city || addr.town || addr.municipality) {
-                             this.shopCity = addr.city || addr.town || addr.municipality;
-                         }
-                         if (addr.state || addr.province || addr.region) {
-                             let prov = addr.state || addr.province || addr.region;
-                             prov = prov.replace(/^Province of\s+/i, '');
-                             this.shopProvince = prov;
-                         }
-                         if (addr.postcode) {
-                             this.shopPostalCode = addr.postcode;
-                         }
-                         this.gpsMessage = '📍 Pin & address updated in real-time!';
-                         setTimeout(() => {
-                             if (this.gpsMessage === '📍 Pin & address updated in real-time!') {
-                                 this.gpsMessage = '';
-                             }
-                         }, 4000);
-                     }
-                 } catch (e) {
-                     // Non-blocking fallback
-                 } finally {
-                     this.reverseGeocoding = false;
-                 }
-             },
-
-             locateCurrentGps() {
-                 if (!navigator.geolocation) {
-                     this.gpsMessage = 'Geolocation is not supported by your browser.';
-                     return;
-                 }
-                 this.locatingGps = true;
-                 this.gpsMessage = '';
-                 navigator.geolocation.getCurrentPosition(
-                     (position) => {
-                         this.locatingGps = false;
-                         this.shopLatitude = Number(position.coords.latitude.toFixed(6));
-                         this.shopLongitude = Number(position.coords.longitude.toFixed(6));
-                         if (window._sellerWorkshopMap) {
-                             window._sellerWorkshopMap.setView([this.shopLatitude, this.shopLongitude], 17);
-                             if (window._sellerWorkshopMarker) {
-                                 window._sellerWorkshopMarker.setLatLng([this.shopLatitude, this.shopLongitude]);
-                                 window._sellerWorkshopMarker.openPopup();
-                             }
-                         }
-                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
-                         this.gpsMessage = '📍 Location pinned from device GPS!';
-                         setTimeout(() => {
-                             if (this.gpsMessage === '📍 Location pinned from device GPS!') {
-                                 this.gpsMessage = '';
-                             }
-                         }, 4000);
-                     },
-                     (error) => {
-                         this.locatingGps = false;
-                         this.gpsMessage = 'Could not get GPS location. Please allow permissions or drag the pin on map.';
-                     },
-                     { enableHighAccuracy: true, timeout: 10000 }
-                 );
-             },
-
-             // Secure Email Change Manager
-             showChangeEmailModal: false,
-             emailStep: 1,
-             currentEmailDisplay: @js($user->email),
-             newEmailInput: '',
-             oldEmailOtp: '',
-             newEmailOtp: '',
-             emailLoading: false,
-             emailError: '',
-             emailSuccessMsg: '',
-             emailCooldown: 0,
-             emailTimer: null,
-
-             openChangeEmailModal() {
-                 this.showAccountSettingsModal = false;
-                 this.showChangeEmailModal = true;
-                 this.emailStep = 1;
-                 this.newEmailInput = '';
-                 this.oldEmailOtp = '';
-                 this.newEmailOtp = '';
-                 this.emailError = '';
-                 this.emailSuccessMsg = '';
-                 this.emailLoading = false;
-             },
-
-             closeChangeEmailModal() {
-                 if (this.emailStep > 1 && this.emailStep < 4) {
-                     fetch('{{ route('profile.email.cancel') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                     }).catch(() => {});
-                 }
-                 this.showChangeEmailModal = false;
-                 this.emailStep = 1;
-                 this.emailError = '';
-             },
-
-             startEmailCooldown(seconds) {
-                 this.emailCooldown = seconds;
-                 if (this.emailTimer) clearInterval(this.emailTimer);
-                 this.emailTimer = setInterval(() => {
-                     if (this.emailCooldown > 0) {
-                         this.emailCooldown--;
-                     } else {
-                         clearInterval(this.emailTimer);
-                     }
-                 }, 1000);
-             },
-
-             async submitNewEmail() {
-                 this.emailError = '';
-                 if (!this.newEmailInput || !this.newEmailInput.includes('@')) {
-                     this.emailError = 'Please enter a valid new email address.';
-                     return;
-                 }
-                 this.emailLoading = true;
-                 try {
-                     const res = await fetch('{{ route('profile.email.initiate') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                         body: JSON.stringify({ new_email: this.newEmailInput })
-                     });
-                     const data = await res.json();
-                     if (res.ok && data.status === 'success') {
-                         this.emailStep = 2;
-                         this.emailSuccessMsg = data.message;
-                         this.startEmailCooldown(data.cooldown || 60);
-                     } else {
-                         this.emailError = data.message || 'Unable to initiate email change.';
-                     }
-                 } catch (err) {
-                     this.emailError = 'Network error. Please try again.';
-                 } finally {
-                     this.emailLoading = false;
-                 }
-             },
-
-             async verifyOldEmailOtp() {
-                 this.emailError = '';
-                 if (this.oldEmailOtp.length !== 6) {
-                     this.emailError = 'Please enter the complete 6-digit verification code.';
-                     return;
-                 }
-                 this.emailLoading = true;
-                 try {
-                     const res = await fetch('{{ route('profile.email.verify-old') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                         body: JSON.stringify({ code: this.oldEmailOtp })
-                     });
-                     const data = await res.json();
-                     if (res.ok && data.status === 'success') {
-                         this.emailStep = 3;
-                         this.emailSuccessMsg = data.message;
-                         this.startEmailCooldown(data.cooldown || 60);
-                     } else {
-                         this.emailError = data.message || 'Incorrect or expired verification code.';
-                     }
-                 } catch (err) {
-                     this.emailError = 'Network error. Please try again.';
-                 } finally {
-                     this.emailLoading = false;
-                 }
-             },
-
-             async resendOldEmailOtp() {
-                 if (this.emailCooldown > 0) return;
-                 this.emailLoading = true;
-                 this.emailError = '';
-                 try {
-                     const res = await fetch('{{ route('profile.email.resend-old') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                     });
-                     const data = await res.json();
-                     if (res.ok && data.status === 'success') {
-                         this.emailSuccessMsg = data.message;
-                         this.startEmailCooldown(data.cooldown || 60);
-                     } else {
-                         this.emailError = data.message || 'Unable to resend code.';
-                     }
-                 } catch (err) {
-                     this.emailError = 'Network error. Please try again.';
-                 } finally {
-                     this.emailLoading = false;
-                 }
-             },
-
-             async verifyNewEmailOtp() {
-                 this.emailError = '';
-                 if (this.newEmailOtp.length !== 6) {
-                     this.emailError = 'Please enter the complete 6-digit verification code.';
-                     return;
-                 }
-                 this.emailLoading = true;
-                 try {
-                     const res = await fetch('{{ route('profile.email.verify-new') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                         body: JSON.stringify({ code: this.newEmailOtp, new_email: this.newEmailInput })
-                     });
-                     const data = await res.json();
-                     if (res.ok && data.status === 'success') {
-                         this.emailStep = 4;
-                         this.currentEmailDisplay = data.new_email || this.newEmailInput;
-                         this.emailSuccessMsg = data.message;
-                     } else {
-                         this.emailError = data.message || 'Incorrect or expired verification code.';
-                     }
-                 } catch (err) {
-                     this.emailError = 'Network error. Please try again.';
-                 } finally {
-                     this.emailLoading = false;
-                 }
-             },
-
-             async resendNewEmailOtp() {
-                 if (this.emailCooldown > 0) return;
-                 this.emailLoading = true;
-                 this.emailError = '';
-                 try {
-                     const res = await fetch('{{ route('profile.email.resend-new') }}', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                         body: JSON.stringify({ new_email: this.newEmailInput })
-                     });
-                     const data = await res.json();
-                     if (res.ok && data.status === 'success') {
-                         this.emailSuccessMsg = data.message;
-                         this.startEmailCooldown(data.cooldown || 60);
-                     } else {
-                         this.emailError = data.message || 'Unable to resend code.';
-                     }
-                 } catch (err) {
-                     this.emailError = 'Network error. Please try again.';
-                 } finally {
-                     this.emailLoading = false;
-                 }
-             }
-         }">
+         x-data="sellerProfileState()">
 
         {{-- Main Container: Compact card on mobile, wide 3-column dashboard on large screens --}}
         <div class="w-full max-w-165 lg:max-w-5xl mx-auto transition-all duration-300 px-4 py-5 sm:px-6 sm:py-7"
