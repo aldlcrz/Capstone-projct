@@ -52,8 +52,6 @@
              shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
 
              // Workshop & Store Pickup Location State
-             workshopMap: null,
-             workshopMarker: null,
              shopHouseNo: @js(old('shopHouseNo', $user->shopHouseNo ?? '')),
              shopStreet: @js(old('shopStreet', $user->shopStreet ?? '')),
              shopBarangay: @js(old('shopBarangay', $user->shopBarangay ?? '')),
@@ -63,14 +61,27 @@
              shopLatitude: @js((float)(old('shopLatitude', $user->shopLatitude ?? 14.2952))),
              shopLongitude: @js((float)(old('shopLongitude', $user->shopLongitude ?? 121.4647))),
              locatingGps: false,
+             reverseGeocoding: false,
              gpsMessage: '',
+
+             computedShopAddress() {
+                 const parts = [
+                     this.shopHouseNo,
+                     this.shopStreet,
+                     this.shopBarangay,
+                     this.shopCity || 'Lumban',
+                     this.shopProvince || 'Laguna',
+                     this.shopPostalCode || '4014'
+                 ].filter(Boolean);
+                 return parts.length ? parts.join(', ') : 'Lumban, Laguna, Philippines';
+             },
 
              openWorkshopLocationModal() {
                  this.showAccountSettingsModal = false;
                  this.showWorkshopLocationModal = true;
                  setTimeout(() => {
                      this.initWorkshopMap();
-                 }, 180);
+                 }, 150);
              },
 
              initWorkshopMap() {
@@ -81,61 +92,109 @@
                      const lat = Number(this.shopLatitude) || 14.2952;
                      const lng = Number(this.shopLongitude) || 121.4647;
 
-                     if (this.workshopMap) {
-                         this.workshopMap.remove();
-                         this.workshopMap = null;
+                     if (window._sellerWorkshopMap) {
+                         try {
+                             window._sellerWorkshopMap.remove();
+                         } catch (e) {}
+                         window._sellerWorkshopMap = null;
+                         window._sellerWorkshopMarker = null;
                      }
 
-                     this.workshopMap = L.map('seller-workshop-leaflet-map', {
+                     const map = L.map('seller-workshop-leaflet-map', {
                          zoomControl: true,
                          attributionControl: false
                      }).setView([lat, lng], 16);
 
+                     window._sellerWorkshopMap = map;
+
                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                          maxZoom: 19
-                     }).addTo(this.workshopMap);
+                     }).addTo(map);
 
                      const shopPinIcon = L.divIcon({
                          className: 'lumbarong-workshop-pin-icon',
-                         html: `
-                             <div style='position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;'>
-                                 <div style='width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);'>
-                                     <span style='transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;'>🏛️</span>
-                                 </div>
-                                 <div style='position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);'></div>
-                             </div>
-                         `,
+                         html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
                          iconSize: [38, 38],
                          iconAnchor: [19, 38],
                          popupAnchor: [0, -38]
                      });
 
-                     this.workshopMarker = L.marker([lat, lng], {
+                     const marker = L.marker([lat, lng], {
                          draggable: true,
                          icon: shopPinIcon
-                     }).addTo(this.workshopMap);
+                     }).addTo(map);
 
-                     this.workshopMarker.bindPopup('<b>' + (this.shopName || 'Artisan Workshop') + '</b><br><span style=\'font-size:11px;color:#666;\'>Drag pin or tap on map to set exact workshop location</span>').openPopup();
+                     window._sellerWorkshopMarker = marker;
 
-                     this.workshopMarker.on('dragend', (e) => {
+                     marker.bindPopup('<b>' + (this.shopName || 'Artisan Workshop') + '</b><br><span style="font-size:11px;color:#666;">Drag pin or click map to set exact workshop location</span>');
+
+                     marker.on('dragend', (e) => {
                          const pos = e.target.getLatLng();
                          this.shopLatitude = Number(pos.lat.toFixed(6));
                          this.shopLongitude = Number(pos.lng.toFixed(6));
+                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
                      });
 
-                     this.workshopMap.on('click', (e) => {
+                     map.on('click', (e) => {
                          const pos = e.latlng;
                          this.shopLatitude = Number(pos.lat.toFixed(6));
                          this.shopLongitude = Number(pos.lng.toFixed(6));
-                         if (this.workshopMarker) {
-                             this.workshopMarker.setLatLng(pos);
+                         if (window._sellerWorkshopMarker) {
+                             window._sellerWorkshopMarker.setLatLng(pos);
                          }
+                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
                      });
 
                      setTimeout(() => {
-                         if (this.workshopMap) this.workshopMap.invalidateSize();
-                     }, 300);
+                         if (window._sellerWorkshopMap) {
+                             window._sellerWorkshopMap.invalidateSize();
+                             if (window._sellerWorkshopMarker) {
+                                 window._sellerWorkshopMarker.openPopup();
+                             }
+                         }
+                     }, 250);
                  });
+             },
+
+             async reverseGeocodeWorkshop(lat, lng) {
+                 this.reverseGeocoding = true;
+                 try {
+                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                         headers: { 'Accept': 'application/json' }
+                     });
+                     if (!res.ok) return;
+                     const data = await res.json();
+                     if (data && data.address) {
+                         const addr = data.address;
+                         if (addr.road || addr.street || addr.pedestrian) {
+                             this.shopStreet = addr.road || addr.street || addr.pedestrian;
+                         }
+                         if (addr.suburb || addr.quarter || addr.neighbourhood || addr.village) {
+                             this.shopBarangay = addr.suburb || addr.quarter || addr.neighbourhood || addr.village;
+                         }
+                         if (addr.city || addr.town || addr.municipality) {
+                             this.shopCity = addr.city || addr.town || addr.municipality;
+                         }
+                         if (addr.state || addr.province || addr.region) {
+                             let prov = addr.state || addr.province || addr.region;
+                             prov = prov.replace(/^Province of\s+/i, '');
+                             this.shopProvince = prov;
+                         }
+                         if (addr.postcode) {
+                             this.shopPostalCode = addr.postcode;
+                         }
+                         this.gpsMessage = '📍 Pin & address updated in real-time!';
+                         setTimeout(() => {
+                             if (this.gpsMessage === '📍 Pin & address updated in real-time!') {
+                                 this.gpsMessage = '';
+                             }
+                         }, 4000);
+                     }
+                 } catch (e) {
+                     // Non-blocking fallback
+                 } finally {
+                     this.reverseGeocoding = false;
+                 }
              },
 
              locateCurrentGps() {
@@ -150,15 +209,20 @@
                          this.locatingGps = false;
                          this.shopLatitude = Number(position.coords.latitude.toFixed(6));
                          this.shopLongitude = Number(position.coords.longitude.toFixed(6));
-                         if (this.workshopMap) {
-                             this.workshopMap.setView([this.shopLatitude, this.shopLongitude], 17);
-                             if (this.workshopMarker) {
-                                 this.workshopMarker.setLatLng([this.shopLatitude, this.shopLongitude]);
-                                 this.workshopMarker.openPopup();
+                         if (window._sellerWorkshopMap) {
+                             window._sellerWorkshopMap.setView([this.shopLatitude, this.shopLongitude], 17);
+                             if (window._sellerWorkshopMarker) {
+                                 window._sellerWorkshopMarker.setLatLng([this.shopLatitude, this.shopLongitude]);
+                                 window._sellerWorkshopMarker.openPopup();
                              }
                          }
+                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
                          this.gpsMessage = '📍 Location pinned from device GPS!';
-                         setTimeout(() => { this.gpsMessage = ''; }, 4000);
+                         setTimeout(() => {
+                             if (this.gpsMessage === '📍 Location pinned from device GPS!') {
+                                 this.gpsMessage = '';
+                             }
+                         }, 4000);
                      },
                      (error) => {
                          this.locatingGps = false;
@@ -2178,46 +2242,63 @@
 
                     {{-- Address Fields Grid --}}
                     <div class="space-y-3">
-                        <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
-                            <span>🏛️ Workshop Physical Address</span>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
+                                <span>🏛️ Workshop Physical Address</span>
+                            </div>
+                            <span x-show="reverseGeocoding" x-cloak class="text-[10.5px] text-[#C49520] font-bold flex items-center gap-1">
+                                <svg class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                <span>Auto-detecting address...</span>
+                            </span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">House / Building / Unit No.</label>
-                                <input type="text" name="shopHouseNo" value="{{ old('shopHouseNo', $user->shopHouseNo) }}" placeholder="e.g. Unit 4B, 128"
+                                <input type="text" name="shopHouseNo" x-model="shopHouseNo" placeholder="e.g. Unit 4B, 128"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
 
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Street Name</label>
-                                <input type="text" name="shopStreet" value="{{ old('shopStreet', $user->shopStreet) }}" placeholder="e.g. Rizal Street, General Luna"
+                                <input type="text" name="shopStreet" x-model="shopStreet" placeholder="e.g. Rizal Street, General Luna"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
 
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Barangay</label>
-                                <input type="text" name="shopBarangay" value="{{ old('shopBarangay', $user->shopBarangay) }}" placeholder="e.g. Barangay Salac, Poblacion"
+                                <input type="text" name="shopBarangay" x-model="shopBarangay" placeholder="e.g. Barangay Salac, Poblacion"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
 
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">City / Municipality</label>
-                                <input type="text" name="shopCity" value="{{ old('shopCity', $user->shopCity ?: 'Lumban') }}" placeholder="Lumban"
+                                <input type="text" name="shopCity" x-model="shopCity" placeholder="Lumban"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
 
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Province</label>
-                                <input type="text" name="shopProvince" value="{{ old('shopProvince', $user->shopProvince ?: 'Laguna') }}" placeholder="Laguna"
+                                <input type="text" name="shopProvince" x-model="shopProvince" placeholder="Laguna"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
 
                             <div>
                                 <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Postal / ZIP Code</label>
-                                <input type="text" name="shopPostalCode" value="{{ old('shopPostalCode', $user->shopPostalCode ?: '4014') }}" placeholder="4014"
+                                <input type="text" name="shopPostalCode" x-model="shopPostalCode" placeholder="4014"
                                        class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
                             </div>
+                        </div>
+
+                        {{-- Live Formatted Address Preview --}}
+                        <div class="p-3 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center justify-between gap-2 text-xs">
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-[#8C827A] block">Compiled Pickup Address:</span>
+                                <span class="font-bold text-[#1E1915] truncate block mt-0.5" x-text="computedShopAddress()"></span>
+                            </div>
+                            <span class="text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md shrink-0">
+                                Real-Time
+                            </span>
                         </div>
                     </div>
 

@@ -1368,19 +1368,24 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 const shopName = this.shippingQuote?.shop_name || sellerDefaults.shopName || 'Artisan Workshop';
                 const shopAddress = this.shippingQuote?.shop_address || sellerDefaults.shopAddress || 'Lumban, Laguna';
 
-                if (this.storePickupMap) {
-                    this.storePickupMap.remove();
-                    this.storePickupMap = null;
+                if (window._checkoutStorePickupMap) {
+                    try {
+                        window._checkoutStorePickupMap.remove();
+                    } catch (e) {}
+                    window._checkoutStorePickupMap = null;
+                    window._checkoutStorePickupMarker = null;
                 }
 
-                this.storePickupMap = L.map('store-pickup-leaflet-map', {
+                const map = L.map('store-pickup-leaflet-map', {
                     zoomControl: true,
                     attributionControl: false
                 }).setView([lat, lng], 16);
 
+                window._checkoutStorePickupMap = map;
+
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19
-                }).addTo(this.storePickupMap);
+                }).addTo(map);
 
                 const shopPinIcon = L.divIcon({
                     className: 'lumbarong-shop-pin-icon',
@@ -1397,9 +1402,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     popupAnchor: [0, -36]
                 });
 
-                this.storePickupMarker = L.marker([lat, lng], {
+                const marker = L.marker([lat, lng], {
                     icon: shopPinIcon
-                }).addTo(this.storePickupMap);
+                }).addTo(map);
+
+                window._checkoutStorePickupMarker = marker;
 
                 const popupHtml = `
                     <div style="font-family:sans-serif;font-size:12px;line-height:1.4;color:#1E1915;padding:2px;max-width:200px;">
@@ -1408,10 +1415,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                         <div style="margin-top:5px;font-size:9px;font-weight:800;color:#8C6D1F;background:#FAF5EA;padding:2px 6px;border-radius:4px;border:1px solid #E6D8BA;display:inline-block;">Artisan Workshop</div>
                     </div>
                 `;
-                this.storePickupMarker.bindPopup(popupHtml).openPopup();
+                marker.bindPopup(popupHtml).openPopup();
 
                 setTimeout(() => {
-                    if (this.storePickupMap) this.storePickupMap.invalidateSize();
+                    if (window._checkoutStorePickupMap) window._checkoutStorePickupMap.invalidateSize();
                 }, 300);
             });
         },
