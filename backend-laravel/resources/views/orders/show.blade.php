@@ -567,28 +567,80 @@
                     if (!$locality && !empty($addr['locality'])) {
                         $locality = $addr['locality'];
                     }
+                @php
+                    $sellerWorkshopLat = $order->seller?->shopLatitude ? (float) $order->seller->shopLatitude : 14.2988;
+                    $sellerWorkshopLng = $order->seller?->shopLongitude ? (float) $order->seller->shopLongitude : 121.4606;
+                    $sellerWorkshopAddress = $order->seller?->shopAddress ?: trim(implode(', ', array_filter([
+                        $order->seller?->shopHouseNo,
+                        $order->seller?->shopStreet,
+                        $order->seller?->shopBarangay,
+                        $order->seller?->shopCity ?: 'Lumban',
+                        $order->seller?->shopProvince ?: 'Laguna',
+                        $order->seller?->shopPostalCode ?: '4014'
+                    ])));
+                    if (empty($sellerWorkshopAddress)) {
+                        $sellerWorkshopAddress = 'Lumban, Laguna, Philippines (4014)';
+                    }
+                    $sellerShopName = $order->seller?->shopName ?: ($order->seller?->name ?: 'Lumban Artisan Workshop');
+                    $directionsUrl = "https://www.google.com/maps/dir/?api=1&destination=" . urlencode("{$sellerWorkshopLat},{$sellerWorkshopLng}");
                 @endphp
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;" class="space-y-2 h-full flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#78716C] pb-2" style="border-bottom:1px solid #EAE1D0;">
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;" class="space-y-3 h-full flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between pb-2" style="border-bottom:1px solid #EAE1D0;">
+                            <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#78716C]">
+                                @if($isStorePickup)
+                                    <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    <span>Store Pickup &amp; Workshop Location</span>
+                                @elseif($isSpecialDelivery)
+                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span>Special Delivery Address</span>
+                                @else
+                                    <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span>Ship To</span>
+                                @endif
+                            </div>
                             @if($isStorePickup)
-                                <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                <span>Pickup Point & Customer</span>
-                            @elseif($isSpecialDelivery)
-                                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span>Special Delivery Address</span>
-                            @else
-                                <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span>Ship To</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                                    Self-Pickup Ready
+                                </span>
                             @endif
                         </div>
 
-                        <div class="space-y-1 pt-2">
-                            <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
+                        <div class="space-y-1.5 pt-1">
                             @if($isStorePickup)
-                                <p class="text-xs text-emerald-800 font-bold leading-relaxed">🏬 Self-Pickup at Workshop (Lumban, Laguna)</p>
-                                <p class="text-[11px] text-[#78716C] leading-relaxed">Present your Order ID (#LB-OR-{{ strtoupper(substr($order->id, -8)) }}) upon claiming.</p>
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] font-serif">{{ $sellerShopName }}</h4>
+                                        <p class="text-xs text-[#78716C] leading-relaxed mt-0.5 font-medium flex items-center gap-1">
+                                            <span>📍</span>
+                                            <span>{{ $sellerWorkshopAddress }}</span>
+                                        </p>
+                                    </div>
+                                    <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
+                                       class="px-2.5 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] hover:bg-[#C49520] hover:text-white transition-all text-[11px] font-black uppercase tracking-wider shrink-0 shadow-2xs flex items-center gap-1">
+                                        <span>🗺️ Directions</span>
+                                    </a>
+                                </div>
+
+                                {{-- Interactive Leaflet Workshop Pickup Map --}}
+                                <div class="mt-2.5 rounded-2xl overflow-hidden border border-[#E2D9C8] shadow-inner bg-[#FAF8F5] relative">
+                                    <div id="order-workshop-leaflet-map" class="w-full h-48 sm:h-56 relative z-0"></div>
+                                    <div class="absolute bottom-2 left-2 right-2 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#ECE3D2] flex items-center justify-between text-[10px] font-bold text-[#1E1915] shadow-xs pointer-events-none">
+                                        <span class="text-[#C49520]">🏛️ {{ $sellerShopName }}</span>
+                                        <span class="text-[#78716C] font-mono">{{ number_format($sellerWorkshopLat, 4) }}, {{ number_format($sellerWorkshopLng, 4) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-2.5 bg-[#FAF7F0] border border-[#EAE1D0] rounded-xl flex items-center justify-between gap-2 text-xs">
+                                    <div class="text-[11px] text-[#78716C]">
+                                        Claiming Code: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong>
+                                    </div>
+                                    <span class="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                        Buyer: {{ $recipient }}
+                                    </span>
+                                </div>
                             @else
+                                <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
                                 @if($isSpecialDelivery)
                                     <p class="text-xs text-blue-800 font-bold leading-relaxed">🏍️ Local Special Delivery (Artisan Rider)</p>
                                 @endif
@@ -605,7 +657,7 @@
                     </div>
 
                     @if(!empty($addr['phone']))
-                        <div class="pt-2">
+                        <div class="pt-1">
                             <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FAF8F5] border border-[#ECE3D2] rounded-lg text-[11px] font-bold text-[#1E1915]">
                                 <svg class="w-3 h-3 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                                 <span>{{ $addr['phone'] }}</span>
@@ -1411,4 +1463,56 @@
     </div>
 
 </div>
+
+@if($isStorePickup)
+    {{-- Leaflet Assets for Workshop Map --}}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapContainer = document.getElementById('order-workshop-leaflet-map');
+        if (!mapContainer || typeof L === 'undefined') return;
+
+        const lat = {{ $sellerWorkshopLat }};
+        const lng = {{ $sellerWorkshopLng }};
+        const shopName = @js($sellerShopName);
+        const shopAddress = @js($sellerWorkshopAddress);
+
+        const map = L.map('order-workshop-leaflet-map', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([lat, lng], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        const shopPinIcon = L.divIcon({
+            className: 'lumbarong-workshop-pin-icon',
+            html: `
+                <div style='position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;'>
+                    <div style='width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);'>
+                        <span style='transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;'>🏛️</span>
+                    </div>
+                    <div style='position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);'></div>
+                </div>
+            `,
+            iconSize: [38, 38],
+            iconAnchor: [19, 38],
+            popupAnchor: [0, -38]
+        });
+
+        const marker = L.marker([lat, lng], { icon: shopPinIcon }).addTo(map);
+        marker.bindPopup(`
+            <div style="font-family:sans-serif;padding:2px;">
+                <div style="font-weight:800;color:#1E1915;font-size:12px;">${shopName}</div>
+                <div style="font-size:11px;color:#666;margin-top:2px;">${shopAddress}</div>
+                <a href="${@js($directionsUrl)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:10px;font-weight:800;color:#C49520;text-transform:uppercase;text-decoration:none;">Get Directions ↗</a>
+            </div>
+        `).openPopup();
+
+        setTimeout(() => { map.invalidateSize(); }, 300);
+    });
+    </script>
+@endif
 @endsection

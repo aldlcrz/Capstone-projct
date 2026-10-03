@@ -905,6 +905,15 @@ class DashboardController extends Controller
             'businessPermit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
             'birDocument'          => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
             'residencyCertificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'shopHouseNo'          => 'nullable|string|max:100',
+            'shopStreet'           => 'nullable|string|max:255',
+            'shopBarangay'         => 'nullable|string|max:100',
+            'shopCity'             => 'nullable|string|max:100',
+            'shopProvince'         => 'nullable|string|max:100',
+            'shopPostalCode'       => 'nullable|string|max:20',
+            'shopLatitude'         => 'nullable|numeric|between:-90,90',
+            'shopLongitude'        => 'nullable|numeric|between:-180,180',
+            'shopAddress'          => 'nullable|string|max:500',
         ]);
         // Validate GCash: both number and QR required if configured
         if ($request->filled('gcashNumber') || $request->hasFile('gcashQrCode')) {
@@ -977,6 +986,27 @@ class DashboardController extends Controller
         if ($request->has('isGcashAvailable')) $user->isGcashAvailable = $request->boolean('isGcashAvailable');
         if ($request->has('isMayaAvailable')) $user->isMayaAvailable = $request->boolean('isMayaAvailable');
 
+        if ($request->has('shopHouseNo')) $user->shopHouseNo = $request->shopHouseNo;
+        if ($request->has('shopStreet')) $user->shopStreet = $request->shopStreet;
+        if ($request->has('shopBarangay')) $user->shopBarangay = $request->shopBarangay;
+        if ($request->has('shopCity')) $user->shopCity = $request->shopCity ?: 'Lumban';
+        if ($request->has('shopProvince')) $user->shopProvince = $request->shopProvince ?: 'Laguna';
+        if ($request->has('shopPostalCode')) $user->shopPostalCode = $request->shopPostalCode ?: '4014';
+        if ($request->has('shopLatitude')) $user->shopLatitude = $request->filled('shopLatitude') ? (float) $request->shopLatitude : null;
+        if ($request->has('shopLongitude')) $user->shopLongitude = $request->filled('shopLongitude') ? (float) $request->shopLongitude : null;
+
+        $addressParts = array_filter([
+            $user->shopHouseNo,
+            $user->shopStreet,
+            $user->shopBarangay,
+            $user->shopCity ?: 'Lumban',
+            $user->shopProvince ?: 'Laguna',
+            $user->shopPostalCode ?: '4014'
+        ]);
+        if (!empty($addressParts)) {
+            $user->shopAddress = implode(', ', $addressParts);
+        }
+
         if ($request->hasFile('profilePhoto')) {
             $file = $request->file('profilePhoto');
             $filename = time() . '_seller_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
@@ -1020,25 +1050,34 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Payment methods updated successfully.',
+                'message' => 'Profile updated successfully.',
                 'user' => [
-                    'gcashNumber'     => $user->gcashNumber,
-                    'gcashQrCode'     => $user->gcashQrCode,
-                    'gcashQrUrl'      => $getImg($user->gcashQrCode),
-                    'hasGcashNumber'  => !empty($user->gcashNumber),
-                    'hasGcashQr'      => !empty($user->gcashQrCode),
-                    'isGcashComplete' => !empty($user->gcashNumber) && !empty($user->gcashQrCode),
-                    'mayaNumber'      => $user->mayaNumber,
-                    'mayaQrCode'      => $user->mayaQrCode,
-                    'mayaQrUrl'       => $getImg($user->mayaQrCode),
-                    'hasMayaNumber'   => !empty($user->mayaNumber),
-                    'hasMayaQr'       => !empty($user->mayaQrCode),
-                    'isMayaComplete'  => !empty($user->mayaNumber) && !empty($user->mayaQrCode),
+                    'gcashNumber'      => $user->gcashNumber,
+                    'gcashQrCode'      => $user->gcashQrCode,
+                    'gcashQrUrl'       => $getImg($user->gcashQrCode),
+                    'hasGcashNumber'   => !empty($user->gcashNumber),
+                    'hasGcashQr'       => !empty($user->gcashQrCode),
+                    'isGcashComplete'  => !empty($user->gcashNumber) && !empty($user->gcashQrCode),
+                    'mayaNumber'       => $user->mayaNumber,
+                    'mayaQrCode'       => $user->mayaQrCode,
+                    'mayaQrUrl'        => $getImg($user->mayaQrCode),
+                    'hasMayaNumber'    => !empty($user->mayaNumber),
+                    'hasMayaQr'        => !empty($user->mayaQrCode),
+                    'isMayaComplete'   => !empty($user->mayaNumber) && !empty($user->mayaQrCode),
+                    'shopHouseNo'      => $user->shopHouseNo,
+                    'shopStreet'       => $user->shopStreet,
+                    'shopBarangay'     => $user->shopBarangay,
+                    'shopCity'         => $user->shopCity,
+                    'shopProvince'     => $user->shopProvince,
+                    'shopPostalCode'   => $user->shopPostalCode,
+                    'shopLatitude'     => $user->shopLatitude,
+                    'shopLongitude'    => $user->shopLongitude,
+                    'shopAddress'      => $user->shopAddress,
                 ]
             ]);
         }
 
-        return redirect()->route('seller.profile')->with('success', 'Profile updated successfully.');
+        return redirect()->route('seller.profile')->with('success', 'Profile and Workshop Location updated successfully.');
     }
 
     public function notifications()

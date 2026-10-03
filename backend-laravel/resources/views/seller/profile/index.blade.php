@@ -1,6 +1,9 @@
 @extends('layouts.seller')
 
 @section('content')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
     @php
         $getImgUrl = function($path) {
             if (empty($path)) return null;
@@ -35,6 +38,7 @@
              showPaymentModal: false,
              showPaymentHistoryModal: false,
              showLegalModal: false,
+             showWorkshopLocationModal: false,
              showDocPreview: false,
              showDeleteAccountModal: false,
              showDownloadInfoModal: false,
@@ -46,6 +50,123 @@
              shopName: @js(old('name', $user->name ?? '')),
              mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
              shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+
+             // Workshop & Store Pickup Location State
+             workshopMap: null,
+             workshopMarker: null,
+             shopHouseNo: @js(old('shopHouseNo', $user->shopHouseNo ?? '')),
+             shopStreet: @js(old('shopStreet', $user->shopStreet ?? '')),
+             shopBarangay: @js(old('shopBarangay', $user->shopBarangay ?? '')),
+             shopCity: @js(old('shopCity', $user->shopCity ?? 'Lumban')),
+             shopProvince: @js(old('shopProvince', $user->shopProvince ?? 'Laguna')),
+             shopPostalCode: @js(old('shopPostalCode', $user->shopPostalCode ?? '4014')),
+             shopLatitude: @js((float)(old('shopLatitude', $user->shopLatitude ?? 14.2952))),
+             shopLongitude: @js((float)(old('shopLongitude', $user->shopLongitude ?? 121.4647))),
+             locatingGps: false,
+             gpsMessage: '',
+
+             openWorkshopLocationModal() {
+                 this.showAccountSettingsModal = false;
+                 this.showWorkshopLocationModal = true;
+                 setTimeout(() => {
+                     this.initWorkshopMap();
+                 }, 180);
+             },
+
+             initWorkshopMap() {
+                 this.$nextTick(() => {
+                     const container = document.getElementById('seller-workshop-leaflet-map');
+                     if (!container || typeof L === 'undefined') return;
+
+                     const lat = Number(this.shopLatitude) || 14.2952;
+                     const lng = Number(this.shopLongitude) || 121.4647;
+
+                     if (this.workshopMap) {
+                         this.workshopMap.remove();
+                         this.workshopMap = null;
+                     }
+
+                     this.workshopMap = L.map('seller-workshop-leaflet-map', {
+                         zoomControl: true,
+                         attributionControl: false
+                     }).setView([lat, lng], 16);
+
+                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                         maxZoom: 19
+                     }).addTo(this.workshopMap);
+
+                     const shopPinIcon = L.divIcon({
+                         className: 'lumbarong-workshop-pin-icon',
+                         html: `
+                             <div style='position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;'>
+                                 <div style='width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);'>
+                                     <span style='transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;'>🏛️</span>
+                                 </div>
+                                 <div style='position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);'></div>
+                             </div>
+                         `,
+                         iconSize: [38, 38],
+                         iconAnchor: [19, 38],
+                         popupAnchor: [0, -38]
+                     });
+
+                     this.workshopMarker = L.marker([lat, lng], {
+                         draggable: true,
+                         icon: shopPinIcon
+                     }).addTo(this.workshopMap);
+
+                     this.workshopMarker.bindPopup('<b>' + (this.shopName || 'Artisan Workshop') + '</b><br><span style=\'font-size:11px;color:#666;\'>Drag pin or tap on map to set exact workshop location</span>').openPopup();
+
+                     this.workshopMarker.on('dragend', (e) => {
+                         const pos = e.target.getLatLng();
+                         this.shopLatitude = Number(pos.lat.toFixed(6));
+                         this.shopLongitude = Number(pos.lng.toFixed(6));
+                     });
+
+                     this.workshopMap.on('click', (e) => {
+                         const pos = e.latlng;
+                         this.shopLatitude = Number(pos.lat.toFixed(6));
+                         this.shopLongitude = Number(pos.lng.toFixed(6));
+                         if (this.workshopMarker) {
+                             this.workshopMarker.setLatLng(pos);
+                         }
+                     });
+
+                     setTimeout(() => {
+                         if (this.workshopMap) this.workshopMap.invalidateSize();
+                     }, 300);
+                 });
+             },
+
+             locateCurrentGps() {
+                 if (!navigator.geolocation) {
+                     this.gpsMessage = 'Geolocation is not supported by your browser.';
+                     return;
+                 }
+                 this.locatingGps = true;
+                 this.gpsMessage = '';
+                 navigator.geolocation.getCurrentPosition(
+                     (position) => {
+                         this.locatingGps = false;
+                         this.shopLatitude = Number(position.coords.latitude.toFixed(6));
+                         this.shopLongitude = Number(position.coords.longitude.toFixed(6));
+                         if (this.workshopMap) {
+                             this.workshopMap.setView([this.shopLatitude, this.shopLongitude], 17);
+                             if (this.workshopMarker) {
+                                 this.workshopMarker.setLatLng([this.shopLatitude, this.shopLongitude]);
+                                 this.workshopMarker.openPopup();
+                             }
+                         }
+                         this.gpsMessage = '📍 Location pinned from device GPS!';
+                         setTimeout(() => { this.gpsMessage = ''; }, 4000);
+                     },
+                     (error) => {
+                         this.locatingGps = false;
+                         this.gpsMessage = 'Could not get GPS location. Please allow permissions or drag the pin on map.';
+                     },
+                     { enableHighAccuracy: true, timeout: 10000 }
+                 );
+             },
 
              // Secure Email Change Manager
              showChangeEmailModal: false,
@@ -633,9 +754,17 @@
                                         <span class="text-xs font-bold text-[#1E1915] font-serif">{{ $user->shopName ?: $user->name }}</span>
                                     </div>
 
-                                    <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Origin Workshop</span>
-                                        <span class="text-xs font-bold text-[#1E1915]">{{ $user->shopCity ?: 'Lumban' }}, {{ $user->shopProvince ?: 'Laguna' }}</span>
+                                    <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C] block">Origin Workshop &amp; Pickup</span>
+                                            <span class="text-xs font-bold text-[#1E1915] truncate block">
+                                                {{ $user->shopAddress ?: (($user->shopCity ?: 'Lumban') . ', ' . ($user->shopProvince ?: 'Laguna')) }}
+                                            </span>
+                                        </div>
+                                        <button type="button" @click="openWorkshopLocationModal()"
+                                                class="px-2.5 py-1 rounded-lg bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] hover:bg-[#C49520] hover:text-white transition-all text-[10px] font-extrabold uppercase tracking-wider shrink-0 cursor-pointer">
+                                            📍 Pin Map
+                                        </button>
                                     </div>
 
                                     <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
@@ -873,7 +1002,28 @@
                         </div>
                     </button>
 
-                    {{-- 4. Change Password --}}
+                    {{-- 4. Workshop Location & GPS Map Pin (For Buyer Store Pickup) --}}
+                    <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <div style="min-width:0;">
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Workshop &amp; Store Pickup Map</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">
+                                    {{ $user->shopAddress ?: ($user->shopCity ?: 'Lumban') . ', ' . ($user->shopProvince ?: 'Laguna') }}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" @click="openWorkshopLocationModal()" style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;">
+                            Pin Map
+                        </button>
+                    </div>
+
+                    {{-- 5. Change Password --}}
                     <a href="{{ route('profile.change-password') }}"
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
@@ -1976,6 +2126,162 @@
         </div>
 
 
+
+        {{-- Workshop Location & Store Pickup Map Modal --}}
+        <div x-show="showWorkshopLocationModal"
+             x-cloak
+             style="display:none;"
+             class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="showWorkshopLocationModal = false">
+
+            <div class="relative w-full max-w-xl md:max-w-2xl bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-[#EAE1D0] space-y-4 my-8 max-h-[90vh] overflow-y-auto"
+                 style="background: #FFFCF7;"
+                 @click.away="showWorkshopLocationModal = false">
+
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between pb-3 border-b border-[#ECE3D2]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#E6D8BA] flex items-center justify-center text-[#B88728] shrink-0 shadow-2xs">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Workshop &amp; Store Pickup Location</h3>
+                            <p class="text-[11px] text-[#78716C]">Set your physical artisan workshop address and GPS coordinates for buyer store pickup.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showWorkshopLocationModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer bg-[#FDF8EE] text-[#78716C] hover:text-[#1E1915] hover:bg-[#FAF5EA]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Info Banner --}}
+                <div class="p-3.5 bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl flex items-start gap-2.5">
+                    <span class="text-base shrink-0">📍</span>
+                    <div class="text-xs text-[#78716C] leading-relaxed">
+                        <strong class="text-[#1E1915]">Store Pickup Route:</strong> When customers choose Store Pickup during checkout, they will see this exact map location, complete address, and one-tap Google Maps driving directions to visit your workshop.
+                    </div>
+                </div>
+
+                <form action="{{ route('seller.profile.update') }}" method="POST" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="name" value="{{ $user->name }}">
+
+                    {{-- Address Fields Grid --}}
+                    <div class="space-y-3">
+                        <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
+                            <span>🏛️ Workshop Physical Address</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">House / Building / Unit No.</label>
+                                <input type="text" name="shopHouseNo" value="{{ old('shopHouseNo', $user->shopHouseNo) }}" placeholder="e.g. Unit 4B, 128"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Street Name</label>
+                                <input type="text" name="shopStreet" value="{{ old('shopStreet', $user->shopStreet) }}" placeholder="e.g. Rizal Street, General Luna"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Barangay</label>
+                                <input type="text" name="shopBarangay" value="{{ old('shopBarangay', $user->shopBarangay) }}" placeholder="e.g. Barangay Salac, Poblacion"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">City / Municipality</label>
+                                <input type="text" name="shopCity" value="{{ old('shopCity', $user->shopCity ?: 'Lumban') }}" placeholder="Lumban"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Province</label>
+                                <input type="text" name="shopProvince" value="{{ old('shopProvince', $user->shopProvince ?: 'Laguna') }}" placeholder="Laguna"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Postal / ZIP Code</label>
+                                <input type="text" name="shopPostalCode" value="{{ old('shopPostalCode', $user->shopPostalCode ?: '4014') }}" placeholder="4014"
+                                       class="w-full px-3.5 py-2.5 bg-white border border-[#E2D9C8] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] transition-colors">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- GPS Interactive Map Section --}}
+                    <div class="space-y-2.5 pt-2 border-t border-[#ECE3D2]">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
+                                    <span>🗺️ Real-Time Workshop Pin on Map</span>
+                                </div>
+                                <p class="text-[10.5px] text-[#78716C] mt-0.5">Drag the gold artisan pin or click anywhere on the map to pinpoint your workshop entrance.</p>
+                            </div>
+
+                            <button type="button" @click="locateCurrentGps()"
+                                    :disabled="locatingGps"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] hover:bg-[#C49520] hover:text-white transition-all text-xs font-bold shrink-0 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-50">
+                                <span x-show="!locatingGps">🎯 Use My Current GPS</span>
+                                <span x-show="locatingGps" class="flex items-center gap-1">
+                                    <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                    <span>Detecting GPS...</span>
+                                </span>
+                            </button>
+                        </div>
+
+                        {{-- Dynamic GPS Message Toast --}}
+                        <div x-show="gpsMessage" x-cloak class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold flex items-center gap-2">
+                            <span>ℹ️</span>
+                            <span x-text="gpsMessage"></span>
+                        </div>
+
+                        {{-- Leaflet Map Container --}}
+                        <div class="relative rounded-2xl overflow-hidden border border-[#E2D9C8] shadow-inner bg-[#FAF8F5]">
+                            <div id="seller-workshop-leaflet-map" class="w-full h-64 sm:h-72 relative z-0"></div>
+                            <div class="absolute bottom-2 left-2 right-2 bg-white/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#ECE3D2] flex items-center justify-between text-[11px] font-bold text-[#1E1915] shadow-xs pointer-events-none">
+                                <span class="flex items-center gap-1 text-[#C49520]">
+                                    <span>📍</span>
+                                    <span>Coordinates:</span>
+                                </span>
+                                <span class="font-mono text-[#78716C]">
+                                    <span x-text="shopLatitude || '14.2988'"></span>, <span x-text="shopLongitude || '121.4606'"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Hidden inputs to submit latitude and longitude --}}
+                        <input type="hidden" name="shopLatitude" :value="shopLatitude">
+                        <input type="hidden" name="shopLongitude" :value="shopLongitude">
+                    </div>
+
+                    {{-- Form Actions --}}
+                    <div class="pt-3 border-t border-[#ECE3D2] flex items-center gap-3">
+                        <button type="button" @click="showWorkshopLocationModal = false"
+                                class="flex-1 py-3 rounded-xl border border-[#E2D9C8] text-[#78716C] hover:bg-[#FAF6EE] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="flex-1 py-3 rounded-xl bg-[#1E1915] hover:bg-[#C49520] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
+                            <span>💾 Save Workshop Location</span>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
 
     </div>
 
