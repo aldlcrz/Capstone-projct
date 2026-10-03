@@ -264,9 +264,9 @@
                 
                 // Escape HTML special characters for XSS protection
                 text = text
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
+                    .replace(new RegExp('&', 'g'), '&amp;')
+                    .replace(new RegExp('<', 'g'), '&lt;')
+                    .replace(new RegExp('>', 'g'), '&gt;');
 
                 // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
                 text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {

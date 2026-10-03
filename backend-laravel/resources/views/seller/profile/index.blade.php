@@ -25,8 +25,39 @@
             ->count();
     @endphp
 
+    <script type="application/json" id="seller-profile-init-data">
+    {!! json_encode([
+        'shopName' => (string) old('name', $user->name ?? ''),
+        'mobileNumber' => (string) old('mobileNumber', $user->mobileNumber ?? ''),
+        'shopDescription' => (string) old('shopDescription', $user->shopDescription ?? ''),
+        'shopHouseNo' => (string) old('shopHouseNo', $user->shopHouseNo ?? ''),
+        'shopStreet' => (string) old('shopStreet', $user->shopStreet ?? ''),
+        'shopBarangay' => (string) old('shopBarangay', $user->shopBarangay ?? ''),
+        'shopCity' => (string) old('shopCity', $user->shopCity ?? 'Lumban'),
+        'shopProvince' => (string) old('shopProvince', $user->shopProvince ?? 'Laguna'),
+        'shopPostalCode' => (string) old('shopPostalCode', $user->shopPostalCode ?? '4014'),
+        'shopLatitude' => (float) old('shopLatitude', $user->shopLatitude ?? 14.2952),
+        'shopLongitude' => (float) old('shopLongitude', $user->shopLongitude ?? 121.4647),
+        'userEmail' => (string) ($user->email ?? ''),
+        'csrfToken' => (string) csrf_token(),
+        'routes' => [
+            'emailCancel' => route('profile.email.cancel'),
+            'emailInitiate' => route('profile.email.initiate'),
+            'emailVerifyOld' => route('profile.email.verify-old'),
+            'emailResendOld' => route('profile.email.resend-old'),
+            'emailVerifyNew' => route('profile.email.verify-new'),
+            'emailResendNew' => route('profile.email.resend-new'),
+        ]
+    ]) !!}
+    </script>
+
     <script>
     function sellerProfileState() {
+        const _initEl = document.getElementById('seller-profile-init-data');
+        const _cfg = JSON.parse(_initEl ? _initEl.textContent : '{}');
+        const _routes = _cfg.routes || {};
+        const _csrf = _cfg.csrfToken || '';
+
         return {
             showAccountSettingsModal: false,
             showEditModal: false,
@@ -42,19 +73,19 @@
             previewDocTitle: '',
             paymentEditing: false,
             legalEditing: false,
-            shopName: @js(old('name', $user->name ?? '')),
-            mobileNumber: @js(old('mobileNumber', $user->mobileNumber ?? '')),
-            shopDescription: @js(old('shopDescription', $user->shopDescription ?? '')),
+            shopName: _cfg.shopName || '',
+            mobileNumber: _cfg.mobileNumber || '',
+            shopDescription: _cfg.shopDescription || '',
 
             // Workshop & Store Pickup Location State
-            shopHouseNo: @js(old('shopHouseNo', $user->shopHouseNo ?? '')),
-            shopStreet: @js(old('shopStreet', $user->shopStreet ?? '')),
-            shopBarangay: @js(old('shopBarangay', $user->shopBarangay ?? '')),
-            shopCity: @js(old('shopCity', $user->shopCity ?? 'Lumban')),
-            shopProvince: @js(old('shopProvince', $user->shopProvince ?? 'Laguna')),
-            shopPostalCode: @js(old('shopPostalCode', $user->shopPostalCode ?? '4014')),
-            shopLatitude: @js((float)(old('shopLatitude', $user->shopLatitude ?? 14.2952))),
-            shopLongitude: @js((float)(old('shopLongitude', $user->shopLongitude ?? 121.4647))),
+            shopHouseNo: _cfg.shopHouseNo || '',
+            shopStreet: _cfg.shopStreet || '',
+            shopBarangay: _cfg.shopBarangay || '',
+            shopCity: _cfg.shopCity || 'Lumban',
+            shopProvince: _cfg.shopProvince || 'Laguna',
+            shopPostalCode: _cfg.shopPostalCode || '4014',
+            shopLatitude: typeof _cfg.shopLatitude === 'number' ? _cfg.shopLatitude : 14.2952,
+            shopLongitude: typeof _cfg.shopLongitude === 'number' ? _cfg.shopLongitude : 121.4647,
             locatingGps: false,
             reverseGeocoding: false,
             gpsMessage: '',
@@ -230,7 +261,7 @@
             // Secure Email Change Manager
             showChangeEmailModal: false,
             emailStep: 1,
-            currentEmailDisplay: @js($user->email),
+            currentEmailDisplay: _cfg.userEmail || '',
             newEmailInput: '',
             oldEmailOtp: '',
             newEmailOtp: '',
@@ -254,9 +285,9 @@
 
             closeChangeEmailModal() {
                 if (this.emailStep > 1 && this.emailStep < 4) {
-                    fetch('{{ route('profile.email.cancel') }}', {
+                    fetch(_routes.emailCancel || '/profile/email/cancel', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf }
                     }).catch(() => {});
                 }
                 this.showChangeEmailModal = false;
@@ -284,9 +315,9 @@
                 }
                 this.emailLoading = true;
                 try {
-                    const res = await fetch('{{ route('profile.email.initiate') }}', {
+                    const res = await fetch(_routes.emailInitiate || '/profile/email/initiate', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' },
                         body: JSON.stringify({ new_email: this.newEmailInput })
                     });
                     const data = await res.json();
@@ -312,9 +343,9 @@
                 }
                 this.emailLoading = true;
                 try {
-                    const res = await fetch('{{ route('profile.email.verify-old') }}', {
+                    const res = await fetch(_routes.emailVerifyOld || '/profile/email/verify-old', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' },
                         body: JSON.stringify({ code: this.oldEmailOtp })
                     });
                     const data = await res.json();
@@ -337,9 +368,9 @@
                 this.emailLoading = true;
                 this.emailError = '';
                 try {
-                    const res = await fetch('{{ route('profile.email.resend-old') }}', {
+                    const res = await fetch(_routes.emailResendOld || '/profile/email/resend-old', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' }
                     });
                     const data = await res.json();
                     if (res.ok && data.status === 'success') {
@@ -363,9 +394,9 @@
                 }
                 this.emailLoading = true;
                 try {
-                    const res = await fetch('{{ route('profile.email.verify-new') }}', {
+                    const res = await fetch(_routes.emailVerifyNew || '/profile/email/verify-new', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' },
                         body: JSON.stringify({ code: this.newEmailOtp, new_email: this.newEmailInput })
                     });
                     const data = await res.json();
@@ -388,9 +419,9 @@
                 this.emailLoading = true;
                 this.emailError = '';
                 try {
-                    const res = await fetch('{{ route('profile.email.resend-new') }}', {
+                    const res = await fetch(_routes.emailResendNew || '/profile/email/resend-new', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' },
                         body: JSON.stringify({ new_email: this.newEmailInput })
                     });
                     const data = await res.json();
