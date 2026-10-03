@@ -204,10 +204,10 @@ function sellerOrdersManager() {
         },
 
         formatPaymentMethod(order) {
-            if (!order) return 'Cash on Delivery';
+            if (!order) return 'Special Delivery';
             const method = (order.paymentMethod || '').trim().toUpperCase();
-            if (method === 'COD' || method === '') {
-                return 'Cash on Delivery';
+            if (method === 'COD' || method === '' || method === 'CASH ON DELIVERY') {
+                return 'Special Delivery';
             }
             if (method === 'GCASH') return 'GCash';
             if (method === 'MAYA') return 'Maya';
@@ -2736,9 +2736,9 @@ function sellerOrdersManager() {
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight"
-                        x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify Payment & Accept Order' : 'Accept Order (Cash on Delivery)'"></h3>
+                        x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify Payment & Accept Order' : 'Accept Order (Special Delivery)'"></h3>
                     <p class="text-[10px] text-gray-500 font-medium"
-                       x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify that the payment was credited to your account.' : 'Confirm and accept this Cash on Delivery order for fulfillment.'"></p>
+                       x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify that the payment was credited to your account.' : 'Confirm and accept this Special Delivery order for fulfillment.'"></p>
                 </div>
             </div>
 
@@ -2747,7 +2747,7 @@ function sellerOrdersManager() {
                     <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 font-bold text-[10px] uppercase">Payment Method</span>
-                            <span class="font-black text-black uppercase" x-text="(verifyOrderTarget.paymentMethod || 'COD').toUpperCase() === 'COD' ? 'Cash on Delivery (COD)' : verifyOrderTarget.paymentMethod"></span>
+                            <span class="font-black text-black uppercase" x-text="(verifyOrderTarget.paymentMethod || 'COD').toUpperCase() === 'COD' ? 'Special Delivery' : verifyOrderTarget.paymentMethod"></span>
                         </div>
                         <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase()) && verifyOrderTarget.paymentReference && !verifyOrderTarget.paymentReference.startsWith('COD-')">
                             <div class="flex justify-between items-center">
@@ -2788,11 +2788,11 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    {{-- COD Order Acceptance Info --}}
+                    {{-- Special Delivery Order Acceptance Info --}}
                     <template x-if="!['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
                         <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
-                            <span class="font-black uppercase tracking-wider block mb-0.5">ℹ️ Cash on Delivery (COD) Order</span>
-                            Payment of <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> will be collected in cash from the customer upon delivery/pickup. No payment reference verification is required. Please proceed to accept and prepare the order for dispatch.
+                            <span class="font-black uppercase tracking-wider block mb-0.5">ℹ️ Special Delivery Order</span>
+                            Payment of <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> will be collected from the customer upon delivery/pickup. No online payment reference verification is required. Please proceed to accept and prepare the order for dispatch.
                         </div>
                     </template>
                 </div>
