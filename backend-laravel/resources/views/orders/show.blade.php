@@ -567,7 +567,7 @@
                     if (!$locality && !empty($addr['locality'])) {
                         $locality = $addr['locality'];
                     }
-                @php
+
                     $sellerWorkshopLat = $order->seller?->shopLatitude ? (float) $order->seller->shopLatitude : 14.2988;
                     $sellerWorkshopLng = $order->seller?->shopLongitude ? (float) $order->seller->shopLongitude : 121.4606;
                     $sellerWorkshopAddress = $order->seller?->shopAddress ?: trim(implode(', ', array_filter([
