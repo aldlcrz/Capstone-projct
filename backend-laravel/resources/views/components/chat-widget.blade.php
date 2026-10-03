@@ -263,16 +263,9 @@
                 text = text.replace(/<!--[\s\S]*?-->/g, '');
                 
                 // Escape HTML special characters for XSS protection
-                const htmlEscapeMap = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                text = text.replace(/[&<>"']/g, function(char) {
-                    return htmlEscapeMap[char] || char;
-                });
+                const escapeEl = document.createElement('div');
+                escapeEl.textContent = text;
+                text = escapeEl.innerHTML;
 
                 // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
                 text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {

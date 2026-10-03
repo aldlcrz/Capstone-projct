@@ -1468,15 +1468,28 @@
     {{-- Leaflet Assets for Workshop Map --}}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script id="order-workshop-map-config" type="application/json">
+    {!! json_encode([
+        'lat' => $sellerWorkshopLat,
+        'lng' => $sellerWorkshopLng,
+        'shopName' => $sellerShopName,
+        'shopAddress' => $sellerWorkshopAddress,
+        'directionsUrl' => $directionsUrl,
+    ]) !!}
+    </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const mapContainer = document.getElementById('order-workshop-leaflet-map');
         if (!mapContainer || typeof L === 'undefined') return;
 
-        const lat = {{ $sellerWorkshopLat }};
-        const lng = {{ $sellerWorkshopLng }};
-        const shopName = @js($sellerShopName);
-        const shopAddress = @js($sellerWorkshopAddress);
+        const configEl = document.getElementById('order-workshop-map-config');
+        const config = configEl ? JSON.parse(configEl.textContent || '{}') : {};
+
+        const lat = Number(config.lat || 14.2988);
+        const lng = Number(config.lng || 121.4606);
+        const shopName = config.shopName || 'Artisan Workshop';
+        const shopAddress = config.shopAddress || 'Lumban, Laguna';
+        const directionsUrl = config.directionsUrl || '#';
 
         const map = L.map('order-workshop-leaflet-map', {
             zoomControl: true,
@@ -1489,29 +1502,16 @@
 
         const shopPinIcon = L.divIcon({
             className: 'lumbarong-workshop-pin-icon',
-            html: `
-                <div style='position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;'>
-                    <div style='width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);'>
-                        <span style='transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;'>🏛️</span>
-                    </div>
-                    <div style='position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);'></div>
-                </div>
-            `,
+            html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
             iconSize: [38, 38],
             iconAnchor: [19, 38],
             popupAnchor: [0, -38]
         });
 
         const marker = L.marker([lat, lng], { icon: shopPinIcon }).addTo(map);
-        marker.bindPopup(`
-            <div style="font-family:sans-serif;padding:2px;">
-                <div style="font-weight:800;color:#1E1915;font-size:12px;">${shopName}</div>
-                <div style="font-size:11px;color:#666;margin-top:2px;">${shopAddress}</div>
-                <a href="${@js($directionsUrl)}" target="_blank" style="display:inline-block;margin-top:6px;font-size:10px;font-weight:800;color:#C49520;text-transform:uppercase;text-decoration:none;">Get Directions ↗</a>
-            </div>
-        `).openPopup();
+        marker.bindPopup('<div style="font-family:sans-serif;padding:2px;"><div style="font-weight:800;color:#1E1915;font-size:12px;">' + shopName + '</div><div style="font-size:11px;color:#666;margin-top:2px;">' + shopAddress + '</div><a href="' + directionsUrl + '" target="_blank" style="display:inline-block;margin-top:6px;font-size:10px;font-weight:800;color:#C49520;text-transform:uppercase;text-decoration:none;">Get Directions ↗</a></div>').openPopup();
 
-        setTimeout(() => { map.invalidateSize(); }, 300);
+        setTimeout(function() { map.invalidateSize(); }, 300);
     });
     </script>
 @endif

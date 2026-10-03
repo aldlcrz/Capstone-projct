@@ -68,7 +68,7 @@ class ChatController extends Controller
             ->orderBy('createdAt', 'asc')
             ->with(['sender:id,name,shopName,profilePhoto,role', 'receiver:id,name,shopName,profilePhoto,role'])
             ->get()
-            ->map(function (\App\Models\Message $m) {
+            ->map(function (Message $m) {
                 $arr = $m->toArray();
                 $arr['body'] = $m->content;
                 $arr['createdAt'] = $m->createdAt ? ($m->createdAt instanceof \Carbon\Carbon ? $m->createdAt->toISOString() : \Carbon\Carbon::parse($m->createdAt)->toISOString()) : null;
