@@ -403,8 +403,8 @@
                 </a>
             </div>
 
-            {{-- 3-COLUMN ACTION GRID (Stacks on mobile, 3 columns on lg screens) --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
+            {{-- ACTION GRID: 1 column on mobile (all 3 sections stacked), 2 balanced columns on lg screens --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
 
                 {{-- COLUMN 1: Account & Shop Settings --}}
                 <div id="tour-profile-col-account" class="flex flex-col gap-3">
@@ -450,7 +450,7 @@
                             </div>
                             <div>
                                 <div style="font-size:14px;font-weight:700;color:#1E1915;">Payment Methods</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash &amp; Maya accounts &amp; QR</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash, Maya &amp; Special Delivery</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -503,7 +503,6 @@
                         </svg>
                     </button>
 
-
                     {{-- Delete Account Action (7-Day Soft Delete Lifecycle) --}}
                     <div class="pt-2 border-t border-[#EAE1D0]">
                         <button type="button"
@@ -528,79 +527,140 @@
                     </div>
                 </div>
 
-                {{-- COLUMN 2: Creations & Operations --}}
+                {{-- COLUMN 2: Creations & Operations (Mobile) / Artisan Heritage & Shop Status (Large Screens) --}}
                 <div id="tour-profile-col-operations" class="flex flex-col gap-3">
-                    <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
-                        Creations &amp; Operations
-                    </h3>
-
-                    {{-- Products Catalogue & Orders (mobile only — sidebar covers these on large screens) --}}
+                    
+                    {{-- Mobile-only Creations & Operations Section Header & Nav Cards --}}
                     <div class="flex flex-col gap-3 lg:hidden">
-                    {{-- Products Catalogue --}}
-                    <a href="{{ route('seller.products.index') }}" 
-                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
-                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"/>
+                        <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                            Creations &amp; Operations
+                        </h3>
+
+                        {{-- Products Catalogue --}}
+                        <a href="{{ route('seller.products.index') }}" 
+                           style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                           class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="display:flex;align-items:center;gap:7px;">
+                                        <div style="font-size:14px;font-weight:700;color:#1E1915;">Products Catalogue</div>
+                                        @if($attentionProductsCount > 0)
+                                            <span style="font-size:10px;font-weight:800;background-color:#C49520;color:#FFFFFF;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(196,149,32,0.3);">{{ $attentionProductsCount }}</span>
+                                        @endif
+                                    </div>
+                                    <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Handcrafted creations, stock &amp; drafts</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
+                                <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </div>
-                            <div>
-                                <div style="display:flex;align-items:center;gap:7px;">
-                                    <div style="font-size:14px;font-weight:700;color:#1E1915;">Products Catalogue</div>
-                                    @if($attentionProductsCount > 0)
-                                        <span style="font-size:10px;font-weight:800;background-color:#C49520;color:#FFFFFF;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(196,149,32,0.3);">{{ $attentionProductsCount }}</span>
-                                    @endif
+                        </a>
+
+                        {{-- Orders & Dispatch --}}
+                        <a href="{{ route('seller.orders') }}" 
+                           style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
+                           class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                    </svg>
                                 </div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Handcrafted creations, stock &amp; drafts</div>
+                                <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders &amp; Dispatch</span>
                             </div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:10px;font-weight:800;color:#996515;background-color:#FAF5EA;border:1px solid #E6D8BA;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Manage</span>
                             <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
-                        </div>
-                    </a>
+                        </a>
 
-                    {{-- Orders & Dispatch --}}
-                    <a href="{{ route('seller.orders') }}" 
-                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
-                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
+                        {{-- Mobile Compact Verified Banner --}}
+                        <div style="padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                            <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                                <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h5 style="font-size:12.5px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified Artisan Shop</h5>
+                                    <p style="font-size:10.5px;color:#78716C;margin:2px 0 0 0;">Quality craft &amp; Filipino heritage.</p>
+                                </div>
                             </div>
-                            <span style="font-size:14px;font-weight:700;color:#1E1915;">Orders &amp; Dispatch</span>
                         </div>
-                        <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
                     </div>
 
+                    {{-- Large-Screen Enhanced Artisan Heritage & Shop Status Card --}}
+                    <div class="hidden lg:flex flex-col gap-3 h-full">
+                        <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
+                            Artisan Heritage &amp; Accreditation
+                        </h3>
 
+                        <div class="flex-1 bg-white border border-[#ECE3D2] rounded-2xl p-5 shadow-xs flex flex-col justify-between relative overflow-hidden">
+                            <!-- Background Flourish Watermark -->
+                            <svg width="180" height="120" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:-10px;bottom:-15px;opacity:0.08;pointer-events:none;">
+                                <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+                            </svg>
 
-                    {{-- Verified LumBarong Artisan Shop Banner --}}
-                    <div style="padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-                        <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
-                            <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            </div>
                             <div>
-                                <h5 style="font-size:12.5px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">Verified Artisan Shop</h5>
-                                <p style="font-size:10.5px;color:#78716C;margin:2px 0 0 0;">Quality craft &amp; Filipino heritage.</p>
+                                {{-- Top Status Banner --}}
+                                <div class="p-3.5 rounded-xl border border-[#E2D6C0] bg-linear-to-r from-[#FAF6EE] to-[#F5ECE0] flex items-center justify-between gap-3 mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full border-2 border-[#B88728] bg-[#FAF4EA] flex items-center justify-center text-[#B88728] shrink-0 shadow-xs">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Verified Artisan Partner</div>
+                                            <div class="text-[11px] text-[#78716C] mt-0.5">Authentic Lumban Embroidery Craft</div>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-full bg-[#4A6741] text-white text-[9px] font-black uppercase tracking-widest shrink-0 shadow-2xs">
+                                        Active
+                                    </span>
+                                </div>
+
+                                {{-- Shop Details Matrix --}}
+                                <div class="space-y-2.5">
+                                    <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Artisan Storefront</span>
+                                        <span class="text-xs font-bold text-[#1E1915] font-serif">{{ $user->shopName ?: $user->name }}</span>
+                                    </div>
+
+                                    <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Origin Workshop</span>
+                                        <span class="text-xs font-bold text-[#1E1915]">{{ $user->shopCity ?: 'Lumban' }}, {{ $user->shopProvince ?: 'Laguna' }}</span>
+                                    </div>
+
+                                    <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Customer Payouts</span>
+                                        <span class="text-xs font-bold {{ ($user->gcashNumber || $user->mayaNumber) ? 'text-[#4A6741]' : 'text-amber-700' }}">
+                                            {{ ($user->gcashNumber || $user->mayaNumber) ? '✓ Ready (GCash/Maya)' : '⚠️ Setup Pending' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Footer Actions --}}
+                            <div class="pt-4 mt-4 border-t border-[#ECE3D2] flex items-center gap-2.5">
+                                <button type="button" @click="showEditModal = true"
+                                        class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#FAF6EE] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] border border-[#E2D9C8] transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    <span>Edit Shop Bio</span>
+                                </button>
+                                <button type="button" @click="showPaymentModal = true; paymentEditing = false;"
+                                        class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#1E1915] hover:bg-[#C49520] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span>Manage Payouts</span>
+                                </button>
                             </div>
                         </div>
-                        <!-- Background Flourish Watermark -->
-                        <svg width="100" height="60" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:4px;bottom:-10px;opacity:0.18;pointer-events:none;">
-                            <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
-                        </svg>
                     </div>
                 </div>
 
