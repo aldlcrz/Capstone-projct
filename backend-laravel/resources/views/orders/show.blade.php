@@ -601,7 +601,7 @@
                             </div>
                             @if($isStorePickup)
                                 <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
-                                    Self-Pickup Ready
+                                    Self-Pickup at Workshop
                                 </span>
                             @endif
                         </div>
