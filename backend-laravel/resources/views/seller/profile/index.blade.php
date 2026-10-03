@@ -534,6 +534,8 @@
                         Creations &amp; Operations
                     </h3>
 
+                    {{-- Products Catalogue & Orders (mobile only — sidebar covers these on large screens) --}}
+                    <div class="flex flex-col gap-3 lg:hidden">
                     {{-- Products Catalogue --}}
                     <a href="{{ route('seller.products.index') }}" 
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-decoration:none;transition:all 0.2s;"
@@ -578,6 +580,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
+                    </div>
 
 
 
@@ -601,8 +604,8 @@
                     </div>
                 </div>
 
-                {{-- COLUMN 3: Insights & Store --}}
-                <div id="tour-profile-col-insights" class="flex flex-col gap-3">
+                {{-- COLUMN 3: Insights & Store (mobile only — sidebar covers these on large screens) --}}
+                <div id="tour-profile-col-insights" class="flex flex-col gap-3 lg:hidden">
                     <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#996515;margin:0 0 4px 2px;">
                         Insights &amp; Store
                     </h3>

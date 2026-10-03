@@ -1,8 +1,3 @@
-<script>
-    window.lumbarongChatUserId = {!! json_encode(auth()->id() ? (string) auth()->id() : '') !!};
-    window.lumbarongIsLoggedIn = {!! json_encode(auth()->check()) !!};
-</script>
-
 <script type="application/json" id="chat-widget-config">
 {!! json_encode([
     'currentUserId' => (string) (Auth::id() ?? ''),
@@ -34,6 +29,8 @@
         window._chatWidgetRegistered = true;
 
         const _chatConfig = JSON.parse(document.getElementById('chat-widget-config')?.textContent || '{}');
+        window.lumbarongChatUserId = _chatConfig.currentUserId || '';
+        window.lumbarongIsLoggedIn = Boolean(_chatConfig.isLoggedIn);
         if (_chatConfig.openChat) {
             window._autoOpenChat = _chatConfig.openChat;
         }
@@ -266,26 +263,30 @@
                 text = text.replace(/<!--[\s\S]*?-->/g, '');
                 
                 // Escape HTML special characters for XSS protection
-                text = text
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
+                const htmlEscapeMap = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                text = text.replace(/[&<>"']/g, function(char) {
+                    return htmlEscapeMap[char] || char;
+                });
 
                 // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
                 text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {
                     const safeImg = imgUrl.replace(/"/g, '&quot;');
                     const safeLink = linkUrl.replace(/"/g, '&quot;');
                     const safeAlt = alt.replace(/"/g, '&quot;');
-                    return '<a href="' + safeLink + '" class="block my-2 group"><img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 shadow-xs group-hover:opacity-90 group-hover:ring-2 group-hover:ring-[#C0422A] transition-all cursor-pointer" onerror="this.style.display=\'none\'"></a>';
+                    return '<a href="' + safeLink + '" class="block my-2 group"><img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 shadow-xs group-hover:opacity-90 group-hover:ring-2 group-hover:ring-[#C0422A] transition-all cursor-pointer" onerror="this.remove()"></a>';
                 });
 
                 // Parse standalone markdown image: ![alt](imgUrl)
                 text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(match, alt, imgUrl) {
                     const safeImg = imgUrl.replace(/"/g, '&quot;');
                     const safeAlt = alt.replace(/"/g, '&quot;');
-                    return '<img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 my-2 shadow-xs" onerror="this.style.display=\'none\'">';
+                    return '<img src="' + safeImg + '" alt="' + safeAlt + '" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 my-2 shadow-xs" onerror="this.remove()">';
                 });
 
                 // Parse markdown link: [Text](url)
