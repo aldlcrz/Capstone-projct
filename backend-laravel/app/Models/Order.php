@@ -43,6 +43,7 @@ class Order extends Model
     protected $appends = [
         'is_store_pickup',
         'is_special_delivery',
+        'formatted_payment_method',
         'packing_proof_url',
         'resolved_payment_status',
     ];
@@ -399,5 +400,37 @@ class Order extends Model
     public function getIsSpecialDeliveryAttribute(): bool
     {
         return $this->isSpecialDelivery();
+    }
+
+    /**
+     * Accessor for formatted_payment_method.
+     */
+    public function getFormattedPaymentMethodAttribute(): string
+    {
+        $method = strtoupper(trim((string) ($this->paymentMethod ?? '')));
+
+        if ($method === 'COD' || $method === '' || $method === 'CASH ON DELIVERY' || $method === 'PAY ON CLAIM' || $method === 'PAY IN SHOP') {
+            if ($this->isStorePickup()) {
+                return 'Pay in Shop';
+            }
+            if ($this->isSpecialDelivery()) {
+                return 'Special Delivery (COD)';
+            }
+            return 'Cash on Delivery';
+        }
+
+        if ($method === 'GCASH') {
+            return 'GCash';
+        }
+
+        if ($method === 'MAYA' || $method === 'PAYMAYA') {
+            return 'Maya';
+        }
+
+        if ($method === 'CARD' || $method === 'CREDIT_CARD' || $method === 'DEBIT_CARD') {
+            return 'Credit / Debit Card';
+        }
+
+        return $this->paymentMethod ?? 'Cash on Delivery';
     }
 }

@@ -204,13 +204,19 @@ function sellerOrdersManager() {
         },
 
         formatPaymentMethod(order) {
-            if (!order) return 'Special Delivery';
+            if (!order) return 'Cash on Delivery';
             const method = (order.paymentMethod || '').trim().toUpperCase();
-            if (method === 'COD' || method === '' || method === 'CASH ON DELIVERY') {
-                return 'Special Delivery';
+            if (method === 'COD' || method === '' || method === 'CASH ON DELIVERY' || method === 'PAY ON CLAIM' || method === 'PAY IN SHOP') {
+                if (this.isStorePickup(order)) {
+                    return 'Pay in Shop';
+                }
+                if (this.isSpecialDelivery(order)) {
+                    return 'Special Delivery (COD)';
+                }
+                return 'Cash on Delivery';
             }
             if (method === 'GCASH') return 'GCash';
-            if (method === 'MAYA') return 'Maya';
+            if (method === 'MAYA' || method === 'PAYMAYA') return 'Maya';
             return order.paymentMethod;
         },
 
@@ -2732,13 +2738,13 @@ function sellerOrdersManager() {
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0"
-                     x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '💳' : '📦'">
+                     x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '💳' : (isStorePickup(verifyOrderTarget) ? '🏬' : '📦')">
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight"
-                        x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify Payment & Accept Order' : 'Accept Order (Special Delivery)'"></h3>
+                        x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify Payment & Accept Order' : (isStorePickup(verifyOrderTarget) ? 'Accept Order (Store Pickup)' : (isSpecialDelivery(verifyOrderTarget) ? 'Accept Order (Special Delivery)' : 'Accept Order (Cash on Delivery)'))"></h3>
                     <p class="text-[10px] text-gray-500 font-medium"
-                       x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify that the payment was credited to your account.' : 'Confirm and accept this Special Delivery order for fulfillment.'"></p>
+                       x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verify that the payment was credited to your account.' : (isStorePickup(verifyOrderTarget) ? 'Confirm and accept this In-Shop Pickup order for workshop claim.' : (isSpecialDelivery(verifyOrderTarget) ? 'Confirm and accept this Special Delivery order for fulfillment.' : 'Confirm and accept this order for fulfillment.'))"></p>
                 </div>
             </div>
 
@@ -2747,7 +2753,7 @@ function sellerOrdersManager() {
                     <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 font-bold text-[10px] uppercase">Payment Method</span>
-                            <span class="font-black text-black uppercase" x-text="(verifyOrderTarget.paymentMethod || 'COD').toUpperCase() === 'COD' ? 'Special Delivery' : verifyOrderTarget.paymentMethod"></span>
+                            <span class="font-black text-black uppercase" x-text="formatPaymentMethod(verifyOrderTarget)"></span>
                         </div>
                         <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase()) && verifyOrderTarget.paymentReference && !verifyOrderTarget.paymentReference.startsWith('COD-')">
                             <div class="flex justify-between items-center">
@@ -2788,11 +2794,11 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    {{-- Special Delivery Order Acceptance Info --}}
+                    {{-- Non-electronic Payment Order Acceptance Info --}}
                     <template x-if="!['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
                         <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
-                            <span class="font-black uppercase tracking-wider block mb-0.5">ℹ️ Special Delivery Order</span>
-                            Payment of <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> will be collected from the customer upon delivery/pickup. No online payment reference verification is required. Please proceed to accept and prepare the order for dispatch.
+                            <span class="font-black uppercase tracking-wider block mb-0.5" x-text="isStorePickup(verifyOrderTarget) ? 'ℹ️ In-Shop Store Pickup' : (isSpecialDelivery(verifyOrderTarget) ? 'ℹ️ Special Delivery Order' : 'ℹ️ Cash on Delivery Order')"></span>
+                            <span x-text="isStorePickup(verifyOrderTarget) ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly in cash when the customer claims the order at the workshop.' : 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected from the customer upon delivery. No online payment reference verification is required. Please proceed to accept and prepare the order.'"></span>
                         </div>
                     </template>
                 </div>

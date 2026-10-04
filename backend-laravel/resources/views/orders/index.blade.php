@@ -189,7 +189,7 @@
                         'status' => $order->status,
                         'createdAt' => $order->createdAt ? $order->createdAt->format('F d, Y \a\t h:i A') : '',
                         'totalAmount' => number_format($order->totalAmount, 2),
-                        'paymentMethod' => $order->paymentMethod ?? 'COD',
+                        'paymentMethod' => $order->formatted_payment_method,
                         'paymentStatus' => $order->resolved_payment_status,
                         'paymentReference' => $order->paymentReference ?? null,
                         'packingProof' => $order->packing_proof_url,

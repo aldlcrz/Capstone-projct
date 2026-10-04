@@ -364,7 +364,7 @@
                     @endphp
 
                     <div class="space-y-3">
-                        {{-- Special Delivery / Pay on Claim Option (Only visible for nearby local cluster) --}}
+                        {{-- Cash / Pay in Shop / Special Delivery Option --}}
                         <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
                              class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
                              :class="paymentMethod === 'COD' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
@@ -372,8 +372,14 @@
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
                                     <div>
-                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Special Delivery / Pay on Claim</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay upon in-store pickup or Special Delivery arrival</div>
+                                        <div class="font-bold text-gray-900 text-sm lg:text-base"
+                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in Shop' : (shippingQuote?.provider_code === 'seller_direct' ? 'Special Delivery (COD)' : 'Cash on Delivery')">
+                                            Pay in Shop / Cash on Delivery
+                                        </div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500"
+                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in cash upon claiming your item at the workshop' : (shippingQuote?.provider_code === 'seller_direct' ? 'Pay cash upon Special Delivery arrival' : 'Pay cash upon courier delivery')">
+                                            Pay in cash upon workshop claim or arrival
+                                        </div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
@@ -382,7 +388,9 @@
                             <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
                                 <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
                                     <span class="text-base shrink-0">ℹ️</span>
-                                    <span>You can pay directly with cash upon in-store pickup or upon Special Delivery arrival. No online receipt screenshot required.</span>
+                                    <span x-text="shippingQuote?.provider_code === 'store_pickup' ? 'You can pay directly in cash when you pick up and inspect your items at the workshop.' : (shippingQuote?.provider_code === 'seller_direct' ? 'You can pay directly with cash upon Special Delivery arrival. No online receipt screenshot required.' : 'You can pay directly with cash upon courier delivery. No online receipt screenshot required.')">
+                                        You can pay directly in cash when you pick up and inspect your items at the workshop.
+                                    </span>
                                 </div>
                             </div>
                         </div>

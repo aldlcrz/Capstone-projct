@@ -239,7 +239,7 @@
                 <div class="info-row"><strong>Artisan Shop:</strong> {{ $order->seller?->shopName ?: $order->seller?->name }}</div>
                 <div class="info-row"><strong>Collection Point:</strong> Lumban Workshop Studio, Lumban, Laguna</div>
                 <div class="info-row"><strong>Fulfillment Method:</strong> Store Pickup (Free / ₱0.00)</div>
-                <div class="info-row"><strong>Payment Method:</strong> {{ strtoupper($order->paymentMethod ?? '') === 'COD' ? 'Cash on Pickup / COD' : ($order->paymentMethod ?? 'GCash') }}</div>
+                <div class="info-row"><strong>Payment Method:</strong> {{ $order->formatted_payment_method }}</div>
                 <div class="info-row">
                     <strong>Payment Status:</strong> {{ $order->resolved_payment_status }}
                     @if(in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA']) && $order->paymentReference && !str_starts_with($order->paymentReference, 'COD-'))

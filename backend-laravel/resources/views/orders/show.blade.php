@@ -473,7 +473,7 @@
                         <div class="space-y-3 pt-2">
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-bold text-[#8C827A] uppercase tracking-wider text-[10px]">Method</span>
-                                <span class="font-black text-[#1E1915] text-xs px-2.5 py-1 bg-[#FAF8F5] rounded-lg border border-[#ECE3D2]">{{ (strtoupper($order->paymentMethod ?? '') === 'COD' || strtoupper($order->paymentMethod ?? '') === 'CASH ON DELIVERY') ? 'Special Delivery' : ($order->paymentMethod ?? 'GCash') }}</span>
+                                <span class="font-black text-[#1E1915] text-xs px-2.5 py-1 bg-[#FAF8F5] rounded-lg border border-[#ECE3D2]">{{ $order->formatted_payment_method }}</span>
                             </div>
 
                             <div class="flex items-center justify-between text-xs">
