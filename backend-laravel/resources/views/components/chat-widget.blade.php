@@ -260,13 +260,15 @@
                 let text = String(rawText);
                 
                 // Strip internal metadata comments
-                text = text.replace(/<!--[\s\S]*?-->/g, '');
+                text = text.replace(new RegExp('<!--[\\s\\S]*?-->', 'g'), '');
                 
                 // Escape HTML special characters for XSS protection
                 text = text
-                    .replace(new RegExp('&', 'g'), '&amp;')
-                    .replace(new RegExp('<', 'g'), '&lt;')
-                    .replace(new RegExp('>', 'g'), '&gt;');
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
 
                 // Parse markdown image inside link: [![alt](imgUrl)](linkUrl)
                 text = text.replace(/\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g, function(match, alt, imgUrl, linkUrl) {
@@ -304,7 +306,7 @@
             formatPreviewText(raw) {
                 if (!raw) return '';
                 return String(raw)
-                    .replace(/<!--[\s\S]*?-->/g, '')
+                    .replace(new RegExp('<!--[\\s\\S]*?-->', 'g'), '')
                     .replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, '[Image]')
                     .replace(/!\[.*?\]\(.*?\)/g, '[Image]')
                     .replace(/\[(.*?)\]\(.*?\)/g, '$1')

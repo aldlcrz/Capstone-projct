@@ -158,7 +158,7 @@ document.addEventListener('alpine:init', () => {
             let text = String(rawText);
             
             // Strip internal metadata comments
-            text = text.replace(/<!--[\s\S]*?-->/g, '');
+            text = text.replace(new RegExp('<!--[\\s\\S]*?-->', 'g'), '');
             
             // Escape HTML special characters for XSS protection
             text = text
@@ -204,7 +204,7 @@ document.addEventListener('alpine:init', () => {
         formatPreviewText(raw) {
             if (!raw) return '';
             return String(raw)
-                .replace(/<!--[\s\S]*?-->/g, '')
+                .replace(new RegExp('<!--[\\s\\S]*?-->', 'g'), '')
                 .replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, '[Image]')
                 .replace(/!\[.*?\]\(.*?\)/g, '[Image]')
                 .replace(/\[(.*?)\]\(.*?\)/g, '$1')
