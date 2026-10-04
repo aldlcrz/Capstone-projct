@@ -143,13 +143,13 @@ class WishlistService
             $sizeBadge = $targetSize ? " (Size {$targetSize})" : "";
             try {
                 Notification::create([
-                    'user_id'     => $user->id,
-                    'title'       => '🎉 Wishlist Item Back in Stock',
-                    'message'     => "\"{$product->name}\"{$sizeBadge} is back in stock and has been added to your shopping cart!",
-                    'type'        => 'wishlist_restocked',
-                    'target_url'  => '/cart',
-                    'target_role' => 'customer',
-                    'is_read'     => false,
+                    'userId'     => $user->id,
+                    'title'      => '🎉 Wishlist Item Back in Stock',
+                    'message'    => "\"{$product->name}\"{$sizeBadge} is back in stock and has been added to your shopping cart!",
+                    'type'       => 'wishlist_restocked',
+                    'link'       => '/cart',
+                    'targetRole' => 'customer',
+                    'isRead'     => false,
                 ]);
             } catch (\Throwable $ne) {
                 Log::error("Failed to create in-app notification for restock: " . $ne->getMessage());

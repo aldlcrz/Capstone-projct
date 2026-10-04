@@ -18,12 +18,16 @@ class Notification extends Model
     protected $fillable = [
         'id',
         'userId',
+        'user_id',
         'title',
         'message',
         'type',
         'link',
+        'target_url',
         'isRead',
+        'is_read',
         'targetRole',
+        'target_role',
     ];
 
     /**
@@ -87,6 +91,29 @@ class Notification extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'userId');
+    }
+
+    /**
+     * Mutators for snake_case backwards compatibility
+     */
+    public function setUserIdAttribute($value)
+    {
+        $this->attributes['userId'] = $value;
+    }
+
+    public function setTargetUrlAttribute($value)
+    {
+        $this->attributes['link'] = $value;
+    }
+
+    public function setTargetRoleAttribute($value)
+    {
+        $this->attributes['targetRole'] = $value;
+    }
+
+    public function setIsReadAttribute($value)
+    {
+        $this->attributes['isRead'] = $value;
     }
 
     /**
