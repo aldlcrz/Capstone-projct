@@ -95,6 +95,16 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .artisan-badge { background-color: #C49520; color: #fff; font-size: 9px; font-weight: 800; border-radius: 9999px; padding: 2px 6px; min-width: 16px; text-align: center; }
+        /* Hide number input spinners / up and down buttons */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
     </style>
 </head>
 <body class="antialiased">

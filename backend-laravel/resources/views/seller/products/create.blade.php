@@ -1,6 +1,18 @@
 @extends('layouts.seller')
 
 @section('content')
+<style>
+    /* Hide number input spinners / up and down buttons */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+</style>
 <div class="max-w-4xl mx-auto pb-36 sm:pb-28 lg:pb-16 px-3 sm:px-6" x-data="addProductManager()">
     {{-- Top Header & Navigation --}}
     <div style="margin-bottom: 20px;">

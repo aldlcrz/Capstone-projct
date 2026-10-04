@@ -15,6 +15,17 @@
     ];
 @endphp
 <style>
+    /* Hide number input spinners / up and down buttons */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
     /* Target Group Pills */
     .target-pill {
         height: 38px;
