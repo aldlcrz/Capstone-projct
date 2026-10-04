@@ -1094,7 +1094,7 @@
                         <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Highlight the craftsmanship, weaving techniques, and care instructions</p>
                     </div>
 
-                    {{-- AI Auto-Write Story Button --}}
+                    {{-- AI Generate Story Button --}}
                     <button type="button" 
                             @click="generateDescriptionAi()"
                             :disabled="isAiLoading"
@@ -1102,14 +1102,14 @@
                             class="hover:opacity-90 active:scale-95 disabled:opacity-50">
                         <span x-show="!isAiLoading" style="display:flex;align-items:center;gap:6px;">
                             <span style="color:#C49520;font-size:12px;">✦</span>
-                            <span>AI Auto-Write</span>
+                            <span>Generate</span>
                         </span>
                         <span x-show="isAiLoading" style="display:flex;align-items:center;gap:6px;" x-cloak>
                             <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                             </svg>
-                            <span>Writing...</span>
+                            <span>Generating...</span>
                         </span>
                     </button>
                 </div>
@@ -3698,8 +3698,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         [
             'selector' => '#tour-create-step3-story',
-            'title' => '✍️ Artisan Story & AI Auto-Write',
-            'text' => 'Highlight fabric provenance, embroidery techniques (Calado, Callado, Burda), and care guidelines. Click "✦ AI Auto-Write" to generate an authentic heritage story instantly!'
+            'title' => '✍️ Artisan Story & AI Generator',
+            'text' => 'Highlight fabric provenance, embroidery techniques (Calado, Callado, Burda), and care guidelines. Click "✦ Generate" to generate an authentic heritage story instantly!'
         ],
         [
             'selector' => '#tour-create-step3-footer',
