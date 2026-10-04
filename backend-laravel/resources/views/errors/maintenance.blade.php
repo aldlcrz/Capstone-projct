@@ -79,10 +79,16 @@
         </h1>
 
         <!-- Subtitle/Message -->
-        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-xl max-w-md w-full mb-8">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-xl max-w-md w-full mb-6">
             <p class="text-sm sm:text-base leading-relaxed text-gray-300 font-medium">
                 {{ $message }}
             </p>
+            @if(!empty($estimated_end))
+            <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-center gap-2 text-xs font-semibold text-amber-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Estimated Completion: {{ \Carbon\Carbon::parse($estimated_end)->format('M d, Y h:i A') }}</span>
+            </div>
+            @endif
         </div>
 
         <!-- Status Indicator -->

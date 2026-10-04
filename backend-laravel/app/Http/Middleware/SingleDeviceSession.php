@@ -22,7 +22,13 @@ class SingleDeviceSession
 
             // If the user's DB sessionVersion is higher than this session's version,
             // another device has logged in with this account.
+            // Super Admin lockout protection: never terminate Super Admin session during active maintenance
             if ($storedVersion !== null && $user && (int) $user->sessionVersion > (int) $storedVersion) {
+                if ($user->role === 'superadmin' && \App\Http\Middleware\CheckMaintenance::isInMaintenance()) {
+                    $request->session()->put('login_session_version', (int) $user->sessionVersion);
+                    return $next($request);
+                }
+
                 Auth::guard('web')->logout();
 
                 $request->session()->invalidate();

@@ -96,6 +96,24 @@ class WebAuthController extends Controller
             /** @var User $user */
             $user = Auth::user();
 
+            // If System Maintenance is active, only allow Super Admins to proceed
+            if (\App\Http\Middleware\CheckMaintenance::isInMaintenance() && $user->role !== 'superadmin') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $config = \App\Http\Middleware\CheckMaintenance::getMaintenanceConfig();
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message'          => $config['message'] ?? 'Platform is currently under scheduled maintenance.',
+                        'maintenance'      => true,
+                        'estimated_end_at' => $config['estimated_end'] ?? null,
+                    ], 503);
+                }
+                return response()->view('errors.maintenance', [
+                    'message'       => $config['message'] ?? 'Platform is currently under scheduled maintenance.',
+                    'estimated_end' => $config['estimated_end'] ?? null,
+                ], 503);
+            }
+
             if ($user->status === 'frozen') {
                 Auth::logout();
                 $unpaidRecords = CommissionRecord::where('sellerId', $user->id)
@@ -759,9 +777,19 @@ class WebAuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user && $user->role === 'superadmin' && \App\Http\Middleware\CheckMaintenance::isInMaintenance()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'error'   => 'SUPERADMIN_LOGOUT_BLOCKED_MAINTENANCE',
+                    'message' => 'Logout is disabled while system maintenance is active to prevent admin lockout.'
+                ], 403);
+            }
+            return back()->with('error', 'Logout is disabled while system maintenance is active to prevent admin lockout.');
+        }
+
         try {
             $cart = $request->session()->get('cart', []);
-            $user = Auth::user();
             if ($user instanceof User && !empty($cart)) {
                 $user->update(['cart' => json_encode($cart)]);
             }

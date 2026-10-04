@@ -1,3 +1,6 @@
+@php
+    $isMaintenanceActive = \App\Http\Middleware\CheckMaintenance::isInMaintenance();
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -240,6 +243,12 @@
                         </div>
                     </div>
 
+                    @if($isMaintenanceActive)
+                    <div class="flex items-center gap-3 w-full px-4 py-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-700 rounded-xl font-bold text-[10px] tracking-wider uppercase cursor-not-allowed select-none" title="Logout is disabled while system maintenance is active to prevent admin lockout.">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>Logout Locked (Maintenance)</span>
+                    </div>
+                    @else
                     <form x-ref="logoutForm" action="{{ route('superadmin.logout') }}" method="POST">
                         @csrf
                         <button type="button" 
@@ -255,6 +264,7 @@
                             <span>Sign Out</span>
                         </button>
                     </form>
+                    @endif
                 </div>
             </div>
         </aside>
@@ -277,6 +287,13 @@
                 </div>
 
                 <div class="flex items-center gap-4">
+                    @if($isMaintenanceActive)
+                    <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-700 text-[10px] font-black uppercase tracking-wider animate-pulse">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Maintenance Active — Lockout Protected</span>
+                    </div>
+                    @endif
+
                     <!-- Super Admin Profile Dropdown -->
                     <div x-data="{ superProfileOpen: false }" class="relative" @click.away="superProfileOpen = false">
                         <button @click="superProfileOpen = !superProfileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="Super Admin Profile">
@@ -320,6 +337,12 @@
                             </div>
 
                             <div class="p-2 border-t border-gray-100 bg-gray-50">
+                                @if($isMaintenanceActive)
+                                <div class="flex items-center justify-center gap-2 w-full py-2 bg-amber-500/10 border border-amber-500/25 text-amber-700 rounded-xl font-bold text-[10px] tracking-wider uppercase cursor-not-allowed select-none" title="Logout is disabled while system maintenance is active.">
+                                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    <span>Logout Locked (Maintenance)</span>
+                                </div>
+                                @else
                                 <form x-ref="superDropdownLogoutForm" action="{{ route('superadmin.logout') }}" method="POST">
                                     @csrf
                                     <button type="button"
@@ -335,6 +358,7 @@
                                         Sign Out
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -519,6 +543,12 @@
                         </div>
 
                         <div class="p-2 border-t border-gray-100 bg-gray-50">
+                            @if($isMaintenanceActive)
+                            <div class="flex items-center justify-center gap-2 w-full py-2 bg-amber-500/10 border border-amber-500/25 text-amber-700 rounded-xl font-bold text-[10px] tracking-wider uppercase cursor-not-allowed select-none" title="Logout is disabled while system maintenance is active.">
+                                <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span>Logout Locked</span>
+                            </div>
+                            @else
                             <form x-ref="superMobileBottomLogoutForm" action="{{ route('superadmin.logout') }}" method="POST">
                                 @csrf
                                 <button type="button"
@@ -534,6 +564,7 @@
                                     Sign Out
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -543,6 +574,24 @@
     
     <x-confirmation-modal />
     <x-modal-scroll-lock />
+
+    @if($isMaintenanceActive)
+    <script>
+    (function() {
+        // Silent keep-alive every 3 minutes to guarantee Super Admin session never expires during maintenance
+        setInterval(function() {
+            fetch('{{ route('superadmin.session.keep_alive') }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            }).catch(function(err) {
+                console.warn('Super Admin keep-alive heartbeat failed:', err);
+            });
+        }, 180000);
+    })();
+    </script>
+    @endif
 
     @stack('scripts')
 </body>

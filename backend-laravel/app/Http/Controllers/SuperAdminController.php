@@ -58,10 +58,34 @@ class SuperAdminController extends Controller
 
     public function logout(Request $request)
     {
+        if (\App\Http\Middleware\CheckMaintenance::isInMaintenance()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'error'   => 'SUPERADMIN_LOGOUT_BLOCKED_MAINTENANCE',
+                    'message' => 'Logout is disabled while system maintenance is active to prevent admin lockout.'
+                ], 403);
+            }
+            return back()->with('error', 'Logout is disabled while system maintenance is active to prevent admin lockout.');
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    public function keepAlive(Request $request)
+    {
+        if (Auth::check() && Auth::user()->role === 'superadmin') {
+            $request->session()->regenerate();
+            return response()->json([
+                'status'      => 'ok',
+                'maintenance' => \App\Http\Middleware\CheckMaintenance::isInMaintenance(),
+                'user'        => Auth::user()->name,
+                'timestamp'   => now()->toIso8601String()
+            ]);
+        }
+        return response()->json(['error' => 'Unauthorized'], 401);
     }
 
     // ─── Dashboard ───────────────────────────────────────────────────────────
@@ -987,37 +1011,58 @@ class SuperAdminController extends Controller
 
     public function maintenance()
     {
-        $isMaintenanceMode  = $this->isInMaintenance();
-        $maintenanceMessage = SystemSetting::where('key', 'maintenance_message')->first()?->value
+        $config = \App\Http\Middleware\CheckMaintenance::getMaintenanceConfig();
+        $isMaintenanceMode  = !empty($config['active']);
+        $maintenanceMessage = $config['message'] 
             ?? 'We are currently performing scheduled system maintenance. We will be back shortly.';
-        $scheduledAt  = SystemSetting::where('key', 'maintenance_scheduled_at')->first()?->value;
-        $scheduledEnd = SystemSetting::where('key', 'maintenance_scheduled_end')->first()?->value;
+        $scheduledAt  = $config['enabled_at'] ?? null;
+        $scheduledEnd = $config['estimated_end'] ?? null;
+        $enabledBy    = $config['enabled_by'] ?? null;
 
         return view('superadmin.maintenance', compact(
-            'isMaintenanceMode', 'maintenanceMessage', 'scheduledAt', 'scheduledEnd'
+            'isMaintenanceMode', 'maintenanceMessage', 'scheduledAt', 'scheduledEnd', 'enabledBy'
         ));
     }
 
     public function toggleMaintenance(Request $request)
     {
-        $enable  = $request->input('enable');
-        $message = $request->input('message', 'Scheduled system maintenance in progress.');
-
-        SystemSetting::updateOrCreate(['key' => 'maintenance_message'], ['value' => $message]);
-
-        // Always ensure framework native down file is removed so admins are never locked out
-        try {
-            Artisan::call('up');
-        } catch (\Exception $e) {
-            Log::warning('Artisan up failed during toggleMaintenance', ['error' => $e->getMessage()]);
-        }
+        $enable = (string) $request->input('enable');
+        $actor  = Auth::user();
+        $ip     = $request->ip();
 
         if ($enable === '1') {
+            $confirmation = trim($request->input('confirmation', ''));
+            if ($confirmation !== 'MAINTENANCE') {
+                return back()->with('error', 'Confirmation failed. You must type "MAINTENANCE" exactly to enable maintenance mode.');
+            }
+
+            $message = trim($request->input('message', 'We are currently performing scheduled system maintenance. We will be back shortly.'));
+            $estimatedEnd = $request->input('estimated_end');
+
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '1']);
-            return back()->with('success', 'Maintenance mode has been ENABLED across the platform.');
+            SystemSetting::updateOrCreate(['key' => 'maintenance_message'], ['value' => $message]);
+            if (!empty($estimatedEnd)) {
+                SystemSetting::updateOrCreate(['key' => 'maintenance_scheduled_end'], ['value' => (string) $estimatedEnd]);
+            } else {
+                SystemSetting::where('key', 'maintenance_scheduled_end')->delete();
+            }
+            SystemSetting::updateOrCreate(['key' => 'maintenance_enabled_by'], ['value' => $actor ? $actor->name . ' (' . $actor->email . ')' : 'Super Administrator']);
+            SystemSetting::updateOrCreate(['key' => 'maintenance_enabled_at'], ['value' => now()->toIso8601String()]);
+
+            \App\Http\Middleware\CheckMaintenance::clearMaintenanceCache();
+
+            Log::warning("SYSTEM_MAINTENANCE_ENABLED by [{$actor?->email}] from IP [{$ip}]. Estimated end: [{$estimatedEnd}]. Message: [{$message}]");
+
+            return back()->with('success', '⚠️ Maintenance mode has been ENABLED. All non-Super Admin users are blocked. Super Admin Lockout Prevention is active.');
         } else {
             SystemSetting::updateOrCreate(['key' => 'maintenance_mode'], ['value' => '0']);
-            return back()->with('success', 'Maintenance mode has been DISABLED. Platform is live.');
+            SystemSetting::where('key', 'maintenance_scheduled_end')->delete();
+
+            \App\Http\Middleware\CheckMaintenance::clearMaintenanceCache();
+
+            Log::info("SYSTEM_MAINTENANCE_DISABLED by [{$actor?->email}] from IP [{$ip}]. Platform is LIVE.");
+
+            return back()->with('success', '✓ Maintenance mode has been DISABLED. Platform is now fully live to all users.');
         }
     }
 

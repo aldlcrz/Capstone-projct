@@ -112,8 +112,18 @@ class AdminSettingsTest extends TestCase
         $response = $this->actingAs($this->customer)->get('/');
         $response->assertStatus(503);
 
-        // 7. Admins should bypass maintenance
+        // 7. Regular Admins should be blocked during maintenance mode
         $response = $this->actingAs($this->admin)->get('/admin/dashboard');
+        $response->assertStatus(503);
+
+        // 8. Super Admins should bypass maintenance
+        $superadmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'super@example.com',
+            'password' => bcrypt('password123'),
+            'role' => 'superadmin',
+        ]);
+        $response = $this->actingAs($superadmin)->get('/superadmin/dashboard');
         $response->assertStatus(200);
     }
 

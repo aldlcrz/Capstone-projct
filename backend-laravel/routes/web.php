@@ -413,6 +413,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::delete('/archives/{id}', [SuperAdminController::class, 'purgeArchive'])->name('superadmin.archives.purge');
 
     // Developer & System Tools
+    Route::get('/session/keep-alive', [SuperAdminController::class, 'keepAlive'])->name('superadmin.session.keep_alive');
     Route::get('/maintenance', [SuperAdminController::class, 'maintenance'])->name('superadmin.maintenance');
     Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
     Route::get('/error-logs', [SuperAdminController::class, 'errorLogs'])->name('superadmin.error-logs');

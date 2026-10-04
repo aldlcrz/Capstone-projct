@@ -19,4 +19,19 @@ class SystemSetting extends Model
     protected $casts = [
         'value' => 'json',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function ($setting) {
+            if (str_starts_with((string) ($setting->key ?? ''), 'maintenance')) {
+                \App\Http\Middleware\CheckMaintenance::clearMaintenanceCache();
+            }
+        });
+
+        static::deleted(function ($setting) {
+            if (str_starts_with((string) ($setting->key ?? ''), 'maintenance')) {
+                \App\Http\Middleware\CheckMaintenance::clearMaintenanceCache();
+            }
+        });
+    }
 }

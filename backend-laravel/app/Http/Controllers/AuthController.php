@@ -208,43 +208,64 @@ class AuthController extends Controller
             $name = $payload['name'] ?? explode('@', $email)[0];
             $picture = $payload['picture'] ?? null;
 
-            $user = User::where('email', $email)->first();
+            $user = User::withTrashed()->where('email', $email)->first();
 
             $isNewUser = false;
 
             if (!$user) {
-                $isNewUser = true;
-                $user = new User();
-                $user->forceFill([
-                    'name' => $name,
-                    'email' => $email,
-                    'password' => Hash::make(Str::random(32)),
-                    'role' => 'customer',
-                    'status' => 'active',
-                    'isVerified' => true,
-                    'googleId' => $googleId,
-                    'profilePhoto' => $picture,
-                    'hasPasswordSet' => false
-                ]);
-                $user->save();
-            } else {
-                // Account status checks
-                if ($user->status === 'blocked' || $user->status === 'frozen') {
-                    return response()->json([
-                        'message' => 'Account Restricted',
-                        'reason' => $user->violationReason ?? 'Account restricted by administrator.',
-                        'status' => $user->status
-                    ], 403);
-                }
-
-                // Link/update googleId if not already matching
-                if ($googleId && $user->googleId !== $googleId) {
-                    $user->googleId = $googleId;
-                    if ($picture && !$user->profilePhoto) {
-                        $user->profilePhoto = $picture;
+                try {
+                    $user = DB::transaction(function () use ($name, $email, $googleId, $picture, &$isNewUser) {
+                        $existing = User::withTrashed()->where('email', $email)->first();
+                        if ($existing) {
+                            return $existing;
+                        }
+                        $isNewUser = true;
+                        $newUser = new User();
+                        $newUser->forceFill([
+                            'name' => $name,
+                            'email' => $email,
+                            'password' => Hash::make(Str::random(32)),
+                            'role' => 'customer',
+                            'status' => 'active',
+                            'isVerified' => true,
+                            'googleId' => $googleId,
+                            'profilePhoto' => $picture,
+                            'hasPasswordSet' => false
+                        ]);
+                        $newUser->save();
+                        return $newUser;
+                    });
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->errorInfo[1] === 1062) {
+                        $user = User::withTrashed()->where('email', $email)->first();
+                    } else {
+                        throw $e;
                     }
-                    $user->save();
                 }
+            }
+
+            if ($user && $user->trashed()) {
+                $user->restore();
+                $user->status = 'active';
+                $user->save();
+            }
+
+            // Account status checks
+            if ($user->status === 'blocked' || $user->status === 'frozen') {
+                return response()->json([
+                    'message' => 'Account Restricted',
+                    'reason' => $user->violationReason ?? 'Account restricted by administrator.',
+                    'status' => $user->status
+                ], 403);
+            }
+
+            // Link/update googleId if not already matching
+            if ($googleId && $user->googleId !== $googleId) {
+                $user->googleId = $googleId;
+                if ($picture && !$user->profilePhoto) {
+                    $user->profilePhoto = $picture;
+                }
+                $user->save();
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;

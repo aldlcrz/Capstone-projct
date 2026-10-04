@@ -5,82 +5,144 @@ namespace App\Http\Middleware;
 use App\Models\SystemSetting;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckMaintenance
 {
     /**
-     * Returns true when the site is in maintenance mode via either
-     * Laravel's native down-file OR the DB flag stored by the admin panel.
+     * Cache key for maintenance settings
      */
-    private function isInMaintenance(): bool
+    const CACHE_KEY = 'system_maintenance_config';
+
+    /**
+     * Retrieve current maintenance configuration from Cache / DB
+     */
+    public static function getMaintenanceConfig(): array
     {
         try {
-            if (app()->isDownForMaintenance()) {
-                return true;
-            }
+            return Cache::rememberForever(self::CACHE_KEY, function () {
+                if (app()->isDownForMaintenance()) {
+                    return [
+                        'active'        => true,
+                        'message'       => 'We are currently performing scheduled maintenance. We will be back shortly.',
+                        'estimated_end' => null,
+                        'enabled_by'    => 'System CLI',
+                        'enabled_at'    => now()->toIso8601String(),
+                    ];
+                }
 
-            $flag = SystemSetting::where('key', 'maintenance_mode')->first()?->value;
-            return $flag === '1' || $flag === true || $flag === 1;
+                $flag = SystemSetting::where('key', 'maintenance_mode')->first()?->value;
+                $isActive = ($flag === '1' || $flag === true || $flag === 1 || $flag === 'true');
+
+                $message = SystemSetting::where('key', 'maintenance_message')->first()?->value 
+                    ?? 'We are currently performing scheduled system maintenance. We will be back shortly.';
+                $estimatedEnd = SystemSetting::where('key', 'maintenance_scheduled_end')->first()?->value;
+                $enabledBy = SystemSetting::where('key', 'maintenance_enabled_by')->first()?->value ?? 'Super Administrator';
+                $enabledAt = SystemSetting::where('key', 'maintenance_enabled_at')->first()?->value;
+
+                return [
+                    'active'        => $isActive,
+                    'message'       => $message,
+                    'estimated_end' => $estimatedEnd,
+                    'enabled_by'    => $enabledBy,
+                    'enabled_at'    => $enabledAt,
+                ];
+            });
         } catch (\Throwable $e) {
-            return false;
+            return [
+                'active'        => false,
+                'message'       => 'System operational',
+                'estimated_end' => null,
+                'enabled_by'    => null,
+                'enabled_at'    => null,
+            ];
         }
+    }
+
+    /**
+     * Returns true when the site is currently in maintenance mode.
+     */
+    public static function isInMaintenance(): bool
+    {
+        $config = static::getMaintenanceConfig();
+        return !empty($config['active']);
+    }
+
+    /**
+     * Invalidate the maintenance settings cache immediately.
+     */
+    public static function clearMaintenanceCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Check bypass patterns
-        $bypassPatterns = [
+        // 1. Always allow critical system infrastructure and health checks
+        $whitelistPatterns = [
             'up',
-            'admin*',
-            'api/v1/admin*',
+            'build/*',
+            'images/*',
+            'storage/*',
+            'favicon.ico',
+            'livewire/*',
             'superadmin*',
             'api/v1/superadmin*',
-            'login*',
-            'logout*',
-            'register*',
-            'seller/register*',
-            'api/v1/auth*',
         ];
 
-        foreach ($bypassPatterns as $pattern) {
+        foreach ($whitelistPatterns as $pattern) {
             if ($request->is($pattern)) {
                 return $next($request);
             }
         }
 
-        // 2. Always let logged-in admins and superadmins through
+        // 2. If maintenance mode is NOT active, proceed normally
+        if (!static::isInMaintenance()) {
+            return $next($request);
+        }
+
+        // 3. Maintenance mode is ACTIVE:
+        // Always allow Super Administrators full uninterrupted access
         try {
-            if (\Illuminate\Support\Facades\Auth::check() && in_array(\Illuminate\Support\Facades\Auth::user()->role, ['admin', 'superadmin'])) {
+            if (Auth::check() && Auth::user()->role === 'superadmin') {
                 return $next($request);
             }
         } catch (\Throwable $e) {
-            // Ignore auth check error during early bootstrap
+            // Ignore auth check exceptions during early boot
         }
 
-        // 3. Block other requests if maintenance is active
-        if ($this->isInMaintenance()) {
-            $message = 'We are currently performing scheduled maintenance. We\'ll be back shortly.';
-            try {
-                $message = SystemSetting::where('key', 'maintenance_message')->first()?->value ?? $message;
-            } catch (\Throwable $e) {
-                // Use default message
-            }
+        // 4. Whitelist login endpoints so Super Admins can authenticate if session was cleared
+        $authRoutes = [
+            'login',
+            'superadmin/login',
+            'api/v1/auth/login',
+            'api/v1/auth/google',
+        ];
 
-            // Return JSON for API/expectsJson requests
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'message' => $message,
-                    'maintenance' => true
-                ], 503);
+        foreach ($authRoutes as $authRoute) {
+            if ($request->is($authRoute)) {
+                return $next($request);
             }
+        }
 
-            return response()->view('errors.maintenance', [
-                'message' => $message,
+        // 5. Block all other users (guests, customers, sellers, standard admins) with HTTP 503
+        $config = static::getMaintenanceConfig();
+        $message = $config['message'] ?? 'We are currently performing scheduled system maintenance. We will be back shortly.';
+        $estimatedEnd = $config['estimated_end'] ?? null;
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message'          => $message,
+                'maintenance'      => true,
+                'estimated_end_at' => $estimatedEnd,
             ], 503);
         }
 
-        return $next($request);
+        return response()->view('errors.maintenance', [
+            'message'       => $message,
+            'estimated_end' => $estimatedEnd,
+        ], 503);
     }
 }
-
