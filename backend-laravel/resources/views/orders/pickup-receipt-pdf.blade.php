@@ -20,47 +20,58 @@
         }
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #A87B10;
+            border-bottom: 2px solid #C49520;
             padding-bottom: 14px;
             margin-bottom: 16px;
         }
         .brand-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: #1E1915;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
         .brand-sub {
             font-size: 9px;
             color: #A87B10;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             margin-top: 2px;
+        }
+        .doc-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1E1915;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 4px;
         }
         .receipt-badge {
             text-align: right;
+            vertical-align: middle;
         }
         .badge-box {
             display: inline-block;
             background-color: #FAF5EA;
-            border: 1px solid #E6D8BA;
+            border: 1.5px solid #E6D8BA;
             color: #8C6212;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
             text-align: right;
         }
         .badge-title {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #78716C;
         }
         .badge-code {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             color: #C0420A;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             margin-top: 2px;
         }
 
@@ -71,7 +82,7 @@
             border: 1px solid #EAE2D2;
             border-radius: 8px;
             margin-bottom: 16px;
-            padding: 12px;
+            padding: 12px 14px;
         }
         .info-col {
             width: 50%;
@@ -85,12 +96,13 @@
             color: #8C827A;
             letter-spacing: 0.5px;
             border-bottom: 1px solid #EAE1D0;
-            padding-bottom: 3px;
+            padding-bottom: 4px;
             margin-bottom: 6px;
         }
         .info-row {
             margin-bottom: 4px;
             font-size: 10px;
+            color: #374151;
         }
         .info-row strong {
             color: #1E1915;
@@ -113,7 +125,7 @@
             text-align: left;
         }
         .items-table td {
-            padding: 8px 10px;
+            padding: 9px 10px;
             border-bottom: 1px solid #ECE3D2;
             font-size: 10px;
         }
@@ -127,29 +139,76 @@
             text-align: center;
         }
 
-        /* Summary Box */
+        /* Summary & Handover Section */
         .summary-table {
             width: 100%;
             margin-bottom: 16px;
         }
         .summary-left {
-            width: 55%;
+            width: 52%;
             vertical-align: top;
-            padding-right: 16px;
+            padding-right: 14px;
         }
         .summary-right {
-            width: 45%;
+            width: 48%;
             vertical-align: top;
         }
+
+        /* Handover Box */
+        .handover-box {
+            background-color: #FAF8F5;
+            border: 1px solid #ECE3D2;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .handover-title {
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8C827A;
+            border-bottom: 1px solid #EAE1D0;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+        }
+        .handover-note {
+            font-size: 9px;
+            color: #5C5247;
+            line-height: 1.35;
+            margin-bottom: 10px;
+        }
+        .sig-row {
+            width: 100%;
+            margin-top: 6px;
+        }
+        .sig-col {
+            width: 50%;
+            vertical-align: bottom;
+            padding-right: 6px;
+        }
+        .sig-line {
+            border-bottom: 1px solid #C4B5A5;
+            height: 18px;
+            margin-bottom: 3px;
+        }
+        .sig-label {
+            font-size: 8px;
+            color: #78716C;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* Totals Box */
         .totals-table {
             width: 100%;
             border-collapse: collapse;
             background-color: #FAF8F5;
             border: 1px solid #ECE3D2;
-            border-radius: 6px;
+            border-radius: 8px;
+            overflow: hidden;
         }
         .totals-table td {
-            padding: 6px 10px;
+            padding: 7px 12px;
             font-size: 10px;
         }
         .grand-total {
@@ -158,22 +217,22 @@
             font-weight: bold;
             font-size: 12px;
         }
-
-        .instructions-box {
-            background-color: #F0FDF4;
-            border: 1px solid #BBF7D0;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 9px;
-            color: #166534;
-            line-height: 1.4;
+        .grand-total td {
+            padding: 9px 12px;
         }
-        .instructions-box strong {
-            color: #14532D;
-            display: block;
-            margin-bottom: 3px;
-            font-size: 10px;
+
+        .auth-badge {
+            display: inline-block;
+            background-color: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            color: #047857;
+            font-weight: bold;
+            font-size: 8px;
+            padding: 3px 8px;
+            border-radius: 4px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
         }
 
         .footer {
@@ -182,19 +241,8 @@
             text-align: center;
             font-size: 8px;
             color: #8C827A;
-            margin-top: 20px;
-        }
-        .verification-badge {
-            display: inline-block;
-            border: 2px solid #059669;
-            color: #059669;
-            font-weight: bold;
-            font-size: 9px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
+            margin-top: 14px;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -206,11 +254,11 @@
             <td style="vertical-align: middle;">
                 <div class="brand-title">LumBarong</div>
                 <div class="brand-sub">Lumban Heritage Craft &amp; Artisan Marketplace</div>
-                <div style="font-size: 12px; font-weight: bold; color: #1E1915; margin-top: 4px;">
-                    STORE PICKUP COLLECTION PASS &amp; OFFICIAL RECEIPT
+                <div class="doc-title">
+                    Store Pickup Collection Pass &amp; Official Receipt
                 </div>
             </td>
-            <td class="receipt-badge" style="vertical-align: middle;">
+            <td class="receipt-badge">
                 <div class="badge-box">
                     <div class="badge-title">Pickup Claim Code</div>
                     <div class="badge-code">{{ $pickupCode }}</div>
@@ -238,7 +286,7 @@
                 <div class="section-label">Pickup Workshop &amp; Artisan</div>
                 <div class="info-row"><strong>Artisan Shop:</strong> {{ $order->seller?->shopName ?: $order->seller?->name }}</div>
                 <div class="info-row"><strong>Collection Point:</strong> Lumban Workshop Studio, Lumban, Laguna</div>
-                <div class="info-row"><strong>Fulfillment Method:</strong> Store Pickup (Free / ₱0.00)</div>
+                <div class="info-row"><strong>Fulfillment Method:</strong> In-Shop Store Pickup (Free / ₱0.00)</div>
                 <div class="info-row"><strong>Payment Method:</strong> {{ $order->formatted_payment_method }}</div>
                 <div class="info-row">
                     <strong>Payment Status:</strong> {{ $order->resolved_payment_status }}
@@ -290,21 +338,37 @@
         </tbody>
     </table>
 
-    {{-- Summary & Instructions --}}
+    {{-- Summary & Handover Section --}}
     <table class="summary-table">
         <tr>
+            {{-- Handover & Workshop Release Block --}}
             <td class="summary-left">
-                <div class="instructions-box">
-                    <strong>✓ Pickup Claim Instructions</strong>
-                    1. Present this official pickup pass (on your phone or printed) to the artisan.<br>
-                    2. State your Claim Code <strong>{{ $pickupCode }}</strong> or Order ID <strong>#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong>.<br>
-                    3. Inspect and verify your handcrafted garment before completing collection.<br>
-                    4. Once received, confirm delivery on your LumBarong dashboard.
-                </div>
-                <div style="margin-top: 8px;">
-                    <span class="verification-badge">✓ Verified Authenticity Pass</span>
+                <div class="handover-box">
+                    <div class="handover-title">Workshop Release &amp; Claim Acknowledgment</div>
+                    <div class="handover-note">
+                        This official document authorizes the release of the handcrafted piece(s) listed above upon presentation at the Lumban workshop.
+                    </div>
+                    
+                    <table class="sig-row">
+                        <tr>
+                            <td class="sig-col">
+                                <div class="sig-line"></div>
+                                <div class="sig-label">Customer / Claimant Signature</div>
+                            </td>
+                            <td class="sig-col">
+                                <div class="sig-line"></div>
+                                <div class="sig-label">Artisan Workshop Release</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 6px;">
+                        <span class="auth-badge">✓ Verified LumBarong Artisan Pass</span>
+                    </div>
                 </div>
             </td>
+
+            {{-- Totals Summary --}}
             <td class="summary-right">
                 <table class="totals-table">
                     <tr>
