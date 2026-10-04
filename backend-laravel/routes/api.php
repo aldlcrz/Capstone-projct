@@ -60,6 +60,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
         Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
         Route::post('/orders/{id}/resubmit-payment', [OrderController::class, 'resubmitPayment']);
+        Route::get('/orders/{id}/payment-proof', [OrderController::class, 'paymentProof']);
     });
 
     Route::middleware(['auth:sanctum', 'seller'])->group(function () {

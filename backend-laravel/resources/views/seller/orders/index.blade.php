@@ -2218,7 +2218,7 @@ function sellerOrdersManager() {
                             <template x-if="detailsOrder.paymentProof">
                                 <div class="pt-2 border-t border-gray-200/60 flex items-center justify-between">
                                     <span class="text-gray-400 font-bold text-[9px] uppercase tracking-wider">Receipt File</span>
-                                    <button type="button" @click="receiptUrl = '/storage/' + detailsOrder.paymentProof; receiptModal = true;" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#C0420A] hover:underline">
+                                    <button type="button" @click="receiptUrl = detailsOrder.payment_proof_url || ('/orders/' + detailsOrder.id + '/payment-proof'); receiptModal = true;" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#C0420A] hover:underline">
                                         View Proof ↗
                                     </button>
                                 </div>
@@ -2773,13 +2773,13 @@ function sellerOrdersManager() {
                             <span class="text-gray-400 font-bold text-[10px] uppercase">Customer Receipt Proof</span>
                             <div class="p-2 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
                                 <div class="w-12 h-14 bg-black/5 rounded-xl overflow-hidden shrink-0 border border-gray-200">
-                                    <img :src="'/storage/' + verifyOrderTarget.paymentProof" class="w-full h-full object-cover" alt="Proof">
+                                    <img :src="verifyOrderTarget.payment_proof_url || ('/orders/' + verifyOrderTarget.id + '/payment-proof')" class="w-full h-full object-cover" alt="Proof">
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[11px] font-bold text-gray-700">Receipt Screenshot</p>
                                     <p class="text-[10px] text-gray-400">Click to view in full resolution</p>
                                 </div>
-                                <button type="button" @click="receiptUrl = '/storage/' + verifyOrderTarget.paymentProof; receiptModal = true;" class="px-3 py-1.5 bg-black text-white text-[9px] font-black uppercase tracking-wider rounded-xl hover:bg-[#C0420A] transition-all">
+                                <button type="button" @click="receiptUrl = verifyOrderTarget.payment_proof_url || ('/orders/' + verifyOrderTarget.id + '/payment-proof'); receiptModal = true;" class="px-3 py-1.5 bg-black text-white text-[9px] font-black uppercase tracking-wider rounded-xl hover:bg-[#C0420A] transition-all">
                                     Inspect ↗
                                 </button>
                             </div>

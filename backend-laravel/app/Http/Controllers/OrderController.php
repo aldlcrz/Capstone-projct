@@ -565,6 +565,64 @@ class OrderController extends Controller
     }
 
     /**
+     * Download or view customer payment receipt proof image securely.
+     */
+    public function paymentProof(Request $request, string $id)
+    {
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        $order = Order::findOrFail($id);
+
+        // Security check: Buyer, Seller of the order, or Admin
+        $isBuyer = ($order->customerId === $user->id);
+        $isSeller = ($order->sellerId === $user->id);
+        $isAdmin = in_array(strtolower($user->role), ['admin', 'superadmin'], true);
+
+        if (!$isBuyer && !$isSeller && !$isAdmin) {
+            abort(403, 'Unauthorized to view this payment receipt.');
+        }
+
+        if (empty($order->paymentProof)) {
+            abort(404, 'No payment proof uploaded for this order.');
+        }
+
+        $proof = trim($order->paymentProof);
+        $cleanProof = ltrim($proof, '/');
+        $filename = basename($cleanProof);
+
+        // Check possible paths across both local and public disks
+        $candidates = [
+            storage_path('app/' . $cleanProof),
+            storage_path('app/private/' . $cleanProof),
+            storage_path('app/private/' . str_replace('private/', '', $cleanProof)),
+            storage_path('app/payments/' . $filename),
+            storage_path('app/private/payments/' . $filename),
+            storage_path('app/public/' . $cleanProof),
+            storage_path('app/public/' . str_replace('private/', '', $cleanProof)),
+            storage_path('app/public/payments/' . $filename),
+            public_path('storage/' . $cleanProof),
+            public_path('storage/' . str_replace('private/', '', $cleanProof)),
+            public_path('uploads/' . $cleanProof),
+            public_path('uploads/payments/' . $filename),
+        ];
+
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && is_file($cand)) {
+                $mimeType = mime_content_type($cand) ?: 'image/jpeg';
+                return response()->file($cand, [
+                    'Content-Type' => $mimeType,
+                    'Cache-Control' => 'private, max-age=86400',
+                ]);
+            }
+        }
+
+        abort(404, 'Payment proof image file not found on server.');
+    }
+
+    /**
      * Upload a packing proof photo for a Ready to Ship order.
      * Accessible by the seller only.
      */

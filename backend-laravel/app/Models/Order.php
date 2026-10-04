@@ -45,6 +45,7 @@ class Order extends Model
         'is_special_delivery',
         'formatted_payment_method',
         'packing_proof_url',
+        'payment_proof_url',
         'resolved_payment_status',
     ];
 
@@ -154,6 +155,24 @@ class Order extends Model
         }
 
         return asset('uploads/packing-proofs/' . basename($proof));
+    }
+
+    /**
+     * Get the secure URL for customer payment receipt proof.
+     */
+    public function getPaymentProofUrlAttribute(): ?string
+    {
+        if (empty($this->paymentProof)) {
+            return null;
+        }
+
+        $proof = trim($this->paymentProof);
+
+        if (str_starts_with($proof, 'http://') || str_starts_with($proof, 'https://')) {
+            return $proof;
+        }
+
+        return url('/orders/' . $this->id . '/payment-proof');
     }
 
     /**
