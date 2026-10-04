@@ -265,120 +265,125 @@ class WebAuthController extends Controller
 
     public function register(Request $request)
     {
-        $email = strtolower(trim($request->email));
-        $name = trim($request->name);
+        try {
+            $email = strtolower(trim($request->email));
+            $name = trim($request->name);
 
-        // Check if an existing account with this email is pending deletion
-        $hasScheduledCol = Schema::hasColumn('users', 'deletion_scheduled_at');
-        $pendingUser = User::withTrashed()
-            ->where('email', $email)
-            ->where(function ($q) use ($hasScheduledCol) {
-                $q->where('status', 'pending_deletion');
-                if ($hasScheduledCol) {
-                    $q->orWhereNotNull('deletion_scheduled_at');
+            // Check if an existing account with this email is pending deletion
+            $hasScheduledCol = Schema::hasColumn('users', 'deletion_scheduled_at');
+            $pendingUser = User::withTrashed()
+                ->where('email', $email)
+                ->where(function ($q) use ($hasScheduledCol) {
+                    $q->where('status', 'pending_deletion');
+                    if ($hasScheduledCol) {
+                        $q->orWhereNotNull('deletion_scheduled_at');
+                    }
+                })
+                ->first();
+
+            if ($pendingUser) {
+                // Check if 7 days have expired
+                if (!empty($pendingUser->permanent_deletion_at) && $pendingUser->permanent_deletion_at->lte(now())) {
+                    $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
+                    $cleanup->permanentlyDeleteAccount($pendingUser);
+                } else {
+                    return back()->withErrors([
+                        'email' => 'This account is currently scheduled for deletion. Please log in with your credentials to restore your existing account.'
+                    ])->withInput();
                 }
-            })
-            ->first();
-
-        if ($pendingUser) {
-            // Check if 7 days have expired
-            if (!empty($pendingUser->permanent_deletion_at) && $pendingUser->permanent_deletion_at->lte(now())) {
-                $cleanup = new \App\Console\Commands\ProcessScheduledAccountDeletions();
-                $cleanup->permanentlyDeleteAccount($pendingUser);
-            } else {
-                return back()->withErrors([
-                    'email' => 'This account is currently scheduled for deletion. Please log in with your credentials to restore your existing account.'
-                ])->withInput();
             }
+
+            // Delete any stale unverified, pending, or soft-deleted user record with this email so it doesn't block re-registering
+            $staleUser = User::withTrashed()->where('email', $email)->first();
+            if ($staleUser && (!$staleUser->isVerified || $staleUser->status === 'pending' || $staleUser->trashed())) {
+                $staleUser->forceDelete();
+            }
+
+            $validator = Validator::make($request->all(), [
+                'name'          => ['required', 'string', 'min:2', 'max:100', 'regex:/^[a-zA-Z\x{00C0}-\x{024F}\s\.\'\-]+$/u'],
+                'email'         => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')->whereNull('deleted_at')
+                ],
+                'password'      => [
+                    'required',
+                    'string',
+                    'min:6',
+                    'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/',
+                    'confirmed',
+                ],
+                'terms_consent' => 'required|accepted',
+            ], [
+                'name.required'          => 'Please enter your full name.',
+                'name.min'               => 'Name must be at least 2 characters.',
+                'name.regex'             => 'Full name may only contain letters, spaces, hyphens, periods, and apostrophes.',
+                'email.required'         => 'Please enter your email address.',
+                'email.email'            => 'Please enter a valid email address.',
+                'email.unique'           => 'This email is already in use. Please log in instead.',
+                'password.required'      => 'Please enter a password.',
+                'password.min'           => 'Password must be at least 6 characters.',
+                'password.regex'         => 'Password must contain at least one letter and one number.',
+                'password.confirmed'     => 'Password confirmation does not match.',
+                'terms_consent.required' => 'You must accept the Terms and Conditions to proceed.',
+                'terms_consent.accepted' => 'You must accept the Terms and Conditions to proceed.',
+            ]);
+
+            if ($validator->fails()) {
+                return back()->withErrors($validator)->withInput();
+            }
+
+            $googleSignup = session('google_signup');
+            $googleId = null;
+            $profilePhoto = null;
+            if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
+                $googleId = $googleSignup['googleId'] ?? null;
+                $profilePhoto = $googleSignup['picture'] ?? null;
+            }
+
+            // Create pending customer in DB (isVerified = false, status = 'pending')
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name'           => $name,
+                    'username'       => null,
+                    'password'       => Hash::make($request->password),
+                    'role'           => 'customer',
+                    'status'         => 'pending',
+                    'isVerified'     => false,
+                    'googleId'       => $googleId,
+                    'profilePhoto'   => $profilePhoto,
+                    'hasPasswordSet' => true,
+                ]
+            );
+
+            session([
+                'pending_registration' => [
+                    'name'              => $name,
+                    'username'          => null,
+                    'email'             => $email,
+                    'role'              => 'customer',
+                ],
+                'verify_email' => $email,
+            ]);
+            session()->forget('google_signup');
+
+            // Generate verification code and send email
+            $verification = EmailNotificationService::createVerificationCode($email, 'registration');
+            $mailable = new \App\Mail\VerificationCodeMail($name, $verification->code);
+            $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+
+            if (!$sent) {
+                return redirect()->route('verify.email')->with('warning', 'Verification code created, but sending email may be delayed. Please check your Gmail or click Resend.');
+            }
+
+            return redirect()->route('verify.email')->with('success', 'A 6-digit verification code has been sent to ' . $email . '. Please enter it below to activate your account.');
+        } catch (\Throwable $e) {
+            Log::error('Customer registration fatal error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return back()->withErrors(['email' => 'An error occurred during registration. Please try again.'])->withInput();
         }
-
-        // Delete any stale unverified active user record with this email so it doesn't block re-registering
-        $staleUser = User::where('email', $email)->where('isVerified', false)->first();
-        if ($staleUser) {
-            $staleUser->forceDelete();
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name'          => ['required', 'string', 'min:2', 'max:100', 'regex:/^[a-zA-Z\x{00C0}-\x{024F}\s\.\'\-]+$/u'],
-            'email'         => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->whereNull('deleted_at')
-            ],
-            'password'      => [
-                'required',
-                'string',
-                'min:6',
-                'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/',
-                'confirmed',
-            ],
-            'terms_consent' => 'required|accepted',
-        ], [
-            'name.required'          => 'Please enter your full name.',
-            'name.min'               => 'Name must be at least 2 characters.',
-            'name.regex'             => 'Full name may only contain letters, spaces, hyphens, periods, and apostrophes.',
-            'email.required'         => 'Please enter your email address.',
-            'email.email'            => 'Please enter a valid email address.',
-            'email.unique'           => 'This email is already in use. Please log in instead.',
-            'password.required'      => 'Please enter a password.',
-            'password.min'           => 'Password must be at least 6 characters.',
-            'password.regex'         => 'Password must contain at least one letter and one number.',
-            'password.confirmed'     => 'Password confirmation does not match.',
-            'terms_consent.required' => 'You must accept the Terms and Conditions to proceed.',
-            'terms_consent.accepted' => 'You must accept the Terms and Conditions to proceed.',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $googleSignup = session('google_signup');
-        $googleId = null;
-        $profilePhoto = null;
-        if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
-            $googleId = $googleSignup['googleId'] ?? null;
-            $profilePhoto = $googleSignup['picture'] ?? null;
-        }
-
-        // Create pending customer in DB (isVerified = false, status = 'pending')
-        $user = User::updateOrCreate(
-            ['email' => $email],
-            [
-                'name'           => $name,
-                'username'       => null,
-                'password'       => Hash::make($request->password),
-                'role'           => 'customer',
-                'status'         => 'pending',
-                'isVerified'     => false,
-                'googleId'       => $googleId,
-                'profilePhoto'   => $profilePhoto,
-                'hasPasswordSet' => true,
-            ]
-        );
-
-        session([
-            'pending_registration' => [
-                'name'              => $name,
-                'username'          => null,
-                'email'             => $email,
-                'role'              => 'customer',
-            ],
-            'verify_email' => $email,
-        ]);
-        session()->forget('google_signup');
-
-        // Generate verification code and send email
-        $verification = EmailNotificationService::createVerificationCode($email, 'registration');
-        $mailable = new \App\Mail\VerificationCodeMail($name, $verification->code);
-        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
-
-        if (!$sent) {
-            return redirect()->route('verify.email')->with('warning', 'Verification code created, but sending email may be delayed. Please check your Gmail or click Resend.');
-        }
-
-        return redirect()->route('verify.email')->with('success', 'Verification code sent to your Gmail! Enter the 6-digit code below to activate your account.');
     }
 
     public function showSellerRegister()
@@ -1958,7 +1963,7 @@ class WebAuthController extends Controller
         // Increment sessionVersion to terminate sessions on other devices
         $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
         // Revoke Sanctum / personal access tokens if table and relation present
-        if (\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
+        if (Schema::hasTable('personal_access_tokens') && method_exists($user, 'tokens')) {
             $user->tokens()->delete();
         }
         $user->save();
@@ -2230,7 +2235,7 @@ class WebAuthController extends Controller
             ])->render();
 
             if (!class_exists(\Dompdf\Dompdf::class)) {
-                \Log::error('Dompdf class not found. Please run composer install on the server.');
+                Log::error('Dompdf class not found. Please run composer install on the server.');
                 return response($html, 200, [
                     'Content-Type'        => 'text/html; charset=UTF-8',
                     'Content-Disposition' => "attachment; filename=\"lumbarong-information-{$dateStr}.html\"",
@@ -2252,7 +2257,7 @@ class WebAuthController extends Controller
                 'Content-Disposition' => "attachment; filename=\"{$pdfFilename}\"",
             ]);
         } catch (\Throwable $e) {
-            \Log::error('Failed to generate PDF account information: ' . $e->getMessage(), [
+            Log::error('Failed to generate PDF account information: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace'     => $e->getTraceAsString(),
             ]);

@@ -64,7 +64,7 @@
             </div>
         @endif
 
-        <form action="/register" 
+        <form action="{{ route('register.submit') }}" 
               method="POST" 
               class="space-y-4" 
               id="register-form"

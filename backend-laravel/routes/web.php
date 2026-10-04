@@ -64,7 +64,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [WebAuthController::class, 'login'])->name('login.post');
     Route::post('/account/restore', [WebAuthController::class, 'restoreAccount'])->name('account.restore');
     Route::post('/account/restore/cancel', [WebAuthController::class, 'cancelRestore'])->name('account.restore.cancel');
-    Route::post('/register', [WebAuthController::class, 'register']);
+    Route::post('/register', [WebAuthController::class, 'register'])->name('register.submit');
     Route::post('/auth/google', [WebAuthController::class, 'handleGoogleLogin'])->name('auth.google');
     Route::post('/auth/google/signup', [WebAuthController::class, 'handleGoogleSignup'])->name('auth.google.signup');
     Route::post('/auth/google/seller/signup', [WebAuthController::class, 'handleGoogleSellerSignup'])->name('auth.google.seller.signup');
