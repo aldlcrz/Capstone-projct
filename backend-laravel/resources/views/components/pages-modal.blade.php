@@ -13,8 +13,8 @@
     @keydown.escape.window="if(isOpen) closeModal()"
     x-show="isOpen"
     x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
-    style="display: none;"
+    class="fixed inset-0 z-200000 flex items-center justify-center p-3 sm:p-6"
+    style="display: none; z-index: 200000;"
 >
     <!-- Backdrop (absolute, matching standard modal architecture) -->
     <div 

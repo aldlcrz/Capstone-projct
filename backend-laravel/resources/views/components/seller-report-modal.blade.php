@@ -1,8 +1,8 @@
 <div x-data="sellerReportModal()" 
     @open-seller-report.window="open($event.detail)"
     x-show="isOpen" 
-    class="fixed inset-0 z-1000 flex items-center justify-center p-4" 
-    style="display: none;"
+    class="fixed inset-0 z-200000 flex items-center justify-center p-4" 
+    style="display: none; z-index: 200000;"
     x-transition:enter="transition ease-out duration-300"
     x-transition:enter-start="opacity-0 scale-95"
     x-transition:enter-end="opacity-100 scale-100"
@@ -17,7 +17,7 @@
     <!-- Modal Content -->
     <div class="relative w-full max-w-lg bg-white rounded-3xl sm:rounded-4xl shadow-2xl overflow-hidden p-0 border border-gray-100 max-h-[90vh] flex flex-col">
         <!-- Header Banner -->
-        <div class="p-6 sm:p-8 bg-gradient-to-r from-amber-500/10 via-red-500/10 to-transparent border-b border-gray-100">
+        <div class="p-6 sm:p-8 bg-linear-to-r from-amber-500/10 via-red-500/10 to-transparent border-b border-gray-100">
             <div class="flex justify-between items-start">
                 <div class="space-y-1">
                     <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-[9px] font-black uppercase tracking-widest">

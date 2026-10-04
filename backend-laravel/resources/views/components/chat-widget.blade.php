@@ -696,7 +696,7 @@ body.chat-open {
                     <span>✨ Smart Assistant</span>
                 </button>
                 <button type="button" 
-                        @click="mainMode = 'artisan'; if(isLoggedIn) { loadConversations(); } else { window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } })); }"
+                        @click="if (isLoggedIn) { mainMode = 'artisan'; loadConversations(); } else { window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } })); }"
                         :class="mainMode === 'artisan' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
                         class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                     <span>💬 Artisans</span>
