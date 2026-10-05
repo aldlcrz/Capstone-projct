@@ -31,7 +31,8 @@
 
 <div id="cart-root"
      data-cart-items="{{ json_encode($cartItemsForJs) }}"
-     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 16px 48px 16px;"
+     style="min-height:calc(100vh - 80px);background-color:#FAF8F5;"
+     class="px-4 pt-6 pb-44 lg:pb-12"
      x-data="cartApp()"
      x-init="init()">
 
@@ -297,9 +298,9 @@
                 </div>
             </div>
 
-            {{-- ===== Right: Minimalist Order Summary Sidebar (4 cols) ===== --}}
-            <div class="lg:col-span-5 xl:col-span-4 hidden lg:block">
-                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);position:sticky;top:96px;" class="space-y-5">
+            {{-- ===== Right: Order Summary Sidebar / Card (Visible on all screen sizes) ===== --}}
+            <div class="lg:col-span-5 xl:col-span-4">
+                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);" class="space-y-5 lg:sticky lg:top-24">
                     <div>
                         <h2 style="font-family:ui-serif,Georgia,serif;" class="text-xl font-bold text-[#1E1915] tracking-tight">
                             Order Summary
@@ -323,7 +324,8 @@
                             <span>Estimated Shipping</span>
                             <span x-show="shipping > 0" class="font-bold text-[#1E1915]">₱<span x-text="shipping.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
                             <span x-show="shipping === 0" class="font-bold text-emerald-700">Free</span>
-                                        {{-- Total line --}}
+                        </div>
+                        {{-- Total line --}}
                         <div class="pt-3 border-t border-[#EAE2D2] flex justify-between items-baseline">
                             <span class="text-sm font-bold text-[#1E1915] uppercase tracking-wider">Total</span>
                             <span class="text-2xl font-black text-[#C0422A]">₱<span x-text="(subtotal + shipping).toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
@@ -361,17 +363,17 @@
                 </div>
             </div>
 
-            {{-- ===== Mobile Sticky Checkout Bar ===== --}}
+            {{-- ===== Mobile Sticky Bottom Checkout Bar (Positioned above Mobile Nav) ===== --}}
             <div x-show="items.length > 0"
                  x-cloak
-                 class="lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-[#ECE3D2] shadow-lg px-4 py-3"
+                 class="lg:hidden fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[95] bg-[#FDFBF7]/95 backdrop-blur-md border-t border-[#EAE2D2] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] px-4 py-3"
                  x-data="{ showMobileBreakdown: false }">
 
                 {{-- Price breakdown popup --}}
                 <div x-show="showMobileBreakdown" 
                      x-cloak
                      x-transition
-                     class="mb-2.5 p-3 bg-[#FAF8F5] rounded-xl border border-[#ECE3D2] text-xs space-y-1.5 shadow-xs">
+                     class="mb-2.5 p-3 bg-white rounded-xl border border-[#ECE3D2] text-xs space-y-1.5 shadow-sm">
                     <div class="flex justify-between text-[#78716C]">
                         <span>Subtotal (<span x-text="selected.length"></span> items)</span>
                         <span class="font-bold text-[#1E1915]">₱<span x-text="subtotal.toLocaleString('en-PH', {minimumFractionDigits:2,maximumFractionDigits:2})"></span></span>
@@ -412,12 +414,12 @@
                             @click="$refs.checkoutForm.submit()"
                             :disabled="selected.length === 0 || selectedShopCount > 1"
                             :style="(selected.length === 0 || selectedShopCount > 1) 
-                                ? 'background-color:#A8A29E;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:not-allowed;opacity:0.6;' 
-                                : 'background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:pointer;opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.2s;'"
-                            style="background-color:#1E1915;color:#FFFFFF;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border:none;"
+                                ? 'background-color:#A8A29E;color:#FFFFFF;padding:11px 18px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:not-allowed;opacity:0.6;' 
+                                : 'background-color:#1E1915;color:#FFFFFF;padding:11px 18px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:pointer;opacity:1;box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:all 0.2s;'"
+                            style="background-color:#1E1915;color:#FFFFFF;padding:11px 18px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;border:none;"
                             class="shrink-0">
-                        <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:700;">Check Out</span>
-                        <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:700;">1 Shop Only</span>
+                        <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:800;">Proceed to Checkout</span>
+                        <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:800;">1 Shop Only</span>
                         <span x-show="selected.length > 0 && selectedShopCount <= 1" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                     </button>
                 </div>
