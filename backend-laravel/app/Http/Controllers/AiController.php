@@ -15,9 +15,12 @@ class AiController extends Controller
     public function chatStylist(Request $request)
     {
         try {
-            $message = trim($request->input('message', ''));
+            $message = trim((string) $request->input('message', ''));
             if (!$message) {
                 return response()->json(['message' => 'Message cannot be empty'], 400);
+            }
+            if (mb_strlen($message) > 100) {
+                $message = mb_substr($message, 0, 100);
             }
 
             $history = $request->input('history', []);

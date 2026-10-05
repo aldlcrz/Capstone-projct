@@ -161,13 +161,16 @@
 
             // --- AI Stylist Methods ---
             sendAiPrompt(promptText) {
-                this.aiInput = promptText;
+                this.aiInput = (promptText || '').substring(0, 100);
                 this.sendAiMessage();
             },
 
             sendAiMessage() {
-                const query = (this.aiInput || '').trim();
+                let query = (this.aiInput || '').trim();
                 if (!query || this.aiLoading) return;
+                if (query.length > 100) {
+                    query = query.substring(0, 100);
+                }
 
                 this.aiMessages.push({ role: 'user', text: query, products: [], refinements: [] });
                 this.aiInput = '';
@@ -545,11 +548,11 @@ body.chat-open {
 .lumbarong-chat-window {
     position: fixed;
     right: 24px;
-    bottom: 90px;
+    bottom: 24px;
     width: 380px;
     max-width: calc(100vw - 32px);
-    height: 560px;
-    max-height: calc(100vh - 110px);
+    height: 570px;
+    max-height: calc(100vh - 48px);
     z-index: 100000;
     box-shadow: 0 20px 40px rgba(0,0,0,0.25);
     overscroll-behavior: contain;
@@ -568,19 +571,19 @@ body.chat-open {
         bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
     }
     .lumbarong-chat-window {
-        bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
-        height: calc(100dvh - 170px) !important;
+        bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(100dvh - 120px) !important;
         right: 12px !important;
         left: 12px !important;
         width: auto !important;
         max-width: none !important;
-        max-height: 560px !important;
+        max-height: 580px !important;
         z-index: 100000 !important;
         overscroll-behavior: contain;
     }
     .lumbarong-chat-wrapper.in-checkout-flow .lumbarong-chat-window {
-        bottom: calc(210px + env(safe-area-inset-bottom, 0px)) !important;
-        height: calc(100dvh - 230px) !important;
+        bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(100dvh - 180px) !important;
     }
 }
 </style>
@@ -600,10 +603,17 @@ body.chat-open {
         x-cloak
     ></div>
 
-    <!-- Floating Trigger Button -->
+    <!-- Floating Trigger Button (visible only when chat is closed) -->
     <button 
         type="button"
         @click="toggleChat()"
+        x-show="!isOpen"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 scale-75"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-75"
         style="width: 56px; height: 56px; background-color: #1F1F1F; box-shadow: 0 10px 25px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.25); position: relative; z-index: 100001;"
         class="rounded-full text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer"
         aria-label="Open LumBarong Support & Chat"
@@ -612,11 +622,8 @@ body.chat-open {
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#C0422A]"></span>
         </span>
-        <svg x-show="!isOpen" style="width: 24px; height: 24px;" class="text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style="width: 24px; height: 24px;" class="text-white transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-        </svg>
-        <svg x-show="isOpen" x-cloak style="width: 24px; height: 24px;" class="text-white transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
     </button>
 
@@ -707,29 +714,29 @@ body.chat-open {
         <!-- ========================================== -->
         <!-- SMART ASSISTANT TAB (3-MODE RECOMMENDATIONS) -->
         <!-- ========================================== -->
-        <div x-show="mainMode === 'ai'" class="flex-1 flex flex-col min-h-0 bg-[#FAF7F2]">
+        <div x-show="mainMode === 'ai'" class="flex-1 flex flex-col min-h-0 bg-[#FAF7F2] overflow-hidden">
             <!-- Quick Starter Prompt Chips -->
             <div class="px-3.5 py-2 bg-white border-b border-[#EBE3D9] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                <button @click="sendAiPrompt('Recommend a Barong for a wedding groom')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                <button @click="sendAiPrompt('Recommend a Barong for a wedding groom')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
                     🤵 Wedding Groom
                 </button>
-                <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
                     🧵 Piña vs Jusi
                 </button>
-                <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
                     🎓 Graduation under ₱3.5k
                 </button>
-                <button @click="sendAiPrompt('Where is my order?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer">
+                <button @click="sendAiPrompt('Where is my order?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
                     📦 Track Order
                 </button>
             </div>
 
             <!-- Chat Messages Stream -->
-            <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-4 lumbarong-chat-scroll-area">
+            <div x-ref="aiMsgBox" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-3.5 space-y-4 lumbarong-chat-scroll-area min-w-0">
                 <template x-for="(msg, idx) in aiMessages" :key="idx">
-                    <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
+                    <div class="w-full min-w-0 flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
                         <!-- Message Bubble -->
-                        <div class="max-w-[90%] px-4 py-3 rounded-2xl text-xs leading-relaxed"
+                        <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words overflow-hidden"
                              :class="msg.role === 'user' 
                                  ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                  : 'bg-white text-gray-800 rounded-tl-none border border-[#E5DDD5] shadow-xs prose prose-xs'"
@@ -738,9 +745,9 @@ body.chat-open {
 
                         <!-- Scored Recommendation Product Cards -->
                         <template x-if="msg.products && msg.products.length > 0">
-                            <div class="w-full mt-2.5 space-y-2.5">
+                            <div class="w-full mt-2.5 space-y-2.5 min-w-0">
                                 <template x-for="prod in msg.products" :key="prod.id">
-                                    <div class="bg-white rounded-2xl border border-[#E5DDD5] p-3 shadow-xs hover:border-[#C0422A] hover:shadow-md transition-all">
+                                    <div class="bg-white rounded-2xl border border-[#E5DDD5] p-3 shadow-xs hover:border-[#C0422A] hover:shadow-md transition-all min-w-0">
                                         <!-- Card Header with Tier Badge & Score -->
                                         <div class="flex items-center justify-between gap-2 mb-2">
                                             <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
@@ -784,7 +791,7 @@ body.chat-open {
 
                         <!-- Dynamic Refinement Chips -->
                         <template x-if="msg.refinements && msg.refinements.length > 0">
-                            <div class="w-full mt-2 flex flex-wrap gap-1.5">
+                            <div class="w-full mt-2 flex flex-wrap gap-1.5 min-w-0">
                                 <template x-for="(chip, cIdx) in msg.refinements" :key="cIdx">
                                     <button type="button" 
                                             @click="sendAiPrompt(chip.prompt)"
@@ -804,21 +811,33 @@ body.chat-open {
                 </div>
             </div>
 
-            <!-- Input Bar -->
+            <!-- Input Bar with 100 character limit & live counter -->
             <div class="p-3 bg-white border-t border-[#EBE3D9] flex items-center gap-2 shrink-0">
-                <input type="text"
-                       x-model="aiInput"
-                       @keyup.enter="sendAiMessage()"
-                       placeholder="Ask about wedding barongs, budget, fabric, or order status..."
-                       autocomplete="off"
-                       autocorrect="off"
-                       spellcheck="false"
-                       inputmode="text"
-                       class="flex-1 bg-[#FAF7F2] border border-[#EBE3D9] text-[#3D2B1F] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#C0422A] focus:bg-white transition-all">
-                <button @click="sendAiMessage()"
+                <div class="relative flex-1 flex items-center min-w-0">
+                    <input type="text"
+                           x-model="aiInput"
+                           @keyup.enter="sendAiMessage()"
+                           maxlength="100"
+                           placeholder="Ask about wedding barongs, budget, fabric (max 100)..."
+                           autocomplete="off"
+                           autocorrect="off"
+                           spellcheck="false"
+                           inputmode="text"
+                           class="w-full bg-[#FAF7F2] border border-[#EBE3D9] text-[#3D2B1F] rounded-xl pl-3.5 pr-14 py-2.5 text-xs outline-none focus:border-[#C0422A] focus:bg-white transition-all placeholder:text-gray-400">
+                    <!-- Live Character Counter Badge -->
+                    <span class="absolute right-2.5 text-[10px] font-mono select-none px-1 rounded transition-colors"
+                          :class="(aiInput || '').length >= 100 ? 'text-red-600 font-bold bg-red-50' : ((aiInput || '').length >= 80 ? 'text-amber-600 font-semibold' : 'text-gray-400')"
+                          x-text="(aiInput || '').length + '/100'">
+                    </span>
+                </div>
+                <button type="button"
+                        @click="sendAiMessage()"
                         :disabled="!aiInput.trim() || aiLoading"
-                        class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] disabled:opacity-50 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                    <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/></svg>
+                        class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] active:scale-95 disabled:opacity-40 disabled:hover:bg-[#3D2B1F] text-white rounded-xl flex items-center justify-center transition-all shrink-0 cursor-pointer shadow-xs"
+                        title="Send question">
+                    <svg class="w-4 h-4 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -826,7 +845,7 @@ body.chat-open {
         <!-- ========================================== -->
         <!-- ARTISAN CHAT TAB -->
         <!-- ========================================== -->
-        <div x-show="mainMode === 'artisan'" class="flex-1 flex flex-col min-h-0 bg-white">
+        <div x-show="mainMode === 'artisan'" class="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
             <!-- Conversations List -->
             <div x-show="activeTab === 'conversations'" class="flex-1 overflow-y-auto no-scrollbar p-4 bg-gray-50/50">
                 <div class="space-y-2">
@@ -857,10 +876,10 @@ body.chat-open {
 
             <!-- Messages Stream -->
             <div x-show="activeTab === 'messages'" class="flex-1 flex flex-col min-h-0">
-                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50 lumbarong-chat-scroll-area">
+                <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50 lumbarong-chat-scroll-area min-w-0">
                     <template x-for="(msg, mIdx) in (Array.isArray(messages) ? messages : [])" :key="msg.id || mIdx">
-                        <div class="flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
-                            <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed"
+                        <div class="w-full min-w-0 flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
+                            <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words overflow-hidden"
                                  :class="String(msg.senderId) === String(currentUserId) 
                                      ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                      : 'bg-white text-gray-900 rounded-tl-none border border-gray-200 shadow-xs'"
@@ -879,10 +898,14 @@ body.chat-open {
                            @keyup.enter="sendMessage()"
                            placeholder="Message artisan..."
                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#3D2B1F] focus:bg-white transition-all">
-                    <button @click="sendMessage()"
+                    <button type="button"
+                            @click="sendMessage()"
                             :disabled="!newMessage.trim()"
-                            class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] disabled:opacity-50 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                        <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-7-9-7V19z"/></svg>
+                            class="w-9 h-9 bg-[#3D2B1F] hover:bg-[#C0422A] active:scale-95 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-all shrink-0 cursor-pointer shadow-xs"
+                            title="Send message">
+                        <svg class="w-4 h-4 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
                     </button>
                 </div>
             </div>
