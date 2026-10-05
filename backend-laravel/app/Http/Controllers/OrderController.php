@@ -393,6 +393,14 @@ class OrderController extends Controller
                 'Delivered' => 'Your order has been claimed and picked up. Please inspect your item and rate your purchase.',
                 'Completed' => 'Your store pickup order has been marked as completed.',
             ];
+        } elseif ($isSpecialDelivery) {
+            $statusMsgMap = [
+                'To Ship' => 'Your order is being processed and prepared for special artisan delivery.',
+                'Shipped' => 'Your handcrafted order is packed and being prepared for dispatch via local artisan rider.',
+                'In Transit' => 'Your order is out for special delivery via local artisan rider.',
+                'Delivered' => 'Your order has been delivered by our artisan rider. Please inspect your item and rate your purchase.',
+                'Completed' => 'Your special delivery order has been marked as completed.',
+            ];
         } else {
             $statusMsgMap = [
                 'To Ship' => 'Your order is being processed and prepared for shipping.',
@@ -408,9 +416,17 @@ class OrderController extends Controller
             $notifTitle = "Shipping Info Updated";
             $statusMsg = $isStorePickup 
                 ? "Your order fulfillment method is confirmed for Store Pickup."
-                : "Your order shipping details have been updated: {$order->courierName} (Tracking: {$order->trackingNumber}).";
+                : ($isSpecialDelivery
+                    ? "Your order is scheduled for Special Delivery via local artisan rider."
+                    : "Your order shipping details have been updated: {$order->courierName} (Tracking: {$order->trackingNumber}).");
         } else {
-            $notifTitle = ($isStorePickup && $canonicalTarget === 'Shipped') ? "Ready for Pickup" : "Order {$canonicalTarget}";
+            $notifTitle = match(true) {
+                $isStorePickup && $canonicalTarget === 'Shipped' => "Ready for Pickup",
+                $isStorePickup && $canonicalTarget === 'Delivered' => "Order Picked Up",
+                $isSpecialDelivery && $canonicalTarget === 'In Transit' => "Out for Special Delivery",
+                $isSpecialDelivery && $canonicalTarget === 'Shipped' => "Special Delivery Processing",
+                default => "Order {$canonicalTarget}"
+            };
             $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
         }
 

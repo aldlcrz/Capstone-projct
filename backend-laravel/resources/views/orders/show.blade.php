@@ -328,22 +328,75 @@
                 @endif
             </div>
 
-            {{-- 2. STATUS ACTION BANNER (DELIVERED / COMPLETED) --}}
+            {{-- 2. STATUS ACTION BANNERS --}}
             @if(in_array($statusLower, ['delivered'], true))
                 <div class="px-4 sm:px-5 pb-4 pt-0">
                     <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 14px; padding: 10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                @if($isStorePickup)
+                                    <span class="text-sm">🏬</span>
+                                @elseif($isSpecialDelivery)
+                                    <span class="text-sm">🏍️</span>
+                                @else
+                                    <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                @endif
                             </div>
                             <div>
-                                <h3 class="text-xs sm:text-sm font-extrabold text-emerald-950 m-0">Parcel delivered</h3>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-emerald-950 m-0">
+                                    {{ $isStorePickup ? 'Order picked up at workshop' : ($isSpecialDelivery ? 'Special delivery completed' : 'Parcel delivered') }}
+                                </h3>
                                 <p class="text-[11px] text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your heritage piece and confirm receipt.</p>
                             </div>
                         </div>
                         <button @click="confirmModal = true"
                             class="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
                             Confirm received
+                        </button>
+                    </div>
+                </div>
+            @elseif($isStorePickup && $statusLower === 'shipped')
+                <div class="px-4 sm:px-5 pb-4 pt-0">
+                    <div style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid #FDE68A; border-radius: 14px; padding: 10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100/90 border border-amber-300 text-amber-800 flex items-center justify-center shrink-0 text-sm">
+                                🏬
+                            </div>
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-amber-950 m-0">Ready for Workshop Pickup!</h3>
+                                <p class="text-[11px] text-amber-800/90 mt-0.5 m-0 font-medium">Your piece is packed and ready. Present Claim Code <strong class="font-mono text-amber-950">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong> at the workshop.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
+                               class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider transition-all shadow-2xs text-center">
+                                🗺️ Directions ↗
+                            </a>
+                            <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
+                               style="background-color:#1E1915;color:#FFFFFF;"
+                               class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs text-center">
+                                Pickup Pass ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @elseif($isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
+                <div class="px-4 sm:px-5 pb-4 pt-0">
+                    <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1px solid #BFDBFE; border-radius: 14px; padding: 10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-100/90 border border-blue-300 text-blue-800 flex items-center justify-center shrink-0 text-sm">
+                                🏍️
+                            </div>
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Out for Special Delivery!</h3>
+                                <p class="text-[11px] text-blue-800/90 mt-0.5 m-0 font-medium">Your heritage piece is on the way via our dedicated local artisan rider.</p>
+                            </div>
+                        </div>
+                        <button type="button"
+                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}' } }))"
+                                style="background-color:#1E1915;color:#FFFFFF;"
+                                class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
+                            💬 Message Artisan
                         </button>
                     </div>
                 </div>
