@@ -100,7 +100,15 @@ class CheckoutController extends Controller
         }
         unset($item);
 
-        $addresses = Auth::check() ? Address::where('userId', Auth::id())->get() : collect();
+        $addresses = collect();
+        if (Auth::check()) {
+            $userId = Auth::id();
+            // Ensure at least one default address is flagged if addresses exist
+            if (Address::where('userId', $userId)->exists() && !Address::where('userId', $userId)->where('isDefault', true)->exists()) {
+                Address::where('userId', $userId)->orderByDesc('createdAt')->first()?->update(['isDefault' => true]);
+            }
+            $addresses = Address::where('userId', $userId)->orderByDesc('isDefault')->orderByDesc('createdAt')->get();
+        }
         $subtotal = 0;
         foreach ($cart as $item) {
             $subtotal += $item['price'] * $item['quantity'];

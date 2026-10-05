@@ -141,18 +141,20 @@ class WishlistService
 
             // 2. In-App Notification
             $sizeBadge = $targetSize ? " (Size {$targetSize})" : "";
-            try {
-                Notification::create([
-                    'userId'     => $user->id,
-                    'title'      => '🎉 Wishlist Item Back in Stock',
-                    'message'    => "\"{$product->name}\"{$sizeBadge} is back in stock and has been added to your shopping cart!",
-                    'type'       => 'wishlist_restocked',
-                    'link'       => '/cart',
-                    'targetRole' => 'customer',
-                    'isRead'     => false,
-                ]);
-            } catch (\Throwable $ne) {
-                Log::error("Failed to create in-app notification for restock: " . $ne->getMessage());
+            $targetUserId = $user->id ?? $wishlist->user_id;
+            if ($targetUserId) {
+                try {
+                    Notification::send(
+                        $targetUserId,
+                        '🎉 Wishlist Item Back in Stock',
+                        "\"{$product->name}\"{$sizeBadge} is back in stock and has been added to your shopping cart!",
+                        'wishlist_restocked',
+                        '/cart',
+                        'customer'
+                    );
+                } catch (\Throwable $ne) {
+                    Log::error("Failed to create in-app notification for restock: " . $ne->getMessage());
+                }
             }
 
             // 3. Email Notification via EmailNotificationService

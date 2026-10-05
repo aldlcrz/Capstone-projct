@@ -6,7 +6,7 @@
 <div class="py-6 px-3 sm:py-8 sm:px-4"
      style="min-height:calc(100vh - 80px);background-color:#FAF8F5;"
      x-data="checkoutApp(
-    @js($addresses->first() ?? [
+    @js($addresses->where('isDefault', true)->first() ?? $addresses->first() ?? [
         'recipientName' => '',
         'phone' => '',
         'houseNo' => '',
@@ -954,19 +954,31 @@
                 <template x-for="addr in addresses" :key="addr.id">
                     <div class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:border-[#D4AF37] relative group" :class="address.id === addr.id ? 'border-[#D4AF37] bg-[#FAF5E6]/40 shadow-xs' : 'border-gray-100'" @click="selectAddress(addr)">
                         <div class="flex items-start justify-between gap-3">
-                            <div class="flex gap-3.5 flex-1">
+                            <div class="flex gap-3.5 flex-1 min-w-0">
                                 <div class="w-9 h-9 rounded-xl bg-[#FAF5E6] text-[#8C6D1F] border border-[#D4AF37]/30 flex items-center justify-center shrink-0 mt-0.5">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 </div>
-                                <div>
-                                    <div class="text-sm font-bold text-black" x-text="addr.recipientName"></div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm font-bold text-black" x-text="addr.recipientName"></span>
+                                        <template x-if="addr.isDefault">
+                                            <span class="px-2 py-0.5 bg-[#1E1915] text-[#DFC97A] border border-[#C49520] text-[9px] font-black uppercase tracking-wider rounded">Default</span>
+                                        </template>
+                                    </div>
                                     <div class="text-[10px] text-gray-500 font-bold mt-0.5" x-text="addr.phone"></div>
-                                    <p class="text-xs text-gray-600 mt-1.5 leading-relaxed" x-text="addr.houseNo + ' ' + (addr.street ? addr.street + ', ' : '') + (addr.barangay ? addr.barangay + ', ' : '') + addr.city"></p>
+                                    <p class="text-xs text-gray-600 mt-1.5 leading-relaxed truncate" x-text="addr.houseNo + ' ' + (addr.street ? addr.street + ', ' : '') + (addr.barangay ? addr.barangay + ', ' : '') + addr.city"></p>
                                 </div>
                             </div>
-                            <button type="button" @click.stop="openEditAddress(addr)" class="text-xs font-bold text-[#8C6D1F] hover:underline px-2 py-1 rounded hover:bg-[#FAF5E6] transition-colors">
-                                Edit
-                            </button>
+                            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                                <button type="button" @click.stop="openEditAddress(addr)" class="text-xs font-bold text-[#8C6D1F] hover:underline px-2 py-1 rounded hover:bg-[#FAF5E6] transition-colors">
+                                    Edit
+                                </button>
+                                <template x-if="!addr.isDefault">
+                                    <button type="button" @click.stop="setDefaultAddressInCheckout(addr.id)" class="text-[10px] border border-gray-200 text-gray-500 hover:text-[#8C6D1F] hover:border-[#D4AF37] px-2 py-0.5 rounded transition-all">
+                                        Set Default
+                                    </button>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -1212,6 +1224,13 @@
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Postal Code</label>
                     <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                </div>
+
+                <div class="col-span-1 sm:col-span-2 pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" x-model="editForm.isDefault" class="w-4 h-4 accent-[#D4AF37] rounded border-gray-300">
+                        <span class="text-xs font-semibold text-gray-700">Set as default shipping address</span>
+                    </label>
                 </div>
             </div>
 
@@ -1861,7 +1880,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 province: '',
                 postalCode: '',
                 latitude: null,
-                longitude: null
+                longitude: null,
+                isDefault: this.addresses.length === 0
             };
             this.selectedRegion = null;
             this.selectedProvince = null;
@@ -1889,7 +1909,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 province: target.province || '',
                 postalCode: target.postalCode || '',
                 latitude: target.latitude || null,
-                longitude: target.longitude || null
+                longitude: target.longitude || null,
+                isDefault: Boolean(target.isDefault)
             };
 
             this.selectedRegion = target.province || target.city ? { name: target.province || 'Default Region' } : null;
@@ -2497,6 +2518,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 const isUpdate = !!this.editForm.id;
                 const url = isUpdate ? `/api/addresses/${this.editForm.id}` : '/api/addresses';
                 const method = isUpdate ? 'PUT' : 'POST';
+                const isDefaultVal = Boolean(this.editForm.isDefault);
                 
                 const res = await fetch(url, {
                     method: method,
@@ -2512,7 +2534,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                         houseNo: houseNo,
                         city: city,
                         province: province,
-                        postalCode: postalCode
+                        postalCode: postalCode,
+                        isDefault: isDefaultVal
                     })
                 });
 
@@ -2527,6 +2550,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
 
                 const saved = await res.json();
                 this.address = saved;
+                
+                if (saved.isDefault) {
+                    this.addresses = this.addresses.map(a => ({ ...a, isDefault: a.id === saved.id }));
+                }
+
                 if (isUpdate) {
                     const idx = this.addresses.findIndex(a => a.id === saved.id);
                     if (idx !== -1) {
@@ -2537,11 +2565,43 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 } else {
                     this.addresses.unshift(saved);
                 }
+
+                // Sort addresses so default is at the top
+                this.addresses.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+
                 this.showEditAddressModal = false;
             } catch (e) {
                 this.addressError = e.message || 'An error occurred while saving address.';
             } finally {
                 this.savingAddress = false;
+            }
+        },
+
+        async setDefaultAddressInCheckout(id) {
+            try {
+                const res = await fetch(`/api/addresses/${id}/set-default`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.addresses && Array.isArray(data.addresses)) {
+                        this.addresses = data.addresses;
+                    } else {
+                        this.addresses = this.addresses.map(a => ({ ...a, isDefault: a.id === id }));
+                        this.addresses.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+                    }
+                    const target = this.addresses.find(a => a.id === id);
+                    if (target) {
+                        this.address = target;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to set default address in checkout', e);
             }
         },
         validateRef() {

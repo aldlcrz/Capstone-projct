@@ -1544,7 +1544,7 @@ function profileApp() {
                 postalCode:'', 
                 latitude: 14.2952, 
                 longitude: 121.4647, 
-                isDefault: false 
+                isDefault: this.addresses.length === 0 
             };
             this.addressFormError = '';
             this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
@@ -1568,7 +1568,8 @@ function profileApp() {
             this.addressForm = { 
                 ...addr,
                 latitude: lat,
-                longitude: lng
+                longitude: lng,
+                isDefault: Boolean(addr.isDefault)
             };
             this.addressFormError = '';
             this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
@@ -1636,9 +1637,14 @@ function profileApp() {
             try {
                 const url = this.editAddressId ? `/api/addresses/${this.editAddressId}` : '/api/addresses';
                 const method = this.editAddressId ? 'PUT' : 'POST';
+                const payload = {
+                    ...this.addressForm,
+                    isDefault: Boolean(this.addressForm.isDefault)
+                };
                 const r = await fetch(url, {
-                    method, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify(this.addressForm)
+                    method, 
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify(payload)
                 });
                 if (!r.ok) { const d = await r.json(); this.addressFormError = d.message ?? 'Failed to save.'; }
                 else { this.addEditModalOpen = false; await this.fetchAddresses(); }
@@ -1663,8 +1669,22 @@ function profileApp() {
         },
 
         async setDefaultAddress(id) {
+            this.addresses = this.addresses.map(a => ({ ...a, isDefault: a.id === id }));
             const token = document.querySelector('meta[name="csrf-token"]').content;
-            await fetch(`/api/addresses/${id}/set-default`, { method:'PATCH', headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
+            try {
+                const res = await fetch(`/api/addresses/${id}/set-default`, { 
+                    method:'PATCH', 
+                    headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } 
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.addresses && Array.isArray(data.addresses)) {
+                        this.addresses = data.addresses;
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
             await this.fetchAddresses();
         },
 

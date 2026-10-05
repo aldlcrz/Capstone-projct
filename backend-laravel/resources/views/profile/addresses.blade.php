@@ -748,7 +748,18 @@ function addressManager() {
 
         openAdd() {
             this.editId = null;
-            this.form = { recipientName: "{{ addslashes($user->name ?? '') }}", phone: "{{ addslashes($user->mobileNumber ?? '') }}", houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false };
+            this.form = { 
+                recipientName: "{{ addslashes($user->name ?? '') }}", 
+                phone: "{{ addslashes($user->mobileNumber ?? '') }}", 
+                houseNo:'', 
+                street:'', 
+                barangay:'', 
+                city:'', 
+                province:'', 
+                region:'', 
+                postalCode:'', 
+                isDefault: this.addresses.length === 0 
+            };
             this.formError = '';
 
             this.selectedRegion = null;
@@ -764,7 +775,7 @@ function addressManager() {
 
         openEdit(addr) {
             this.editId = addr.id;
-            this.form = { ...addr };
+            this.form = { ...addr, isDefault: Boolean(addr.isDefault) };
             this.formError = '';
 
             this.selectedRegion = addr.region ? { name: addr.region } : null;
@@ -789,9 +800,14 @@ function addressManager() {
             try {
                 const url = this.editId ? `/api/addresses/${this.editId}` : '/api/addresses';
                 const method = this.editId ? 'PUT' : 'POST';
+                const payload = {
+                    ...this.form,
+                    isDefault: Boolean(this.form.isDefault)
+                };
                 const r = await fetch(url, {
-                    method, headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify(this.form)
+                    method, 
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify(payload)
                 });
                 if (!r.ok) { const d = await r.json(); this.formError = d.message ?? 'Failed to save.'; }
                 else { this.modalOpen = false; await this.fetchAddresses(); }
@@ -816,8 +832,23 @@ function addressManager() {
         },
 
         async setDefault(id) {
+            this.addresses = this.addresses.map(a => ({ ...a, isDefault: a.id === id }));
+            this.addresses.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
             const token = document.querySelector('meta[name="csrf-token"]').content;
-            await fetch(`/api/addresses/${id}/set-default`, { method:'PATCH', headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' } });
+            try {
+                const res = await fetch(`/api/addresses/${id}/set-default`, { 
+                    method:'PATCH', 
+                    headers:{ 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } 
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.addresses && Array.isArray(data.addresses)) {
+                        this.addresses = data.addresses;
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
             await this.fetchAddresses();
         },
     }

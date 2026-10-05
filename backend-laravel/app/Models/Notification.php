@@ -98,7 +98,9 @@ class Notification extends Model
      */
     public function setUserIdAttribute($value)
     {
-        $this->attributes['userId'] = $value;
+        if ($value !== null) {
+            $this->attributes['userId'] = $value;
+        }
     }
 
     public function setTargetUrlAttribute($value)

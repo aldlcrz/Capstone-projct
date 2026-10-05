@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AddressController extends Controller
 {
@@ -13,9 +15,11 @@ class AddressController extends Controller
      */
     public function index()
     {
+        $userId = Auth::id();
+
         // Purge any legacy dummy auto-generated addresses from previous onboarding bug
         try {
-            Address::where('userId', Auth::id())
+            Address::where('userId', $userId)
                 ->where('phone', '09000000000')
                 ->where(function($q) {
                     $q->whereIn('houseNo', ['National Highway', 'Unit', ''])
@@ -24,13 +28,26 @@ class AddressController extends Controller
                 })
                 ->delete();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to purge legacy dummy address for user', [
-                'user_id' => Auth::id(),
+            Log::warning('Failed to purge legacy dummy address for user', [
+                'user_id' => $userId,
                 'error'   => $e->getMessage(),
             ]);
         }
 
-        $addresses = Address::where('userId', Auth::id())
+        // Ensure user has at least one default address if addresses exist
+        $totalCount = Address::where('userId', $userId)->count();
+        if ($totalCount > 0) {
+            $hasDefault = Address::where('userId', $userId)->where('isDefault', true)->exists();
+            if (!$hasDefault) {
+                // Elect the most recent address as default
+                $firstAddr = Address::where('userId', $userId)->orderByDesc('createdAt')->first();
+                if ($firstAddr) {
+                    $firstAddr->update(['isDefault' => true]);
+                }
+            }
+        }
+
+        $addresses = Address::where('userId', $userId)
             ->orderBy('isDefault', 'desc')
             ->orderBy('createdAt', 'desc')
             ->get();
@@ -55,31 +72,38 @@ class AddressController extends Controller
             'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'isDefault' => 'nullable',
         ], [
             'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
             'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
             'postalCode.regex' => 'Postal code must contain exactly 4 numeric digits (e.g., 4103).',
         ]);
 
-        if ($request->isDefault) {
-            Address::where('userId', Auth::id())->update(['isDefault' => false]);
-        }
+        $userId = Auth::id();
+        $isFirst = !Address::where('userId', $userId)->exists();
+        $isDefault = $isFirst || $request->boolean('isDefault');
 
-        $address = Address::create([
-            'userId' => Auth::id(),
-            'recipientName' => trim($request->recipientName),
-            'phone' => trim($request->phone),
-            'houseNo' => trim($request->houseNo),
-            'street' => trim($request->street ?? ''),
-            'barangay' => trim($request->barangay ?? ''),
-            'city' => trim($request->city),
-            'province' => trim($request->province),
-            'region' => trim($request->region ?? ''),
-            'postalCode' => trim($request->postalCode ?? ''),
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'isDefault' => $request->isDefault ?? false,
-        ]);
+        $address = DB::transaction(function () use ($request, $userId, $isDefault) {
+            if ($isDefault) {
+                Address::where('userId', $userId)->update(['isDefault' => false]);
+            }
+
+            return Address::create([
+                'userId' => $userId,
+                'recipientName' => trim($request->recipientName),
+                'phone' => trim($request->phone),
+                'houseNo' => trim($request->houseNo),
+                'street' => trim($request->street ?? ''),
+                'barangay' => trim($request->barangay ?? ''),
+                'city' => trim($request->city),
+                'province' => trim($request->province),
+                'region' => trim($request->region ?? ''),
+                'postalCode' => trim($request->postalCode ?? ''),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'isDefault' => $isDefault,
+            ]);
+        });
 
         return response()->json($address, 201);
     }
@@ -89,7 +113,8 @@ class AddressController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $address = Address::where('id', $id)->where('userId', Auth::id())->firstOrFail();
+        $userId = Auth::id();
+        $address = Address::where('id', $id)->where('userId', $userId)->firstOrFail();
 
         $validated = $request->validate([
             'recipientName' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\,\'\-]+$/'],
@@ -103,25 +128,53 @@ class AddressController extends Controller
             'postalCode' => ['nullable', 'string', 'regex:/^\d{4}$/'],
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'isDefault' => 'nullable',
         ], [
             'recipientName.regex' => 'Recipient name can only contain letters, spaces, hyphens, and periods (no numbers allowed).',
             'phone.regex' => 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g., 09123456789).',
             'postalCode.regex' => 'Postal code must contain exactly 4 numeric digits (e.g., 4103).',
         ]);
 
-        if ($request->isDefault && !$address->isDefault) {
-            Address::where('userId', Auth::id())->update(['isDefault' => false]);
+        $totalAddresses = Address::where('userId', $userId)->count();
+        $isDefault = $request->has('isDefault') 
+            ? $request->boolean('isDefault') 
+            : (bool) $address->isDefault;
+
+        // If user has only one address, it MUST stay as default
+        if ($totalAddresses <= 1) {
+            $isDefault = true;
         }
 
-        $validated['street'] = trim($request->street ?? '');
-        $validated['barangay'] = trim($request->barangay ?? '');
-        $validated['latitude'] = $request->latitude;
-        $validated['longitude'] = $request->longitude;
-        $validated['isDefault'] = $request->isDefault ?? false;
+        DB::transaction(function () use ($address, $userId, $isDefault, $validated, $request) {
+            if ($isDefault) {
+                Address::where('userId', $userId)
+                    ->where('id', '!=', $address->id)
+                    ->update(['isDefault' => false]);
+            } else if ($address->isDefault) {
+                // If unchecking the default address, make another address default so there's always one
+                $another = Address::where('userId', $userId)
+                    ->where('id', '!=', $address->id)
+                    ->orderByDesc('createdAt')
+                    ->first();
+                if ($another) {
+                    $another->update(['isDefault' => true]);
+                } else {
+                    $isDefault = true; // Fallback if no other address exists
+                }
+            }
 
-        $address->update($validated);
+            $validated['street'] = trim($request->street ?? '');
+            $validated['barangay'] = trim($request->barangay ?? '');
+            $validated['region'] = trim($request->region ?? '');
+            $validated['postalCode'] = trim($request->postalCode ?? '');
+            $validated['latitude'] = $request->latitude;
+            $validated['longitude'] = $request->longitude;
+            $validated['isDefault'] = $isDefault;
 
-        return response()->json($address);
+            $address->update($validated);
+        });
+
+        return response()->json($address->fresh());
     }
 
     /**
@@ -129,10 +182,25 @@ class AddressController extends Controller
      */
     public function destroy(string $id)
     {
-        $address = Address::where('id', $id)->where('userId', Auth::id())->firstOrFail();
-        $address->delete();
+        $userId = Auth::id();
+        $address = Address::where('id', $id)->where('userId', $userId)->firstOrFail();
+        $wasDefault = (bool) $address->isDefault;
 
-        return response()->json(['message' => 'Address deleted']);
+        DB::transaction(function () use ($address, $userId, $wasDefault) {
+            $address->delete();
+
+            // If the deleted address was default, promote another address to default
+            if ($wasDefault) {
+                $replacement = Address::where('userId', $userId)
+                    ->orderByDesc('createdAt')
+                    ->first();
+                if ($replacement) {
+                    $replacement->update(['isDefault' => true]);
+                }
+            }
+        });
+
+        return response()->json(['message' => 'Address deleted', 'success' => true]);
     }
 
     /**
@@ -140,9 +208,24 @@ class AddressController extends Controller
      */
     public function setDefault(string $id)
     {
-        Address::where('userId', Auth::id())->update(['isDefault' => false]);
-        Address::where('id', $id)->where('userId', Auth::id())->update(['isDefault' => true]);
+        $userId = Auth::id();
+        $address = Address::where('id', $id)->where('userId', $userId)->firstOrFail();
 
-        return response()->json(['message' => 'Default address updated']);
+        DB::transaction(function () use ($address, $userId) {
+            Address::where('userId', $userId)->update(['isDefault' => false]);
+            $address->update(['isDefault' => true]);
+        });
+
+        $allAddresses = Address::where('userId', $userId)
+            ->orderBy('isDefault', 'desc')
+            ->orderBy('createdAt', 'desc')
+            ->get();
+
+        return response()->json([
+            'message'   => 'Default address updated',
+            'success'   => true,
+            'address'   => $address->fresh(),
+            'addresses' => $allAddresses,
+        ]);
     }
 }

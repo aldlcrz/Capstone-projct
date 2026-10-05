@@ -158,7 +158,7 @@ function addressManager() {
         async fetchAddresses() {
             this.loading = true;
             try {
-                const res = await fetch('/api/v1/addresses');
+                const res = await fetch('/api/addresses', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 this.addresses = await res.json();
             } catch (e) { console.error(e); }
             this.loading = false;
@@ -175,7 +175,7 @@ function addressManager() {
                 houseNo: '',
                 street: '',
                 label: 'Home',
-                isDefault: false
+                isDefault: this.addresses.length === 0
             };
             this.view = 'form';
             // Wait for DOM to update then dispatch to psgc
@@ -184,7 +184,7 @@ function addressManager() {
             });
         },
         handleEdit(addr) {
-            this.editingAddress = { ...addr };
+            this.editingAddress = { ...addr, isDefault: Boolean(addr.isDefault) };
             this.view = 'form';
             this.$nextTick(() => {
                 window.dispatchEvent(new CustomEvent('psgc-set', { detail: this.editingAddress }));
@@ -200,14 +200,19 @@ function addressManager() {
             this.loading = true;
             try {
                 const method = this.editingAddress.id ? 'PUT' : 'POST';
-                const url = this.editingAddress.id ? `/api/v1/addresses/${this.editingAddress.id}` : '/api/v1/addresses';
+                const url = this.editingAddress.id ? `/api/addresses/${this.editingAddress.id}` : '/api/addresses';
                 const res = await fetch(url, {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify(this.editingAddress)
+                    body: JSON.stringify({
+                        ...this.editingAddress,
+                        isDefault: Boolean(this.editingAddress.isDefault)
+                    })
                 });
                 if (res.ok) {
                     await this.fetchAddresses();
@@ -219,18 +224,19 @@ function addressManager() {
         async handleDelete(id) {
             if (!confirm('Are you sure?')) return;
             try {
-                const res = await fetch(`/api/v1/addresses/${id}`, {
+                const res = await fetch(`/api/addresses/${id}`, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (res.ok) this.fetchAddresses();
             } catch (e) { console.error(e); }
         },
         async setDefault(id) {
+            this.addresses = this.addresses.map(a => ({ ...a, isDefault: a.id === id }));
             try {
-                const res = await fetch(`/api/v1/addresses/${id}/set-default`, {
+                const res = await fetch(`/api/addresses/${id}/set-default`, {
                     method: 'PATCH',
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (res.ok) this.fetchAddresses();
             } catch (e) { console.error(e); }
