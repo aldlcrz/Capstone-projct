@@ -409,38 +409,46 @@
                             </div>
                         </div>
                     @else
-                        {{-- Delivery: Address on Left / Packing Proof & Status on Right --}}
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5 items-start">
-                            {{-- Destination Address (6 cols) --}}
-                            <div class="md:col-span-6 space-y-2.5">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-[#8C827A]">Destination Address</div>
-                                <div>
-                                    <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
-                                    @if($streetLine)
-                                        <p class="text-xs text-[#78716C] leading-relaxed font-medium mt-0.5">{{ $streetLine }}</p>
-                                    @endif
-                                    @if($locality || !empty($addr['postalCode']))
-                                        <p class="text-xs text-[#78716C] leading-relaxed font-medium">
-                                            {{ $locality }}@if(!empty($addr['postalCode'])) · {{ $addr['postalCode'] }}@endif
-                                        </p>
-                                    @endif
-                                </div>
-                                @if(!empty($addr['phone']))
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FAF8F5] border border-[#ECE3D2] rounded-lg text-[11px] font-bold text-[#1E1915]">
-                                        <svg class="w-3 h-3 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                        <span>{{ $addr['phone'] }}</span>
+                        {{-- Delivery: Responsive 2-Card Layout (Address on Left / Packing Proof & Dispatch on Right) --}}
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch;">
+                            
+                            {{-- Destination Address Card --}}
+                            <div style="flex: 1 1 280px; min-width: 260px; background-color: #FAF8F5; border: 1px solid #ECE3D2; border-radius: 18px; padding: 18px;" class="space-y-3 flex flex-col justify-between">
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1">
+                                            <span>📍</span>
+                                            <span>Destination Address</span>
+                                        </span>
+                                        @if(!empty($addr['phone']))
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white border border-[#ECE3D2] rounded-full text-[10px] font-bold text-[#1E1915]">
+                                                <svg class="w-2.5 h-2.5 text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                                <span>{{ $addr['phone'] }}</span>
+                                            </span>
+                                        @endif
                                     </div>
-                                @endif
+                                    <div>
+                                        <h4 class="text-sm font-extrabold text-[#1E1915]">{{ $recipient }}</h4>
+                                        @if($streetLine)
+                                            <p class="text-xs text-[#57534E] leading-relaxed font-medium mt-1">{{ $streetLine }}</p>
+                                        @endif
+                                        @if($locality || !empty($addr['postalCode']))
+                                            <p class="text-xs text-[#78716C] leading-relaxed font-medium">
+                                                {{ $locality }}@if(!empty($addr['postalCode'])) · <span class="font-bold text-[#1E1915]">{{ $addr['postalCode'] }}</span>@endif
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
 
                                 @if($hasCourierTracking && $order->trackingNumber)
-                                    <div class="mt-2 bg-[#FAF8F5] p-2.5 rounded-xl border border-[#ECE3D2] flex items-center justify-between">
-                                        <div class="min-w-0 pr-2">
-                                            <span class="text-[#8C827A] font-bold text-[9px] uppercase tracking-wider block">Tracking #</span>
+                                    <div class="mt-2 bg-white p-2.5 rounded-xl border border-[#ECE3D2] flex items-center justify-between gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <span class="text-[#8C827A] font-bold text-[9px] uppercase tracking-wider block">Courier Tracking #</span>
                                             <span class="font-mono text-[#C0422A] font-bold text-xs truncate block">{{ $order->trackingNumber }}</span>
                                         </div>
                                         <button type="button" 
                                                 @click="copyText('{{ $order->trackingNumber }}', 'Tracking number copied!')"
-                                                class="px-2.5 py-1 bg-white border border-[#ECE3D2] hover:border-[#C49520] hover:text-[#1E1915] rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
+                                                class="px-2.5 py-1 bg-[#FAF8F5] border border-[#ECE3D2] hover:border-[#C49520] hover:text-[#1E1915] rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
                                                 title="Copy tracking number">
                                             <span>Copy</span>
                                         </button>
@@ -448,47 +456,59 @@
                                 @endif
                             </div>
 
-                            {{-- Packing Proof & Dispatch Card (6 cols) --}}
-                            <div class="md:col-span-6 space-y-2.5">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#8C827A]">Artisan Packing Proof</span>
+                            {{-- Packing Proof & Dispatch Card --}}
+                            <div style="flex: 1 1 280px; min-width: 260px; background-color: #FAF8F5; border: 1px solid #ECE3D2; border-radius: 18px; padding: 18px;" class="space-y-3 flex flex-col justify-between">
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1">
+                                            <span>📸</span>
+                                            <span>Artisan Packing Proof</span>
+                                        </span>
+                                        @if($order->packingProof)
+                                            <span class="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-2xs">✓ Verified</span>
+                                        @else
+                                            <span class="text-[9px] font-bold text-stone-500 bg-white border border-[#ECE3D2] px-2 py-0.5 rounded-full">In Preparation</span>
+                                        @endif
+                                    </div>
+
                                     @if($order->packingProof)
-                                        <span class="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Verified</span>
+                                        <div class="relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-white cursor-pointer group flex items-center justify-center"
+                                             style="height: 110px; width: 100%;"
+                                             @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
+                                            <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof photo">
+                                            <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span class="px-2.5 py-1 bg-black/80 text-white rounded-lg text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 shadow-sm">
+                                                    🔍 Click to Enlarge
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="p-3 bg-white border border-[#ECE3D2] rounded-xl flex items-center gap-2.5 text-xs text-[#78716C]">
+                                            <span class="text-base">⏳</span>
+                                            <div class="text-[11px] leading-tight">
+                                                <strong class="text-[#1E1915] block">Inspection Photo Pending</strong>
+                                                <span>Artisan will upload parcel photo before dispatch.</span>
+                                            </div>
+                                        </div>
                                     @endif
                                 </div>
 
-                                @if($order->packingProof)
-                                    <div class="relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-[#FAF8F5] cursor-pointer group flex items-center justify-center max-h-40 aspect-video"
-                                         @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
-                                        <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing proof photo">
-                                        <div class="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span class="px-2.5 py-1 bg-black/80 text-white rounded-lg text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
-                                                🔍 Zoom Photo
-                                            </span>
+                                <div>
+                                    @if($isSpecialDelivery)
+                                        <div class="p-2.5 bg-blue-50/90 rounded-xl border border-blue-100 text-[11px] text-blue-900 leading-relaxed font-semibold flex items-center gap-2">
+                                            <span class="text-sm">🏍️</span>
+                                            <span>Dispatched directly via local artisan rider.</span>
                                         </div>
-                                    </div>
-                                @else
-                                    <div class="p-3.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-start gap-2 text-xs text-[#78716C]">
-                                        <span class="text-sm">⏳</span>
-                                        <div>
-                                            <span class="font-bold text-[#1E1915] block text-[11px]">Preparing Package</span>
-                                            <span class="text-[10px] text-[#78716C] mt-0.5 block">Artisan inspection photo will be uploaded here before courier dispatch.</span>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if($isSpecialDelivery)
-                                    <div class="p-2.5 bg-blue-50/80 rounded-xl border border-blue-100 text-[11px] text-blue-900 leading-relaxed font-medium">
-                                        🏍️ Dispatched directly via local artisan rider.
-                                    </div>
-                                @elseif($order->trackingLink)
-                                    <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
-                                       style="background-color:#1E1915;color:#FFFFFF;"
-                                       class="block text-center py-2 hover:bg-[#C0422A] rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
-                                        Track on Courier Site ↗
-                                    </a>
-                                @endif
+                                    @elseif($order->trackingLink)
+                                        <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
+                                           style="background-color:#1E1915;color:#FFFFFF;"
+                                           class="block text-center py-2 hover:bg-[#C0422A] rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                            Track on Courier Site ↗
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
+
                         </div>
                     @endif
                 </div>
