@@ -116,6 +116,10 @@ function sellerOrdersManager() {
                     this.statusFilter = 'cancellation pending';
                 } else if (normParam === 'return requests' || normParam === 'return requested' || normParam === 'returns') {
                     this.statusFilter = 'return requests';
+                } else if (normParam === 'store pickup' || normParam === 'store_pickup' || normParam === 'pickup') {
+                    this.statusFilter = 'store pickup';
+                } else if (normParam === 'special delivery' || normParam === 'special_delivery' || normParam === 'special') {
+                    this.statusFilter = 'special delivery';
                 } else if (['all', 'pending', 'to ship', 'shipped', 'in transit', 'delivered', 'completed', 'cancelled'].includes(normParam)) {
                     this.statusFilter = normParam;
                 }
@@ -334,8 +338,21 @@ function sellerOrdersManager() {
             if (!this.verifyOrderTarget || this.verifyingPayment || this.statusUpdating) return;
             this.verifyingPayment = true;
             try {
-                await this.updateStatus(this.verifyOrderTarget, 'To Ship');
-                this.showVerifyModal = false;
+                let targetStatus = 'To Ship';
+                if (this.isStorePickup(this.verifyOrderTarget)) {
+                    targetStatus = 'Shipped'; // Directly Ready for Store Pickup
+                } else if (this.isSpecialDelivery(this.verifyOrderTarget)) {
+                    targetStatus = 'In Transit'; // Directly Out for Special Delivery
+                }
+                const success = await this.updateStatus(this.verifyOrderTarget, targetStatus);
+                if (success) {
+                    this.showVerifyModal = false;
+                    if (this.isStorePickup(this.verifyOrderTarget)) {
+                        this.showToast('✓ Store pickup order accepted and marked Ready for Pickup!');
+                    } else if (this.isSpecialDelivery(this.verifyOrderTarget)) {
+                        this.showToast('✓ Special delivery order accepted and dispatched with rider!');
+                    }
+                }
             } finally {
                 this.verifyingPayment = false;
             }
@@ -1118,7 +1135,17 @@ function sellerOrdersManager() {
             this.shippingError = '';
             this.packingUploadError = '';
 
-            // 1. If proof already recorded or successfully uploaded, prompt confirmation before updating status to Shipped
+            // Store Pickup & Special Delivery do not require packing proof photos
+            if (this.isStorePickup(this.detailsOrder)) {
+                this.requestStatusUpdate(this.detailsOrder, 'Shipped');
+                return;
+            }
+            if (this.isSpecialDelivery(this.detailsOrder)) {
+                this.requestStatusUpdate(this.detailsOrder, 'In Transit');
+                return;
+            }
+
+            // 1. Standard Courier: If proof already recorded or successfully uploaded, prompt confirmation before updating status to Shipped
             if (this.packingUploadSuccess || this.detailsOrder.packingProof) {
                 this.requestStatusUpdate(this.detailsOrder, 'Shipped');
                 return;
@@ -1133,12 +1160,8 @@ function sellerOrdersManager() {
                 return;
             }
 
-            // 3. No photo selected yet: alert seller and trigger file picker
-            this.packingUploadError = this.isStorePickup(this.detailsOrder)
-                ? 'Please upload or capture a packing proof photo before marking as Ready for Pickup.'
-                : (this.isSpecialDelivery(this.detailsOrder)
-                    ? 'Please upload or capture a packing proof photo before processing Special Delivery.'
-                    : 'Please upload or capture a packing proof photo before confirming shipment.');
+            // 3. No photo selected yet for standard courier: alert seller and trigger file picker
+            this.packingUploadError = 'Please upload or capture a packing proof photo before confirming courier shipment.';
             this.shippingError = this.packingUploadError;
             this.showToast('⚠️ Please select or take a packing proof photo first.');
 
@@ -1320,6 +1343,12 @@ function sellerOrdersManager() {
                 const s = this.normalizeStatus(o.status);
                 const f = this.normalizeStatus(this.statusFilter);
                 if (f === 'all') return matchSearch;
+                if (f === 'store pickup' || f === 'store_pickup' || f === 'pickup') {
+                    return matchSearch && this.isStorePickup(o);
+                }
+                if (f === 'special delivery' || f === 'special_delivery' || f === 'special') {
+                    return matchSearch && this.isSpecialDelivery(o);
+                }
                 if (f === 'cancellation pending' || f === 'cancellation requests') {
                     return matchSearch && (s === 'cancellation pending' || s === 'cancellation requested');
                 }
@@ -1375,6 +1404,12 @@ function sellerOrdersManager() {
         countForStatus(statusKey) {
             if (statusKey === 'all') return this.orders.length;
             const normKey = this.normalizeStatus(statusKey);
+            if (normKey === 'store pickup' || normKey === 'store_pickup' || normKey === 'pickup') {
+                return this.orders.filter(o => this.isStorePickup(o)).length;
+            }
+            if (normKey === 'special delivery' || normKey === 'special_delivery' || normKey === 'special') {
+                return this.orders.filter(o => this.isSpecialDelivery(o)).length;
+            }
             return this.orders.filter(o => {
                 const s = this.normalizeStatus(o.status);
                 if (normKey === 'cancellation pending' || normKey === 'cancellation requests') {
@@ -1685,6 +1720,8 @@ function sellerOrdersManager() {
                 $statusTabs = [
                     'all' => ['label' => 'All Orders', 'icon' => '📋'],
                     'pending' => ['label' => 'Pending', 'icon' => '⏳'],
+                    'store pickup' => ['label' => 'Store Pickup', 'icon' => '🏬'],
+                    'special delivery' => ['label' => 'Special Delivery', 'icon' => '🏍️'],
                     'to ship' => ['label' => 'To Ship', 'icon' => '📦'],
                     'shipped' => ['label' => 'Shipped', 'icon' => '🚚'],
                     'in transit' => ['label' => 'In Transit', 'icon' => '🛣️'],
@@ -1974,8 +2011,8 @@ function sellerOrdersManager() {
                             </div>
                         </template>
 
-                        {{-- PACKING PROOF UPLOAD CARD — shown when To Ship --}}
-                        <div id="packing-proof-card" x-show="normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-3 shadow-xs">
+                        {{-- PACKING PROOF UPLOAD CARD — shown only for standard courier To Ship --}}
+                        <div id="packing-proof-card" x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-3 shadow-xs">
                             <div class="flex items-center gap-2">
                                 <span class="text-xl">📦</span>
                                 <div>
@@ -2639,7 +2676,11 @@ function sellerOrdersManager() {
                                 <template x-if="!statusUpdating && !verifyingPayment">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
-                                <span x-text="(statusUpdating || verifyingPayment) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verifying Payment...' : 'Accepting Order...') : (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept' : 'Accept Order')"></span>
+                                <span x-text="(statusUpdating || verifyingPayment) ? 'Processing Acceptance...' : (
+                                    isStorePickup(detailsOrder) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Mark Ready for Pickup' : 'Accept & Mark Ready for Pickup') : (
+                                    isSpecialDelivery(detailsOrder) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Dispatch Rider' : 'Accept & Dispatch Rider') : (
+                                    ['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept' : 'Accept Order'
+                                )))"></span>
                                 <span x-show="!statusUpdating && !verifyingPayment" class="text-xs">➔</span>
                             </button>
                         </div>

@@ -727,6 +727,8 @@ class DashboardController extends Controller
             $counts = [
                 'all'                  => $orders->count(),
                 'pending'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['pending', 'cancellation pending', 'cancellation requested']))->count(),
+                'store pickup'         => $orders->filter(fn($o) => $o->isStorePickup())->count(),
+                'special delivery'     => $orders->filter(fn($o) => $o->isSpecialDelivery())->count(),
                 'to ship'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship', 'confirmed', 'packed']))->count(),
                 'shipped'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['shipped', 'to receive']))->count(),
                 'in transit'           => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['in transit', 'in_transit', 'out for delivery']))->count(),
@@ -742,7 +744,8 @@ class DashboardController extends Controller
             Log::error('Error in sellerOrders: ' . $e->getMessage());
             $orders = collect([]);
             $counts = [
-                'all' => 0, 'pending' => 0, 'to ship' => 0, 'shipped' => 0, 'in transit' => 0,
+                'all' => 0, 'pending' => 0, 'store pickup' => 0, 'special delivery' => 0,
+                'to ship' => 0, 'shipped' => 0, 'in transit' => 0,
                 'delivered' => 0, 'completed' => 0, 'cancelled' => 0,
                 'cancellation pending' => 0, 'return requests' => 0
             ];
