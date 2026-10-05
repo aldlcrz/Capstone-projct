@@ -209,308 +209,316 @@
             $hasSpecialDeliveryActive = $isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status)), ['shipped', 'in transit', 'out for delivery', 'delivered', 'completed']);
         @endphp
 
-        {{-- 1. TOP ACTION BANNER (DELIVERED / COMPLETED) --}}
-        @if(in_array($statusLower, ['delivered'], true))
-            <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 20px; padding: 18px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm sm:text-base font-extrabold text-emerald-950 m-0">Parcel delivered</h3>
-                        <p class="text-xs text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your heritage piece and confirm receipt.</p>
-                    </div>
-                </div>
-                <button @click="confirmModal = true"
-                    class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer text-center">
-                    Confirm received
-                </button>
-            </div>
-        @elseif($statusLower === 'completed')
-            @php
-                $firstItem = $order->items ? $order->items->first() : null;
-                $unreviewedItem = null;
-                $hasReviews = $order->reviews && $order->reviews->count() > 0;
-                if ($firstItem && $order->items) {
-                    $unreviewedItem = $order->items->first(function($itm) use ($order) {
-                        return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
-                    });
-                }
-                $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
-            @endphp
-            <div style="background-color:#FAF8F5;border:1px solid #ECE3D2;border-radius:20px;padding:16px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-black text-sm">✓</div>
-                    <div>
-                        <h3 class="text-sm font-extrabold text-[#1E1915] m-0">Order Completed</h3>
-                        <p class="text-xs text-[#78716C] mt-0.5 m-0">Thank you for supporting Lumban artisanal craftsmanship.</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    @if($activeReturn)
-                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
-                            Return: {{ ucfirst($activeReturn->status ?? 'Pending') }}
-                        </span>
-                    @elseif($hasReviews)
-                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            ★ Reviewed by Buyer
-                        </span>
-                    @else
-                        @if($unreviewedItem)
-                            @php
-                                $imgForReview = \App\Support\VariationFormatter::getImageForVariation($unreviewedItem->variation, $unreviewedItem->product)
-                                    ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
-                            @endphp
-                            <button type="button"
-                                @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
-                                style="background-color:#1E1915;color:#FFFFFF;"
-                                class="px-4 py-2 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
-                                <span>⭐ Rate Purchase</span>
-                            </button>
-                        @endif
-                        <button type="button"
-                            @click="returnModal = true;"
-                            class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center gap-1 cursor-pointer">
-                            <span>Request Return</span>
-                        </button>
-                    @endif
-                </div>
-            </div>
-        @endif
-
-        {{-- 2. CARD 1 (FULL WIDTH): ORDER HEADER & STEPPER TRACKER --}}
-        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="space-y-6">
+        {{-- UNIFIED MASTER ORDER DETAILS CARD CONTAINER --}}
+        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);overflow:hidden;" class="space-y-0">
             
-            {{-- Header Row --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3" style="border-bottom:1px solid #FAF4EB;">
-                <div class="space-y-1">
-                    <div class="text-sm sm:text-base font-extrabold text-[#1E1915] font-mono tracking-wide">
-                        #LB-OR-{{ strtoupper(substr($order->id, -8)) }}
+            {{-- 1. ORDER HEADER & STEPPER TRACKER --}}
+            <div class="p-5 sm:p-6 space-y-6">
+                {{-- Header Row --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3" style="border-bottom:1px solid #FAF4EB;">
+                    <div class="space-y-1">
+                        <div class="text-sm sm:text-base font-extrabold text-[#1E1915] font-mono tracking-wide">
+                            #LB-OR-{{ strtoupper(substr($order->id, -8)) }}
+                        </div>
+                        <div class="text-xs text-[#78716C]">
+                            Placed {{ $order->createdAt ? $order->createdAt->format('M d, Y \a\t g:i A') : 'Recently' }}
+                        </div>
                     </div>
-                    <div class="text-xs text-[#78716C]">
-                        Placed {{ $order->createdAt ? $order->createdAt->format('M d, Y \a\t g:i A') : 'Recently' }}
-                    </div>
-                </div>
 
-                {{-- Badges on Right --}}
-                <div class="flex flex-wrap items-center gap-2">
-                    @if($isStorePickup)
-                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
-                            Store Pickup
-                        </span>
-                    @elseif($isSpecialDelivery)
-                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
-                            Special delivery
-                        </span>
-                    @else
-                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200">
-                            Standard Shipping
-                        </span>
-                    @endif
+                    {{-- Badges on Right --}}
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if($isStorePickup)
+                            <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
+                                Store Pickup
+                            </span>
+                        @elseif($isSpecialDelivery)
+                            <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
+                                Special delivery
+                            </span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200">
+                                Standard Shipping
+                            </span>
+                        @endif
 
-                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $statusPillClass }}">
-                        {{ $customerStatusDisplay }}
-                    </span>
-
-                    @if($statusLower === 'pending')
-                        <button type="button" @click="cancelModal = true" class="px-3 py-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold uppercase rounded-full transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
-                            <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            <span>Cancel</span>
-                        </button>
-                    @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
-                        <span class="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold uppercase rounded-full shadow-2xs">
-                            ⏳ Cancellation Pending
+                        <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $statusPillClass }}">
+                            {{ $customerStatusDisplay }}
                         </span>
-                    @endif
-                </div>
-            </div>
 
-            {{-- 4-Step Stepper --}}
-            @if($isCancellationPending)
-                <div style="background-color:#FFF7ED;border:1px solid #FED7AA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 text-base">⏳</div>
-                    <div class="text-xs">
-                        <span class="font-bold text-orange-900 block">Cancellation Pending Artisan Approval</span>
-                        <span class="text-orange-700 text-[11px]">Your request has been submitted and is currently being reviewed.</span>
-                    </div>
-                </div>
-            @elseif($isCancelled)
-                <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0 text-base">✕</div>
-                    <div class="text-xs">
-                        <span class="font-bold text-red-900 block">Order Cancelled</span>
-                        @if($order->cancellationReason)
-                            <span class="text-red-600 text-[11px]">Reason: {{ $order->cancellationReason }}</span>
+                        @if($statusLower === 'pending')
+                            <button type="button" @click="cancelModal = true" class="px-3 py-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold uppercase rounded-full transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
+                                <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <span>Cancel</span>
+                            </button>
+                        @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
+                            <span class="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold uppercase rounded-full shadow-2xs">
+                                ⏳ Cancellation Pending
+                            </span>
                         @endif
                     </div>
                 </div>
-            @else
-                <div class="relative py-2">
-                    {{-- Connecting Line Background --}}
-                    <div class="absolute top-6 sm:top-7 left-[12%] right-[12%] h-0.5 bg-[#EAE1D0] -translate-y-1/2 z-0"></div>
-                    {{-- Connecting Line Active fill --}}
-                    @php
-                        $progressWidthPct = match($currentStep) {
-                            0 => 0,
-                            1 => 33.33,
-                            2 => 66.66,
-                            3 => 100,
-                            default => 0,
-                        };
-                        $fillWidth = number_format($progressWidthPct * 0.76, 2) . '%';
-                    @endphp
-                    <div class="absolute top-6 sm:top-7 left-[12%] h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: {{ $fillWidth }};"></div>
 
-                    <div class="grid grid-cols-4 gap-2 relative z-10">
-                        @foreach($steps as $i => $step)
-                            @php
-                                $isDone = $i < $currentStep;
-                                $isCurrent = $i === $currentStep;
-                                $stepKey = strtolower($step['status']);
-                                $timeLabel = $historyDates[$stepKey] ?? ($i === 0 && $order->createdAt ? $order->createdAt->format('g:i A') : null);
-                                if (!$timeLabel && $stepKey === 'to receive') {
-                                    $timeLabel = $historyDates['in transit'] ?? ($historyDates['in_transit'] ?? null);
-                                }
-                            @endphp
-                            <div class="flex flex-col items-center text-center">
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-black transition-all shadow-xs {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'bg-emerald-600 text-white' : ($isCurrent ? 'bg-[#1E1915] text-[#DFC97A] border-2 border-[#A87B10] ring-4 ring-amber-100' : 'bg-[#FAF8F5] text-stone-400 border border-[#ECE3D2]') }}">
-                                    @if($isDone || ($isCurrent && $currentStep === 3))
-                                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                    @else
-                                        <span>{{ $i + 1 }}</span>
-                                    @endif
+                {{-- 4-Step Stepper --}}
+                @if($isCancellationPending)
+                    <div style="background-color:#FFF7ED;border:1px solid #FED7AA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 text-base">⏳</div>
+                        <div class="text-xs">
+                            <span class="font-bold text-orange-900 block">Cancellation Pending Artisan Approval</span>
+                            <span class="text-orange-700 text-[11px]">Your request has been submitted and is currently being reviewed.</span>
+                        </div>
+                    </div>
+                @elseif($isCancelled)
+                    <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0 text-base">✕</div>
+                        <div class="text-xs">
+                            <span class="font-bold text-red-900 block">Order Cancelled</span>
+                            @if($order->cancellationReason)
+                                <span class="text-red-600 text-[11px]">Reason: {{ $order->cancellationReason }}</span>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="relative py-2">
+                        {{-- Connecting Line Background --}}
+                        <div class="absolute top-6 sm:top-7 left-[12%] right-[12%] h-0.5 bg-[#EAE1D0] -translate-y-1/2 z-0"></div>
+                        {{-- Connecting Line Active fill --}}
+                        @php
+                            $progressWidthPct = match($currentStep) {
+                                0 => 0,
+                                1 => 33.33,
+                                2 => 66.66,
+                                3 => 100,
+                                default => 0,
+                            };
+                            $fillWidth = number_format($progressWidthPct * 0.76, 2) . '%';
+                        @endphp
+                        <div class="absolute top-6 sm:top-7 left-[12%] h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: {{ $fillWidth }};"></div>
+
+                        <div class="grid grid-cols-4 gap-2 relative z-10">
+                            @foreach($steps as $i => $step)
+                                @php
+                                    $isDone = $i < $currentStep;
+                                    $isCurrent = $i === $currentStep;
+                                    $stepKey = strtolower($step['status']);
+                                    $timeLabel = $historyDates[$stepKey] ?? ($i === 0 && $order->createdAt ? $order->createdAt->format('g:i A') : null);
+                                    if (!$timeLabel && $stepKey === 'to receive') {
+                                        $timeLabel = $historyDates['in transit'] ?? ($historyDates['in_transit'] ?? null);
+                                    }
+                                @endphp
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-black transition-all shadow-xs {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'bg-emerald-600 text-white' : ($isCurrent ? 'bg-[#1E1915] text-[#DFC97A] border-2 border-[#A87B10] ring-4 ring-amber-100' : 'bg-[#FAF8F5] text-stone-400 border border-[#ECE3D2]') }}">
+                                        @if($isDone || ($isCurrent && $currentStep === 3))
+                                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        @else
+                                            <span>{{ $i + 1 }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="mt-2 space-y-0.5">
+                                        <span class="text-[10px] sm:text-[11px] font-black block uppercase tracking-wider {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'text-[#1E1915]' : ($isCurrent ? 'text-[#C0422A]' : 'text-stone-400') }}">
+                                            {{ $step['label'] }}
+                                        </span>
+                                        @if($timeLabel && ($isDone || $isCurrent))
+                                            <span class="text-[9px] sm:text-[10px] font-medium text-[#78716C] block">{{ $timeLabel }}</span>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="mt-2 space-y-0.5">
-                                    <span class="text-[10px] sm:text-[11px] font-black block uppercase tracking-wider {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'text-[#1E1915]' : ($isCurrent ? 'text-[#C0422A]' : 'text-stone-400') }}">
-                                        {{ $step['label'] }}
-                                    </span>
-                                    @if($timeLabel && ($isDone || $isCurrent))
-                                        <span class="text-[9px] sm:text-[10px] font-medium text-[#78716C] block">{{ $timeLabel }}</span>
-                                    @endif
-                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            {{-- 2. STATUS ACTION BANNER (DELIVERED / COMPLETED) --}}
+            @if(in_array($statusLower, ['delivered'], true))
+                <div class="px-5 sm:px-6 pb-6 pt-0">
+                    <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 16px; padding: 14px 20px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                             </div>
-                        @endforeach
+                            <div>
+                                <h3 class="text-sm font-extrabold text-emerald-950 m-0">Parcel delivered</h3>
+                                <p class="text-xs text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your heritage piece and confirm receipt.</p>
+                            </div>
+                        </div>
+                        <button @click="confirmModal = true"
+                            class="px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
+                            Confirm received
+                        </button>
+                    </div>
+                </div>
+            @elseif($statusLower === 'completed')
+                @php
+                    $firstItem = $order->items ? $order->items->first() : null;
+                    $unreviewedItem = null;
+                    $hasReviews = $order->reviews && $order->reviews->count() > 0;
+                    if ($firstItem && $order->items) {
+                        $unreviewedItem = $order->items->first(function($itm) use ($order) {
+                            return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
+                        });
+                    }
+                    $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
+                @endphp
+                <div class="px-5 sm:px-6 pb-6 pt-0">
+                    <div style="background-color:#FAF8F5;border:1px solid #ECE3D2;border-radius:16px;padding:14px 20px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-black text-sm">✓</div>
+                            <div>
+                                <h3 class="text-sm font-extrabold text-[#1E1915] m-0">Order Completed</h3>
+                                <p class="text-xs text-[#78716C] mt-0.5 m-0">Thank you for supporting Lumban artisanal craftsmanship.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if($activeReturn)
+                                <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
+                                    Return: {{ ucfirst($activeReturn->status ?? 'Pending') }}
+                                </span>
+                            @elseif($hasReviews)
+                                <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    ★ Reviewed by Buyer
+                                </span>
+                            @else
+                                @if($unreviewedItem)
+                                    @php
+                                        $imgForReview = \App\Support\VariationFormatter::getImageForVariation($unreviewedItem->variation, $unreviewedItem->product)
+                                            ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
+                                    @endphp
+                                    <button type="button"
+                                        @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
+                                        style="background-color:#1E1915;color:#FFFFFF;"
+                                        class="px-4 py-2 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                        <span>⭐ Rate Purchase</span>
+                                    </button>
+                                @endif
+                                <button type="button"
+                                    @click="returnModal = true;"
+                                    class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center gap-1 cursor-pointer">
+                                    <span>Request Return</span>
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @endif
 
-        </div>
+            {{-- Divider --}}
+            <div style="border-top:1px solid #FAF4EB;"></div>
 
-        {{-- 3. CARD 2 (FULL WIDTH): ITEMS ORDERED --}}
-        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="space-y-4">
-            <div class="flex items-center justify-between pb-3" style="border-bottom:1px solid #FAF4EB;">
-                <div style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
-                    Items ordered ({{ $order->items ? $order->items->count() : 0 }})
-                </div>
-                <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#FAF5EA;border:1px solid #E6D8BA;border-radius:8px;color:#A87B10;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;">
-                    Heritage pieces
-                </span>
-            </div>
-
-            <div class="divide-y divide-[#FAF4EB]">
-                @if($order->items)
-                @foreach($order->items as $item)
-                    @php
-                        $variationLabel = $item->display_variation ?? $item->variation;
-                        $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
-                            ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
-                        $itemStatus = strtolower(trim($order->status ?? ''));
-                        $hasReturn = $order->returnRequests && $order->returnRequests->count() > 0;
-                        $canRate = ($itemStatus === 'completed') && !$hasReturn;
-                        $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
-                        if (!$existingReview && $order->reviews) {
-                            $existingReview = $order->reviews->where('productId', $item->productId)->first();
-                        }
-                        $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Barong Piece');
-                    @endphp
-                    <div class="py-4 first:pt-0 last:pb-0 space-y-3">
-                        <div class="flex items-center gap-3.5">
-                            {{-- Thumbnail --}}
-                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[#FAF8F5] border border-[#ECE3D2] shrink-0 cursor-pointer group"
-                                 onclick="window.location.href='/products/{{ $item->productId }}'">
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
-                            </div>
-
-                            {{-- Info --}}
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate uppercase tracking-tight m-0">
-                                    <a href="/products/{{ $item->productId }}" class="hover:text-[#C0422A] transition-colors">
-                                        {{ $itemTitle }}
-                                    </a>
-                                </h4>
-                                <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                    @if($item->size)
-                                        <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#1E1915] text-xs font-bold rounded-md border border-[#ECE3D2]">
-                                            Size {{ $item->size }}
-                                        </span>
-                                    @endif
-                                    <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#78716C] text-xs font-bold rounded-md border border-[#ECE3D2]">
-                                        Qty {{ $item->quantity }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {{-- Price --}}
-                            <div class="text-right shrink-0">
-                                <div class="text-sm sm:text-base font-black text-[#1E1915]">
-                                    ₱{{ number_format($item->price * $item->quantity) }}
-                                </div>
-                                <div class="text-[11px] font-bold text-[#8C827A]">
-                                    ₱{{ number_format($item->price) }} each
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Item Actions --}}
-                        <div class="flex flex-wrap items-center gap-2 pt-1">
-                            <button type="button"
-                                @click="window.dispatchEvent(new CustomEvent('open-report', { 
-                                    detail: { 
-                                        reportedId: '{{ $order->sellerId }}', 
-                                        reportedName: '{{ e($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', 
-                                        productId: '{{ $item->productId }}', 
-                                        productName: '{{ e($item->product->name ?? $itemTitle) }}', 
-                                        referenceId: '{{ $order->id }}', 
-                                        orderItemId: '{{ $item->id }}', 
-                                        variant: '{{ e($variationLabel ?? $item->size ?? '') }}', 
-                                        reportType: 'product' 
-                                    } 
-                                }))"
-                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-stone-200 bg-stone-50 hover:bg-red-50 text-xs font-bold text-stone-600 hover:text-red-700 transition-all cursor-pointer shadow-2xs">
-                                <svg class="w-3 h-3 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                <span>Report product</span>
-                            </button>
-
-                            @if($canRate)
-                                @if($existingReview)
-                                    <div class="px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-200 text-xs flex items-center gap-2 shadow-2xs">
-                                        <div class="flex items-center text-amber-400 text-xs">
-                                            @for($s = 1; $s <= 5; $s++)
-                                                <span>{{ $s <= $existingReview->rating ? '★' : '☆' }}</span>
-                                            @endfor
-                                        </div>
-                                        <span class="text-[10px] font-extrabold text-emerald-800">✓ Reviewed ({{ $existingReview->rating }}/5)</span>
-                                    </div>
-                                @else
-                                    <button type="button"
-                                        @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgSrc }}'"
-                                        style="background-color:#1E1915;color:#FFFFFF;"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
-                                        <span>⭐ Rate Product</span>
-                                    </button>
-                                @endif
-                            @endif
-                        </div>
+            {{-- 3. ITEMS ORDERED --}}
+            <div class="p-5 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between pb-3" style="border-bottom:1px solid #FAF4EB;">
+                    <div style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
+                        Items ordered ({{ $order->items ? $order->items->count() : 0 }})
                     </div>
-                @endforeach
-                @endif
-            </div>
-        </div>
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#FAF5EA;border:1px solid #E6D8BA;border-radius:8px;color:#A87B10;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;">
+                        Heritage pieces
+                    </span>
+                </div>
 
-        {{-- 4. UNIFIED LOGISTICS, ARTISAN & PAYMENT SUMMARY (1 Consolidated Master Box) --}}
-        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);overflow:hidden;">
-            
-            {{-- UPPER SECTION: Delivery Address (Left) & Artisan Inspection Proof (Right) --}}
+                <div class="divide-y divide-[#FAF4EB]">
+                    @if($order->items)
+                    @foreach($order->items as $item)
+                        @php
+                            $variationLabel = $item->display_variation ?? $item->variation;
+                            $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
+                                ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
+                            $itemStatus = strtolower(trim($order->status ?? ''));
+                            $hasReturn = $order->returnRequests && $order->returnRequests->count() > 0;
+                            $canRate = ($itemStatus === 'completed') && !$hasReturn;
+                            $existingReview = $order->reviews ? $order->reviews->where('orderItemId', $item->id)->first() : null;
+                            if (!$existingReview && $order->reviews) {
+                                $existingReview = $order->reviews->where('productId', $item->productId)->first();
+                            }
+                            $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Barong Piece');
+                        @endphp
+                        <div class="py-4 first:pt-0 last:pb-0 space-y-3">
+                            <div class="flex items-center gap-3.5">
+                                {{-- Thumbnail --}}
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[#FAF8F5] border border-[#ECE3D2] shrink-0 cursor-pointer group"
+                                     onclick="window.location.href='/products/{{ $item->productId }}'">
+                                    <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
+                                </div>
+
+                                {{-- Info --}}
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate uppercase tracking-tight m-0">
+                                        <a href="/products/{{ $item->productId }}" class="hover:text-[#C0422A] transition-colors">
+                                            {{ $itemTitle }}
+                                        </a>
+                                    </h4>
+                                    <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                        @if($item->size)
+                                            <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#1E1915] text-xs font-bold rounded-md border border-[#ECE3D2]">
+                                                Size {{ $item->size }}
+                                            </span>
+                                        @endif
+                                        <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#78716C] text-xs font-bold rounded-md border border-[#ECE3D2]">
+                                            Qty {{ $item->quantity }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {{-- Price --}}
+                                <div class="text-right shrink-0">
+                                    <div class="text-sm sm:text-base font-black text-[#1E1915]">
+                                        ₱{{ number_format($item->price * $item->quantity) }}
+                                    </div>
+                                    <div class="text-[11px] font-bold text-[#8C827A]">
+                                        ₱{{ number_format($item->price) }} each
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Item Actions --}}
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                <button type="button"
+                                    @click="window.dispatchEvent(new CustomEvent('open-report', { 
+                                        detail: { 
+                                            reportedId: '{{ $order->sellerId }}', 
+                                            reportedName: '{{ e($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', 
+                                            productId: '{{ $item->productId }}', 
+                                            productName: '{{ e($item->product->name ?? $itemTitle) }}', 
+                                            referenceId: '{{ $order->id }}', 
+                                            orderItemId: '{{ $item->id }}', 
+                                            variant: '{{ e($variationLabel ?? $item->size ?? '') }}', 
+                                            reportType: 'product' 
+                                        } 
+                                    }))"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-stone-200 bg-stone-50 hover:bg-red-50 text-xs font-bold text-stone-600 hover:text-red-700 transition-all cursor-pointer shadow-2xs">
+                                    <svg class="w-3 h-3 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>Report product</span>
+                                </button>
+
+                                @if($canRate)
+                                    @if($existingReview)
+                                        <div class="px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-200 text-xs flex items-center gap-2 shadow-2xs">
+                                            <div class="flex items-center text-amber-400 text-xs">
+                                                @for($s = 1; $s <= 5; $s++)
+                                                    <span>{{ $s <= $existingReview->rating ? '★' : '☆' }}</span>
+                                                @endfor
+                                            </div>
+                                            <span class="text-[10px] font-extrabold text-emerald-800">✓ Reviewed ({{ $existingReview->rating }}/5)</span>
+                                        </div>
+                                    @else
+                                        <button type="button"
+                                            @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgSrc }}'"
+                                            style="background-color:#1E1915;color:#FFFFFF;"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                            <span>⭐ Rate Product</span>
+                                        </button>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                    @endif
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div style="border-top:1px solid #FAF4EB;"></div>
+
+            {{-- 4. UPPER SECTION: Delivery Address (Left) & Artisan Inspection Proof (Right) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#FAF4EB]">
                 
                 {{-- Left Column: Delivery Address --}}
@@ -644,10 +652,10 @@
 
             </div>
 
-            {{-- Horizontal Master Divider --}}
+            {{-- Divider --}}
             <div style="border-top:1px solid #FAF4EB;"></div>
 
-            {{-- LOWER SECTION: Sold by Artisan (Left) & Payment and Receipt (Right) --}}
+            {{-- 5. LOWER SECTION: Sold by Artisan (Left) & Payment and Receipt (Right) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#FAF4EB]">
                 
                 {{-- Left Column: Sold by artisan --}}
@@ -744,12 +752,12 @@
 
             </div>
 
-        </div>
+            {{-- 6. AUTHENTIC HERITAGE GUARANTEE FOOTER --}}
+            <div class="border-t border-[#FAF4EB] bg-[#FAF8F5]/50 p-4 text-center text-xs text-[#78716C] flex items-center justify-center gap-2">
+                <span>🛡️</span>
+                <span><strong>Lumban Heritage Guarantee:</strong> Verified genuine artisanal embroidery craft.</span>
+            </div>
 
-        {{-- 5. AUTHENTIC HERITAGE GUARANTEE FOOTER --}}
-        <div class="text-center py-2 text-xs text-[#78716C] flex items-center justify-center gap-2">
-            <span>🛡️</span>
-            <span><strong>Lumban Heritage Guarantee:</strong> Verified authentic hand-embroidered craft directly from local master artisans.</span>
         </div>
 
     </div>
