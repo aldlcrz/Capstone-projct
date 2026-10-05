@@ -56,7 +56,7 @@
         <span x-text="copiedMessage"></span>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-5 sm:space-y-6">
+    <div class="max-w-5xl mx-auto space-y-5 sm:space-y-6">
 
         {{-- Top Navigation --}}
         <div class="flex items-center justify-between gap-3">
