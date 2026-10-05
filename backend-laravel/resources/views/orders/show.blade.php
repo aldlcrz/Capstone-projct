@@ -211,18 +211,18 @@
 
         {{-- 1. TOP ACTION BANNER (DELIVERED / COMPLETED) --}}
         @if(in_array($statusLower, ['delivered'], true))
-            <div style="background-color:#14281B;border:1px solid #1E4627;border-radius:20px;padding:18px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+            <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; border-radius: 20px; padding: 18px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                 <div class="flex items-center gap-3.5">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-900/40 border border-emerald-600/50 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
                     <div>
-                        <h3 class="text-sm sm:text-base font-bold text-emerald-400 m-0">Parcel delivered</h3>
-                        <p class="text-xs text-emerald-300/80 mt-0.5 m-0">Please inspect your heritage piece and confirm receipt.</p>
+                        <h3 class="text-sm sm:text-base font-extrabold text-emerald-950 m-0">Parcel delivered</h3>
+                        <p class="text-xs text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your heritage piece and confirm receipt.</p>
                     </div>
                 </div>
                 <button @click="confirmModal = true"
-                    class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-extrabold uppercase tracking-wider transition-all shadow-md shrink-0 cursor-pointer text-center">
+                    class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer text-center">
                     Confirm received
                 </button>
             </div>
@@ -238,21 +238,21 @@
                 }
                 $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
             @endphp
-            <div style="background-color:#14281B;border:1px solid #1E4627;border-radius:20px;padding:16px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+            <div style="background-color:#FAF8F5;border:1px solid #ECE3D2;border-radius:20px;padding:16px 22px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-emerald-900/60 border border-emerald-500/50 text-emerald-400 flex items-center justify-center font-bold text-sm">✓</div>
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-black text-sm">✓</div>
                     <div>
-                        <h3 class="text-sm font-bold text-emerald-400 m-0">Order Completed</h3>
-                        <p class="text-xs text-emerald-300/80 mt-0.5 m-0">Thank you for supporting Lumban artisanal craftsmanship.</p>
+                        <h3 class="text-sm font-extrabold text-[#1E1915] m-0">Order Completed</h3>
+                        <p class="text-xs text-[#78716C] mt-0.5 m-0">Thank you for supporting Lumban artisanal craftsmanship.</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     @if($activeReturn)
-                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-950/60 text-blue-300 border border-blue-800/60">
+                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
                             Return: {{ ucfirst($activeReturn->status ?? 'Pending') }}
                         </span>
                     @elseif($hasReviews)
-                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
+                        <span class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
                             ★ Reviewed by Buyer
                         </span>
                     @else
@@ -263,13 +263,14 @@
                             @endphp
                             <button type="button"
                                 @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
-                                class="px-4 py-2 rounded-xl bg-[#1E1915] text-white hover:bg-[#C0422A] text-xs font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                style="background-color:#1E1915;color:#FFFFFF;"
+                                class="px-4 py-2 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
                                 <span>⭐ Rate Purchase</span>
                             </button>
                         @endif
                         <button type="button"
                             @click="returnModal = true;"
-                            class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-600 text-xs font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center gap-1 cursor-pointer">
+                            class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center gap-1 cursor-pointer">
                             <span>Request Return</span>
                         </button>
                     @endif
@@ -278,15 +279,15 @@
         @endif
 
         {{-- 2. CARD 1 (FULL WIDTH): ORDER HEADER & STEPPER TRACKER --}}
-        <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="space-y-6 shadow-sm">
+        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="space-y-6">
             
             {{-- Header Row --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800/80">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3" style="border-bottom:1px solid #FAF4EB;">
                 <div class="space-y-1">
-                    <div class="text-sm sm:text-base font-extrabold text-stone-100 font-mono tracking-wide">
+                    <div class="text-sm sm:text-base font-extrabold text-[#1E1915] font-mono tracking-wide">
                         #LB-OR-{{ strtoupper(substr($order->id, -8)) }}
                     </div>
-                    <div class="text-xs text-stone-400">
+                    <div class="text-xs text-[#78716C]">
                         Placed {{ $order->createdAt ? $order->createdAt->format('M d, Y \a\t g:i A') : 'Recently' }}
                     </div>
                 </div>
@@ -294,30 +295,30 @@
                 {{-- Badges on Right --}}
                 <div class="flex flex-wrap items-center gap-2">
                     @if($isStorePickup)
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-950/50 text-amber-400 border border-amber-800/50">
+                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200">
                             Store Pickup
                         </span>
                     @elseif($isSpecialDelivery)
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-950/60 text-blue-400 border border-blue-800/50">
+                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
                             Special delivery
                         </span>
                     @else
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-stone-800 text-stone-300 border border-stone-700">
+                        <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200">
                             Standard Shipping
                         </span>
                     @endif
 
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $statusPillClass }}">
                         {{ $customerStatusDisplay }}
                     </span>
 
                     @if($statusLower === 'pending')
-                        <button type="button" @click="cancelModal = true" class="px-3 py-1 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1">
-                            <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <button type="button" @click="cancelModal = true" class="px-3 py-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold uppercase rounded-full transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
+                            <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             <span>Cancel</span>
                         </button>
                     @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
-                        <span class="px-3 py-1 bg-orange-950/40 text-orange-300 border border-orange-800/50 text-xs font-bold rounded-full">
+                        <span class="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold uppercase rounded-full shadow-2xs">
                             ⏳ Cancellation Pending
                         </span>
                     @endif
@@ -326,27 +327,27 @@
 
             {{-- 4-Step Stepper --}}
             @if($isCancellationPending)
-                <div class="bg-orange-950/30 border border-orange-800/40 rounded-xl p-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-orange-900/50 text-orange-300 flex items-center justify-center shrink-0 text-base">⏳</div>
+                <div style="background-color:#FFF7ED;border:1px solid #FED7AA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 text-base">⏳</div>
                     <div class="text-xs">
-                        <span class="font-bold text-orange-200 block">Cancellation Pending Artisan Approval</span>
-                        <span class="text-orange-400/80 text-[11px]">Your request has been submitted and is currently being reviewed.</span>
+                        <span class="font-bold text-orange-900 block">Cancellation Pending Artisan Approval</span>
+                        <span class="text-orange-700 text-[11px]">Your request has been submitted and is currently being reviewed.</span>
                     </div>
                 </div>
             @elseif($isCancelled)
-                <div class="bg-red-950/30 border border-red-800/40 rounded-xl p-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-red-900/50 text-red-300 flex items-center justify-center shrink-0 text-base">✕</div>
+                <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:14px 18px;" class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0 text-base">✕</div>
                     <div class="text-xs">
-                        <span class="font-bold text-red-200 block">Order Cancelled</span>
+                        <span class="font-bold text-red-900 block">Order Cancelled</span>
                         @if($order->cancellationReason)
-                            <span class="text-red-400 text-[11px]">Reason: {{ $order->cancellationReason }}</span>
+                            <span class="text-red-600 text-[11px]">Reason: {{ $order->cancellationReason }}</span>
                         @endif
                     </div>
                 </div>
             @else
                 <div class="relative py-2">
                     {{-- Connecting Line Background --}}
-                    <div class="absolute top-6 sm:top-7 left-[12%] right-[12%] h-0.5 bg-stone-800 -translate-y-1/2 z-0"></div>
+                    <div class="absolute top-6 sm:top-7 left-[12%] right-[12%] h-0.5 bg-[#EAE1D0] -translate-y-1/2 z-0"></div>
                     {{-- Connecting Line Active fill --}}
                     @php
                         $progressWidthPct = match($currentStep) {
@@ -372,7 +373,7 @@
                                 }
                             @endphp
                             <div class="flex flex-col items-center text-center">
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-black transition-all shadow-xs {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'bg-emerald-500 text-white' : ($isCurrent ? 'bg-red-500/20 text-red-400 border border-red-500/40 ring-2 ring-red-500/20' : 'bg-stone-800 text-stone-500 border border-stone-700') }}">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-black transition-all shadow-xs {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'bg-emerald-600 text-white' : ($isCurrent ? 'bg-[#1E1915] text-[#DFC97A] border-2 border-[#A87B10] ring-4 ring-amber-100' : 'bg-[#FAF8F5] text-stone-400 border border-[#ECE3D2]') }}">
                                     @if($isDone || ($isCurrent && $currentStep === 3))
                                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     @else
@@ -380,11 +381,11 @@
                                     @endif
                                 </div>
                                 <div class="mt-2 space-y-0.5">
-                                    <span class="text-[10px] sm:text-xs font-bold block uppercase tracking-wider {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'text-stone-200' : ($isCurrent ? 'text-red-400' : 'text-stone-500') }}">
+                                    <span class="text-[10px] sm:text-[11px] font-black block uppercase tracking-wider {{ ($isDone || ($isCurrent && $currentStep === 3)) ? 'text-[#1E1915]' : ($isCurrent ? 'text-[#C0422A]' : 'text-stone-400') }}">
                                         {{ $step['label'] }}
                                     </span>
                                     @if($timeLabel && ($isDone || $isCurrent))
-                                        <span class="text-[10px] font-medium text-stone-400 block">{{ $timeLabel }}</span>
+                                        <span class="text-[9px] sm:text-[10px] font-medium text-[#78716C] block">{{ $timeLabel }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -396,17 +397,17 @@
         </div>
 
         {{-- 3. CARD 2 (FULL WIDTH): ITEMS ORDERED --}}
-        <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="space-y-4 shadow-sm">
-            <div class="flex items-center justify-between pb-3 border-b border-stone-800/80">
-                <div class="text-sm sm:text-base font-bold text-stone-100">
+        <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="space-y-4">
+            <div class="flex items-center justify-between pb-3" style="border-bottom:1px solid #FAF4EB;">
+                <div style="font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
                     Items ordered ({{ $order->items ? $order->items->count() : 0 }})
                 </div>
-                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-950/40 text-amber-500 border border-amber-800/40 uppercase tracking-wider">
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#FAF5EA;border:1px solid #E6D8BA;border-radius:8px;color:#A87B10;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;">
                     Heritage pieces
                 </span>
             </div>
 
-            <div class="divide-y divide-stone-800/80">
+            <div class="divide-y divide-[#FAF4EB]">
                 @if($order->items)
                 @foreach($order->items as $item)
                     @php
@@ -425,25 +426,25 @@
                     <div class="py-4 first:pt-0 last:pb-0 space-y-3">
                         <div class="flex items-center gap-3.5">
                             {{-- Thumbnail --}}
-                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-stone-900 border border-stone-800 shrink-0 cursor-pointer"
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[#FAF8F5] border border-[#ECE3D2] shrink-0 cursor-pointer group"
                                  onclick="window.location.href='/products/{{ $item->productId }}'">
-                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top hover:scale-105 transition-transform" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
+                                <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
                             </div>
 
                             {{-- Info --}}
                             <div class="flex-1 min-w-0">
-                                <h4 class="text-xs sm:text-sm font-bold text-stone-100 truncate uppercase tracking-tight m-0">
-                                    <a href="/products/{{ $item->productId }}" class="hover:text-red-400 transition-colors">
+                                <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] truncate uppercase tracking-tight m-0">
+                                    <a href="/products/{{ $item->productId }}" class="hover:text-[#C0422A] transition-colors">
                                         {{ $itemTitle }}
                                     </a>
                                 </h4>
                                 <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
                                     @if($item->size)
-                                        <span class="px-2.5 py-0.5 bg-stone-800 text-stone-200 text-xs font-semibold rounded-md border border-stone-700">
+                                        <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#1E1915] text-xs font-bold rounded-md border border-[#ECE3D2]">
                                             Size {{ $item->size }}
                                         </span>
                                     @endif
-                                    <span class="px-2.5 py-0.5 bg-stone-800 text-stone-300 text-xs font-semibold rounded-md border border-stone-700">
+                                    <span class="px-2.5 py-0.5 bg-[#FAF8F5] text-[#78716C] text-xs font-bold rounded-md border border-[#ECE3D2]">
                                         Qty {{ $item->quantity }}
                                     </span>
                                 </div>
@@ -451,10 +452,10 @@
 
                             {{-- Price --}}
                             <div class="text-right shrink-0">
-                                <div class="text-sm sm:text-base font-extrabold text-stone-100">
+                                <div class="text-sm sm:text-base font-black text-[#1E1915]">
                                     ₱{{ number_format($item->price * $item->quantity) }}
                                 </div>
-                                <div class="text-[11px] font-medium text-stone-400">
+                                <div class="text-[11px] font-bold text-[#8C827A]">
                                     ₱{{ number_format($item->price) }} each
                                 </div>
                             </div>
@@ -475,25 +476,26 @@
                                         reportType: 'product' 
                                     } 
                                 }))"
-                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-stone-700/80 bg-stone-850 hover:bg-red-950/20 text-xs font-bold text-red-400 hover:text-red-300 transition-all cursor-pointer">
-                                <svg class="w-3 h-3 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-stone-200 bg-stone-50 hover:bg-red-50 text-xs font-bold text-stone-600 hover:text-red-700 transition-all cursor-pointer shadow-2xs">
+                                <svg class="w-3 h-3 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                 <span>Report product</span>
                             </button>
 
                             @if($canRate)
                                 @if($existingReview)
-                                    <div class="px-3 py-1 bg-emerald-950/30 rounded-lg border border-emerald-800/40 text-xs flex items-center gap-2">
+                                    <div class="px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-200 text-xs flex items-center gap-2 shadow-2xs">
                                         <div class="flex items-center text-amber-400 text-xs">
                                             @for($s = 1; $s <= 5; $s++)
                                                 <span>{{ $s <= $existingReview->rating ? '★' : '☆' }}</span>
                                             @endfor
                                         </div>
-                                        <span class="text-[10px] font-bold text-emerald-400">✓ Reviewed ({{ $existingReview->rating }}/5)</span>
+                                        <span class="text-[10px] font-extrabold text-emerald-800">✓ Reviewed ({{ $existingReview->rating }}/5)</span>
                                     </div>
                                 @else
                                     <button type="button"
                                         @click="reviewModal = true; reviewProductId = '{{ $item->productId }}'; reviewOrderItemId = '{{ $item->id }}'; reviewProductName = '{{ addslashes($item->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgSrc }}'"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-amber-700/60 bg-amber-950/30 hover:bg-amber-900/40 text-xs font-bold text-amber-400 transition-all cursor-pointer">
+                                        style="background-color:#1E1915;color:#FFFFFF;"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
                                         <span>⭐ Rate Product</span>
                                     </button>
                                 @endif
@@ -509,32 +511,33 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             
             {{-- Left Column: Delivery Address --}}
-            <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="flex flex-col justify-between space-y-4 shadow-sm">
+            <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="flex flex-col justify-between space-y-4">
                 @if($isStorePickup)
                     {{-- Workshop Pickup Address --}}
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
                                 <span>📍</span>
                                 <span>Workshop Pickup</span>
                             </span>
                             <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
-                               class="text-xs font-bold text-amber-400 hover:text-amber-300">
+                               class="text-xs font-black uppercase tracking-wider text-[#996515] hover:text-[#C49520]">
                                 🗺️ Directions ↗
                             </a>
                         </div>
                         <div>
-                            <h4 class="text-sm font-bold text-stone-100 font-serif m-0">{{ $sellerShopName }}</h4>
-                            <p class="text-xs text-stone-400 leading-relaxed mt-1 m-0">{{ $sellerWorkshopAddress }}</p>
+                            <h4 class="text-sm font-extrabold text-[#1E1915] font-serif m-0">{{ $sellerShopName }}</h4>
+                            <p class="text-xs text-[#78716C] leading-relaxed mt-1 m-0 font-medium">{{ $sellerWorkshopAddress }}</p>
                         </div>
-                        <div class="rounded-xl overflow-hidden border border-stone-800 bg-stone-900 relative">
+                        <div class="rounded-xl overflow-hidden border border-[#E2D9C8] bg-white relative">
                             <div id="order-workshop-leaflet-map" class="w-full h-36 relative z-0"></div>
                         </div>
                     </div>
-                    <div class="pt-2 border-t border-stone-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <span class="text-stone-400">Claim Code: <strong class="text-stone-200 font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
+                    <div class="pt-2 border-t border-[#FAF4EB] flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="text-[#78716C]">Claim Code: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
                         <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
-                           class="px-3 py-1 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold">
+                           style="background-color:#1E1915;color:#FFFFFF;"
+                           class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all">
                             Download Pass
                         </a>
                     </div>
@@ -542,39 +545,39 @@
                     {{-- Standard/Special Delivery Address --}}
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
                                 <span>📍</span>
                                 <span>Delivery address</span>
                             </span>
                             @if(!empty($addr['phone']))
-                                <span class="text-xs font-mono text-stone-300 font-bold flex items-center gap-1">
+                                <span class="text-xs font-mono text-[#1E1915] font-bold flex items-center gap-1 px-2.5 py-0.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-full">
                                     <span>📞</span>
                                     <span>{{ $addr['phone'] }}</span>
                                 </span>
                             @endif
                         </div>
                         <div class="space-y-1">
-                            <h4 class="text-sm font-bold text-stone-100 m-0">{{ $recipient }}</h4>
+                            <h4 class="text-sm font-extrabold text-[#1E1915] m-0">{{ $recipient }}</h4>
                             @if($streetLine)
-                                <p class="text-xs text-stone-300 leading-relaxed m-0">{{ $streetLine }}</p>
+                                <p class="text-xs text-[#57534E] leading-relaxed m-0 font-medium">{{ $streetLine }}</p>
                             @endif
                             @if($locality || !empty($addr['postalCode']))
-                                <p class="text-xs text-stone-400 leading-relaxed m-0">
-                                    {{ $locality }}@if(!empty($addr['postalCode'])) · <span class="font-bold text-stone-300">{{ $addr['postalCode'] }}</span>@endif
+                                <p class="text-xs text-[#78716C] leading-relaxed m-0 font-medium">
+                                    {{ $locality }}@if(!empty($addr['postalCode'])) · <span class="font-bold text-[#1E1915]">{{ $addr['postalCode'] }}</span>@endif
                                 </p>
                             @endif
                         </div>
                     </div>
 
                     @if($hasCourierTracking && $order->trackingNumber)
-                        <div class="pt-2 border-t border-stone-800/80 flex items-center justify-between gap-2">
+                        <div class="pt-2 border-t border-[#FAF4EB] flex items-center justify-between gap-2">
                             <div class="min-w-0 flex-1">
-                                <span class="text-stone-400 text-[10px] font-bold uppercase tracking-wider block">Tracking #</span>
-                                <span class="font-mono text-red-400 font-bold text-xs truncate block">{{ $order->trackingNumber }}</span>
+                                <span class="text-[#8C827A] text-[10px] font-bold uppercase tracking-wider block">Tracking #</span>
+                                <span class="font-mono text-[#C0422A] font-bold text-xs truncate block">{{ $order->trackingNumber }}</span>
                             </div>
                             <button type="button" 
                                     @click="copyText('{{ $order->trackingNumber }}', 'Tracking number copied!')"
-                                    class="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer">
+                                    class="px-2.5 py-1 bg-[#FAF8F5] hover:bg-stone-100 text-[#1E1915] border border-[#ECE3D2] rounded-lg text-xs font-bold uppercase transition-all cursor-pointer shadow-2xs">
                                 Copy
                             </button>
                         </div>
@@ -583,22 +586,22 @@
             </div>
 
             {{-- Right Column: Artisan Inspection Proof --}}
-            <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="flex flex-col justify-between space-y-4 shadow-sm">
+            <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
+                        <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
                             <span>📸</span>
                             <span>Artisan inspection proof</span>
                         </span>
                         @if($order->packingProof)
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/50">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 shadow-2xs">
                                 ✓ Verified
                             </span>
                         @endif
                     </div>
 
                     @if($order->packingProof)
-                        <div class="relative rounded-xl overflow-hidden border border-stone-800 bg-stone-900 cursor-pointer group flex items-center justify-center"
+                        <div class="relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-[#FAF8F5] cursor-pointer group flex items-center justify-center"
                              style="height: 110px; width: 100%;"
                              @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
                             <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing inspection proof">
@@ -609,10 +612,10 @@
                             </div>
                         </div>
                     @else
-                        <div class="p-3 bg-stone-900/60 border border-stone-800 rounded-xl flex items-center gap-2.5 text-xs text-stone-400">
+                        <div class="p-3 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center gap-2.5 text-xs text-[#78716C]">
                             <span class="text-base">⏳</span>
                             <div class="text-xs leading-tight">
-                                <strong class="text-stone-200 block">Inspection photo pending</strong>
+                                <strong class="text-[#1E1915] block">Inspection photo pending</strong>
                                 <span>Artisan will upload quality inspection photo before dispatch.</span>
                             </div>
                         </div>
@@ -622,13 +625,14 @@
                 {{-- Dispatch pill / Courier track --}}
                 <div>
                     @if($isSpecialDelivery)
-                        <div class="p-2.5 bg-blue-950/40 rounded-xl border border-blue-800/50 text-xs text-blue-300 leading-relaxed font-semibold flex items-center gap-2">
+                        <div class="p-2.5 bg-blue-50/90 rounded-xl border border-blue-100 text-xs text-blue-900 leading-relaxed font-bold flex items-center gap-2 shadow-2xs">
                             <span class="text-sm">🏍️</span>
                             <span>Dispatched via local artisan rider</span>
                         </div>
                     @elseif($order->trackingLink)
                         <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
-                           class="block text-center py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
+                           style="background-color:#1E1915;color:#FFFFFF;"
+                           class="block text-center py-2.5 hover:bg-[#C0422A] rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
                             Track Courier Live ↗
                         </a>
                     @endif
@@ -641,12 +645,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             
             {{-- Left Column: Sold by artisan --}}
-            <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="flex flex-col justify-between space-y-4 shadow-sm">
+            <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="flex flex-col justify-between space-y-4">
                 <div class="space-y-3.5">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-stone-400">Sold by artisan</span>
+                        <span class="text-xs font-black uppercase tracking-wider text-[#8C827A]">Sold by artisan</span>
                         @if($order->seller)
-                            <a href="{{ route('shops.show', $order->seller->id) }}" class="text-xs font-bold text-red-400 hover:text-red-300 transition-colors">
+                            <a href="{{ route('shops.show', $order->seller->id) }}" class="text-xs font-bold text-[#C0422A] hover:underline transition-colors">
                                 Visit shop ↗
                             </a>
                         @endif
@@ -654,7 +658,7 @@
 
                     @if($order->seller)
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-full bg-red-950/60 border border-red-800/50 text-red-300 flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-xs">
+                            <div class="w-11 h-11 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0422A] border border-[#ECE3D2] text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-2xs">
                                 @if($order->seller?->profile_photo_url)
                                     <img src="{{ $order->seller->profile_photo_url }}" alt="{{ $order->seller->display_name ?? 'Artisan' }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                                 @else
@@ -662,9 +666,9 @@
                                 @endif
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="text-sm font-bold text-stone-100 truncate">{{ $order->seller?->display_name ?? 'Artisan Shop' }}</div>
-                                <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-                                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                <div class="text-sm font-extrabold text-[#1E1915] truncate">{{ $order->seller?->display_name ?? 'Artisan Shop' }}</div>
+                                <div class="text-xs text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     <span>{{ $order->seller?->isVerified ? 'Verified Lumban Artisan' : 'Artisan Seller' }}</span>
                                 </div>
                             </div>
@@ -676,7 +680,8 @@
                     @if($order->seller)
                         <button type="button"
                                 @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}' } }))"
-                                class="w-full py-2.5 rounded-xl border border-stone-700/80 bg-stone-850 hover:bg-stone-800 text-stone-200 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                                style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#1E1915;"
+                                class="w-full py-2.5 rounded-xl hover:bg-[#1E1915] hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
                             <span>💬</span>
                             <span>Chat with artisan</span>
                         </button>
@@ -685,35 +690,37 @@
             </div>
 
             {{-- Right Column: Payment and receipt --}}
-            <div style="background-color:#181818;border:1px solid #262626;border-radius:20px;padding:22px 24px;" class="flex flex-col justify-between space-y-4 shadow-sm">
+            <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:20px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.02);" class="flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between pb-2 border-b border-stone-800/80">
-                        <span class="text-xs font-bold uppercase tracking-wider text-stone-300">Payment and receipt</span>
-                        <span class="text-xs font-bold text-stone-300 px-2.5 py-0.5 bg-stone-850 rounded-full border border-stone-700">
+                    <div class="flex items-center justify-between pb-2" style="border-bottom:1px solid #FAF4EB;">
+                        <span style="font-family:ui-serif,Georgia,serif;font-size:12px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
+                            Payment and receipt
+                        </span>
+                        <span class="text-xs font-bold text-[#78716C] px-2.5 py-0.5 bg-[#FAF8F5] rounded-md border border-[#ECE3D2]">
                             {{ $order->formatted_payment_method }}
                         </span>
                     </div>
 
                     <div class="space-y-2 text-xs">
-                        <div class="flex items-center justify-between text-stone-400">
+                        <div class="flex items-center justify-between text-[#78716C]">
                             <span>Subtotal</span>
-                            <span class="font-bold text-stone-200">
+                            <span class="font-bold text-[#1E1915]">
                                 ₱{{ number_format(($order->totalAmount ?? 0) - ($order->shippingFee ?? ($order->shipping?->shipping_fee ?? 0)), 2) }}
                             </span>
                         </div>
-                        <div class="flex items-center justify-between text-stone-400">
+                        <div class="flex items-center justify-between text-[#78716C]">
                             <span>{{ $isStorePickup ? 'Fulfillment' : 'Shipping fee' }}</span>
-                            <span class="font-bold text-stone-200">
+                            <span class="font-bold text-[#1E1915]">
                                 ₱{{ number_format($isStorePickup ? 0 : ($order->shipping?->shipping_fee ?? ($order->shippingFee ?? 0)), 2) }}
                             </span>
                         </div>
 
                         @if(in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-'))
-                            <div class="pt-1 flex items-center justify-between text-stone-400">
+                            <div class="pt-1 flex items-center justify-between text-[#78716C]">
                                 <span class="text-[10px] uppercase tracking-wider">Ref:</span>
-                                <div class="flex items-center gap-1.5 font-mono text-xs text-stone-200">
+                                <div class="flex items-center gap-1.5 font-mono text-xs text-[#1E1915]">
                                     <span>{{ $order->paymentReference }}</span>
-                                    <button type="button" @click="copyText('{{ $order->paymentReference }}', 'Reference copied!')" class="text-[10px] text-stone-400 hover:text-stone-200 uppercase font-bold">Copy</button>
+                                    <button type="button" @click="copyText('{{ $order->paymentReference }}', 'Reference copied!')" class="text-[10px] text-[#78716C] hover:text-[#1E1915] uppercase font-bold">Copy</button>
                                 </div>
                             </div>
                         @endif
@@ -721,9 +728,9 @@
                 </div>
 
                 {{-- Grand Total --}}
-                <div class="pt-3 border-t border-dashed border-stone-800 flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-stone-400">Grand total</span>
-                    <span class="text-xl sm:text-2xl font-black text-[#C0422A] dark:text-[#E07A5F]">
+                <div class="pt-3 border-t border-dashed border-[#ECE3D2] flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#78716C]">Grand total</span>
+                    <span class="text-xl sm:text-2xl font-black text-[#C0422A]">
                         ₱{{ number_format($order->totalAmount ?? 0, 2) }}
                     </span>
                 </div>
@@ -732,7 +739,7 @@
         </div>
 
         {{-- 6. AUTHENTIC HERITAGE GUARANTEE FOOTER --}}
-        <div class="text-center py-2 text-xs text-stone-500 flex items-center justify-center gap-2">
+        <div class="text-center py-2 text-xs text-[#78716C] flex items-center justify-center gap-2">
             <span>🛡️</span>
             <span><strong>Lumban Heritage Guarantee:</strong> Verified authentic hand-embroidered craft directly from local master artisans.</span>
         </div>
