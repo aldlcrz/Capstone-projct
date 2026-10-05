@@ -356,8 +356,9 @@
                             3 => 100,
                             default => 0,
                         };
+                        $fillWidth = number_format($progressWidthPct * 0.76, 2) . '%';
                     @endphp
-                    <div class="absolute top-6 sm:top-7 left-[12%] h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: calc({{ $progressWidthPct }}% * 0.76);"></div>
+                    <div class="absolute top-6 sm:top-7 left-[12%] h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: {{ $fillWidth }};"></div>
 
                     <div class="grid grid-cols-4 gap-2 relative z-10">
                         @foreach($steps as $i => $step)
