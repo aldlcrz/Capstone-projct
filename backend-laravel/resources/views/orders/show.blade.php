@@ -457,23 +457,6 @@
                                         <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#78716C] text-[11px] font-bold rounded-md border border-[#ECE3D2]">
                                             Qty {{ $item->quantity }}
                                         </span>
-                                        <button type="button"
-                                            @click="window.dispatchEvent(new CustomEvent('open-report', { 
-                                                detail: { 
-                                                    reportedId: '{{ $order->sellerId }}', 
-                                                    reportedName: '{{ e($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', 
-                                                    productId: '{{ $item->productId }}', 
-                                                    productName: '{{ e($item->product->name ?? $itemTitle) }}', 
-                                                    referenceId: '{{ $order->id }}', 
-                                                    orderItemId: '{{ $item->id }}', 
-                                                    variant: '{{ e($variationLabel ?? $item->size ?? '') }}', 
-                                                    reportType: 'product' 
-                                                } 
-                                            }))"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-stone-200 bg-stone-50 hover:bg-red-50 text-[11px] font-bold text-stone-600 hover:text-red-700 transition-all cursor-pointer shadow-2xs">
-                                            <svg class="w-2.5 h-2.5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                            <span>Report</span>
-                                        </button>
                                         @if($canRate && $existingReview)
                                             <span class="px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-200 text-[10px] font-extrabold text-emerald-800">
                                                 ✓ {{ $existingReview->rating }}/5 Stars
