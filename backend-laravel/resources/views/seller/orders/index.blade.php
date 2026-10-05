@@ -135,6 +135,15 @@ function sellerOrdersManager() {
         trackingNumber: '',
         trackingLink: '',
         shippingError: '',
+        claimCodeInput: '',
+        claimCodeLoading: false,
+        claimCodeError: '',
+        claimCodeSuccess: false,
+        riderNameInput: '',
+        riderPhoneInput: '',
+        riderNotesInput: '',
+        dispatchRiderLoading: false,
+        dispatchRiderError: '',
         packingPhotoFile: null,
         packingPhotoPreview: null,
         packingUploading: false,
@@ -226,6 +235,93 @@ function sellerOrdersManager() {
             if (ps.includes('submitted') || (order?.paymentProof && !ps.includes('verified') && !ps.includes('paid'))) return { text: '⏳ Verify Payment', class: 'bg-amber-50 text-amber-800 border-amber-300' };
             if (ps.includes('verified') || ps.includes('paid') || (order?.status && order.status !== 'Pending')) return { text: '✓ Verified', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
             return { text: 'Pending Submission', class: 'bg-gray-50 text-gray-600 border-gray-200' };
+        },
+
+        async executeVerifyClaimCode(order) {
+            const target = order || this.detailsOrder;
+            if (!target || this.claimCodeLoading) return;
+            const code = this.claimCodeInput.trim();
+            if (!code) {
+                this.claimCodeError = 'Please enter the customer\'s claim code.';
+                return;
+            }
+            this.claimCodeLoading = true;
+            this.claimCodeError = '';
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + target.id + '/verify-claim-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ claimCode: code })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.order)) {
+                    const updatedOrder = data.order || data;
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, updatedOrder);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = updatedOrder;
+                        }
+                    }
+                    this.claimCodeSuccess = true;
+                    this.showToast('✓ Claim code verified! Order marked as Claimed.');
+                    this.claimCodeInput = '';
+                } else {
+                    this.claimCodeError = data.message || 'Invalid claim code.';
+                }
+            } catch(e) {
+                this.claimCodeError = 'Network error while verifying claim code.';
+            } finally {
+                this.claimCodeLoading = false;
+            }
+        },
+
+        async executeDispatchSpecialDelivery(order) {
+            const target = order || this.detailsOrder;
+            if (!target || this.dispatchRiderLoading) return;
+            this.dispatchRiderLoading = true;
+            this.dispatchRiderError = '';
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/api/orders/' + target.id + '/dispatch-special-delivery', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        riderName: this.riderNameInput.trim(),
+                        riderPhone: this.riderPhoneInput.trim(),
+                        riderNotes: this.riderNotesInput.trim()
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.order)) {
+                    const updatedOrder = data.order || data;
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        this.orders.splice(idx, 1, updatedOrder);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = updatedOrder;
+                        }
+                    }
+                    this.showToast('✓ Local rider dispatched! Order is Out for Special Delivery.');
+                } else {
+                    this.dispatchRiderError = data.message || 'Failed to dispatch rider.';
+                }
+            } catch(e) {
+                this.dispatchRiderError = 'Network error while dispatching rider.';
+            } finally {
+                this.dispatchRiderLoading = false;
+            }
         },
 
         openVerifyPaymentModal(order) {
@@ -1298,12 +1394,20 @@ function sellerOrdersManager() {
             const target = order || this.detailsOrder || this.activeOrder;
             const norm = this.normalizeStatus(statusKey || target?.status || '');
             if (this.isStorePickup(target)) {
-                if (norm === 'shipped') return 'Ready for In-Shop Pickup';
-                if (norm === 'delivered') return 'Picked Up / Claimed';
+                if (norm === 'pending') return 'Pending Acceptance';
+                if (norm === 'to ship') return 'Preparing in Workshop';
+                if (norm === 'shipped') return 'Ready for Pickup';
+                if (norm === 'delivered') return 'Claimed at Workshop';
+                if (norm === 'completed') return 'Completed';
+                if (norm === 'cancelled') return 'Cancelled';
             }
             if (this.isSpecialDelivery(target)) {
-                if (norm === 'shipped') return 'Special Delivery Processing';
-                if (norm === 'in transit') return 'Out for Special Delivery';
+                if (norm === 'pending') return 'Pending Acceptance';
+                if (norm === 'to ship') return 'Preparing Garment';
+                if (norm === 'shipped' || norm === 'in transit') return 'Out for Special Delivery';
+                if (norm === 'delivered') return 'Delivered by Rider';
+                if (norm === 'completed') return 'Completed';
+                if (norm === 'cancelled') return 'Cancelled';
             }
             if (norm === 'pending') return 'Pending Acceptance';
             if (norm === 'to ship') return 'To Ship';
@@ -1643,9 +1747,13 @@ function sellerOrdersManager() {
                             <h3 class="font-sans text-xs sm:text-sm font-extrabold tracking-tight transition-colors"
                                 style="color: #1E1915;"
                                 x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
+                            
+                            {{-- Dynamic Status Stage Badge --}}
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
                                   :class="statusColor(order.status)"
-                                  x-text="isStorePickup(order) && normalizeStatus(order.status) === 'shipped' ? 'Ready for Pickup' : (isSpecialDelivery(order) && normalizeStatus(order.status) === 'shipped' ? 'Special Delivery Processing' : (isSpecialDelivery(order) && normalizeStatus(order.status) === 'in transit' ? 'Out for Special Delivery' : (normalizeStatus(order.status) === 'to ship' ? 'To Ship' : order.status)))"></span>
+                                  x-text="getStatusDisplayName(order, order.status)"></span>
+
+                            {{-- Fulfillment Workflow Badge --}}
                             <template x-if="isStorePickup(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
                                     <span>🏬</span>
@@ -1658,6 +1766,13 @@ function sellerOrdersManager() {
                                     <span>Special Delivery</span>
                                 </span>
                             </template>
+                            <template x-if="!isStorePickup(order) && !isSpecialDelivery(order)">
+                                <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs">
+                                    <span>📦</span>
+                                    <span x-text="order.courierName || order.shipping?.provider_name || 'Standard Courier'"></span>
+                                </span>
+                            </template>
+
                             <template x-if="hasPendingReturn(order)">
                                 <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 animate-pulse"
                                       style="background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;">
@@ -1951,7 +2066,229 @@ function sellerOrdersManager() {
                             </template>
                         </div>
 
-                        {{-- COURIER & SHIPPING CARD — hidden when Store Pickup, Special Delivery, Pending, To Ship, Cancellation Pending, or Return Request --}}
+                        {{-- 🏬 STORE PICKUP TERMINAL — Handover & Claim Code Verification --}}
+                        <div x-show="isStorePickup(detailsOrder)" x-transition class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-xs" style="background: #FDF8EE; border-color: #E8DECB;">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🏬</span>
+                                    <div>
+                                        <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915]">
+                                            Store Pickup & Workshop Handover
+                                        </div>
+                                        <div class="text-[10px] text-[#766C60]">Customer will claim order directly at your workshop/boutique.</div>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                                    Claim Code Protected
+                                </span>
+                            </div>
+
+                            {{-- Workshop Location Card --}}
+                            <div class="p-3 bg-white rounded-xl border border-[#E8DECB] space-y-1.5 text-xs">
+                                <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Pickup Location</div>
+                                <div class="font-extrabold text-[#1E1915] flex items-center gap-1.5">
+                                    <span>📍</span>
+                                    <span>Artisan Atelier / Boutique Workshop</span>
+                                </div>
+                                <div class="text-[10px] text-gray-500">
+                                    Claim Hours: Monday – Saturday, 9:00 AM – 6:00 PM
+                                </div>
+                            </div>
+
+                            {{-- Customer Contact Info & Quick Actions --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div class="p-3 bg-white rounded-xl border border-[#E8DECB]">
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Claiming Customer</div>
+                                    <div class="font-extrabold text-[#1E1915]" x-text="detailsOrder.customer?.name || 'Customer'"></div>
+                                    <div class="text-[10px] text-gray-600 mt-0.5" x-text="buyerPhone(detailsOrder) || 'No phone recorded'"></div>
+                                </div>
+                                <div class="p-3 bg-white rounded-xl border border-[#E8DECB] flex flex-col justify-center gap-1.5">
+                                    <div class="flex items-center gap-2">
+                                        <template x-if="buyerPhone(detailsOrder)">
+                                            <a :href="'tel:' + buyerPhone(detailsOrder)" class="flex-1 py-1 px-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-[10px] font-bold text-center transition-colors">
+                                                📞 Call
+                                            </a>
+                                        </template>
+                                        <button type="button" @click="if (window.openChatWithUser && detailsOrder.customer?.id) { window.openChatWithUser(detailsOrder.customer.id, detailsOrder.customer.name); } else { showToast('Connecting to artisan chat...'); }" class="flex-1 py-1 px-2 bg-[#1E1915] hover:bg-[#C49520] text-white rounded-lg text-[10px] font-bold text-center transition-colors cursor-pointer">
+                                            💬 Message
+                                        </button>
+                                    </div>
+                                    <button type="button" @click="printOrderDetails()" class="w-full py-1 px-2 border border-stone-300 hover:bg-stone-50 text-stone-700 rounded-lg text-[10px] font-bold text-center transition-colors cursor-pointer flex items-center justify-center gap-1">
+                                        <span>🖨️</span> Print Claim Slip Pass
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Server-side Claim Code Verification Box (When Ready for Pickup) --}}
+                            <template x-if="normalizeStatus(detailsOrder.status) === 'shipped'">
+                                <div class="p-4 bg-white rounded-xl border-2 border-[#C49520] space-y-3 shadow-xs">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-1.5">
+                                            <span>🔑 Verify Customer Claim Code</span>
+                                        </div>
+                                        <span class="text-[9px] font-mono font-bold text-[#C49520]">#LB-OR-XXXX</span>
+                                    </div>
+                                    <p class="text-[10px] text-stone-600">
+                                        Ask the customer for their 8-character Claim Code (displayed on their mobile receipt / pickup pass) before handing over the garments.
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text"
+                                            x-model="claimCodeInput"
+                                            @input="claimCodeError = ''"
+                                            @keyup.enter="executeVerifyClaimCode(detailsOrder)"
+                                            placeholder="Enter customer's 8-character claim code..."
+                                            class="flex-1 h-10 px-3.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-mono font-bold uppercase tracking-widest outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                                        <button type="button"
+                                            @click="executeVerifyClaimCode(detailsOrder)"
+                                            :disabled="claimCodeLoading"
+                                            class="h-10 px-4 bg-[#1E1915] hover:bg-[#C49520] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50">
+                                            <template x-if="claimCodeLoading">
+                                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                            </template>
+                                            <span x-text="claimCodeLoading ? 'Verifying...' : 'Verify & Hand Over ➔'"></span>
+                                        </button>
+                                    </div>
+                                    <template x-if="claimCodeError">
+                                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-lg text-[10px] font-bold text-red-600 flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span x-text="claimCodeError"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            {{-- Already Claimed State --}}
+                            <template x-if="normalizeStatus(detailsOrder.status) === 'delivered' || normalizeStatus(detailsOrder.status) === 'completed'">
+                                <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5">
+                                    <span class="text-xl">✅</span>
+                                    <div>
+                                        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-900">Successfully Claimed at Workshop</div>
+                                        <div class="text-[10px] text-emerald-700">The customer presented their verified claim code and received all items.</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- 🏍️ SPECIAL DELIVERY DISPATCH TERMINAL — Local Direct Dispatch --}}
+                        <div x-show="isSpecialDelivery(detailsOrder)" x-transition class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-xs" style="background: #F0F4F8; border-color: #D3E0EA;">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🏍️</span>
+                                    <div>
+                                        <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915]">
+                                            Special Delivery Dispatch Terminal
+                                        </div>
+                                        <div class="text-[10px] text-[#556B82]">Hand-to-hand local direct artisan dispatch (zero third-party courier tracking required).</div>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-300">
+                                    Artisan Rider Direct
+                                </span>
+                            </div>
+
+                            {{-- Delivery Address & Recipient Card --}}
+                            <div class="p-3.5 bg-white rounded-xl border border-[#D3E0EA] space-y-2 text-xs">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Recipient & Destination</div>
+                                        <div class="font-extrabold text-[#1E1915] mt-0.5" x-text="detailsOrder.customer?.name || 'Customer'"></div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <template x-if="buyerPhone(detailsOrder)">
+                                            <a :href="'tel:' + buyerPhone(detailsOrder)" class="py-1 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-[10px] font-bold transition-colors">
+                                                📞 Call
+                                            </a>
+                                        </template>
+                                        <button type="button" @click="if (window.openChatWithUser && detailsOrder.customer?.id) { window.openChatWithUser(detailsOrder.customer.id, detailsOrder.customer.name); } else { showToast('Connecting to artisan chat...'); }" class="py-1 px-2.5 bg-[#1E1915] hover:bg-[#C49520] text-white rounded-lg text-[10px] font-bold transition-colors cursor-pointer">
+                                            💬 Message
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-[11px] text-gray-700 leading-relaxed font-medium bg-stone-50 p-2.5 rounded-lg border border-stone-200">
+                                    <span class="font-bold text-stone-900">📍 Delivery Address: </span>
+                                    <span x-text="formatAddress(detailsOrder) || 'Local Delivery Address'"></span>
+                                </div>
+                                <div class="text-[10px] text-gray-500 flex items-center justify-between">
+                                    <span>Phone: <strong class="text-gray-800" x-text="buyerPhone(detailsOrder) || 'None'"></strong></span>
+                                    <span class="text-blue-800 font-bold">Special Delivery Zone</span>
+                                </div>
+                            </div>
+
+                            {{-- Local Rider Dispatch Details (when preparing / dispatching) --}}
+                            <template x-if="normalizeStatus(detailsOrder.status) === 'to ship' || normalizeStatus(detailsOrder.status) === 'shipped' || normalizeStatus(detailsOrder.status) === 'in transit'">
+                                <div class="p-3.5 bg-white rounded-xl border border-[#D3E0EA] space-y-3">
+                                    <div class="text-[9px] font-black uppercase tracking-widest text-[#1E1915]">
+                                        Local Rider / Dispatch Notes (Optional)
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Rider / Handler Name</label>
+                                            <input type="text" x-model="riderNameInput" placeholder="e.g. Kuya John (Atelier Driver)"
+                                                class="w-full h-8 px-2.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium outline-none focus:border-blue-600 focus:bg-white transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Rider Contact Number</label>
+                                            <input type="tel" x-model="riderPhoneInput" placeholder="e.g. 0917-XXX-XXXX"
+                                                class="w-full h-8 px-2.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium outline-none focus:border-blue-600 focus:bg-white transition-all">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Dispatch Instructions / Notes</label>
+                                        <input type="text" x-model="riderNotesInput" placeholder="e.g. Handle with care, fragile piña embroidery, gate pass required"
+                                            class="w-full h-8 px-2.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium outline-none focus:border-blue-600 focus:bg-white transition-all">
+                                    </div>
+
+                                    {{-- Quick Action when in To Ship --}}
+                                    <template x-if="normalizeStatus(detailsOrder.status) === 'to ship'">
+                                        <div class="pt-1">
+                                            <button type="button"
+                                                @click="executeDispatchSpecialDelivery(detailsOrder)"
+                                                :disabled="dispatchRiderLoading"
+                                                class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                                                <template x-if="dispatchRiderLoading">
+                                                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                                </template>
+                                                <span x-text="dispatchRiderLoading ? 'Dispatching Rider...' : 'Dispatch Local Rider (Out for Delivery) ➔'"></span>
+                                            </button>
+                                            <template x-if="dispatchRiderError">
+                                                <p class="text-[10px] font-bold text-red-600 mt-1" x-text="dispatchRiderError"></p>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            {{-- Out for Delivery State: Confirm Handover --}}
+                            <template x-if="normalizeStatus(detailsOrder.status) === 'shipped' || normalizeStatus(detailsOrder.status) === 'in transit'">
+                                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="text-base animate-bounce">🏍️</span>
+                                        <div>
+                                            <div class="text-[10px] font-black uppercase text-amber-900">Rider is Out for Special Delivery</div>
+                                            <div class="text-[10px] text-amber-700">Once hand-off is completed at customer's address, confirm delivery.</div>
+                                        </div>
+                                    </div>
+                                    <button type="button"
+                                        @click="confirmMarkAsDelivered(detailsOrder)"
+                                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg transition-all shadow-xs shrink-0 cursor-pointer">
+                                        Confirm Handed Over ✓
+                                    </button>
+                                </div>
+                            </template>
+
+                            {{-- Delivered State --}}
+                            <template x-if="normalizeStatus(detailsOrder.status) === 'delivered' || normalizeStatus(detailsOrder.status) === 'completed'">
+                                <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5">
+                                    <span class="text-xl">✅</span>
+                                    <div>
+                                        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-900">Successfully Delivered by Artisan Rider</div>
+                                        <div class="text-[10px] text-emerald-700">Order was handed over directly to the customer at their delivery address.</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- 📦 STANDARD COURIER CARD — only for standard 3rd-party logistics --}}
                         <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
@@ -2327,23 +2664,30 @@ function sellerOrdersManager() {
                         </div>
                     </template>
 
-                    {{-- Button for Shipped status: For Store Pickup (Mark as Picked Up / Claimed) vs Special Delivery (Out for Special Delivery) vs Courier (Mark In Transit) --}}
+                    {{-- Button for Shipped status: For Store Pickup (Verify Claim Code & Hand Over) vs Special Delivery (Out for Special Delivery) vs Courier (Mark In Transit) --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
                         <div class="flex-1 flex justify-end">
                             <template x-if="isStorePickup(detailsOrder)">
-                                <button type="button"
-                                    @click="confirmMarkAsDelivered(detailsOrder)"
-                                    :disabled="statusUpdating"
-                                    style="background-color: #059669; color: #ffffff;"
-                                    class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                                    <template x-if="statusUpdating">
-                                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                                    </template>
-                                    <template x-if="!statusUpdating">
-                                        <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    </template>
-                                    <span x-text="statusUpdating ? 'Updating...' : 'Mark as Picked Up / Claimed ➔'"></span>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button"
+                                        @click="printOrderDetails()"
+                                        class="px-4 py-2.5 sm:py-3 border border-stone-300 hover:bg-stone-100 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer flex items-center gap-1">
+                                        <span>🖨️</span> Print Pass
+                                    </button>
+                                    <button type="button"
+                                        @click="claimCodeInput ? executeVerifyClaimCode(detailsOrder) : showToast('Please enter the customer\'s 8-character claim code in the box above.')"
+                                        :disabled="claimCodeLoading"
+                                        style="background-color: #C49520; color: #ffffff;"
+                                        class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-[#C49520] hover:bg-[#B38519] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                        <template x-if="claimCodeLoading">
+                                            <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                        </template>
+                                        <template x-if="!claimCodeLoading">
+                                            <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        </template>
+                                        <span x-text="claimCodeLoading ? 'Verifying Code...' : 'Verify Claim Code & Hand Over ➔'"></span>
+                                    </button>
+                                </div>
                             </template>
                             <template x-if="!isStorePickup(detailsOrder) && isSpecialDelivery(detailsOrder)">
                                 <button type="button"
@@ -2400,7 +2744,7 @@ function sellerOrdersManager() {
                                 <template x-if="!statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
-                                <span x-text="statusUpdating ? 'Mark as Delivered ➔' : 'Mark as Delivered ➔'"></span>
+                                <span x-text="statusUpdating ? 'Marking Delivered...' : (isSpecialDelivery(detailsOrder) ? 'Confirm Handed Over to Customer ➔' : 'Mark as Delivered ➔')"></span>
                             </button>
                         </div>
                     </template>
@@ -2408,7 +2752,15 @@ function sellerOrdersManager() {
                     {{-- Status notice for Delivered status --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'delivered'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
-                            <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+                            <template x-if="isStorePickup(detailsOrder)">
+                                <span>🏬 Claimed at Workshop — Order Fulfilled</span>
+                            </template>
+                            <template x-if="isSpecialDelivery(detailsOrder)">
+                                <span>🏍️ Delivered by Artisan Rider — Completed</span>
+                            </template>
+                            <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
+                                <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+                            </template>
                         </div>
                     </template>
 

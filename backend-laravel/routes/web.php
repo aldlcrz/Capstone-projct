@@ -157,7 +157,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt');
     Route::get('/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt.download');
     Route::get('/seller/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt');
-    Route::get('/seller/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt.download');
+    Route::post('/seller/api/orders/{id}/verify-claim-code', [OrderController::class, 'verifyClaimCode'])->name('orders.verify-claim-code');
+    Route::post('/seller/api/orders/{id}/dispatch-special-delivery', [OrderController::class, 'dispatchSpecialDelivery'])->name('orders.dispatch-special-delivery');
     Route::get('/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('orders.payment-proof');
     Route::get('/seller/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('seller.orders.payment-proof');
 

@@ -491,6 +491,138 @@ class OrderController extends Controller
     }
 
     /**
+     * Verify customer claim code and mark Store Pickup order as Claimed/Delivered.
+     */
+    public function verifyClaimCode(Request $request, string $id)
+    {
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $order = Order::with(['seller', 'customer', 'shipping', 'items.product', 'statusHistories'])->findOrFail($id);
+
+        if ($user->role !== 'admin' && $order->sellerId !== $user->id) {
+            return response()->json(['message' => 'Unauthorized action on this order.'], 403);
+        }
+
+        if (!$order->isStorePickup()) {
+            return response()->json(['message' => 'Claim code verification is only applicable for Store Pickup orders.'], 400);
+        }
+
+        $statusLower = strtolower(trim($order->status ?? ''));
+        if (!in_array($statusLower, ['shipped', 'ready for pickup', 'ready_for_pickup'], true)) {
+            return response()->json(['message' => 'Order must be in "Ready for Pickup" status before verifying the claim code.'], 400);
+        }
+
+        $enteredCode = strtoupper(trim($request->input('claimCode', '')));
+        $cleanEntered = str_replace(['#', 'LB-OR-', 'LB-', ' '], '', $enteredCode);
+        $expectedSuffix = strtoupper(substr($order->id, -8));
+        $fullExpectedCode = 'LB-OR-' . $expectedSuffix;
+
+        if (empty($cleanEntered) || ($cleanEntered !== $expectedSuffix && $enteredCode !== $fullExpectedCode && $enteredCode !== '#' . $fullExpectedCode && $enteredCode !== $order->id)) {
+            return response()->json(['message' => 'Invalid claim code. Please ask the customer for their official #LB-OR-' . $expectedSuffix . ' pickup code.'], 422);
+        }
+
+        // Mark as Delivered (Claimed)
+        $previousStatus = $order->status;
+        $order->status = 'Delivered';
+        if (strcasecmp($order->paymentMethod ?? '', 'COD') === 0 || strcasecmp($order->paymentMethod ?? '', 'Pay in Shop') === 0 || strcasecmp($order->paymentMethod ?? '', 'Pay on Claim') === 0) {
+            $order->paymentStatus = 'Paid';
+        }
+        $order->save();
+
+        if ($order->shipping) {
+            $order->shipping->update([
+                'shipping_status' => 'Delivered',
+                'fulfillment_provider_name' => 'Store Pickup',
+            ]);
+        }
+
+        OrderStatusHistory::create([
+            'orderId' => $order->id,
+            'previousStatus' => $previousStatus,
+            'newStatus' => 'Delivered',
+            'updatedBy' => $user->id,
+            'userRole' => $user->role,
+            'notes' => 'Customer claim code verified (#LB-OR-' . $expectedSuffix . '). Order handed over at workshop.',
+        ]);
+
+        $statusMsg = 'Your order has been claimed and picked up at our Lumban workshop! Please inspect your item and rate your purchase.';
+        $this->sendNotification($order->customerId, 'Order Picked Up', $statusMsg, 'order', '/orders/' . $order->id, 'customer');
+
+        return response()->json([
+            'success' => true,
+            'message' => '✓ Claim code verified successfully! Order marked as Claimed.',
+            'order' => $order->fresh(['customer', 'seller', 'items.product', 'statusHistories', 'shipping']),
+        ]);
+    }
+
+    /**
+     * Dispatch local artisan rider for Special Delivery order.
+     */
+    public function dispatchSpecialDelivery(Request $request, string $id)
+    {
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $order = Order::with(['seller', 'customer', 'shipping', 'items.product', 'statusHistories'])->findOrFail($id);
+
+        if ($user->role !== 'admin' && $order->sellerId !== $user->id) {
+            return response()->json(['message' => 'Unauthorized action on this order.'], 403);
+        }
+
+        if (!$order->isSpecialDelivery()) {
+            return response()->json(['message' => 'Rider dispatch is only applicable for Special Delivery orders.'], 400);
+        }
+
+        $riderName = trim($request->input('riderName', ''));
+        $riderPhone = trim($request->input('riderPhone', ''));
+        $riderNotes = trim($request->input('riderNotes', ''));
+
+        $noteParts = array_filter([
+            $riderName ? "Rider: {$riderName}" : "Artisan Rider",
+            $riderPhone ? "Contact: {$riderPhone}" : null,
+            $riderNotes ?: null,
+        ]);
+        $combinedNotes = implode(' · ', $noteParts);
+
+        $previousStatus = $order->status;
+        $order->status = 'In Transit';
+        $order->courierName = 'Special Delivery (Local Artisan Rider)';
+        $order->trackingNumber = null;
+        $order->trackingLink = null;
+        $order->save();
+
+        if ($order->shipping) {
+            $order->shipping->update([
+                'shipping_status' => 'In Transit',
+                'fulfillment_provider_name' => 'Special Delivery (Local Artisan Rider)',
+            ]);
+        }
+
+        OrderStatusHistory::create([
+            'orderId' => $order->id,
+            'previousStatus' => $previousStatus,
+            'newStatus' => 'In Transit',
+            'updatedBy' => $user->id,
+            'userRole' => $user->role,
+            'notes' => 'Dispatched via local artisan rider. ' . $combinedNotes,
+        ]);
+
+        $statusMsg = 'Your order is out for special delivery via our dedicated local artisan rider.' . ($riderName ? " (Rider: {$riderName})" : '');
+        $this->sendNotification($order->customerId, 'Out for Special Delivery', $statusMsg, 'order', '/orders/' . $order->id, 'customer');
+
+        return response()->json([
+            'success' => true,
+            'message' => '✓ Rider dispatched! Order is now Out for Special Delivery.',
+            'order' => $order->fresh(['customer', 'seller', 'items.product', 'statusHistories', 'shipping']),
+        ]);
+    }
+
+    /**
      * Confirm order received from the customer-facing Blade form (PATCH).
      */
     public function confirmReceived(string $id)
