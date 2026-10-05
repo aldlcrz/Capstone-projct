@@ -736,7 +736,7 @@ body.chat-open {
                 <template x-for="(msg, idx) in aiMessages" :key="idx">
                     <div class="w-full min-w-0 flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
                         <!-- Message Bubble -->
-                        <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed wrap-break-word break-words overflow-hidden"
+                        <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words overflow-hidden"
                              :class="msg.role === 'user' 
                                  ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                  : 'bg-white text-gray-800 rounded-tl-none border border-[#E5DDD5] shadow-xs prose prose-xs'"
@@ -879,7 +879,7 @@ body.chat-open {
                 <div x-ref="artisanMsgBox" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-4 space-y-3 bg-[#FAF7F2]/50 lumbarong-chat-scroll-area min-w-0">
                     <template x-for="(msg, mIdx) in (Array.isArray(messages) ? messages : [])" :key="msg.id || mIdx">
                         <div class="w-full min-w-0 flex flex-col" :class="String(msg.senderId) === String(currentUserId) ? 'items-end' : 'items-start'">
-                            <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed wrap-break-word break-words overflow-hidden"
+                            <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words overflow-hidden"
                                  :class="String(msg.senderId) === String(currentUserId) 
                                      ? 'bg-[#3D2B1F] text-white rounded-tr-none shadow-sm' 
                                      : 'bg-white text-gray-900 rounded-tl-none border border-gray-200 shadow-xs'"

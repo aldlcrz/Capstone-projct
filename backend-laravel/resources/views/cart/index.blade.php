@@ -366,7 +366,7 @@
             {{-- ===== Mobile Sticky Bottom Checkout Bar (Positioned above Mobile Nav) ===== --}}
             <div x-show="items.length > 0"
                  x-cloak
-                 class="lg:hidden fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[95] bg-[#FDFBF7]/95 backdrop-blur-md border-t border-[#EAE2D2] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] px-4 py-3"
+                 class="lg:hidden fixed bottom-18 sm:bottom-19 left-0 right-0 z-95 bg-[#FDFBF7]/95 backdrop-blur-md border-t border-[#EAE2D2] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] px-4 py-3"
                  x-data="{ showMobileBreakdown: false }">
 
                 {{-- Price breakdown popup --}}
