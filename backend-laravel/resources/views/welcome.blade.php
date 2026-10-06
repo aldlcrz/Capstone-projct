@@ -191,6 +191,8 @@
                     ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'img' => '/uploads/categories/women_terno.png'],
                     ['name' => 'Boys\' Barong', 'cat' => 'Boys\' Barong', 'img' => '/uploads/categories/kids_boys.png'],
                     ['name' => 'Accessories', 'cat' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
+                    ['name' => 'Lady Barong', 'cat' => 'Lady Barong', 'img' => '/uploads/categories/women_lady_barong.png'],
+                    ['name' => 'Girls\' Filipiniana', 'cat' => 'Girls\' Filipiniana', 'img' => '/uploads/categories/kids_girls.png'],
                 ];
 
                 $allCatItems = [
