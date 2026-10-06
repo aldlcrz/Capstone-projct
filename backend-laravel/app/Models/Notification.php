@@ -68,6 +68,9 @@ class Notification extends Model
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
+            if (empty($model->attributes['userId']) && !empty($model->attributes['user_id'])) {
+                $model->attributes['userId'] = $model->attributes['user_id'];
+            }
         });
     }
 
@@ -99,7 +102,7 @@ class Notification extends Model
     public function setUserIdAttribute($value)
     {
         if ($value !== null) {
-            $this->attributes['userId'] = $value;
+            $this->attributes['userId'] = is_object($value) ? ($value->id ?? (string)$value) : (string)$value;
         }
     }
 
@@ -121,17 +124,26 @@ class Notification extends Model
     /**
      * Send a notification to a specific user.
      */
-    public static function send(string $userId, string $title, string $message, string $type = 'system', ?string $link = null, string $targetRole = 'customer')
+    public static function send($userId, string $title, string $message, string $type = 'system', ?string $link = null, string $targetRole = 'customer')
     {
+        $userIdStr = is_object($userId) ? ($userId->id ?? null) : $userId;
+        if (empty($userIdStr)) {
+            \Illuminate\Support\Facades\Log::warning('Notification::send skipped: empty userId', [
+                'title' => $title,
+                'type' => $type,
+            ]);
+            return null;
+        }
+
         try {
             return self::create([
-                'userId' => $userId,
-                'title' => $title,
-                'message' => $message,
-                'type' => $type,
-                'link' => $link,
+                'userId'     => (string) $userIdStr,
+                'title'      => $title,
+                'message'    => $message,
+                'type'       => $type,
+                'link'       => $link,
                 'targetRole' => $targetRole,
-                'isRead' => false
+                'isRead'     => false
             ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Notification send error: ' . $e->getMessage());

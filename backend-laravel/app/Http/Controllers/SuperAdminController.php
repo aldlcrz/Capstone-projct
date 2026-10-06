@@ -800,6 +800,30 @@ class SuperAdminController extends Controller
         return redirect()->back()->with('success', "User '{$user->name}' status updated to {$user->status}.");
     }
 
+    public function toggleShopStatus(string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status ?? 'active';
+        $newStatus = ($prevStatus === 'active') ? 'blocked' : 'active';
+        $seller->status = $newStatus;
+        $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => $newStatus,
+            'reason'          => "Shop status toggled to {$newStatus} by Super Admin",
+        ]);
+
+        return redirect()->back()->with('success', "Artisan shop '{$seller->shopName}' status updated to {$newStatus}.");
+    }
+
+    public function deleteShop(Request $request, string $id)
+    {
+        return $this->deleteSeller($request, $id);
+    }
+
     public function deleteUser(string $id)
     {
         $user = User::findOrFail($id);
@@ -1078,6 +1102,21 @@ class SuperAdminController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error clearing cache: ' . $e->getMessage());
         }
+    }
+
+    public function clearSystemCache()
+    {
+        return $this->clearCache();
+    }
+
+    public function systemHealth()
+    {
+        return $this->platform();
+    }
+
+    public function orders(Request $request)
+    {
+        return redirect()->route('superadmin.dashboard')->with('info', 'Orders are monitored in real-time on the Super Admin Dashboard and Audit Logs.');
     }
 
     // ─── Audit Logs ───────────────────────────────────────────────────────────

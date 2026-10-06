@@ -141,11 +141,11 @@ class WishlistService
 
             // 2. In-App Notification
             $sizeBadge = $targetSize ? " (Size {$targetSize})" : "";
-            $targetUserId = $user->id ?? $wishlist->user_id;
-            if ($targetUserId) {
+            $targetUserId = $user->id ?? ($wishlist->user_id ?? ($wishlist->userId ?? null));
+            if (!empty($targetUserId)) {
                 try {
                     Notification::send(
-                        $targetUserId,
+                        (string) $targetUserId,
                         '🎉 Wishlist Item Back in Stock',
                         "\"{$product->name}\"{$sizeBadge} is back in stock and has been added to your shopping cart!",
                         'wishlist_restocked',

@@ -441,6 +441,12 @@ class WebAuthController extends Controller
             }
         }
 
+        // Delete any stale unverified, pending, awaiting verification, or soft-deleted seller record with this email so it doesn't block re-registering
+        $staleSeller = User::withTrashed()->where('email', $email)->first();
+        if ($staleSeller && (!$staleSeller->isVerified || in_array($staleSeller->status, ['pending', 'expired', 'awaiting_email_verification']) || $staleSeller->trashed())) {
+            $staleSeller->forceDelete();
+        }
+
         $validator = Validator::make($request->all(), [
             'name'                 => 'required|string|max:255',
             'email'                => [
@@ -491,18 +497,14 @@ class WebAuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $email = strtolower(trim($request->email));
-
-        $staleSeller = User::withTrashed()->where('email', $email)->first();
-        if ($staleSeller && (!$staleSeller->isVerified || $staleSeller->status === 'expired' || $staleSeller->status === 'awaiting_email_verification' || $staleSeller->trashed())) {
-            $staleSeller->forceDelete();
-        }
         $googleSignup = session('google_seller_signup');
         $googleId = null;
         $profilePhoto = null;
+        $isGoogleVerified = false;
         if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
             $googleId = $googleSignup['googleId'] ?? null;
             $profilePhoto = $googleSignup['picture'] ?? null;
+            $isGoogleVerified = true;
         }
 
         $data = [
@@ -514,32 +516,35 @@ class WebAuthController extends Controller
             'shopName'                => trim($request->shopName),
             'shopAddress'             => null,
             'role'                    => 'seller',
-            'status'                  => 'awaiting_email_verification',
-            'isVerified'              => false, // Requires Gmail verification & admin approval
-            'email_verified_at'       => null,
-            'registration_expires_at' => now()->addHours(2),
+            'status'                  => $isGoogleVerified ? 'pending' : 'awaiting_email_verification',
+            'isVerified'              => false, // Requires admin approval
+            'email_verified_at'       => $isGoogleVerified ? now() : null,
+            'registration_expires_at' => $isGoogleVerified ? null : now()->addHours(2),
             'googleId'                => $googleId,
             'profilePhoto'            => $profilePhoto,
         ];
 
+        $uploadDir = public_path('uploads/requirements');
+        \Illuminate\Support\Facades\File::ensureDirectoryExists($uploadDir);
+
         if ($request->hasFile('residencyCertificate')) {
             $file = $request->file('residencyCertificate');
             $filename = time() . '_residency_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $path = $file->move($uploadDir, $filename);
             $data['residencyCertificate'] = '/uploads/requirements/' . basename($path);
         }
 
         if ($request->hasFile('birDocument')) {
             $file = $request->file('birDocument');
             $filename = time() . '_bir_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $path = $file->move($uploadDir, $filename);
             $data['birDocument'] = '/uploads/requirements/' . basename($path);
         }
 
         if ($request->hasFile('businessPermit')) {
             $file = $request->file('businessPermit');
             $filename = time() . '_permit_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $path = $file->move(public_path('uploads/requirements'), $filename);
+            $path = $file->move($uploadDir, $filename);
             $data['businessPermit'] = '/uploads/requirements/' . basename($path);
         }
 
@@ -548,14 +553,30 @@ class WebAuthController extends Controller
         $user->save();
         session()->forget('google_seller_signup');
 
+        if ($isGoogleVerified) {
+            \App\Models\Notification::sendToAdmins(
+                'New Seller Application',
+                "Artisan {$user->name} has submitted a verification application for shop '{$user->shopName}'.",
+                'system',
+                '/admin/sellers'
+            );
+
+            Auth::login($user);
+            return redirect()->route('seller.verification-pending')->with('success', 'Application submitted! Your Google account is verified. Your artisan workshop documents are now under review by platform administrators.');
+        }
+
         // Generate verification code and send email
         $verification = EmailNotificationService::createVerificationCode($email, 'registration');
         $mailable = new \App\Mail\VerificationCodeMail($user->name, $verification->code);
-        EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
+        $sent = EmailNotificationService::sendNotification($email, $mailable, 'email_verification', $user->id, 'User', $user->id);
 
         session(['verify_email' => $email]);
 
-        return redirect()->route('verify.email')->with('success', 'Application submitted! Please verify your Gmail address to proceed.');
+        if (!$sent) {
+            return redirect()->route('verify.email')->with('warning', 'Application received! Verification email is being processed. Please check your Gmail inbox or spam folder.');
+        }
+
+        return redirect()->route('verify.email')->with('success', 'Application submitted! A 6-digit verification code has been sent to your Gmail. Please enter it below to activate your account.');
     }
 
     public function showVerifyEmail(Request $request)
