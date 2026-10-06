@@ -83,22 +83,51 @@ class CleanCustomerAccounts extends Command
                 $userId = $customer->id;
                 $userEmail = strtolower(trim($customer->email));
 
-                // Clean related addresses
-                Address::where('userId', $userId)->delete();
+                // 1. Clean related delivery addresses
+                if (\Illuminate\Support\Facades\Schema::hasTable('addresses')) {
+                    Address::where('userId', $userId)->delete();
+                }
 
-                // Clean related reviews
-                Review::where('userId', $userId)->delete();
+                // 2. Clean reviews written by this customer (uses customerId)
+                if (\Illuminate\Support\Facades\Schema::hasTable('reviews')) {
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('reviews', 'customerId')) {
+                        Review::where('customerId', $userId)->delete();
+                    } elseif (\Illuminate\Support\Facades\Schema::hasColumn('reviews', 'userId')) {
+                        Review::where('userId', $userId)->delete();
+                    }
+                }
 
-                // Clean email verification OTPs
-                EmailVerification::where('email', $userEmail)->delete();
+                // 3. Clean email verification OTPs
+                if (\Illuminate\Support\Facades\Schema::hasTable('email_verifications')) {
+                    EmailVerification::where('email', $userEmail)->delete();
+                }
 
-                // Clean user notifications
-                Notification::where('userId', $userId)->delete();
+                // 4. Clean user notifications
+                if (\Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+                    Notification::where('userId', $userId)->delete();
+                }
 
-                // Clean customer orders if applicable
-                Order::where('userId', $userId)->delete();
+                // 5. Clean customer orders if applicable
+                if (\Illuminate\Support\Facades\Schema::hasTable('orders')) {
+                    Order::where(function($q) use ($userId) {
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'customerId')) {
+                            $q->where('customerId', $userId);
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'userId')) {
+                            $q->orWhere('userId', $userId);
+                        }
+                    })->delete();
+                }
 
-                // Permanently force delete the customer user record
+                // 6. Clean sessions and tokens if applicable
+                if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                    DB::table('sessions')->where('user_id', $userId)->delete();
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('cart_items')) {
+                    DB::table('cart_items')->where('userId', $userId)->delete();
+                }
+
+                // 7. Permanently force delete the customer user record
                 $customer->forceDelete();
                 $deletedCount++;
             }
