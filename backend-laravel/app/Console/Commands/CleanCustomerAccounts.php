@@ -57,7 +57,25 @@ class CleanCustomerAccounts extends Command
             ->get();
 
         if ($customers->isEmpty()) {
-            $this->info("No customer accounts found to delete. Only '{$keepEmail}' (or no customers) exist.");
+            $this->info("No other customer accounts found to delete.");
+            $keptUser = User::withTrashed()->where('email', $keepEmail)->first();
+            if (!$keptUser) {
+                $keptUser = new User();
+                $keptUser->forceFill([
+                    'id'                => (string) \Illuminate\Support\Str::uuid(),
+                    'name'              => 'Heritage Customer',
+                    'email'             => $keepEmail,
+                    'password'          => \Illuminate\Support\Facades\Hash::make('password123'),
+                    'role'              => 'customer',
+                    'status'            => 'active',
+                    'isVerified'        => true,
+                    'email_verified_at' => now(),
+                ]);
+                $keptUser->save();
+                $this->info(" Created active customer account for '{$keepEmail}' (Password: password123).");
+            } else {
+                $this->info(" Account '{$keepEmail}' already exists and is active.");
+            }
             return 0;
         }
 
@@ -132,10 +150,37 @@ class CleanCustomerAccounts extends Command
                 $deletedCount++;
             }
 
+            // 8. Ensure kept customer account exists
+            $keptUser = User::withTrashed()->where('email', $keepEmail)->first();
+            if (!$keptUser) {
+                $keptUser = new User();
+                $keptUser->forceFill([
+                    'id'                => (string) \Illuminate\Support\Str::uuid(),
+                    'name'              => 'Heritage Customer',
+                    'email'             => $keepEmail,
+                    'password'          => \Illuminate\Support\Facades\Hash::make('password123'),
+                    'role'              => 'customer',
+                    'status'            => 'active',
+                    'isVerified'        => true,
+                    'email_verified_at' => now(),
+                ]);
+                $keptUser->save();
+                $this->info(" Created active customer account for '{$keepEmail}' with default password 'password123'.");
+            } else {
+                if ($keptUser->trashed()) {
+                    $keptUser->restore();
+                }
+                $keptUser->role = 'customer';
+                $keptUser->status = 'active';
+                $keptUser->isVerified = true;
+                $keptUser->email_verified_at = $keptUser->email_verified_at ?: now();
+                $keptUser->save();
+                $this->info(" Active account confirmed for: {$keepEmail}");
+            }
+
             DB::commit();
-            $this->info("\n Successfully deleted {$deletedCount} customer account(s).");
-            $this->info("Kept account: {$keepEmail}");
-            Log::info("CleanCustomerAccounts: Deleted {$deletedCount} customers, preserved {$keepEmail}");
+            $this->info("\n Customer cleanup complete.");
+            Log::info("CleanCustomerAccounts: Deleted {$deletedCount} customers, preserved/created {$keepEmail}");
             return 0;
         } catch (\Throwable $e) {
             DB::rollBack();
