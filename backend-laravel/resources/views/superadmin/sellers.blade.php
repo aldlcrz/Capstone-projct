@@ -193,11 +193,11 @@
                         </div>
                         @if($pendingSeller->shopName)
                             <div class="mt-1">
-                                <a href="{{ route('shops.show', $pendingSeller->id) }}" target="_blank"
-                                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#FFF5F2] text-[#C0422A] border border-[#C0422A]/30 hover:bg-[#C0422A] hover:text-white transition-all duration-150 shadow-xs">
+                                <button type="button" @click="openShopPreview('{{ $pendingSeller->id }}', '{{ addslashes($pendingSeller->shopName) }}')"
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#FFF5F2] text-[#C0422A] border border-[#C0422A]/30 hover:bg-[#C0422A] hover:text-white transition-all duration-150 shadow-xs cursor-pointer">
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     View Shop
-                                </a>
+                                </button>
                             </div>
                         @endif
                     </div>
@@ -323,11 +323,11 @@
                                             </div>
                                             @if($seller->shopName)
                                                 <div class="mt-1.5">
-                                                    <a href="{{ route('shops.show', $seller->id) }}" target="_blank"
-                                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#FFF5F2] text-[#C0422A] border border-[#C0422A]/30 hover:bg-[#C0422A] hover:text-white transition-all duration-150 shadow-xs">
+                                                    <button type="button" @click="openShopPreview('{{ $seller->id }}', '{{ addslashes($seller->shopName) }}')"
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#FFF5F2] text-[#C0422A] border border-[#C0422A]/30 hover:bg-[#C0422A] hover:text-white transition-all duration-150 shadow-xs cursor-pointer">
                                                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                         View Shop
-                                                    </a>
+                                                    </button>
                                                 </div>
                                             @endif
                                             @if($normStatus === 'suspended' && $seller->violationReason)
@@ -619,6 +619,115 @@
             </div>
         </div>
     </div>
+    {{-- ═══ 3. SHOP STOREFRONT PREVIEW MODAL (Super Admin Read-Only) ═══ --}}
+    <div x-show="shopPreviewModal" class="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 md:p-6" style="z-index: 60;" x-cloak>
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-sm" @click="shopPreviewModal = false"></div>
+        <div class="relative bg-stone-50 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden z-10 border border-gray-200 flex flex-col">
+
+            {{-- Super Admin Preview Bar --}}
+            <div class="bg-[#2E2A24] text-amber-200 px-5 sm:px-8 py-2.5 flex items-center justify-between border-b border-amber-900/40 shrink-0">
+                <div class="flex items-center gap-2 text-[11px] font-bold">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span class="uppercase tracking-widest text-white">Super Admin · Storefront Preview</span>
+                    <span class="text-amber-400/80 font-normal hidden sm:inline">• View-Only Mode</span>
+                </div>
+                <button type="button" @click="shopPreviewModal = false" class="text-xs text-stone-400 hover:text-white flex items-center gap-1 font-bold transition-colors cursor-pointer">
+                    <span>Close</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Modal Body --}}
+            <div class="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 space-y-6">
+
+                {{-- Loading --}}
+                <div x-show="shopLoading" class="flex items-center justify-center py-20" x-cloak>
+                    <div class="w-8 h-8 border-4 border-[#C0422A]/30 border-t-[#C0422A] rounded-full animate-spin"></div>
+                </div>
+
+                <template x-if="!shopLoading">
+                    <div>
+                        {{-- Shop Header --}}
+                        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden mb-6">
+                            <div class="w-full md:w-72 p-5 flex flex-col justify-center gap-3 bg-[#1A1A1A] relative overflow-hidden">
+                                <div class="absolute inset-0 opacity-[0.04] bg-white"></div>
+                                <div class="relative z-10 flex gap-3 items-center">
+                                    <div class="w-14 h-14 rounded-full border-2 border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-2xl text-stone-400">
+                                        <template x-if="shopSeller && shopSeller.profilePhoto">
+                                            <img :src="shopSeller.profilePhoto.startsWith('http') ? shopSeller.profilePhoto : '/storage/' + shopSeller.profilePhoto" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" />
+                                        </template>
+                                        <template x-if="!shopSeller || !shopSeller.profilePhoto">
+                                            <span x-text="shopSeller?.shopName ? shopSeller.shopName.charAt(0).toUpperCase() : 'A'"></span>
+                                        </template>
+                                    </div>
+                                    <div class="text-white min-w-0">
+                                        <h2 class="font-serif text-base font-bold text-white leading-tight" x-text="shopSeller?.shopName || 'Artisan Workshop'"></h2>
+                                        <div class="text-white/50 text-[10px] mt-0.5" x-text="'Owner: ' + (shopSeller?.name || '—')"></div>
+                                        <div class="text-white/40 text-[10px]" x-text="shopSeller?.location || 'Lumban, Laguna'"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-1 p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div class="text-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                    <div class="text-lg font-black text-gray-900" x-text="shopSeller?.productCount ?? shopProducts.length"></div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">Products</div>
+                                </div>
+                                <div class="text-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                    <div class="text-lg font-black text-gray-900" x-text="Number(shopSeller?.rating || 0).toFixed(1)"></div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">Rating</div>
+                                </div>
+                                <div class="text-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                    <div class="text-lg font-black text-gray-900" x-text="shopSeller?.totalSold ?? '—'"></div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">Sold</div>
+                                </div>
+                                <div class="text-center p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                    <div class="text-sm font-black text-gray-900" x-text="shopSeller?.joined ?? '—'"></div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">Joined</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Products Grid --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" x-show="shopProducts.length > 0">
+                            <template x-for="product in shopProducts" :key="product.id">
+                                <div class="group flex flex-col bg-white rounded-2xl shadow-xs hover:shadow-md border border-stone-200 transition-all overflow-hidden">
+                                    <div class="relative aspect-square overflow-hidden bg-stone-50">
+                                        <img :src="product.image && !product.image.startsWith('http') ? '/storage/' + product.image : (product.image || '/uploads/products/default.jpg')" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='/uploads/products/default.jpg'" />
+                                    </div>
+                                    <div class="p-3">
+                                        <h4 class="text-xs font-bold text-gray-900 line-clamp-2 leading-tight" x-text="product.name"></h4>
+                                        <div class="mt-1.5 flex items-center justify-between">
+                                            <span class="text-xs font-black text-[#C0420A]" x-text="'₱' + parseFloat(product.price || 0).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2})"></span>
+                                            <span class="text-[9px] text-stone-400 font-bold" x-text="'⭐ ' + Number(product.rating || 0).toFixed(1)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Empty state --}}
+                        <div x-show="shopProducts.length === 0" class="rounded-2xl border-2 border-dashed border-stone-200 p-12 text-center">
+                            <svg class="w-10 h-10 mx-auto mb-2 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                            <p class="font-serif italic text-sm text-stone-400">No products listed yet.</p>
+                        </div>
+                    </div>
+                </template>
+
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="px-6 py-3.5 bg-white border-t border-stone-200 flex items-center justify-between shrink-0">
+                <div class="text-[11px] text-stone-500 font-medium flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
+                    <span>Super Admin Preview Session</span>
+                </div>
+                <button type="button" @click="shopPreviewModal = false" class="px-5 py-2 bg-stone-900 hover:bg-[#C0420A] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+                    Close Preview
+                </button>
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
@@ -630,6 +739,10 @@ function superSellerManager() {
         previewModal: false,
         previewSrc: '',
         previewTitle: '',
+        shopPreviewModal: false,
+        shopLoading: false,
+        shopSeller: {},
+        shopProducts: [],
         openReview(seller) {
             this.selectedSeller = seller;
             this.reviewModal = true;
@@ -638,6 +751,25 @@ function superSellerManager() {
             this.previewSrc = src;
             this.previewTitle = title;
             this.previewModal = true;
+        },
+        async openShopPreview(sellerId, fallbackShopName) {
+            this.shopPreviewModal = true;
+            this.shopLoading = true;
+            this.shopSeller = { id: sellerId, shopName: fallbackShopName || 'Artisan Workshop', name: '', location: 'Lumban, Laguna', isVerified: false, rating: '0.0', productCount: 0, joined: '—' };
+            this.shopProducts = [];
+            try {
+                const ts = Date.now();
+                const [sRes, pRes] = await Promise.all([
+                    fetch(`/api/v1/user/seller/${sellerId}?t=${ts}`, { cache: 'no-store' }),
+                    fetch(`/api/v1/products?seller=${sellerId}&t=${ts}`, { cache: 'no-store' })
+                ]);
+                if (sRes.ok) this.shopSeller = await sRes.json();
+                if (pRes.ok) this.shopProducts = await pRes.json();
+            } catch (e) {
+                console.error('Shop preview error:', e);
+            } finally {
+                this.shopLoading = false;
+            }
         }
     };
 }
