@@ -306,7 +306,7 @@
                 }
             @endphp
 
-            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1 items-start">
+            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1 items-start justify-center">
                 @foreach($catItems as $index => $item)
                     @php
                         $isAll = $item['cat'] === '__all__';
