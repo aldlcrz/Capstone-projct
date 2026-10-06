@@ -53,5 +53,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed Shipping & Logistics
         $this->call(ShippingLogisticsSeeder::class);
+
+        // Seed LumBarong Dummy Users
+        $this->call(DummyUserSeeder::class);
     }
 }

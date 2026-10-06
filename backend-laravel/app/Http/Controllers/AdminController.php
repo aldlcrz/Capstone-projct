@@ -153,7 +153,7 @@ class AdminController extends Controller
     {
         return [
             'products'      => Product::where('status', 'pending')->count(),
-            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereVerifiedEmail()->count(),
+            'sellers'       => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->count(),
             'banners'       => \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count(),
             'reports'       => \App\Models\Report::where('status', 'Pending')->count(),
         ];
@@ -484,7 +484,7 @@ class AdminController extends Controller
         fputcsv($out, ['Average Order Value',  'PHP ' . number_format($aov, 2)]);
         fputcsv($out, ['Total Customers',      User::where('role', 'customer')->count()]);
         fputcsv($out, ['Verified Sellers',     User::where('role', 'seller')->where('isVerified', true)->count()]);
-        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereVerifiedEmail()->count()]);
+        fputcsv($out, ['Pending Sellers',      User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->count()]);
         fputcsv($out, ['Total Products',       Product::count()]);
         fputcsv($out, ['Approved Products',    Product::where('status', 'approved')->count()]);
         fputcsv($out, ['Pending Products',     Product::where('status', 'pending')->count()]);
@@ -639,7 +639,7 @@ class AdminController extends Controller
             $query->where('status', $request->status);
         }
 
-        $users = $query->orderBy('createdAt', 'desc')->paginate(20);
+        $users = $query->withCount('customerOrders')->orderBy('createdAt', 'desc')->paginate(20);
         $counts = [
             'all'     => User::where('role', 'customer')->count(),
             'active'  => User::where('role', 'customer')->where('status', 'active')->count(),
@@ -811,8 +811,7 @@ class AdminController extends Controller
 
         if ($filter === 'pending') {
             $query->where('isVerified', false)
-                  ->where('status', 'pending')
-                  ->whereVerifiedEmail();
+                  ->where('status', 'pending');
         } elseif ($filter === 'rejected') {
             $query->where('status', 'rejected');
         } elseif ($filter === 'suspended') {
@@ -832,12 +831,11 @@ class AdminController extends Controller
         $pendingSellers = User::where('role', 'seller')
             ->where('isVerified', false)
             ->where('status', 'pending')
-            ->whereVerifiedEmail()
             ->get();
         $counts = [
             'all'       => User::where('role', 'seller')->whereNotIn('status', ['awaiting_email_verification', 'expired'])->count(),
             'verified'  => User::where('role', 'seller')->where('isVerified', true)->where('status', 'active')->count(),
-            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->whereVerifiedEmail()->count(),
+            'pending'   => User::where('role', 'seller')->where('isVerified', false)->where('status', 'pending')->count(),
             'suspended' => User::where('role', 'seller')->whereIn('status', ['blocked', 'suspended'])->count(),
             'rejected'  => User::where('role', 'seller')->where('status', 'rejected')->count(),
         ];

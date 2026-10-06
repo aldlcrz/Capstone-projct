@@ -176,6 +176,14 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'sellerId');
     }
 
+    /**
+     * Get orders placed by this user as a customer.
+     */
+    public function customerOrders()
+    {
+        return $this->hasMany(Order::class, 'customerId');
+    }
+
     public function addresses()
     {
         return $this->hasMany(Address::class, 'userId')->orderByDesc('isDefault');

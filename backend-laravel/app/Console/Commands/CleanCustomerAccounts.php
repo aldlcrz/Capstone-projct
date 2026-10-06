@@ -179,6 +179,7 @@ class CleanCustomerAccounts extends Command
             }
 
             DB::commit();
+            $this->info(" Successfully deleted {$deletedCount} customer account(s).");
             $this->info("\n Customer cleanup complete.");
             Log::info("CleanCustomerAccounts: Deleted {$deletedCount} customers, preserved/created {$keepEmail}");
             return 0;

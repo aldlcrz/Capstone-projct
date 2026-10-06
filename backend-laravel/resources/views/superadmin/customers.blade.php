@@ -141,16 +141,16 @@
                 <table class="w-full text-left min-w-160">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
-                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[42%]">Customer Details</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden sm:table-cell">Orders Placed</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden md:table-cell">Registered</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] text-right">Status</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[50%]">Customer Details</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[26%] hidden sm:table-cell">Orders Placed</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[24%] text-right">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($customers as $user)
                             @php
                                 $isBanned = in_array($user->status, ['blocked', 'banned']);
+                                $orderCount = $user->customer_orders_count ?? $user->orders_count ?? 0;
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
                                 {{-- User identity --}}
@@ -169,6 +169,9 @@
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $user->name }}</div>
                                             <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">{{ $user->email }}</div>
+                                            <div class="text-[10px] text-gray-500 font-semibold sm:hidden mt-0.5">
+                                                {{ $orderCount }} {{ $orderCount === 1 ? 'order' : 'orders' }}
+                                            </div>
                                             @if($isBanned && $user->violationReason)
                                                 <div class="text-[9px] text-red-600 font-semibold truncate max-w-xs mt-1" title="{{ $user->violationReason }}">
                                                     Reason: {{ $user->violationReason }}
@@ -181,13 +184,8 @@
                                 {{-- Orders Placed --}}
                                 <td class="px-4 py-4 hidden sm:table-cell">
                                     <div class="text-[11px] text-gray-600 font-medium">
-                                        <strong class="text-gray-900 font-bold">{{ $user->orders_count ?? 0 }}</strong> {{ ($user->orders_count ?? 0) === 1 ? 'order' : 'orders' }}
+                                        <strong class="text-gray-900 font-bold">{{ $orderCount }}</strong> {{ $orderCount === 1 ? 'order' : 'orders' }}
                                     </div>
-                                </td>
-
-                                {{-- Registered Date --}}
-                                <td class="px-4 py-4 hidden md:table-cell">
-                                    <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $user->createdAt ? $user->createdAt->format('M d, Y') : '—' }}</span>
                                 </td>
 
                                 {{-- Status badge --}}
@@ -207,7 +205,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-5 py-12 text-center text-gray-400">
+                                <td colspan="3" class="px-5 py-12 text-center text-gray-400">
                                     <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
                                         <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                     </div>
@@ -238,7 +236,7 @@
         ['selector' => '#tour-superadmin-users-header',  'title' => '👥 Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers and monitor customer purchasing activity.'],
         ['selector' => '#tour-superadmin-users-search',  'title' => '🔍 Customer Search',              'description' => 'Instantly lookup customer accounts by name or registered email address.'],
         ['selector' => '#tour-superadmin-users-stats',   'title' => '📊 Account Status Filters',        'description' => 'Filter between Total registered buyers, Active accounts, and Banned/Blocked users.'],
-        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, registration dates, and live access statuses.']
+        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, and live access statuses.']
     ]"
 />
 

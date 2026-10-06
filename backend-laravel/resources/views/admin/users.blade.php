@@ -163,7 +163,7 @@
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
                             <th class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[38%]">Customer</th>
-                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] hidden lg:table-cell">Joined</th>
+                            <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] hidden lg:table-cell">Orders</th>
                             <th class="px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%]">Status</th>
                             <th id="tour-admin-users-actions" class="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] text-right">Actions</th>
                         </tr>
@@ -177,6 +177,7 @@
                                     'frozen'  => ['dot' => 'bg-amber-500', 'pill' => 'bg-amber-50 text-amber-700 border border-amber-200/60',  'ring' => 'ring-amber-200/70'],
                                 ];
                                 $sc = $statusConfig[$user->status] ?? ['dot' => 'bg-gray-400', 'pill' => 'bg-gray-50 text-gray-600 border border-gray-200/60', 'ring' => 'ring-gray-200'];
+                                $orderCount = $user->customer_orders_count ?? $user->orders_count ?? 0;
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors group">
                                 {{-- Customer Identity --}}
@@ -195,12 +196,15 @@
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $user->name }}</div>
                                             <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">{{ $user->email }}</div>
+                                            <div class="text-[10px] text-gray-500 font-semibold lg:hidden mt-0.5">
+                                                {{ $orderCount }} {{ $orderCount === 1 ? 'order' : 'orders' }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
-                                {{-- Joined Date --}}
+                                {{-- Orders Placed --}}
                                 <td class="px-4 py-3.5 hidden lg:table-cell">
-                                    <span class="text-[11px] text-gray-500 font-medium whitespace-nowrap">{{ $user->createdAt ? $user->createdAt->format('M d, Y') : 'N/A' }}</span>
+                                    <span class="text-[11px] text-gray-700 font-bold whitespace-nowrap">{{ $orderCount }} {{ $orderCount === 1 ? 'order' : 'orders' }}</span>
                                 </td>
                                 {{-- Status --}}
                                 <td class="px-4 py-3.5">
@@ -376,7 +380,7 @@
         ['selector' => '#tour-admin-users-header',  'title' => 'Customer Management',      'description' => 'Oversee all registered marketplace buyers, monitor registration history, and handle account privileges.'],
         ['selector' => '#tour-admin-users-search',  'title' => 'Customer Search',           'description' => 'Quickly lookup customers across the entire platform by typing their full name or registered email address.'],
         ['selector' => '#tour-admin-users-stats',   'title' => 'Quick Status Filters',      'description' => 'Segment and filter customer records instantly between Total, Active buyers, and Blocked accounts.'],
-        ['selector' => '#tour-admin-users-table',   'title' => 'Customer Directory Table',  'description' => 'View profile avatars, names, contact emails, join dates, and real-time account status badges.'],
+        ['selector' => '#tour-admin-users-table',   'title' => 'Customer Directory Table',  'description' => 'View profile avatars, names, contact emails, order counts, and real-time account status badges.'],
         ['selector' => '#tour-admin-users-actions', 'title' => 'Moderation Controls',        'description' => 'Manage account access: suspend or unban users with audit notes, or safely purge duplicate/spam records.']
     ]"
 />
