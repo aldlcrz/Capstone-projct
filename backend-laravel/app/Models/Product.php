@@ -115,6 +115,7 @@ class Product extends Model
             'variations'              => 'array',
             'has_variants'            => 'boolean',
             'is_on_sale'              => 'boolean',
+            'sale_starts_at'          => 'datetime',
             'sale_ends_at'            => 'datetime',
             'is_gcash_available'      => 'boolean',
             'is_maya_available'       => 'boolean',
@@ -200,11 +201,17 @@ class Product extends Model
         if (!$rawOnSale || (float)($this->discount_percentage ?? 0) <= 0) {
             return false;
         }
-        if (!empty($this->sale_starts_at) && $this->sale_starts_at->isFuture()) {
-            return false;
+        if (!empty($this->sale_starts_at)) {
+            $startsAt = $this->sale_starts_at instanceof \Carbon\CarbonInterface ? $this->sale_starts_at : \Carbon\Carbon::parse($this->sale_starts_at);
+            if ($startsAt->isFuture()) {
+                return false;
+            }
         }
-        if ($this->sale_ends_at && ($this->sale_ends_at->isPast() || $this->sale_ends_at->lte(now()))) {
-            return false;
+        if (!empty($this->sale_ends_at)) {
+            $endsAt = $this->sale_ends_at instanceof \Carbon\CarbonInterface ? $this->sale_ends_at : \Carbon\Carbon::parse($this->sale_ends_at);
+            if ($endsAt->isPast() || $endsAt->lte(now())) {
+                return false;
+            }
         }
         return true;
     }

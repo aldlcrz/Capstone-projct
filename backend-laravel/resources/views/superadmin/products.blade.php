@@ -205,7 +205,7 @@
                                 <!-- Category -->
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">
-                                        {{ $product->category->name ?? 'Uncategorized' }}
+                                        {{ $product->category?->name ?? 'Uncategorized' }}
                                     </span>
                                 </td>
 
@@ -447,10 +447,6 @@
             </div>
 
         </div>
-    </div>
-
-</div>
-@endsection
     </div>
 
 </div>
