@@ -68,49 +68,6 @@
     formatPrice(price) {
         return parseFloat(price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     },
-
-    // Approval State
-    approveModal: false,
-    approveProductId: null,
-    approveProductName: '',
-    approveProductSeller: '',
-    approveProductPrice: '',
-    approveProductImage: '',
-    openApprove(product) {
-        this.approveProductId = product.id;
-        this.approveProductName = product.name;
-        this.approveProductSeller = (product.seller ? (product.seller.shopName || product.seller.name) : 'Artisan');
-        this.approveProductPrice = parseFloat(product.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
-        this.approveProductImage = product.image ? (Array.isArray(product.image) ? product.image[0] : product.image) : '/uploads/products/default.jpg';
-        this.approveModal = true;
-    },
-
-    // Rejection State
-    rejectModal: false,
-    rejectProductId: null,
-    rejectProductName: '',
-    rejectReason: '',
-    openReject(product) {
-        this.rejectProductId = product.id;
-        this.rejectProductName = product.name;
-        this.rejectReason = '';
-        this.rejectModal = true;
-    },
-
-    // Delete State
-    deleteModal: false,
-    deleteProductId: null,
-    deleteProductName: '',
-    deleteReason: '',
-    deleteConfirmChecked: false,
-    openDelete(product) {
-        this.deleteProductId = product.id;
-        this.deleteProductName = product.name;
-        this.deleteReason = '';
-        this.deleteConfirmChecked = false;
-        this.deleteModal = true;
-    },
-
     getProductImage(img) {
         if (!img) return '/uploads/products/default.jpg';
         let path = '';
@@ -136,11 +93,13 @@
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Catalog Oversight</span>
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Quality Control</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">View Only</span>
             </div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                 Product <span class="text-[#C0420A] font-light italic">Moderation</span>
             </h1>
-            <p class="text-[11px] text-gray-400 font-medium">Supreme moderation of artisan product submissions, approvals, catalog pricing, and quality standards</p>
+            <p class="text-[11px] text-gray-400 font-medium">Browse artisan product submissions, catalog pricing, and quality standards in view-only mode</p>
         </div>
 
         {{-- Search Bar --}}
@@ -211,7 +170,7 @@
                             <th class="px-6 py-3.5">Category</th>
                             <th class="px-6 py-3.5">Price &amp; Stock</th>
                             <th class="px-6 py-3.5">Status</th>
-                            <th class="px-6 py-3.5 text-right">Actions</th>
+                            <th class="px-6 py-3.5 text-right">Details</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -278,41 +237,16 @@
                                     </span>
                                 </td>
 
-                                <!-- Actions -->
+                                <!-- Actions / Inspect Trigger -->
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        @if($product->status === 'pending')
-                                            <!-- Quick Approve Button -->
-                                            <button type="button" 
-                                                    @click="openApprove(@js($product))"
-                                                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-xs">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                <span>Approve</span>
-                                            </button>
-
-                                            <!-- Quick Reject Button -->
-                                            <button type="button" 
-                                                    @click="openReject(@js($product))"
-                                                    class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-1 cursor-pointer border border-rose-200 shadow-none">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                <span>Reject</span>
-                                            </button>
-                                        @endif
-
+                                    <div class="flex items-center justify-end">
                                         <!-- Inspect Modal Trigger -->
                                         <button type="button" 
                                                 @click="openInspect(@js($product))"
-                                                class="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
+                                                class="px-3 py-1.5 bg-gray-50 hover:bg-gray-200 text-gray-700 border border-gray-200/80 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
                                                 title="Inspect Product Full Details & Sizing">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        </button>
-
-                                        <!-- Delete / Archive Product Button -->
-                                        <button type="button" 
-                                                @click="openDelete(@js($product))"
-                                                class="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                                                title="Delete & Archive Product">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <span>Inspect</span>
                                         </button>
                                     </div>
                                 </td>
@@ -506,143 +440,17 @@
             </div>
 
             {{-- Modal Footer with Moderation Actions --}}
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 shrink-0" x-show="inspectProduct">
-                <template x-if="inspectProduct">
-                    <div class="flex items-center justify-between w-full gap-3 flex-wrap">
-                        <div>
-                            <button type="button" @click="closeInspect()" class="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition-all cursor-pointer">
-                                Close Preview
-                            </button>
-                        </div>
-
-                        <div class="flex items-center gap-2 flex-wrap">
-                            {{-- Approve Action --}}
-                            <template x-if="['pending', 'rejected'].includes((inspectProduct?.status || '').toLowerCase())">
-                                <button type="button" 
-                                        @click="openApprove(inspectProduct); closeInspect();"
-                                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    <span x-text="(inspectProduct?.status || '').toLowerCase() === 'rejected' ? 'Re-Approve' : 'Approve Product'"></span>
-                                </button>
-                            </template>
-
-                            {{-- Reject / Revoke Action --}}
-                            <template x-if="['pending', 'approved'].includes((inspectProduct?.status || '').toLowerCase())">
-                                <button type="button" 
-                                        @click="openReject(inspectProduct); closeInspect();"
-                                        class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    <span x-text="(inspectProduct?.status || '').toLowerCase() === 'approved' ? 'Revoke Approval' : 'Reject Product'"></span>
-                                </button>
-                            </template>
-
-                            {{-- Delete / Archive Action --}}
-                            <button type="button" 
-                                    @click="openDelete(inspectProduct); closeInspect();"
-                                    class="px-3 py-2 bg-white border border-gray-200 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl transition-all cursor-pointer flex items-center gap-1"
-                                    title="Delete & Archive Product">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                <span class="text-xs font-semibold">Archive</span>
-                            </button>
-                        </div>
-                    </div>
-                </template>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0" x-show="inspectProduct">
+                <button type="button" @click="closeInspect()" class="px-5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition-all cursor-pointer">
+                    Close Preview
+                </button>
             </div>
 
         </div>
     </div>
 
-    {{-- ==================== APPROVE MODAL ==================== --}}
-    <div x-show="approveModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden border border-gray-100 p-6 sm:p-8 text-center flex flex-col items-center">
-            <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-5">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-1">Approve Product</h3>
-            <p class="text-xs text-gray-500 mb-6">Are you sure you want to approve <span class="font-bold text-gray-900" x-text="approveProductName"></span>? It will become visible in the live customer marketplace immediately.</p>
-            
-            <form :action="'/superadmin/products/' + approveProductId + '/approve'" method="POST" class="w-full flex items-center gap-3">
-                @csrf
-                <button type="button" @click="approveModal = false" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Cancel</button>
-                <button type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm">Approve &amp; Publish</button>
-            </form>
-        </div>
-    </div>
-
-    {{-- ==================== REJECT MODAL ==================== --}}
-    <div x-show="rejectModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden border border-gray-100 p-6 sm:p-8">
-            <div class="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-4 mx-auto">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900 text-center mb-1">Reject Product Submission</h3>
-            <p class="text-xs text-gray-500 text-center mb-4">Provide a clear rejection reason. The seller will be notified via email and in-app message.</p>
-            
-            <form :action="'/superadmin/products/' + rejectProductId + '/reject'" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Rejection Reason <span class="text-rose-500">*</span></label>
-                    <textarea name="reason" rows="3" required placeholder="e.g. Unclear product embroidery photo, incomplete size specifications..."
-                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:border-[#C0422A]"></textarea>
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="rejectModal = false" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm">Reject Product</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ==================== DELETE MODAL ==================== --}}
-    <div x-show="deleteModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden border border-gray-100 p-6 sm:p-8">
-            <div class="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-4 mx-auto">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900 text-center mb-1">Delete &amp; Archive Product</h3>
-            <p class="text-xs text-gray-500 text-center mb-4">This product will be archived in the Archive Vault and removed from the catalog.</p>
-            
-            <form :action="'/superadmin/products/' + deleteProductId" method="POST" class="space-y-4">
-                @csrf
-                @method('DELETE')
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Reason for Deletion <span class="text-rose-500">*</span></label>
-                    <input type="text" name="reason" required placeholder="e.g. Counterfeit design, seller request..."
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:border-[#C0422A]">
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="deleteModal = false" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm">Delete &amp; Archive</button>
-                </div>
-            </form>
-        </div>
+</div>
+@endsection
     </div>
 
 </div>

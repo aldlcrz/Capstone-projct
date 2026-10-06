@@ -10,6 +10,8 @@
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Registry</span>
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Super Admin Center</span>
+                <span class="text-gray-300 text-xs">·</span>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">View Only</span>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
@@ -29,7 +31,7 @@
                     <span>Seller Guide</span>
                 </button>
             </div>
-            <p class="text-[11px] text-gray-400 font-medium">Review applications, monitor shops, manage debt, and enforce marketplace governance</p>
+            <p class="text-[11px] text-gray-400 font-medium">Browse artisan applications, monitor shop profiles, view compliance credentials and inventory in view-only mode</p>
         </div>
 
         {{-- Larger Search Bar --}}
@@ -196,11 +198,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all cursor-pointer shadow-xs">
-                        Approve &amp; Verify
-                    </button>
-                    <button type="button" @click="openReject('{{ $pendingSeller->id }}', '{{ addslashes($pendingSeller->name) }}')" class="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all cursor-pointer">
-                        Reject
+                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-3 py-1.5 bg-gray-50 hover:bg-gray-200 text-gray-700 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>View Credentials</span>
                     </button>
                 </div>
             </div>
@@ -232,11 +232,11 @@
                 <table class="w-full text-left min-w-180">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
-                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[32%]">Seller &amp; Shop</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden md:table-cell">Inventory</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[16%] hidden lg:table-cell">Joined</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%]">Status</th>
-                            <th id="tour-superadmin-sellers-actions" class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[22%] text-right">Actions</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[35%]">Seller &amp; Shop</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden md:table-cell">Inventory</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden lg:table-cell">Joined</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[15%]">Status</th>
+                            <th id="tour-superadmin-sellers-actions" class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%] text-right">Details</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -360,51 +360,14 @@
                                     </span>
                                 </td>
 
-                                {{-- Actions --}}
+                                {{-- Actions / Inspect Credentials --}}
                                 <td class="px-5 py-4">
-                                    <div class="flex items-center justify-end gap-2">
+                                    <div class="flex items-center justify-end">
                                         {{-- Docs Button --}}
                                         <button type="button" @click="openReview({{ json_encode($sData) }})"
-                                            class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
-                                            Docs
-                                        </button>
-
-                                        @if($normStatus === 'frozen')
-                                            {{-- Unfreeze Button (Super Admin Exclusive) --}}
-                                            <form action="{{ route('superadmin.sellers.unfreeze', $seller->id) }}" method="POST" class="inline">
-                                                @csrf @method('PATCH')
-                                                <button type="submit"
-                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
-                                                    Unfreeze
-                                                </button>
-                                            </form>
-                                        @else
-                                            {{-- Freeze Button (Super Admin Exclusive) --}}
-                                            <button type="button" @click="openFreeze('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
-                                                class="px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all cursor-pointer" title="Freeze Shop Account">
-                                                Freeze
-                                            </button>
-                                        @endif
-
-                                        @if($normStatus === 'suspended')
-                                            <form action="{{ route('superadmin.sellers.unsuspend', $seller->id) }}" method="POST" class="inline">
-                                                @csrf @method('PATCH')
-                                                <button type="submit"
-                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
-                                                    Unsuspend
-                                                </button>
-                                            </form>
-                                        @else
-                                            <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
-                                                class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all cursor-pointer" title="Suspend Account (Policy Violation)">
-                                                Suspend
-                                            </button>
-                                        @endif
-
-                                        {{-- Delete Button --}}
-                                        <button type="button" @click="openDelete('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
-                                            class="px-2.5 py-1 bg-gray-50 text-gray-400 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all cursor-pointer">
-                                            Delete
+                                            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <span>Credentials</span>
                                         </button>
                                     </div>
                                 </td>
@@ -463,7 +426,7 @@
                             <span x-show="selectedSeller.status === 'rejected'" class="text-rose-600 text-xs font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">Rejected</span>
                             <span x-show="selectedSeller.status === 'blocked' || selectedSeller.status === 'suspended'" class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded-md border border-red-200">Suspended</span>
                         </h3>
-                        <p class="text-xs text-gray-500">Inspect credentials &amp; requirements before verification</p>
+                        <p class="text-xs text-gray-500">Inspection &amp; verification credentials record</p>
                     </div>
                 </div>
                 <button type="button" @click="reviewModal = false" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black flex items-center justify-center transition-all cursor-pointer">
@@ -620,24 +583,8 @@
             </div>
 
             {{-- Modal Footer --}}
-            <div class="p-6 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 sticky bottom-0 z-20">
-                <div class="flex items-center gap-2">
-                    <template x-if="!selectedSeller.isVerified">
-                        <form :action="'/superadmin/sellers/' + selectedSeller.id + '/verify'" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                <span>Verify &amp; Approve</span>
-                            </button>
-                        </form>
-                    </template>
-                    <template x-if="!selectedSeller.isVerified">
-                        <button type="button" @click="reviewModal = false; openReject(selectedSeller.id, selectedSeller.name)" class="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
-                            Reject Application
-                        </button>
-                    </template>
-                </div>
-                <button type="button" @click="reviewModal = false" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer">
+            <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end sticky bottom-0 z-20">
+                <button type="button" @click="reviewModal = false" class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer">
                     Close
                 </button>
             </div>
@@ -663,139 +610,6 @@
         </div>
     </div>
 
-    {{-- ═══ 3. FREEZE SHOP MODAL (SUPER ADMIN EXCLUSIVE) ═══ --}}
-    <div x-show="freezeModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100" @click.away="freezeModal = false">
-            <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center mx-auto mb-4 border border-orange-100">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            </div>
-            <h3 class="font-serif text-xl font-bold text-center text-[#3D2B1F] mb-1">Freeze Artisan Shop</h3>
-            <p class="text-xs text-gray-500 text-center mb-5">Temporarily restrict <span class="font-bold text-gray-900" x-text="freezeShopName"></span>'s store and listings due to overdue commission balances.</p>
-
-            <form :action="'/superadmin/sellers/' + freezeShopId + '/freeze'" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Reason for Freezing</label>
-                    <textarea name="reason" rows="3" x-model="freezeReason" required
-                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all"></textarea>
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="freezeModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-orange-600 text-white text-xs font-bold rounded-xl hover:bg-orange-700 transition-all cursor-pointer shadow-xs">Freeze Shop</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ═══ 4. SUSPEND SELLER MODAL ═══ --}}
-    <div x-show="suspendModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100" @click.away="suspendModal = false">
-            <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-            </div>
-            <h3 class="font-serif text-xl font-bold text-center text-[#3D2B1F] mb-1">Suspend Seller Account</h3>
-            <p class="text-xs text-gray-500 text-center mb-5">Suspend <span class="font-bold text-gray-900" x-text="suspendSellerName"></span>'s account due to terms of service or policy violations.</p>
-
-            <form :action="'/superadmin/sellers/' + suspendSellerId + '/suspend'" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Violation Reason <span class="text-red-500">*</span></label>
-                    <textarea name="reason" rows="3" required placeholder="Describe the policy violation or reason for suspension..."
-                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all"></textarea>
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all cursor-pointer shadow-xs">Suspend Seller</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ═══ 5. REJECT APPLICATION MODAL ═══ --}}
-    <div x-show="rejectModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100" @click.away="rejectModal = false">
-            <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </div>
-            <h3 class="font-serif text-xl font-bold text-center text-[#3D2B1F] mb-1">Reject Application</h3>
-            <p class="text-xs text-gray-500 text-center mb-5">Provide a detailed reason for rejecting <span class="font-bold text-gray-900" x-text="rejectSellerName"></span>'s seller registration.</p>
-
-            <form :action="'/superadmin/sellers/' + rejectSellerId + '/reject'" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Rejection Reason <span class="text-red-500">*</span></label>
-                    <textarea name="reason" rows="3" required placeholder="e.g. Incomplete business permit, illegible proof of residency..."
-                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all"></textarea>
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="rejectModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 transition-all cursor-pointer shadow-xs">Reject Application</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ═══ 6. DELETE / ARCHIVE SELLER MODAL ═══ --}}
-    <div x-show="deleteModal" 
-         x-cloak 
-         style="display: none;"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100" @click.away="deleteModal = false">
-            <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </div>
-            <h3 class="font-serif text-xl font-bold text-center text-[#3D2B1F] mb-1">Delete &amp; Archive Seller</h3>
-            <p class="text-xs text-gray-500 text-center mb-5">This will archive <span class="font-bold text-gray-900" x-text="deleteSellerName"></span> and deactivate all products associated with their shop.</p>
-
-            <form :action="'/superadmin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
-                @csrf
-                @method('DELETE')
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Deletion Reason</label>
-                    <input type="text" name="reason" placeholder="Administrative deletion"
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:border-[#C0422A] transition-all">
-                </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all cursor-pointer shadow-xs">Confirm Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 </div>
 
 <script>
@@ -806,19 +620,6 @@ function superSellerManager() {
         previewModal: false,
         previewSrc: '',
         previewTitle: '',
-        freezeModal: false,
-        freezeShopId: '',
-        freezeShopName: '',
-        freezeReason: '',
-        suspendModal: false,
-        suspendSellerId: '',
-        suspendSellerName: '',
-        rejectModal: false,
-        rejectSellerId: '',
-        rejectSellerName: '',
-        deleteModal: false,
-        deleteSellerId: '',
-        deleteSellerName: '',
         openReview(seller) {
             this.selectedSeller = seller;
             this.reviewModal = true;
@@ -827,27 +628,6 @@ function superSellerManager() {
             this.previewSrc = src;
             this.previewTitle = title;
             this.previewModal = true;
-        },
-        openFreeze(id, name) {
-            this.freezeShopId = id;
-            this.freezeShopName = name;
-            this.freezeReason = 'Unpaid platform commission fee past grace period';
-            this.freezeModal = true;
-        },
-        openSuspend(id, name) {
-            this.suspendSellerId = id;
-            this.suspendSellerName = name;
-            this.suspendModal = true;
-        },
-        openReject(id, name) {
-            this.rejectSellerId = id;
-            this.rejectSellerName = name;
-            this.rejectModal = true;
-        },
-        openDelete(id, name) {
-            this.deleteSellerId = id;
-            this.deleteSellerName = name;
-            this.deleteModal = true;
         }
     };
 }
@@ -857,11 +637,11 @@ function superSellerManager() {
     tourId="admin-sellers-guide"
     :autoStart="false"
     :steps="[
-        ['selector' => '#tour-superadmin-sellers-header',  'title' => '🏛️ Seller & Artisan Governance',  'description' => 'Review and manage artisan accounts, oversee shop compliance, and process merchant accreditation applications.'],
+        ['selector' => '#tour-superadmin-sellers-header',  'title' => '🏛️ Seller & Artisan Governance',  'description' => 'Review and inspect artisan accounts, oversee shop compliance, and view merchant credentials.'],
         ['selector' => '#tour-superadmin-sellers-search',  'title' => '🔍 Artisan Search',              'description' => 'Find specific sellers by artisan name, registered email, or dedicated shop workshop name.'],
-        ['selector' => '#tour-superadmin-sellers-filters', 'title' => '🏷️ Compliance Status Filters',   'description' => 'Quickly toggle between Approved sellers, Pending verifications, Frozen commission debt accounts, and Suspended shops.'],
+        ['selector' => '#tour-superadmin-sellers-filters', 'title' => '🏷️ Compliance Status Filters',   'description' => 'Quickly toggle between Approved sellers, Pending verifications, Frozen accounts, and Suspended shops.'],
         ['selector' => '#tour-superadmin-sellers-table',   'title' => '📋 Artisan Seller Directory',    'description' => 'Comprehensive directory showing shop details, active inventory count, registration dates, and verification badges.'],
-        ['selector' => '#tour-superadmin-sellers-actions', 'title' => '⚖️ Governance Actions & Audit',   'description' => 'Inspect legal documents (BIR, Barangay permits), verify applications, freeze commission debt, or manage account standing.']
+        ['selector' => '#tour-superadmin-sellers-actions', 'title' => '⚖️ Credentials & Document Audit', 'description' => 'Inspect legal documents (BIR, Barangay permits, proof of residency) in high-resolution preview.']
     ]"
 />
 
