@@ -241,6 +241,12 @@
                             </span>
                         @endif
 
+                        {{-- Payment Method Badge --}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] flex items-center gap-1">
+                            <span>💳</span>
+                            <span>{{ $order->formatted_payment_method }}</span>
+                        </span>
+
                         <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider {{ $statusPillClass }}">
                             {{ $customerStatusDisplay }}
                         </span>
