@@ -25,7 +25,9 @@ use App\Http\Controllers\ProductManagementController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UploadController;
-use App\Http\Controllers\ProductShippingController;
+use App\Http\Controllers\Customer\ReturnRequestController as CustomerReturnController;
+use App\Http\Controllers\Seller\ReturnReviewController as SellerReturnController;
+use App\Http\Controllers\Admin\ReturnManagementController as AdminReturnController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -157,6 +159,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt');
     Route::get('/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('orders.pickup-receipt.download');
     Route::get('/seller/orders/{id}/pickup-receipt', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt');
+    Route::get('/seller/orders/{id}/pickup-receipt/download', [OrderController::class, 'pickupReceipt'])->name('seller.orders.pickup-receipt.download');
     Route::post('/seller/api/orders/{id}/verify-claim-code', [OrderController::class, 'verifyClaimCode'])->name('orders.verify-claim-code');
     Route::post('/seller/api/orders/{id}/dispatch-special-delivery', [OrderController::class, 'dispatchSpecialDelivery'])->name('orders.dispatch-special-delivery');
     Route::get('/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('orders.payment-proof');
@@ -213,6 +216,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/returns', [ReturnRequestController::class, 'store']);
     Route::post('/orders/{id}/return', [ReturnRequestController::class, 'store'])->name('orders.return');
     Route::get('/api/returns', [ReturnRequestController::class, 'index']);
+
+    // Centralized Return / Refund & Dispute Architecture (Customer)
+    Route::get('/orders/{order}/returns/create', [CustomerReturnController::class, 'create'])->name('customer.returns.create');
+    Route::post('/orders/{order}/returns', [CustomerReturnController::class, 'store'])->name('customer.returns.store');
+    Route::get('/orders/{order}/returns/{returnRequest}', [CustomerReturnController::class, 'show'])->name('customer.returns.show');
+    Route::post('/orders/{order}/returns/{returnRequest}/dispute', [CustomerReturnController::class, 'dispute'])->name('customer.returns.dispute');
 });
 
 // Admin Routes
@@ -290,6 +299,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/shipping/rates/{id}', [AdminShippingController::class, 'destroyRate'])->name('admin.shipping.rates.destroy');
     Route::post('/shipping/areas', [AdminShippingController::class, 'storeArea'])->name('admin.shipping.areas.store');
     Route::delete('/shipping/areas/{id}', [AdminShippingController::class, 'destroyArea'])->name('admin.shipping.areas.destroy');
+
+    // Return & Refund Resolution Hub
+    Route::get('/returns', [AdminReturnController::class, 'index'])->name('admin.returns.index');
+    Route::get('/returns/{returnRequest}', [AdminReturnController::class, 'show'])->name('admin.returns.show');
+    Route::post('/returns/{returnRequest}/record-transfer', [AdminReturnController::class, 'recordTransfer'])->name('admin.returns.record-transfer');
+    Route::post('/returns/{returnRequest}/resolve-dispute', [AdminReturnController::class, 'resolveDispute'])->name('admin.returns.resolve-dispute');
 });
 
 // Seller Routes
@@ -312,6 +327,10 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/orders', [DashboardController::class, 'sellerOrders'])->name('seller.orders');
     Route::post('/orders/{id}/returns/{returnId}/approve', [ReturnRequestController::class, 'sellerApproveReturn'])->name('seller.orders.return.approve');
     Route::post('/orders/{id}/returns/{returnId}/reject', [ReturnRequestController::class, 'sellerRejectReturn'])->name('seller.orders.return.reject');
+    Route::get('/returns', [SellerReturnController::class, 'index'])->name('seller.returns.index');
+    Route::post('/returns/{returnRequest}/review', [SellerReturnController::class, 'review'])->name('seller.returns.review');
+    Route::post('/returns/{returnRequest}/receive', [SellerReturnController::class, 'receive'])->name('seller.returns.receive');
+    Route::post('/returns/{returnRequest}/cash-refund', [SellerReturnController::class, 'cashRefund'])->name('seller.returns.cash-refund');
     Route::get('/customers', [DashboardController::class, 'sellerCustomers'])->name('seller.customers');
     Route::get('/commission', [DashboardController::class, 'sellerCommission'])->name('seller.commission');
     Route::post('/commission', [DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');

@@ -285,6 +285,31 @@ class Order extends Model
     }
 
     /**
+     * Get all refund transactions for this order.
+     */
+    public function refundTransactions()
+    {
+        return $this->hasMany(RefundTransaction::class, 'order_id')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Calculate server-authoritative remaining refundable balance.
+     */
+    public function remainingRefundableAmount(): float
+    {
+        $paidAmount = (float) $this->totalAmount;
+        if ($this->latestPaymentTransaction && $this->latestPaymentTransaction->status === 'VERIFIED') {
+            $paidAmount = (float) ($this->latestPaymentTransaction->detected_amount ?: $this->totalAmount);
+        }
+
+        $alreadyRefunded = (float) $this->refundTransactions()
+            ->whereIn('status', ['transferred', 'completed'])
+            ->sum('refund_amount');
+
+        return max(0.0, round($paidAmount - $alreadyRefunded, 2));
+    }
+
+    /**
      * Check if this order is fulfilled / completed.
      */
     public function isCompleted(): bool

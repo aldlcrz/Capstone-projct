@@ -365,7 +365,7 @@
                                 🏬
                             </div>
                             <div>
-                                <h3 class="text-xs sm:text-sm font-extrabold text-amber-950 m-0">Ready for Workshop Pickup!</h3>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-amber-950 m-0">Ready for Pickup &bull; Self-Pickup at Workshop</h3>
                                 <p class="text-[11px] text-amber-800/90 mt-0.5 m-0 font-medium">Your piece is packed and ready. Present Claim Code <strong class="font-mono text-amber-950">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong> at the workshop.</p>
                             </div>
                         </div>
@@ -374,10 +374,14 @@
                                class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider transition-all shadow-2xs text-center">
                                 🗺️ Directions ↗
                             </a>
+                            <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
+                               class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider transition-all shadow-2xs text-center">
+                                View Pickup Receipt
+                            </a>
                             <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
                                style="background-color:#1E1915;color:#FFFFFF;"
                                class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs text-center">
-                                Pickup Receipt ↗
+                                Download Pickup Receipt
                             </a>
                         </div>
                     </div>
@@ -390,8 +394,8 @@
                                 🏍️
                             </div>
                             <div>
-                                <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Out for Special Delivery!</h3>
-                                <p class="text-[11px] text-blue-800/90 mt-0.5 m-0 font-medium">Your heritage piece is on the way via our dedicated local artisan rider.</p>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Special Delivery Fulfillment Progress &bull; Out for Special Delivery</h3>
+                                <p class="text-[11px] text-blue-800/90 mt-0.5 m-0 font-medium">Your heritage piece is in transit via dedicated Local Artisan Rider.</p>
                             </div>
                         </div>
                         <button type="button"
@@ -517,6 +521,11 @@
                                                 ✓ {{ $existingReview->rating }}/5 Stars
                                             </span>
                                         @endif
+                                        <button type="button"
+                                                @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { sellerId: '{{ $order->sellerId }}', productId: '{{ $item->productId }}' } }))"
+                                                class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
+                                            <span>🚩 Report Product</span>
+                                        </button>
                                     </div>
                                 </div>
 

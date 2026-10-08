@@ -211,10 +211,15 @@ class ReturnRequestController extends Controller
             ->firstOrFail();
 
         $comment = trim($request->input('comment', $request->input('seller_notes', '')));
+        $isOnlinePayment = in_array(strtolower($order->paymentMethod ?? ''), ['gcash', 'maya'], true);
 
         $returnRequest->update([
-            'status' => 'Approved',
-            'adminComment' => $comment ?: 'Approved by artisan seller.',
+            'status'                 => 'Approved',
+            'seller_assessment'      => 'accepted',
+            'seller_notes'           => $comment,
+            'return_status'          => 'awaiting_return',
+            'physical_return_status' => 'awaiting_customer',
+            'adminComment'           => $comment ?: 'Approved by artisan seller.',
         ]);
 
         // Record in OrderStatusHistory
@@ -302,8 +307,12 @@ class ReturnRequestController extends Controller
         $reason = trim($request->input('reason'));
 
         $returnRequest->update([
-            'status' => 'Rejected',
-            'adminComment' => $reason,
+            'status'                 => 'Rejected',
+            'seller_assessment'      => 'rejected',
+            'seller_notes'           => $reason,
+            'return_status'          => 'rejected',
+            'physical_return_status' => 'not_required',
+            'adminComment'           => $reason,
         ]);
 
         // Record in OrderStatusHistory
