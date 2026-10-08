@@ -181,20 +181,6 @@
                     return '/uploads/categories/pina_formal.png';
                 };
 
-                $catItems = [
-                    ['name' => 'All Barongs', 'cat' => '__all__', 'img' => '/uploads/categories/featured_best_sellers.png'],
-                    ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'img' => '/uploads/categories/wedding_groom.png'],
-                    ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'img' => '/uploads/categories/pina_formal.png'],
-                    ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'img' => '/uploads/categories/jusi_classic.png'],
-                    ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'img' => '/uploads/categories/polo_casual.png'],
-                    ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'img' => '/uploads/categories/women_filipiniana.png'],
-                    ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'img' => '/uploads/categories/women_terno.png'],
-                    ['name' => 'Boys\' Barong', 'cat' => 'Boys\' Barong', 'img' => '/uploads/categories/kids_boys.png'],
-                    ['name' => 'Accessories', 'cat' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
-                    ['name' => 'Lady Barong', 'cat' => 'Lady Barong', 'img' => '/uploads/categories/women_lady_barong.png'],
-                    ['name' => 'Girls\' Filipiniana', 'cat' => 'Girls\' Filipiniana', 'img' => '/uploads/categories/kids_girls.png'],
-                ];
-
                 $allCatItems = [
                     ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'group' => 'Men', 'img' => '/uploads/categories/wedding_groom.png'],
                     ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'group' => 'Men', 'img' => '/uploads/categories/pina_formal.png'],
@@ -241,6 +227,10 @@
                         }
                     }
                 }
+
+                $catItems = array_merge([
+                    ['name' => 'All Barongs', 'cat' => '__all__', 'img' => '/uploads/categories/featured_best_sellers.png']
+                ], $allCatItems);
 
                 // Saved categories logic applies ONLY for logged-in accounts
                 $selectedCatParam = request('category');
@@ -306,40 +296,90 @@
                 }
             @endphp
 
-            <div class="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1 items-start justify-center">
-                @foreach($catItems as $index => $item)
-                    @php
-                        $isAll = $item['cat'] === '__all__';
-                        $isCurrentSelected = $isAll
-                            ? (!$selectedCatParam || $selectedCatParam === '__all__') && !request('search') && !request('sort')
-                            : ($selectedCatParam && (
-                                strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
-                                strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
-                                ($selectedCatName && (
-                                    strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
-                                    strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
-                                ))
-                            ));
-                        $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
-                    @endphp
-                    <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
-                        <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
-                            <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
-                            <div class="category-active-badge {{ $isCurrentSelected ? '' : 'hidden' }}">
-                                <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
-                                <span class="absolute top-1 right-1 w-4 h-4 sm:w-4.5 sm:h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                </span>
+            <div class="relative group/catnav" x-data="{
+                canScrollLeft: false,
+                canScrollRight: true,
+                checkScroll() {
+                    const el = this.$refs.catSlider;
+                    if (!el) return;
+                    this.canScrollLeft = el.scrollLeft > 10;
+                    this.canScrollRight = el.scrollLeft < (el.scrollWidth - el.clientWidth - 10);
+                },
+                scrollLeft() {
+                    this.$refs.catSlider.scrollBy({ left: -260, behavior: 'smooth' });
+                },
+                scrollRight() {
+                    this.$refs.catSlider.scrollBy({ left: 260, behavior: 'smooth' });
+                }
+            }" x-init="$nextTick(() => checkScroll())" @resize.window.debounce.100ms="checkScroll()">
+                <!-- Left scroll button for desktop -->
+                <button 
+                    type="button" 
+                    x-show="canScrollLeft" 
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-75"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-75"
+                    @click="scrollLeft()" 
+                    aria-label="Scroll left"
+                    class="hidden sm:flex absolute -left-3 top-1/2 -translate-y-6 z-20 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-gray-700 hover:text-black border border-gray-200 shadow-md items-center justify-center transition hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
+                <!-- Scrollable Categories Container -->
+                <div 
+                    x-ref="catSlider"
+                    @scroll.passive="checkScroll()"
+                    class="flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth no-scrollbar pb-1.5 items-start justify-start px-1"
+                    style="-webkit-overflow-scrolling: touch;">
+                    @foreach($catItems as $index => $item)
+                        @php
+                            $isAll = $item['cat'] === '__all__';
+                            $isCurrentSelected = $isAll
+                                ? (!$selectedCatParam || $selectedCatParam === '__all__') && !request('search') && !request('sort')
+                                : ($selectedCatParam && (
+                                    strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
+                                    strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
+                                    ($selectedCatName && (
+                                        strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
+                                        strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
+                                    ))
+                                ));
+                            $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
+                        @endphp
+                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
+                            <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
+                                <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                <div class="category-active-badge {{ $isCurrentSelected ? '' : 'hidden' }}">
+                                    <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
+                                    <span class="absolute top-1 right-1 w-4 h-4 sm:w-4.5 sm:h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <span class="category-name-label text-[11px] {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
-                    </a>
-                @endforeach
-                <button type="button" @click="categoriesModalOpen = true" onclick="window.dispatchEvent(new CustomEvent('open-all-categories'))" class="group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-[#C0422A] flex items-center justify-center text-gray-500 group-hover:text-[#C0422A] transition-all shadow-2xs group-hover:scale-105">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
-                    </div>
-                    <span class="text-[11px] font-bold text-gray-600 group-hover:text-[#C0422A] leading-tight text-center">More...</span>
+                            <span class="category-name-label text-[11px] {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+
+                <!-- Right scroll button for desktop -->
+                <button 
+                    type="button" 
+                    x-show="canScrollRight" 
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-75"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-75"
+                    @click="scrollRight()" 
+                    aria-label="Scroll right"
+                    class="hidden sm:flex absolute -right-3 top-1/2 -translate-y-6 z-20 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-gray-700 hover:text-black border border-gray-200 shadow-md items-center justify-center transition hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
 

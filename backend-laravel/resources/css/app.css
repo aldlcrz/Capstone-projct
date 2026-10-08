@@ -38,3 +38,6 @@ input[type="number"] {
     appearance: textfield;
 }
 
+[x-cloak] {
+    display: none !important;
+}
