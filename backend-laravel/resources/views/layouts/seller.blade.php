@@ -466,29 +466,48 @@
     <div
         x-data="{
             popupNotif: null,
-            dismissedIds: JSON.parse(sessionStorage.getItem('seen_seller_notif_ids') || '[]'),
+            dismissedIds: [],
             checkNotifications() {
-                fetch('/api/notifications?role=seller').then(r => r.json()).then(data => {
+                fetch('/api/notifications?role=seller', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => {
+                    if (!r.ok) return [];
+                    return r.json();
+                })
+                .then(data => {
                     if (Array.isArray(data)) {
-                        const unread = data.filter(n => !n.isRead && !this.dismissedIds.includes(n.id));
+                        const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
                         if (unread.length > 0) {
                             const latest = unread[0];
                             if (!this.popupNotif || this.popupNotif.id !== latest.id) {
                                 this.popupNotif = latest;
-                                setTimeout(() => { if (this.popupNotif && this.popupNotif.id === latest.id) this.dismiss(); }, 8000);
+                                setTimeout(() => {
+                                    if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                        this.dismiss();
+                                    }
+                                }, 8000);
                             }
                         }
                     }
-                }).catch(() => {});
+                })
+                .catch(() => {});
             },
             dismiss() {
                 if (this.popupNotif) {
-                    this.dismissedIds.push(this.popupNotif.id);
-                    sessionStorage.setItem('seen_seller_notif_ids', JSON.stringify(this.dismissedIds));
+                    if (!this.dismissedIds.includes(this.popupNotif.id)) {
+                        this.dismissedIds.push(this.popupNotif.id);
+                    }
                     this.popupNotif = null;
                 }
             },
-            init() { this.checkNotifications(); setInterval(() => this.checkNotifications(), 12000); }
+            init() {
+                this.checkNotifications();
+                setInterval(() => this.checkNotifications(), 10000);
+            }
         }"
         x-show="popupNotif" x-cloak
         x-transition:enter="transition ease-out duration-300 transform"
