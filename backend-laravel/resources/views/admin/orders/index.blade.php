@@ -117,7 +117,26 @@
     @endphp
 
     <div id="tour-admin-orders-stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {{-- 1. Pending Verification (Priority) --}}
+        {{-- 1. All Orders --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-gray-900 text-white border-gray-900 ring-2 ring-gray-900/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm sm:text-base font-black {{ $isAll ? 'text-white' : 'text-gray-900' }} leading-none">{{ $counts['all'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider {{ $isAll ? 'text-gray-300' : 'text-gray-400' }} mt-1">All Orders</div>
+                </div>
+            </div>
+            @if($isAll)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-white/20 text-white shadow-xs">
+                    Active
+                </span>
+            @endif
+        </a>
+
+        {{-- 2. Pending Verification --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_verification', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/70 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-200/60 hover:border-amber-400 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
@@ -136,7 +155,7 @@
             @endif
         </a>
 
-        {{-- 2. Verified / Paid --}}
+        {{-- 3. Verified / Paid --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'verified', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isVerified ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
@@ -155,7 +174,7 @@
             @endif
         </a>
 
-        {{-- 3. Rejected --}}
+        {{-- 4. Rejected --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-rose-50/70 border-rose-600 ring-2 ring-rose-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-100 hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
@@ -174,7 +193,7 @@
             @endif
         </a>
 
-        {{-- 4. COD / In-Shop --}}
+        {{-- 5. COD / In-Shop --}}
         <a href="{{ request()->fullUrlWithQuery(['status' => 'cod', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isCod ? 'bg-slate-100 border-slate-700 ring-2 ring-slate-700/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
@@ -188,25 +207,6 @@
             </div>
             @if($isCod)
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-700 text-white shadow-xs">
-                    Active
-                </span>
-            @endif
-        </a>
-
-        {{-- 5. All Orders --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-gray-900 text-white border-gray-900 ring-2 ring-gray-900/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5' }}">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                </div>
-                <div>
-                    <div class="text-sm sm:text-base font-black {{ $isAll ? 'text-white' : 'text-gray-900' }} leading-none">{{ $counts['all'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider {{ $isAll ? 'text-gray-300' : 'text-gray-400' }} mt-1">All Orders</div>
-                </div>
-            </div>
-            @if($isAll)
-                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-white/20 text-white shadow-xs">
                     Active
                 </span>
             @endif
