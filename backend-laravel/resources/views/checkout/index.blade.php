@@ -653,7 +653,7 @@
             </div>
 
             <!-- Right Column: Order Summary (5 cols on lg, 4 cols on xl) - Sticky on Desktop! -->
-            <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-4 w-full">
+            <div class="hidden lg:block lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-4 w-full">
                 <!-- Order Summary Card -->
                 <div class="w-full bg-white rounded-2xl p-5 sm:p-6 border border-[#ECE3D2] shadow-xs space-y-4">
                     <div>
@@ -683,7 +683,7 @@
                         <div class="flex justify-between items-center pt-3 border-t border-dashed border-[#ECE3D2]">
                             <span class="text-sm sm:text-base font-bold text-[#1E1915]">Total Payment</span>
                             <span class="text-2xl lg:text-3xl font-black text-[#1E1915]" 
-                                  x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                                  x-text="'₱' + (baseSubtotal + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                                 ₱{{ number_format($subtotal) }}
                             </span>
                         </div>
@@ -748,7 +748,7 @@
          style="box-sizing: border-box; padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));">
 
         <div class="max-w-4xl mx-auto">
-            {{-- Expandable Price Breakdown (Opens upward above sticky bar) --}}
+            {{-- Expandable Order Summary (Opens upward above sticky bar for mobile) --}}
             <div x-show="showCheckoutBreakdown" 
                  x-cloak
                  x-transition:enter="transition ease-out duration-200"
@@ -757,18 +757,58 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 translate-y-2"
-                 class="mb-3 p-3.5 bg-white rounded-2xl border border-[#E2D9C8] text-xs space-y-2 shadow-sm">
-                <div class="flex justify-between items-center text-gray-600">
-                    <span>Subtotal ({{ count($cart) }} item{{ count($cart) > 1 ? 's' : '' }})</span>
-                    <span class="font-bold text-black">₱{{ number_format($subtotal) }}</span>
+                 class="mb-3 p-4 bg-white rounded-2xl border border-[#ECE3D2] shadow-xl max-h-[75vh] overflow-y-auto space-y-3">
+                
+                {{-- Order Overview & Title --}}
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <div class="w-3.5 h-[1.5px] bg-[#C49520]"></div>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#996515]">Order Overview</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-[#1E1915]">Order Summary</h3>
+                        <p class="text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+                            {{ count($cart) }} item(s) selected
+                        </p>
+                    </div>
+                    <button type="button" 
+                            @click="showCheckoutBreakdown = false" 
+                            class="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
+                            title="Close Summary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
-                <div class="flex justify-between items-center text-gray-600" x-show="shippingQuote?.provider_code !== 'store_pickup'" x-cloak>
-                    <span>Estimated Shipping</span>
-                    <span class="font-bold text-black">
-                        <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                        <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs">Calculated at checkout</span>
-                        <span x-show="loadingQuotes" class="text-amber-600 text-xs">Calculating...</span>
-                    </span>
+
+                {{-- Price Breakdown --}}
+                <div class="space-y-2.5 border-t border-[#ECE3D2] pt-3 text-xs">
+                    <div class="flex justify-between items-center text-[#78716C]">
+                        <span class="font-medium">Subtotal</span>
+                        <span class="text-sm font-bold text-[#1E1915]">₱{{ number_format($subtotal) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[#78716C]" x-show="shippingQuote?.provider_code !== 'store_pickup'" x-cloak>
+                        <span class="font-medium">Estimated Delivery</span>
+                        <span class="text-sm font-bold text-[#1E1915]">
+                            <span x-show="currentShippingFee > 0" x-text="'₱' + Number(currentShippingFee).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                            <span x-show="!currentShippingFee && !loadingQuotes" class="text-gray-400 text-xs font-semibold">Calculated at checkout</span>
+                            <span x-show="loadingQuotes" class="text-amber-600 text-xs font-semibold">Calculating...</span>
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2.5 border-t border-dashed border-[#ECE3D2]">
+                        <span class="text-xs font-bold text-[#1E1915]">Total Payment</span>
+                        <span class="text-lg font-black text-[#1E1915]" 
+                              x-text="'₱' + (baseSubtotal + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                            ₱{{ number_format($subtotal) }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- LumBarong Buyer Protection Badge --}}
+                <div class="bg-[#FAF6EE] rounded-xl p-3 border border-[#E2D9C8] text-[10px] text-[#78716C] leading-relaxed space-y-1">
+                    <div class="font-bold text-[#1E1915] flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        LumBarong Buyer Protection
+                    </div>
+                    <p class="text-[9.5px]">Your order payment is securely processed and verified directly by the seller before fulfillment.</p>
                 </div>
             </div>
 
@@ -782,7 +822,7 @@
                         </svg>
                     </button>
                     <div class="text-lg sm:text-xl font-black text-[#1E1915] leading-tight"
-                         x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                         x-text="'₱' + (baseSubtotal + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                         ₱{{ number_format($subtotal) }}
                     </div>
                 </div>
@@ -954,7 +994,7 @@
                 <div class="flex justify-between items-center text-gray-600 pt-2 border-t border-gray-200">
                     <span class="font-bold text-gray-900">Total Payment:</span>
                     <span class="font-black text-[#1E1915] text-base"
-                          x-text="'₱' + ({{ (float)$subtotal }} + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
+                          x-text="'₱' + (baseSubtotal + Number(currentShippingFee)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">
                         ₱{{ number_format($subtotal) }}
                     </span>
                 </div>
