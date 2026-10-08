@@ -672,8 +672,9 @@
     <script>
     (function() {
         // Silent keep-alive every 3 minutes to guarantee Super Admin session never expires during maintenance
+        const keepAliveUrl = @json(route('superadmin.session.keep_alive'));
         setInterval(function() {
-            fetch('{{ route('superadmin.session.keep_alive') }}', {
+            fetch(keepAliveUrl, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'

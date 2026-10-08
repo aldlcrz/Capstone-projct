@@ -1404,7 +1404,7 @@ class AdminController extends Controller
                     $existingProduct->update(['status' => 'pending']);
                 } else {
                     Product::create([
-                        'id'                  => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'id'                  => $record->item_id ?: (string) Str::uuid(),
                         'name'                => $meta['name'] ?? $record->name,
                         'description'         => $meta['description'] ?? null,
                         'price'               => $meta['price'] ?? 0,
@@ -1447,7 +1447,7 @@ class AdminController extends Controller
                     ]);
                 } else {
                     \App\Models\Category::create([
-                        'id'           => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'id'           => $record->item_id ?: (string) Str::uuid(),
                         'name'         => $catName,
                         'description'  => $meta['description'] ?? null,
                         'target_group' => $meta['target_group'] ?? [],
@@ -1513,7 +1513,7 @@ class AdminController extends Controller
                 } else {
                     // Create fresh user if row was completely absent
                     $createdUser = User::create([
-                        'id'                   => $record->item_id ?: (string) \Illuminate\Support\Str::uuid(),
+                        'id'                   => $record->item_id ?: (string) Str::uuid(),
                         'name'                 => $meta['name'] ?? $record->name,
                         'email'                => $email,
                         'password'             => $meta['password'] ?? \Illuminate\Support\Facades\Hash::make('password'),
