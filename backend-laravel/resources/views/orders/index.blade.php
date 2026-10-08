@@ -238,13 +238,74 @@
                      onclick="window.location.href='/orders/{{ $order->id }}'">
 
                     {{-- Card Header --}}
-                    <div style="background-color:#FAF6EE;border-bottom:1px solid #EAE1D0;padding:14px 20px;" class="flex flex-wrap items-center justify-between gap-2">
-                        <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#78716C] min-w-0">
-                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:10px;color:#DFC97A;font-weight:800;">
+                    @php
+                        $isPickup = $order->is_store_pickup;
+                        $isSpecial = $order->is_special_delivery;
+                        
+                        // Delivery Type Label & Styling
+                        if ($isPickup) {
+                            $deliveryLabel = 'Store Pickup';
+                            $deliveryClass = 'bg-amber-50 text-amber-900 border-amber-300';
+                            $deliveryIcon = 'store';
+                        } elseif ($isSpecial) {
+                            $deliveryLabel = 'Special Delivery';
+                            $deliveryClass = 'bg-purple-50 text-purple-900 border-purple-300';
+                            $deliveryIcon = 'bike';
+                        } else {
+                            $deliveryLabel = !empty($order->courierName) ? $order->courierName : 'Standard Delivery';
+                            $deliveryClass = 'bg-sky-50 text-sky-900 border-sky-300';
+                            $deliveryIcon = 'truck';
+                        }
+
+                        // Payment Method Label & Styling
+                        $pmRaw = strtoupper(trim((string)$order->paymentMethod));
+                        if ($pmRaw === 'GCASH') {
+                            $paymentLabel = 'GCash';
+                            $paymentClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                        } elseif ($pmRaw === 'MAYA' || $pmRaw === 'PAYMAYA') {
+                            $paymentLabel = 'Maya';
+                            $paymentClass = 'bg-teal-50 text-teal-700 border-teal-200';
+                        } elseif ($pmRaw === 'CARD' || $pmRaw === 'CREDIT_CARD' || $pmRaw === 'DEBIT_CARD') {
+                            $paymentLabel = 'Card';
+                            $paymentClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                        } else {
+                            $paymentLabel = $isPickup ? 'Pay in Shop' : 'Cash on Delivery';
+                            $paymentClass = 'bg-stone-100 text-stone-700 border-stone-300';
+                        }
+                    @endphp
+                    <div style="background-color:#FAF6EE;border-bottom:1px solid #EAE1D0;padding:12px 18px;" class="flex flex-wrap items-center justify-between gap-2.5">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#78716C] min-w-0">
+                            <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:10px;color:#DFC97A;font-weight:800;">
                                 #LB-OR-{{ $orderData['shortId'] }}
                             </span>
                             <span class="w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
-                            <span class="text-[#8C827A]">{{ $order->createdAt->format('M d, Y • g:i A') }}</span>
+                            <span class="text-[#8C827A] font-medium">{{ $order->createdAt->format('M d, Y • g:i A') }}</span>
+
+                            <span class="hidden sm:inline-block w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
+
+                            {{-- Payment Method Badge --}}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $paymentClass }}">
+                                @if($pmRaw === 'GCASH')
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#007DFE]"></span>
+                                @elseif($pmRaw === 'MAYA' || $pmRaw === 'PAYMAYA')
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#14B8A6]"></span>
+                                @else
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                @endif
+                                <span>{{ $paymentLabel }}</span>
+                            </span>
+
+                            {{-- Delivery Type Badge --}}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $deliveryClass }}">
+                                @if($deliveryIcon === 'store')
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                @elseif($deliveryIcon === 'bike')
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                @else
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+                                @endif
+                                <span>{{ $deliveryLabel }}</span>
+                            </span>
                         </div>
 
                         @php
