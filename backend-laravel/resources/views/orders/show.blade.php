@@ -375,7 +375,7 @@
                             <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
                                style="background-color:#1E1915;color:#FFFFFF;"
                                class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs text-center">
-                                Pickup Pass ↗
+                                Pickup Receipt ↗
                             </a>
                         </div>
                     </div>
@@ -550,8 +550,10 @@
                                 <span>Workshop Pickup</span>
                             </span>
                             <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
-                               class="text-xs font-black uppercase tracking-wider text-[#996515] hover:text-[#C49520]">
-                                🗺️ Directions ↗
+                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] hover:border-[#D4AF37] transition-all shadow-2xs">
+                                <span>🗺️</span>
+                                <span>Directions</span>
+                                <span>↗</span>
                             </a>
                         </div>
                         <div>
@@ -565,8 +567,8 @@
                             <span class="text-[#78716C]">Claim: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
                             <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
                                style="background-color:#1E1915;color:#FFFFFF;"
-                               class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all">
-                                Pass ↗
+                               class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
+                                Receipt ↗
                             </a>
                         </div>
                     @else
