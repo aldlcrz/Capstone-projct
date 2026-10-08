@@ -243,7 +243,7 @@
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Payment Details</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-center">Receipt Proof</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-right">Verification Actions</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-right">Action / Commission</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -257,6 +257,9 @@
                                 
                                 $refNumber = $order->paymentReference ?: ($order->latestPaymentTransaction->reference_number ?? null);
                                 $receiptUrl = $order->payment_proof_url;
+
+                                $activeRate = (float) ($commissionRate ?? 5.0);
+                                $orderCommission = round($order->totalAmount * ($activeRate / 100), 2);
                             @endphp
                             <tr class="hover:bg-amber-50/20 transition-colors group">
                                 {{-- 1. Order ID & Date --}}
@@ -421,10 +424,10 @@
                                     </div>
                                 </td>
 
-                                {{-- 7. Verification Actions --}}
+                                {{-- 7. Verification Actions / Commission --}}
                                 <td class="px-4 py-3.5 text-right">
-                                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                                        @if($isEwallet)
+                                    @if($isEwallet)
+                                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                             @if(!$isPaid)
                                                 {{-- Approve / Verify Button (GCash / Maya Only) --}}
                                                 <button type="button" 
@@ -452,14 +455,22 @@
                                                     Revoke
                                                 </button>
                                             @endif
-                                        @else
-                                            {{-- COD / Store Pickup: Verified directly by Seller --}}
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200" title="Payment is collected and verified directly by the artisan seller upon store claim or courier delivery.">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                <span>Seller Verified</span>
-                                            </span>
-                                        @endif
-                                    </div>
+                                        </div>
+                                    @else
+                                        {{-- COD / Store Pickup: Display Calculated Commission Per Order --}}
+                                        <div class="text-right space-y-0.5">
+                                            <div class="font-mono text-sm font-black text-[#C0420A]">
+                                                ₱{{ number_format($orderCommission, 2) }}
+                                            </div>
+                                            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                <span class="w-1 h-1 rounded-full bg-amber-500"></span>
+                                                {{ $activeRate }}% Commission Due
+                                            </div>
+                                            <div class="text-[9px] text-gray-400 font-medium">
+                                                In-Store/COD Remittance
+                                            </div>
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

@@ -1940,7 +1940,9 @@ class AdminController extends Controller
             'cod'                  => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim'])->count(),
         ];
 
-        return view('admin.orders.index', compact('allOrders', 'counts', 'status', 'paymentMethod', 'search'));
+        $commissionRate = (float) (SystemSetting::where('key', 'commission_rate')->value('value') ?? 5.0);
+
+        return view('admin.orders.index', compact('allOrders', 'counts', 'status', 'paymentMethod', 'search', 'commissionRate'));
     }
 
     /**

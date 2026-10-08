@@ -243,7 +243,7 @@ class AdminPaymentVerificationTest extends TestCase
 
         $response = $this->actingAs($this->admin)->get(route('admin.orders', ['status' => 'cod']));
         $response->assertStatus(200);
-        $response->assertSee('Seller Verified');
+        $response->assertSee('Commission Due');
         $response->assertSee('Direct to seller');
 
         // Verify endpoint rejects COD verification with informative error
