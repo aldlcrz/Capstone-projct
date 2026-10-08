@@ -54,6 +54,7 @@
             aiLoading: false,
             sessionContext: {},
             aiMessages: getDefaultAiMessages(),
+            unreadCount: 0,
 
             getStorageKey() {
                 return (this.isLoggedIn && this.currentUserId)
@@ -108,7 +109,7 @@
             },
 
             confirmClearChat() {
-                if (window.confirm('Clear conversation? This will reset the LumBarong Smart Assistant.')) {
+                if (window.confirm('Clear conversation? This will reset the LumBarong Assistant.')) {
                     this.clearAiChat();
                 }
             },
@@ -208,7 +209,7 @@
                     if (data.session_context) {
                         this.sessionContext = data.session_context;
                     }
-                    const textReply = data.reply || data.message || "Mabuhay! I am your LumBarong Smart Assistant. How may I help you today?";
+                    const textReply = data.reply || data.message || "Mabuhay! I am your LumBarong Assistant. How may I help you today?";
                     this.aiMessages.push({
                         role: 'assistant',
                         text: textReply,
@@ -223,7 +224,7 @@
                     console.error('Smart Assistant error:', err);
                     this.aiMessages.push({
                         role: 'assistant',
-                        text: 'Mabuhay! Hello and welcome to **LumBarong Smart Assistance**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\nHow may I help you today? You can ask me about:\n• **Best Sellers** & Top recommended Barongs\n• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n• **Care & Maintenance** (How to wash, iron, and store)',
+                        text: 'Mabuhay! Hello and welcome to **LumBarong Assistant**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\nHow may I help you today? You can ask me about:\n• **Best Sellers** & Top recommended Barongs\n• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n• **Care & Maintenance** (How to wash, iron, and store)',
                         products: [],
                         refinements: [
                             { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
@@ -343,10 +344,12 @@
                 })
                 .then(data => {
                     this.conversations = Array.isArray(data) ? data : [];
+                    this.unreadCount = this.conversations.reduce((sum, c) => sum + (parseInt(c.unreadCount) || 0), 0);
                 })
                 .catch(err => {
                     console.error('Failed to load conversations:', err);
                     this.conversations = [];
+                    this.unreadCount = 0;
                 })
                 .finally(() => {
                     this.isLoadingConversations = false;
@@ -618,7 +621,7 @@ body.chat-open {
         class="rounded-full text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative group cursor-pointer"
         aria-label="Open LumBarong Support & Chat"
     >
-        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+        <span x-show="isLoggedIn && unreadCount > 0" class="absolute -top-1 -right-1 flex h-3.5 w-3.5" x-cloak>
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C0422A] opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#C0422A]"></span>
         </span>
@@ -650,7 +653,7 @@ body.chat-open {
                     </template>
                     <div class="min-w-0">
                         <h3 class="font-serif text-sm font-bold tracking-wide flex items-center gap-1.5 truncate">
-                            <span x-show="mainMode === 'ai'">LumBarong Smart Assistant</span>
+                            <span x-show="mainMode === 'ai'">LumBarong Assistant</span>
                             <span x-show="mainMode === 'artisan'" x-text="activeTab === 'messages' && activeUser ? activeUser.name : 'Artisan Messages'" class="truncate"></span>
                         </h3>
                         <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 truncate">
@@ -700,10 +703,12 @@ body.chat-open {
                         @click="mainMode = 'ai'"
                         :class="mainMode === 'ai' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
                         class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span>✨ Smart Assistant</span>
+                    <span>✨ LumBarong Assistant</span>
                 </button>
                 <button type="button" 
-                        @click="if (isLoggedIn) { mainMode = 'artisan'; loadConversations(); } else { window.dispatchEvent(new CustomEvent('open-auth-gate', { detail: { message: 'Please log in to chat with artisans.' } })); }"
+                        x-show="isLoggedIn"
+                        x-cloak
+                        @click="mainMode = 'artisan'; loadConversations();"
                         :class="mainMode === 'artisan' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
                         class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                     <span>💬 Artisans</span>
@@ -807,7 +812,7 @@ body.chat-open {
                 <!-- Loading indicator -->
                 <div x-show="aiLoading" class="flex items-center gap-2 text-xs text-gray-400 italic p-2" x-cloak>
                     <span class="inline-block w-2 h-2 rounded-full bg-[#C0422A] animate-ping"></span>
-                    <span>Smart Assistant is analyzing Lumban collections...</span>
+                    <span>LumBarong Assistant is analyzing Lumban collections...</span>
                 </div>
             </div>
 
