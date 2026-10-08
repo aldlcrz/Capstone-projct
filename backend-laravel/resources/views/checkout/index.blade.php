@@ -403,29 +403,35 @@
                                     <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">GC</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Scan QR or Transfer to Mobile Number</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
                             
-                            <div x-show="paymentMethod === 'GCash'" class="mt-3 pt-3 border-t border-[#ECE3D2] flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
-                                     @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
-                                    @if($gcashQrUrl)
-                                        <img src="{{ $gcashQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
-                                    @else
-                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
-                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                                        </div>
-                                    @endif
-                                    <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1">Tap to Zoom QR</span>
-                                </div>
-                                <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FAF6EE] p-3.5 sm:p-4 rounded-xl border border-[#E2D9C8]">
-                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest mb-0.5">Send GCash Payment To</div>
-                                        <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->gcashNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
+                            <div x-show="paymentMethod === 'GCash'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
+                                <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                                    <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
+                                         @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
+                                        @if($gcashQrUrl)
+                                            <img src="{{ $gcashQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
+                                            <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                                Tap to Zoom QR
+                                            </span>
+                                        @else
+                                            <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-center sm:text-left space-y-1">
+                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
+                                        <div class="text-sm font-bold text-gray-900">Scan QR Code using GCash</div>
+                                        <p class="text-xs text-gray-600 leading-relaxed">
+                                            Tap the QR code to zoom in, then scan or save it using your GCash app. After completing your payment, upload the screenshot receipt below.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -440,29 +446,35 @@
                                     <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">MY</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay via Maya App or Scan QR</div>
+                                        <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                     </div>
                                 </div>
                                 <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                             </label>
 
-                            <div x-show="paymentMethod === 'Maya'" class="mt-3 pt-3 border-t border-[#ECE3D2] flex flex-col sm:flex-row gap-3 sm:gap-4 items-center" x-transition>
-                                <div class="w-full sm:w-1/3 bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37]/40 transition-all group/qr @endif"
-                                     @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
-                                    @if($mayaQrUrl)
-                                        <img src="{{ $mayaQrUrl }}" class="w-24 h-24 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
-                                    @else
-                                        <div class="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
-                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                                        </div>
-                                    @endif
-                                    <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1">Tap to Zoom QR</span>
-                                </div>
-                                <div class="w-full sm:flex-1">
-                                    <div class="bg-[#FAF6EE] p-3.5 sm:p-4 rounded-xl border border-[#E2D9C8]">
-                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest mb-0.5">Send Maya Payment To</div>
-                                        <div class="text-base sm:text-lg lg:text-xl font-black text-black tracking-wide">{{ $paymentSource->mayaNumber ?? '0912 345 6789' }}</div>
-                                        <div class="text-[10px] lg:text-xs font-bold text-gray-600 mt-1">Account: <span class="text-gray-900">{{ $paymentSource->shopName ?? ($seller->name ?? 'LumBarong Official') }}</span></div>
+                            <div x-show="paymentMethod === 'Maya'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
+                                <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                                    <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
+                                         @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
+                                        @if($mayaQrUrl)
+                                            <img src="{{ $mayaQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
+                                            <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                                Tap to Zoom QR
+                                            </span>
+                                        @else
+                                            <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-center sm:text-left space-y-1">
+                                        <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
+                                        <div class="text-sm font-bold text-gray-900">Scan QR Code using Maya</div>
+                                        <p class="text-xs text-gray-600 leading-relaxed">
+                                            Tap the QR code to zoom in, then scan or save it using your Maya app. After completing your payment, upload the screenshot receipt below.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1248,8 +1260,9 @@
     <!-- QR Code Zoom Modal -->
     <template x-if="showZoomModal">
         <div 
-            class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm select-none"
             @click="showZoomModal = false"
+            @keydown.window.escape="showZoomModal = false"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -1259,7 +1272,7 @@
         >
             <div 
                 @click.stop
-                class="bg-white rounded-3xl border border-gray-100 shadow-2xl p-6 relative overflow-hidden max-w-sm w-full flex flex-col items-center justify-center"
+                class="bg-white rounded-3xl border border-white/20 shadow-2xl p-4 sm:p-6 relative max-w-lg w-full flex flex-col items-center justify-center max-h-[92vh] overflow-hidden"
                 x-transition:enter="transition ease-out duration-300 transform"
                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -1269,23 +1282,29 @@
             >
                 <!-- Close Button -->
                 <button 
+                    type="button"
                     @click="showZoomModal = false"
-                    class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                    class="absolute top-3.5 right-3.5 w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors z-10 cursor-pointer"
+                    title="Close"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
 
                 <!-- Modal Content -->
-                <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8C6D1F] mb-1.5 mt-1">Scan QR Code</div>
-                <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight mb-4" x-text="paymentMethod === 'GCash' ? 'GCash Payment QR' : 'Maya Payment QR'"></h3>
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#8C6D1F] mb-1">Scan Shop QR Code</div>
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-3 text-center" x-text="paymentMethod === 'GCash' ? 'GCash Payment QR' : 'Maya Payment QR'"></h3>
                 
-                <div class="w-64 h-64 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-xs flex items-center justify-center p-4">
-                    <img :src="zoomImage" class="max-w-full max-h-full object-contain rounded-lg" alt="QR Code">
+                <!-- Expanded Responsive QR Container -->
+                <div class="w-full bg-[#FAF6EE] rounded-2xl overflow-hidden border border-[#E2D9C8] flex items-center justify-center p-2 sm:p-4 max-h-[70vh]">
+                    <img :src="zoomImage" class="max-h-[64vh] max-w-full w-auto object-contain rounded-xl shadow-xs" alt="QR Code">
                 </div>
 
-                <p class="text-[10px] text-gray-400 font-medium text-center mt-4">Tap outside or press close to return.</p>
+                <div class="flex items-center justify-between w-full mt-3 px-1 text-[11px] sm:text-xs text-gray-500 font-medium">
+                    <span>💡 Long press or screenshot to save</span>
+                    <button type="button" @click="showZoomModal = false" class="text-[#996515] font-bold hover:underline cursor-pointer">Done</button>
+                </div>
             </div>
         </div>
     </template>
