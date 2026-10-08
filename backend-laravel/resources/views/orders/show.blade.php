@@ -256,10 +256,6 @@
                                 <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 <span>Cancel</span>
                             </button>
-                        @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
-                            <span class="px-2.5 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold uppercase rounded-full shadow-2xs">
-                                ⏳ Cancellation Pending
-                            </span>
                         @endif
                     </div>
                 </div>
