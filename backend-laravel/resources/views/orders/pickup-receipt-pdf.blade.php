@@ -278,7 +278,6 @@
                 <div class="info-row"><strong>Email:</strong> {{ $order->customer?->email ?? 'N/A' }}</div>
                 <div class="info-row"><strong>Phone:</strong> {{ $order->customer?->mobileNumber ?? ($order->normalized_shipping_address['phone'] ?? 'N/A') }}</div>
                 <div class="info-row"><strong>Order Placed:</strong> {{ $order->createdAt ? $order->createdAt->format('M d, Y • g:i A') : 'N/A' }}</div>
-                <div class="info-row"><strong>Ready for Pickup:</strong> {{ $readyDate ? $readyDate->format('M d, Y • g:i A') : 'Confirmed Ready' }}</div>
             </td>
 
             {{-- Artisan Workshop Details --}}
@@ -288,12 +287,6 @@
                 <div class="info-row"><strong>Collection Point:</strong> Lumban Workshop Studio, Lumban, Laguna</div>
                 <div class="info-row"><strong>Fulfillment Method:</strong> In-Shop Store Pickup (Free / ₱0.00)</div>
                 <div class="info-row"><strong>Payment Method:</strong> {{ $order->formatted_payment_method }}</div>
-                <div class="info-row">
-                    <strong>Payment Status:</strong> {{ $order->resolved_payment_status }}
-                    @if(in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA']) && $order->paymentReference && !str_starts_with($order->paymentReference, 'COD-'))
-                        (Ref: {{ $order->paymentReference }})
-                    @endif
-                </div>
             </td>
         </tr>
     </table>
