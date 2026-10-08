@@ -234,7 +234,7 @@ class NetworkResilienceAndIdempotencyAuditTest extends TestCase
 
         // Order 2 attempts to use same active reference
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessageMatches('/already been used/i');
+        $this->expectExceptionMessageMatches('/already (?:been used|in use)/i');
 
         $createOrderService->createOrder([
             'customer'          => $this->customer,

@@ -134,6 +134,7 @@ class CentralizedReturnRefundTest extends TestCase
     {
         [$order, $orderItem, $paymentTx] = $this->createDeliveredGcashOrder();
 
+        /** @var User $otherCustomer */
         $otherCustomer = User::factory()->create([
             'role' => 'customer',
             'status' => 'Active',

@@ -28,6 +28,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\Customer\ReturnRequestController as CustomerReturnController;
 use App\Http\Controllers\Seller\ReturnReviewController as SellerReturnController;
 use App\Http\Controllers\Admin\ReturnManagementController as AdminReturnController;
+use App\Http\Controllers\ProductShippingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +40,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [WebController::class, 'index'])->name('home');
 Route::get('/products/{id}', [WebController::class, 'productDetails'])->name('products.show');
 Route::post('/products/{product}/shipping-quote', [ProductShippingController::class, 'getQuote'])->name('products.shipping-quote');
+Route::get('/shops', [WebController::class, 'allShops'])->name('shops.index');
+Route::get('/shop', [WebController::class, 'allShops'])->name('shop.index');
 Route::get('/shops/{id}', [WebController::class, 'sellerShop'])->name('shops.show');
 Route::get('/shop/{id}', [WebController::class, 'sellerShop'])->name('shop.show');
 

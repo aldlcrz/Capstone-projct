@@ -95,14 +95,35 @@ class UserController extends Controller
     /**
      * Get seller info for public view.
      */
-    public function getSellerInfo($id)
+    public function getSellerInfo(string $id)
     {
-        $seller = User::where('id', $id)
-            ->orWhere('shopName', $id)
-            ->orWhere('shopName', urldecode($id))
+        $cleanId = trim($id);
+        $decodedId = urldecode($cleanId);
+        $unslugged = str_replace('-', ' ', $decodedId);
+
+        $seller = User::where(function($q) {
+                $q->where('role', 'seller')
+                  ->orWhere('role', 'vendor');
+            })
+            ->where(function($q) use ($cleanId, $decodedId, $unslugged) {
+                $q->where('id', $cleanId)
+                  ->orWhere('shopName', $cleanId)
+                  ->orWhere('shopName', $decodedId)
+                  ->orWhere('shopName', $unslugged)
+                  ->orWhere('name', $cleanId)
+                  ->orWhere('name', $decodedId)
+                  ->orWhere('name', $unslugged);
+            })
             ->first();
 
-        if (!$seller || $seller->role !== 'seller') {
+        if (!$seller) {
+            $product = Product::find($cleanId);
+            if ($product && $product->sellerId) {
+                $seller = User::find($product->sellerId);
+            }
+        }
+
+        if (!$seller || !in_array($seller->role, ['seller', 'vendor'])) {
             return response()->json(['message' => 'Seller not found'], 404);
         }
 
@@ -147,7 +168,7 @@ class UserController extends Controller
     /**
      * Toggle follow status.
      */
-    public function toggleFollow(Request $request, $id)
+    public function toggleFollow(Request $request, string $id)
     {
         $customerId = $request->user()->id;
         if ($id === $customerId) {

@@ -29,7 +29,7 @@
         window.dispatchEvent(new CustomEvent('open-quick-add', { detail: detail }));
     };
 </script>
-<div class="space-y-8" x-data="{ categoriesModalOpen: false, topShopsModalOpen: false }">
+<div class="space-y-8" x-data="{ categoriesModalOpen: false, topShopsModalOpen: {{ (request()->has('open_shops') || request()->has('top_shops')) ? 'true' : 'false' }} }">
 
     {{-- ====== Hero Banner Coverflow Product Carousel ====== --}}
     @if(isset($banners) && $banners->isNotEmpty())

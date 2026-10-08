@@ -357,11 +357,17 @@ class CheckoutController extends Controller
 
         if (!$isCod) {
             $validationRules['paymentReference'] = 'nullable|string';
-            $validationRules['paymentScreenshot'] = 'required|image|max:10240';
+            if ($request->hasFile('paymentScreenshots')) {
+                $validationRules['paymentScreenshots'] = 'required|array|min:1';
+                $validationRules['paymentScreenshots.*'] = 'required|image|max:10240';
+            } else {
+                $validationRules['paymentScreenshot'] = 'required|image|max:10240';
+            }
         }
 
         $request->validate($validationRules, [
             'paymentScreenshot.required' => 'Payment receipt screenshot is required for online payments.',
+            'paymentScreenshots.required' => 'Payment receipt screenshot is required for online payments.',
             'address_id.required_without' => 'Please provide a valid shipping address.',
             'shippingAddress.required_without' => 'Please provide a valid shipping address.',
         ]);
@@ -386,27 +392,24 @@ class CheckoutController extends Controller
             }
             $cart = $cartValues;
 
-            // 2. Handle Receipt Upload & Screening for Online Payments
-            $screening = null;
-            $paymentProofPath = null;
+            // 2. Handle Receipt Upload & Screening for Online Payments (Single or Multi-Receipt)
+            $receiptList = [];
             if (!$isCod) {
-                if (!$request->hasFile('paymentScreenshot')) {
+                $uploadedFiles = [];
+                if ($request->hasFile('paymentScreenshots')) {
+                    $uploadedFiles = (array) $request->file('paymentScreenshots');
+                } elseif ($request->hasFile('paymentScreenshot')) {
+                    $uploadedFiles = [$request->file('paymentScreenshot')];
+                }
+
+                if (empty($uploadedFiles)) {
                     if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
                         return response()->json(['success' => false, 'message' => 'Payment receipt screenshot is required for online payments.'], 422);
                     }
                     return redirect()->back()->withInput()->with('error', 'Payment receipt screenshot is required for online payments.');
                 }
 
-                $file = $request->file('paymentScreenshot');
-                $tempPath = $file->getRealPath();
-                $origName = $file->getClientOriginalName();
-
-                // Store receipt privately
-                $storedFileName = (string) Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
-                $storedPath = $file->storeAs('payments', $storedFileName, 'local');
-                $paymentProofPath = 'private/' . $storedPath;
-
-                // Calculate authoritative expected total from database products
+                // Calculate authoritative expected total from database products for screening context
                 $authoritativeSubtotal = 0.0;
                 foreach ($cart as $cItem) {
                     $p = Product::find($cItem['id'] ?? null);
@@ -415,20 +418,42 @@ class CheckoutController extends Controller
                     }
                 }
 
-                $screening = \App\Services\AiService::verifyReceipt(
-                    $tempPath,
-                    (string) $request->input('paymentReference', ''),
-                    $paymentMethod,
-                    $authoritativeSubtotal,
-                    $origName
-                );
+                $submittedRefs = (array) $request->input('paymentReferences', []);
+                if (empty($submittedRefs) && $request->filled('paymentReference')) {
+                    $submittedRefs = [$request->input('paymentReference')];
+                }
 
-                if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
-                    $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
-                    if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
-                        return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                foreach ($uploadedFiles as $idx => $file) {
+                    $tempPath = $file->getRealPath();
+                    $origName = $file->getClientOriginalName();
+                    $expectedRef = $submittedRefs[$idx] ?? ($request->input('paymentReference') ?? '');
+
+                    // Store receipt privately
+                    $storedFileName = (string) Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+                    $storedPath = $file->storeAs('payments', $storedFileName, 'local');
+                    $paymentProofPath = 'private/' . $storedPath;
+
+                    $screening = \App\Services\AiService::verifyReceipt(
+                        $tempPath,
+                        (string) $expectedRef,
+                        $paymentMethod,
+                        $authoritativeSubtotal,
+                        $origName
+                    );
+
+                    if (($screening['status'] ?? '') === 'REJECT' || !($screening['is_receipt'] ?? true)) {
+                        $errorMessage = $screening['message'] ?? 'The uploaded file does not appear to be a valid mobile payment receipt screenshot. Please attach a genuine transaction confirmation.';
+                        if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                            return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                        }
+                        return redirect()->back()->withInput()->with('error', $errorMessage);
                     }
-                    return redirect()->back()->withInput()->with('error', $errorMessage);
+
+                    $receiptList[] = [
+                        'screening'        => $screening,
+                        'paymentProof'     => $paymentProofPath,
+                        'paymentReference' => $screening['detected_ref'] ?: $expectedRef,
+                    ];
                 }
             }
 
@@ -439,9 +464,11 @@ class CheckoutController extends Controller
                 'address_id'          => $request->address_id,
                 'shippingAddress'     => $request->input('shippingAddress'),
                 'paymentMethod'       => $paymentMethod,
-                'paymentReference'    => $request->input('paymentReference'),
-                'paymentProof'        => $paymentProofPath,
-                'screening'           => $screening,
+                'paymentReference'    => $receiptList[0]['paymentReference'] ?? $request->input('paymentReference'),
+                'paymentProof'        => $receiptList[0]['paymentProof'] ?? null,
+                'screening'           => $receiptList[0]['screening'] ?? null,
+                'receipts'            => $receiptList,
+                'refund_mobile_number'=> $request->input('refund_mobile_number') ?: $request->input('refundMobileNumber'),
                 'quoteToken'          => $request->input('shipping_quote_token'),
                 'selectedProviderId'  => $request->input('shipping_provider_id') ?: $request->input('selected_provider_id'),
                 'idempotencyKey'      => $request->input('idempotency_key') ?: $request->header('X-Idempotency-Key'),

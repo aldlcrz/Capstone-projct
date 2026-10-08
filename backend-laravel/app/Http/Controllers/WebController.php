@@ -422,17 +422,48 @@ class WebController extends Controller
     }
 
     /**
+     * Public index / landing for artisan shops.
+     */
+    public function allShops()
+    {
+        return redirect('/?open_shops=1#catalogue-section');
+    }
+
+    /**
      * Display a seller's public shop.
      */
     public function sellerShop(string $id)
     {
-        $seller = User::where('role', 'seller')
-            ->where(function($q) use ($id) {
-                $q->where('id', $id)
-                  ->orWhere('shopName', $id)
-                  ->orWhere('shopName', urldecode($id));
+        $cleanId = trim($id);
+        $decodedId = urldecode($cleanId);
+        $unslugged = str_replace('-', ' ', $decodedId);
+
+        $seller = User::where(function($q) {
+                $q->where('role', 'seller')
+                  ->orWhere('role', 'vendor');
             })
-            ->firstOrFail();
+            ->where(function($q) use ($cleanId, $decodedId, $unslugged) {
+                $q->where('id', $cleanId)
+                  ->orWhere('shopName', $cleanId)
+                  ->orWhere('shopName', $decodedId)
+                  ->orWhere('shopName', $unslugged)
+                  ->orWhere('name', $cleanId)
+                  ->orWhere('name', $decodedId)
+                  ->orWhere('name', $unslugged);
+            })
+            ->first();
+
+        // If not found directly, check if $id was actually a Product ID mistakenly linked
+        if (!$seller) {
+            $product = Product::find($cleanId);
+            if ($product && $product->sellerId) {
+                $seller = User::find($product->sellerId);
+            }
+        }
+
+        if (!$seller) {
+            abort(404, 'Artisan shop not found.');
+        }
 
         $isOwnerOrStaff = Auth::check() && (
             Auth::id() === $seller->id ||

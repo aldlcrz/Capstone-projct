@@ -490,17 +490,20 @@
                                 <h3 class="text-xs font-extrabold text-[#1E1915] uppercase tracking-wider">Upload Proof of Payment</h3>
                             </div>
                             <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] uppercase tracking-wider">
-                                Auto-Scanned Reference
+                                Auto-Scanned Reference & Amount
                             </span>
                         </div>
                         
-                        <!-- Hidden Reference Input for Form Submission -->
-                        <input type="hidden" name="paymentReference" :value="paymentRef">
+                        <!-- Hidden Inputs for Form Submission -->
+                        <input type="hidden" name="paymentReference" :value="receipts.length > 0 ? receipts[0].detected_ref : paymentRef">
+                        <input type="hidden" name="refund_mobile_number" :value="refundMobileNumber">
 
                         <div class="space-y-3.5">
 
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">Payment Receipt Screenshot <span class="text-[#996515]">*</span></label>
+                            <div class="space-y-2">
+                                <label class="text-[9px] lg:text-[10px] font-extrabold text-[#78716C] uppercase tracking-widest block">
+                                    <span x-text="paymentMethod + ' Payment Receipt Screenshot'"></span> <span class="text-[#996515]">*</span>
+                                </label>
                                 
                                 <input type="file" 
                                        id="paymentScreenshotInput" 
@@ -510,100 +513,143 @@
                                        @change="handleFileChange($event)" 
                                        class="sr-only">
 
-                                <!-- Upload Card Dropzone -->
-                                <div x-show="!fileName" 
+                                <!-- Upload Card Dropzone (Visible when no receipts or when more receipts needed for partial balance) -->
+                                <div x-show="receipts.length === 0 || isPartialPayment" 
                                      @click="document.getElementById('paymentScreenshotInput').click()" 
-                                     class="cursor-pointer py-6 px-4 bg-[#FAF8F5] border-2 border-dashed border-[#E2D9C8] rounded-2xl text-center hover:border-[#C49520] hover:bg-[#FAF6EE] transition-all flex flex-col items-center justify-center gap-2 group">
-                                    <div class="w-12 h-12 rounded-2xl bg-white border border-[#ECE3D2] text-[#78716C] group-hover:text-[#1E1915] group-hover:border-[#C49520]/40 flex items-center justify-center shadow-xs transition-all">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                     class="cursor-pointer py-5 px-4 bg-[#FAF8F5] border-2 border-dashed border-[#E2D9C8] rounded-2xl text-center hover:border-[#C49520] hover:bg-[#FAF6EE] transition-all flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-11 h-11 rounded-2xl bg-white border border-[#ECE3D2] text-[#78716C] group-hover:text-[#1E1915] group-hover:border-[#C49520]/40 flex items-center justify-center shadow-xs transition-all">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     </div>
                                     <div>
                                         <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#1E1915]">
-                                            <span class="px-3.5 py-1.5 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs">Attach Screenshot</span>
+                                            <span class="px-3.5 py-1.5 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs"
+                                                  x-text="receipts.length > 0 ? '+ Upload Additional Receipt' : 'Attach Screenshot'">Attach Screenshot</span>
                                             <span class="hidden sm:inline text-gray-500">or tap to select</span>
                                         </div>
-                                        <p class="text-[10px] text-gray-400 mt-2">PNG, JPG, or JPEG (Clear receipt showing ref # & amount)</p>
+                                        <p class="text-[10px] text-gray-400 mt-1.5">PNG, JPG, or JPEG (Clear receipt showing reference # & amount)</p>
                                     </div>
                                 </div>
 
-                                <!-- Active Attached File Display -->
-                                <div x-show="fileName" x-cloak class="space-y-3">
-                                    <div class="p-3.5 bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl flex items-center justify-between gap-3 shadow-xs">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <template x-if="filePreview">
-                                                <img :src="filePreview" class="w-12 h-12 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
-                                            </template>
-                                            <template x-if="!filePreview">
-                                                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                </div>
-                                            </template>
-                                            <div class="min-w-0">
-                                                <div class="flex items-center gap-1.5">
-                                                    <span class="text-xs font-bold text-gray-900 truncate" x-text="fileName"></span>
-                                                    <span class="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">Attached</span>
-                                                </div>
-                                                <p class="text-[10px] text-gray-500 font-medium" x-text="aiChecking ? 'Verifying receipt...' : (aiVerificationResult ? 'Scan Complete' : 'Receipt image attached')"></p>
-                                            </div>
-                                        </div>
-                                        <button type="button" @click="removeFile()" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0 cursor-pointer" title="Remove photo">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-
-                                    <!-- Extracted Reference Number Display Card -->
-                                    <template x-if="!aiChecking && aiVerificationResult && aiVerificationResult.detected_ref">
-                                        <div class="p-3.5 bg-white border border-[#E2D9C8] rounded-xl flex items-center justify-between gap-3 shadow-2xs">
-                                            <div>
-                                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Extracted Reference Number</span>
-                                                <div class="flex items-center gap-2 mt-0.5">
-                                                    <span class="font-mono text-sm sm:text-base font-extrabold text-[#1E1915] tracking-wider" x-text="'Extracted Reference Number: ' + aiVerificationResult.detected_ref"></span>
-                                                    <span x-show="isVerificationSuccess()" class="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">✓ Scanned</span>
-                                                </div>
-                                            </div>
-                                            <template x-if="aiVerificationResult.detected_amount !== null && aiVerificationResult.detected_amount !== undefined">
-                                                <div class="text-right">
-                                                    <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#78716C] block">Receipt Amount</span>
-                                                    <span class="font-mono text-xs font-bold text-[#1E1915]" x-text="'₱' + Number(aiVerificationResult.detected_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <!-- Verification Status Card -->
-                                    <div x-show="aiChecking" x-cloak class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 font-bold animate-pulse">
-                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1E1915] animate-ping"></span>
-                                        <span>Scanning receipt image & cross-referencing with payment details...</span>
-                                    </div>
-
-                                    <template x-if="!aiChecking && aiVerificationResult">
-                                        <div class="p-3.5 rounded-xl border flex items-start gap-3 text-xs transition-all"
-                                             :class="{
-                                                 'bg-emerald-50/80 border-emerald-200 text-emerald-900': isVerificationSuccess(),
-                                                 'bg-amber-50/80 border-amber-200 text-amber-900': isVerificationWarning(),
-                                                 'bg-rose-50/80 border-rose-200 text-rose-900': isVerificationError()
-                                             }">
-                                            <span class="text-base shrink-0 leading-none mt-0.5 font-black"
-                                                  :class="{
-                                                      'text-emerald-600': isVerificationSuccess(),
-                                                      'text-amber-600': isVerificationWarning(),
-                                                      'text-rose-600': isVerificationError()
-                                                  }"
-                                                  x-text="getVerificationIcon()"></span>
-                                            <div class="space-y-1 min-w-0 flex-1">
-                                                <div class="font-extrabold text-xs tracking-tight" x-text="getVerificationPrimaryMessage()"></div>
-                                                <template x-if="getVerificationSecondaryMessage()">
-                                                    <p class="text-[11px] font-normal leading-relaxed opacity-90" x-text="getVerificationSecondaryMessage()"></p>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </template>
+                                <!-- Scanning Indicator -->
+                                <div x-show="aiChecking" x-cloak class="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-xs text-amber-900 font-bold animate-pulse">
+                                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1E1915] animate-ping shrink-0"></span>
+                                    <span>Scanning your receipt...</span>
                                 </div>
 
-                                <div x-show="screenshotError && !aiVerificationResult" x-cloak x-text="screenshotError" class="text-xs font-bold text-red-500 px-1 mt-1"></div>
+                                <!-- List of Attached & Verified Receipts -->
+                                <template x-if="receipts.length > 0">
+                                    <div class="space-y-2.5">
+                                        <template x-for="(rcpt, rIdx) in receipts" :key="rcpt.id || rIdx">
+                                            <div class="p-3.5 bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl space-y-2 shadow-2xs">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex items-center gap-3 min-w-0">
+                                                        <template x-if="rcpt.filePreview">
+                                                            <img :src="rcpt.filePreview" class="w-11 h-11 object-cover rounded-xl border border-gray-200 shrink-0 bg-white">
+                                                        </template>
+                                                        <div class="min-w-0">
+                                                            <div class="flex items-center gap-1.5">
+                                                                <span class="text-xs font-bold text-gray-900 truncate" x-text="rcpt.fileName"></span>
+                                                                <span class="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">✓ Scanned</span>
+                                                            </div>
+                                                            <div class="flex items-center gap-2 text-[10px] text-gray-600 font-medium mt-0.5">
+                                                                <span class="font-mono font-bold text-[#1E1915]" x-text="'Ref: ' + (rcpt.detected_ref || 'N/A')"></span>
+                                                                <span>•</span>
+                                                                <span class="font-bold text-emerald-700" x-text="'₱' + Number(rcpt.detected_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" @click="removeReceipt(rIdx)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0 cursor-pointer" title="Remove receipt">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Payment Accounting & Balance Status Card -->
+                                <template x-if="receipts.length > 0 && !aiChecking">
+                                    <div class="space-y-3">
+                                        <!-- Accounting Summary Card -->
+                                        <div class="p-3.5 bg-white border border-[#E2D9C8] rounded-2xl shadow-2xs space-y-2">
+                                            <div class="flex justify-between items-center text-xs">
+                                                <span class="text-gray-500 font-medium">Order Total Required:</span>
+                                                <span class="font-bold text-gray-900" x-text="'₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                            </div>
+                                            <div class="flex justify-between items-center text-xs">
+                                                <span class="text-gray-500 font-medium">Verified Payment Received:</span>
+                                                <span class="font-black text-emerald-700" x-text="'₱' + Number(totalVerifiedPayments).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                            </div>
+                                            
+                                            <!-- Exact Payment Banner -->
+                                            <div x-show="isExactPayment" class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
+                                                <span>Remaining Amount:</span>
+                                                <span>₱0.00 (Payment Complete)</span>
+                                            </div>
+
+                                            <!-- Partial Payment Banner -->
+                                            <div x-show="isPartialPayment" class="pt-2 border-t border-gray-100 space-y-2">
+                                                <div class="flex justify-between items-center text-xs text-amber-900 font-bold">
+                                                    <span>Remaining Amount:</span>
+                                                    <span class="text-rose-600 font-black" x-text="'₱' + Number(remainingAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                </div>
+                                                <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed font-medium">
+                                                    <span x-text="'Please upload another ' + paymentMethod + ' receipt for the remaining ₱' + Number(remainingAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '.'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Overpayment (Sukli) Banner & Refund Destination Input -->
+                                        <template x-if="isOverpaid">
+                                            <div class="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl space-y-3 shadow-xs">
+                                                <div class="flex items-center gap-2 text-amber-900 font-black text-xs uppercase tracking-wider">
+                                                    <span>⚠ Overpayment Detected</span>
+                                                </div>
+
+                                                <div class="grid grid-cols-3 gap-2 text-center py-2.5 px-2 bg-white/90 rounded-xl border border-amber-200">
+                                                    <div>
+                                                        <div class="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Order Total</div>
+                                                        <div class="text-xs sm:text-sm font-black text-gray-900 mt-0.5" x-text="'₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Payment Received</div>
+                                                        <div class="text-xs sm:text-sm font-black text-emerald-700 mt-0.5" x-text="'₱' + Number(totalVerifiedPayments).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-[9px] uppercase tracking-wider text-amber-700 font-bold">Sukli to be returned</div>
+                                                        <div class="text-xs sm:text-sm font-black text-amber-900 mt-0.5" x-text="'₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                                    </div>
+                                                </div>
+
+                                                <p class="text-xs text-amber-950 font-medium leading-relaxed"
+                                                   x-text="'Your payment is ₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' more than your order total. When the Admin verifies this order, your ₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' sukli will be sent back to you. Please provide your mobile number for the refund.'">
+                                                </p>
+
+                                                <div class="space-y-1.5 pt-1">
+                                                    <label class="text-[10px] font-extrabold uppercase tracking-widest text-amber-950 block">
+                                                        Refund / Sukli Mobile Number <span class="text-red-500">*</span>
+                                                    </label>
+                                                    <input type="tel" 
+                                                           name="refund_mobile_number" 
+                                                           x-model="refundMobileNumber" 
+                                                           @input="validateRefundMobile()" 
+                                                           maxlength="11" 
+                                                           placeholder="09XXXXXXXXX" 
+                                                           class="w-full bg-white border border-amber-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-3.5 py-2.5 text-xs font-bold text-gray-900 placeholder-gray-400 shadow-2xs">
+                                                    <div x-show="refundMobileError" x-cloak x-text="refundMobileError" class="text-[10px] font-bold text-red-600 px-1"></div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Error Alert -->
+                                <div x-show="screenshotError" x-cloak x-text="screenshotError" class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold mt-1"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
                 </div>
             </div>
 
@@ -1363,6 +1409,33 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         scanId: 0,
         fileScanned: false,
 
+        // Online Multi-Receipt & Overpayment Accounting State
+        receipts: [],
+        refundMobileNumber: '',
+        refundMobileError: '',
+
+        get totalVerifiedPayments() {
+            return this.receipts.reduce((sum, r) => sum + (Number(r.detected_amount) || 0), 0);
+        },
+        get payableAmount() {
+            return Number({{ (float)$subtotal }}) + Number(this.currentShippingFee || 0);
+        },
+        get remainingAmount() {
+            return Math.max(0, Math.round((this.payableAmount - this.totalVerifiedPayments) * 100) / 100);
+        },
+        get sukliAmount() {
+            return Math.max(0, Math.round((this.totalVerifiedPayments - this.payableAmount) * 100) / 100);
+        },
+        get isExactPayment() {
+            return this.totalVerifiedPayments > 0 && Math.abs(this.totalVerifiedPayments - this.payableAmount) < 0.001;
+        },
+        get isPartialPayment() {
+            return this.totalVerifiedPayments > 0 && (this.payableAmount - this.totalVerifiedPayments) >= 0.01;
+        },
+        get isOverpaid() {
+            return (this.totalVerifiedPayments - this.payableAmount) >= 0.01;
+        },
+
         // Logistics State
         shippingQuote: null,
         shippingQuoteToken: '',
@@ -1656,46 +1729,55 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (!this.aiVerificationResult) return '';
             const res = this.aiVerificationResult;
 
-            // 1. Reference already used
+            // 1. Reference already used / Duplicate
             if (this.isRefDuplicate || res.reason_code === 'REFERENCE_ALREADY_USED' || (res.message && res.message.toLowerCase().includes('already used'))) {
-                return `${provider} reference is already used.`;
+                return provider === 'Maya'
+                    ? 'The Maya reference number used is already in use. Please check your payment receipt or upload a new transaction.'
+                    : 'The reference number used is already in use. Please check your payment receipt or upload a new transaction.';
             }
 
-            // 2. Reference mismatch (new: backend now REJECTs this)
+            // 2. Reference mismatch between manual input and OCR
             if (res.reason_code === 'REFERENCE_MISMATCH') {
                 return res.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
             }
 
-            // 3. Fake / invalid image detected
-            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || (res.status === 'REJECT' && res.reason_code !== 'AMOUNT_UNDERPAY' && res.reason_code !== 'INVALID_REFERENCE_FORMAT' && res.reason_code !== 'REFERENCE_MISMATCH')) {
-                return 'Fake image uploaded. Please upload again.';
+            // 3. Fake / invalid image or wrong wallet detected
+            if (res.is_receipt === false || res.reason_code === 'FAKE_OR_INVALID_IMAGE' || res.reason_code === 'WALLET_MISMATCH' || (res.status === 'REJECT' && res.reason_code !== 'AMOUNT_UNDERPAY' && res.reason_code !== 'INVALID_REFERENCE_FORMAT' && res.reason_code !== 'REFERENCE_MISMATCH')) {
+                return provider === 'Maya'
+                    ? 'We only accept Maya receipts. Please upload a valid Maya payment receipt.'
+                    : 'We only accept GCash receipts. Please upload a valid GCash payment receipt.';
             }
 
-            // 3. Invalid reference format
+            // 4. Invalid reference format (e.g. repeated digits or wrong length)
             if (res.reason_code === 'INVALID_REFERENCE_FORMAT') {
                 return res.message || 'Invalid reference number format detected in receipt.';
             }
 
-            // 4. Amount underpayment
+            // 5. Amount underpayment
             if (res.reason_code === 'AMOUNT_UNDERPAY') {
                 return 'Amount mismatch detected. Please upload again.';
             }
 
-            // 5. Reference cannot be read
-            if (res.reason_code === 'UNREADABLE_REFERENCE' || !res.detected_ref) {
-                return "Can't read reference from image. Manual artisan verification required.";
+            // 6. Service unavailable / timeout
+            if (res.reason_code === 'VERIFICATION_UNAVAILABLE') {
+                return "We couldn't verify your receipt right now. Please try again in a moment.";
             }
 
-            if (res.reason_code === 'REFERENCE_MISMATCH') {
-                return `Reference mismatch. Manual seller review required.`;
+            // 7. Reference cannot be read / blurry image
+            if (res.reason_code === 'UNREADABLE_REFERENCE' || !res.detected_ref) {
+                return provider === 'Maya'
+                    ? 'Please reupload your Maya receipt. The image is blurry or unclear, and we cannot read the reference number.'
+                    : 'Please reupload your GCash receipt. The image is blurry or unclear, and we cannot read the reference number.';
             }
 
             if (res.status === 'REVIEW') {
                 return res.message || `Manual ${provider} verification required by artisan seller.`;
             }
 
-            // 6. Reference successfully read
-            return `${provider} reference successfully read: ${res.detected_ref}`;
+            // 8. Reference successfully read
+            return provider === 'Maya'
+                ? `✓ Maya reference successfully read: ${res.detected_ref}. Reference accepted.`
+                : `✓ GCash reference successfully read: ${res.detected_ref}. Reference accepted.`;
         },
 
         getVerificationSecondaryMessage() {
@@ -1726,18 +1808,39 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             return this.isVerificationSuccess();
         },
 
+        validateRefundMobile() {
+            const raw = (this.refundMobileNumber || '').trim();
+            if (!raw) {
+                this.refundMobileError = 'Mobile number is required for refund.';
+                return false;
+            }
+            const clean = raw.replace(/\D/g, '');
+            if (!/^09\d{9}$/.test(clean)) {
+                this.refundMobileError = 'Invalid Philippine mobile number format (must be 09XXXXXXXXX).';
+                return false;
+            }
+            this.refundMobileError = '';
+            return true;
+        },
+
         canPlaceOrder() {
             if (this.isPlacingOrder || this.aiChecking) return false;
             if (this.paymentMethod === 'COD') {
                 return true;
             }
-            if (!this.fileName || !this.paymentRef || this.isRefDuplicate || this.refError || this.isVerificationError()) {
+            if (!this.receipts || this.receipts.length === 0) {
                 return false;
             }
-            if (this.aiVerificationResult && this.aiVerificationResult.status === 'REJECT') {
+            if (this.isPartialPayment) {
                 return false;
             }
-            return this.isRefValid();
+            if (this.isOverpaid) {
+                const num = (this.refundMobileNumber || '').trim().replace(/\D/g, '');
+                if (!/^09\d{9}$/.test(num)) {
+                    return false;
+                }
+            }
+            return true;
         },
 
         locationDropdownOpen: false,
@@ -1760,38 +1863,33 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 if (file.size > 10 * 1024 * 1024) {
                     this.screenshotError = 'File size exceeds 10MB limit.';
                     e.target.value = '';
-                    this.removeFile();
                     return;
                 }
                 this.screenshotError = '';
-                this.fileName = file.name;
-                if (file.type.startsWith('image/')) {
-                    this.filePreview = URL.createObjectURL(file);
-                } else {
-                    this.filePreview = '';
-                }
-                // Scan exactly once per uploaded file via authoritative Gemini Vision
-                this.runAiReceiptVerification();
+                this.runAiReceiptVerification(file);
             }
         },
 
-        runAiReceiptVerification() {
-            const fileInput = document.getElementById('paymentScreenshotInput');
-            const file = fileInput && fileInput.files && fileInput.files[0];
+        runAiReceiptVerification(file) {
+            if (!file) {
+                const fileInput = document.getElementById('paymentScreenshotInput');
+                file = fileInput && fileInput.files && fileInput.files[0];
+            }
             if (!file) return;
 
             // Increment scan identity to guard against race conditions and stale responses
             const currentScanId = ++this.scanId;
 
-            const csrfToken = document.querySelector('input[name=_token]')?.value || '';
+            const csrfToken = document.querySelector('input[name=_token]')?.value || document.querySelector('meta[name=csrf-token]')?.content || '';
             const formData = new FormData();
             formData.append('receipt', file);
             formData.append('reference', (this.paymentRef || '').trim());
             formData.append('method', this.paymentMethod);
-            formData.append('amount', '{{ (float)($grandTotal ?? 0) }}');
+            formData.append('amount', String(this.remainingAmount > 0 ? this.remainingAmount : this.payableAmount));
 
             this.aiChecking = true;
             this.aiVerificationResult = null;
+            this.screenshotError = '';
 
             // Bounded failure path: 25-second timeout via AbortController
             const controller = new AbortController();
@@ -1814,7 +1912,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             })
             .then(data => {
                 clearTimeout(timeoutId);
-                // Stale response guard: Ignore if user selected a different file
                 if (currentScanId !== this.scanId) {
                     return;
                 }
@@ -1822,24 +1919,58 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 this.aiVerificationResult = data;
                 this.fileScanned = true;
 
-                if (data.detected_ref) {
-                    const cleanDetected = data.detected_ref.replace(/\D/g, '');
-                    const isGcash = this.paymentMethod === 'GCash';
-                    const targetLen = isGcash ? 13 : 12;
+                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
 
-                    if (cleanDetected.length === targetLen || cleanDetected.length >= 10) {
-                        this.paymentRef = cleanDetected;
-                        this.ocrExtracted = true;
-                        this.validateRef();
-                        // Only checks DB uniqueness, NEVER re-scans the image
-                        this.checkServerReference();
-                    }
+                if (data.is_receipt === false || data.reason_code === 'FAKE_OR_INVALID_IMAGE' || data.reason_code === 'WALLET_MISMATCH' || (data.status === 'REJECT' && data.reason_code !== 'AMOUNT_UNDERPAY' && data.reason_code !== 'INVALID_REFERENCE_FORMAT' && data.reason_code !== 'REFERENCE_MISMATCH')) {
+                    this.screenshotError = provider === 'Maya'
+                        ? 'We only accept Maya receipts. Please upload a valid Maya payment receipt.'
+                        : 'We only accept GCash receipts. Please upload a valid GCash payment receipt.';
+                    return;
                 }
-                if (data.is_receipt === false) {
-                    this.screenshotError = data.message || 'Attached file is not a valid receipt.';
-                } else {
-                    this.screenshotError = '';
+
+                if (data.reason_code === 'UNREADABLE_REFERENCE' || !data.detected_ref) {
+                    this.screenshotError = provider === 'Maya'
+                        ? 'Please reupload your Maya receipt. The image is blurry or unclear, and we cannot read the reference number.'
+                        : 'Please reupload your GCash receipt. The image is blurry or unclear, and we cannot read the reference number.';
+                    return;
                 }
+
+                const cleanDetected = (data.detected_ref || '').replace(/\D/g, '');
+                const targetLen = provider === 'GCash' ? 13 : 12;
+
+                if (cleanDetected.length !== targetLen || /^(\d)\1+$/.test(cleanDetected)) {
+                    this.screenshotError = `Invalid reference number format detected in receipt.`;
+                    return;
+                }
+
+                // Check for duplicate in currently attached receipts
+                const isDupeInBatch = this.receipts.some(r => r.detected_ref === cleanDetected);
+                if (isDupeInBatch || data.reason_code === 'REFERENCE_ALREADY_USED') {
+                    this.screenshotError = 'The reference number used is already in use. Please check your payment receipt or upload a new transaction.';
+                    return;
+                }
+
+                const previewUrl = file.type && file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
+                const detectedAmount = Number(data.detected_amount) || Number(this.remainingAmount > 0 ? this.remainingAmount : this.payableAmount);
+
+                this.receipts.push({
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    fileName: file.name,
+                    filePreview: previewUrl,
+                    file: file,
+                    detected_ref: cleanDetected,
+                    detected_amount: detectedAmount,
+                    reason_code: data.reason_code,
+                    screening: data
+                });
+
+                this.paymentRef = cleanDetected;
+                this.fileName = file.name;
+                this.screenshotError = '';
+
+                // Reset file input so user can attach another receipt if balance remains
+                const input = document.getElementById('paymentScreenshotInput');
+                if (input) input.value = '';
             })
             .catch(err => {
                 clearTimeout(timeoutId);
@@ -1847,18 +1978,17 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     return;
                 }
 
-                // Bounded failure path: fallback to manual seller review so checkout is not permanently blocked
-                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
+                // Technical failure / timeout
                 this.fileScanned = true;
                 this.aiVerificationResult = {
                     status: 'REVIEW',
-                    reason_code: 'UNREADABLE_REFERENCE',
+                    reason_code: 'VERIFICATION_UNAVAILABLE',
                     is_receipt: true,
                     ref_matched: false,
                     detected_ref: '',
-                    message: `${provider} scan timed out or reference is unreadable. Manual artisan seller verification will be required upon placing order.`
+                    message: "We couldn't verify your receipt right now. Please try again in a moment."
                 };
-                this.screenshotError = '';
+                this.screenshotError = "We couldn't verify your receipt right now. Please try again in a moment.";
             })
             .finally(() => {
                 if (currentScanId === this.scanId) {
@@ -1867,11 +1997,27 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             });
         },
 
+        removeReceipt(idx) {
+            if (idx >= 0 && idx < this.receipts.length) {
+                this.receipts.splice(idx, 1);
+                if (this.receipts.length === 0) {
+                    this.fileName = '';
+                    this.paymentRef = '';
+                    this.aiVerificationResult = null;
+                } else {
+                    const last = this.receipts[this.receipts.length - 1];
+                    this.fileName = last.fileName;
+                    this.paymentRef = last.detected_ref;
+                }
+            }
+        },
+
         removeFile() {
             this.scanId++;
             this.fileScanned = false;
             const input = document.getElementById('paymentScreenshotInput');
             if (input) input.value = '';
+            this.receipts = [];
             this.fileName = '';
             this.filePreview = '';
             this.screenshotError = '';
@@ -2680,9 +2826,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (this.isPlacingOrder || !this.canPlaceOrder()) return;
             
             if (this.paymentMethod !== 'COD') {
-                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
-                const screenshotInput = document.getElementById('paymentScreenshotInput');
-                if (!this.fileName || !screenshotInput || !screenshotInput.files || screenshotInput.files.length === 0) {
+                if (!this.receipts || this.receipts.length === 0) {
                     this.screenshotError = 'Payment receipt screenshot is required for online payments.';
                     document.getElementById('paymentScreenshotInput')?.click();
                     return;
@@ -2691,25 +2835,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (this.aiVerificationResult && (this.aiVerificationResult.is_receipt === false || this.aiVerificationResult.reason_code === 'FAKE_OR_INVALID_IMAGE')) {
-                    this.screenshotError = 'Fake image uploaded. Please upload again.';
+                if (this.isPartialPayment) {
+                    this.screenshotError = `Please upload another ${this.paymentMethod} receipt for the remaining balance.`;
                     return;
                 }
-                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_MISMATCH') {
-                    this.screenshotError = this.aiVerificationResult.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
-                    return;
-                }
-                if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
-                    this.refError = `${provider} reference is already used.`;
-                    this.screenshotError = `${provider} reference is already used.`;
-                    return;
-                }
-                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'AMOUNT_UNDERPAY') {
-                    this.screenshotError = 'Amount mismatch detected. Please upload again.';
-                    return;
-                }
-                if (!this.paymentRef || !this.validateRef()) {
-                    this.screenshotError = "Can't read reference. Please upload again.";
+                if (this.isOverpaid && !this.validateRefundMobile()) {
                     return;
                 }
             }
@@ -2719,8 +2849,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         confirmPlaceOrder() {
             if (this.isPlacingOrder || !this.canPlaceOrder()) return;
             if (this.paymentMethod !== 'COD') {
-                const provider = this.paymentMethod === 'Maya' ? 'Maya' : 'GCash';
-                if (!this.fileName) {
+                if (!this.receipts || this.receipts.length === 0) {
                     this.showConfirmModal = false;
                     this.screenshotError = 'Payment receipt screenshot is required for online payments.';
                     return;
@@ -2730,30 +2859,28 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = 'Please wait while receipt scanning is in progress.';
                     return;
                 }
-                if (this.aiVerificationResult && (this.aiVerificationResult.is_receipt === false || this.aiVerificationResult.reason_code === 'FAKE_OR_INVALID_IMAGE')) {
+                if (this.isPartialPayment) {
                     this.showConfirmModal = false;
-                    this.screenshotError = 'Fake image uploaded. Please upload again.';
+                    this.screenshotError = `Please upload another ${this.paymentMethod} receipt for the remaining balance.`;
                     return;
                 }
-                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_MISMATCH') {
+                if (this.isOverpaid && !this.validateRefundMobile()) {
                     this.showConfirmModal = false;
-                    this.screenshotError = this.aiVerificationResult.message || 'Reference mismatch detected. Please upload the correct payment receipt.';
                     return;
                 }
-                if (this.isRefDuplicate || (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'REFERENCE_ALREADY_USED')) {
-                    this.showConfirmModal = false;
-                    this.screenshotError = `${provider} reference is already used.`;
-                    return;
-                }
-                if (this.aiVerificationResult && this.aiVerificationResult.reason_code === 'AMOUNT_UNDERPAY') {
-                    this.showConfirmModal = false;
-                    this.screenshotError = 'Amount mismatch detected. Please upload again.';
-                    return;
-                }
-                if (!this.paymentRef || !this.validateRef()) {
-                    this.showConfirmModal = false;
-                    this.screenshotError = "Can't read reference. Please upload again.";
-                    return;
+
+                // Sync all attached receipt files to paymentScreenshotInput via DataTransfer
+                try {
+                    const dt = new DataTransfer();
+                    this.receipts.forEach(r => {
+                        if (r.file) dt.items.add(r.file);
+                    });
+                    const input = document.getElementById('paymentScreenshotInput');
+                    if (input && dt.files.length > 0) {
+                        input.files = dt.files;
+                    }
+                } catch (e) {
+                    console.warn('DataTransfer sync notice', e);
                 }
             }
             this.isPlacingOrder = true;

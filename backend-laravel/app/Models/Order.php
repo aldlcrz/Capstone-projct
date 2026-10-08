@@ -20,6 +20,9 @@ class Order extends Model
         'customerId',
         'sellerId',
         'totalAmount',
+        'total_verified_payments',
+        'overpayment_amount',
+        'refund_mobile_number',
         'status',
         'paymentMethod',
         'paymentReference',
@@ -99,10 +102,28 @@ class Order extends Model
     {
         return [
             'totalAmount' => 'decimal:2',
+            'total_verified_payments' => 'decimal:2',
+            'overpayment_amount' => 'decimal:2',
             'shippingAddress' => 'array',
             'createdAt' => 'datetime',
             'updatedAt' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if this order has an overpayment requiring sukli refund.
+     */
+    public function isOverpaid(): bool
+    {
+        return (float) ($this->overpayment_amount ?? 0) > 0.0;
+    }
+
+    /**
+     * Get the exact sukli amount to be refunded.
+     */
+    public function sukliAmount(): float
+    {
+        return round((float) ($this->overpayment_amount ?? 0), 2);
     }
 
     /**

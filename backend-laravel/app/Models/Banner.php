@@ -132,6 +132,14 @@ class Banner extends Model
     public function getResolvedButtonUrl2()
     {
         if ($this->button_url_2 && $this->button_url_2 !== '#' && $this->button_url_2 !== '/') {
+            $trimmed = rtrim($this->button_url_2, '/');
+            if ($trimmed === '/shops' || $trimmed === '/shop') {
+                $associatedSellerId = $this->getAssociatedSellerId();
+                if ($associatedSellerId) {
+                    return route('shops.show', ['id' => $associatedSellerId]);
+                }
+                return '/?open_shops=1#catalogue-section';
+            }
             return $this->button_url_2;
         }
 
@@ -140,10 +148,18 @@ class Banner extends Model
             return route('shops.show', ['id' => $this->userId]);
         }
 
+        // Check if seller can be associated from button_url_1 or product
+        $associatedSellerId = $this->getAssociatedSellerId();
+        if ($associatedSellerId) {
+            return route('shops.show', ['id' => $associatedSellerId]);
+        }
+
         // If subtitle or title mentions a seller/store name (e.g., 'MACAPAGAL')
         $possibleName = trim($this->subtitle ?: '');
         if ($possibleName && strlen($possibleName) <= 50) {
-            $seller = User::where('role', 'seller')
+            $seller = User::where(function($q) {
+                    $q->where('role', 'seller')->orWhere('role', 'vendor');
+                })
                 ->where(function($q) use ($possibleName) {
                     $q->where('shopName', 'like', '%' . $possibleName . '%')
                       ->orWhere('name', 'like', '%' . $possibleName . '%');

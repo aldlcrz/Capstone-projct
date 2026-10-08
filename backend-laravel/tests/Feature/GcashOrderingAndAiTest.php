@@ -181,7 +181,7 @@ class GcashOrderingAndAiTest extends TestCase
         $this->assertEquals(2620.00, $evaluation['detected_amount']);
     }
 
-    public function test_ai_receipt_rejects_underpayment(): void
+    public function test_ai_receipt_accepts_underpayment_as_partial_payment(): void
     {
         $evaluation = AiService::evaluateReceiptEvidence([
             'is_receipt' => true,
@@ -193,8 +193,10 @@ class GcashOrderingAndAiTest extends TestCase
             'confidence' => 0.98,
         ], '1009876543210', 'GCash', 2620.00);
 
-        $this->assertEquals('REJECT', $evaluation['status']);
-        $this->assertStringContainsString('Amount mismatch', $evaluation['message']);
+        $this->assertEquals('PASS', $evaluation['status']);
+        $this->assertEquals('PARTIAL_PAYMENT', $evaluation['reason_code']);
+        $this->assertEquals(2520.00, $evaluation['remaining_amount']);
+        $this->assertStringContainsString('Payment received: ₱100.00', $evaluation['message']);
     }
 
     public function test_gcash_ordering_checkout_and_seller_verification_flow(): void

@@ -78,9 +78,9 @@ class PaymentVerificationTest extends TestCase
         $this->assertEquals(1000.00, $evaluation['detected_amount']);
     }
 
-    public function test_severe_underpayment_triggers_reject()
+    public function test_underpayment_triggers_partial_payment()
     {
-        // Case A: Customer paid ₱10 on a ₱1,000 order -> REJECT
+        // Case A: Customer paid ₱10 on a ₱1,000 order -> PARTIAL_PAYMENT
         $eval1 = AiService::evaluateReceiptEvidence([
             'is_receipt' => true,
             'wallet' => 'GCash',
@@ -91,10 +91,12 @@ class PaymentVerificationTest extends TestCase
             'confidence' => 0.95,
         ], '1001234567890', 'GCash', 1000.00);
 
-        $this->assertEquals('REJECT', $eval1['status']);
-        $this->assertStringContainsString('Amount mismatch', $eval1['message']);
+        $this->assertEquals('PASS', $eval1['status']);
+        $this->assertEquals('PARTIAL_PAYMENT', $eval1['reason_code']);
+        $this->assertEquals(990.00, $eval1['remaining_amount']);
+        $this->assertStringContainsString('Payment received: ₱10.00', $eval1['message']);
 
-        // Case B: Customer paid ₱500 on a ₱1,000 order (50% < 90%) -> REJECT
+        // Case B: Customer paid ₱500 on a ₱1,000 order -> PARTIAL_PAYMENT
         $eval2 = AiService::evaluateReceiptEvidence([
             'is_receipt' => true,
             'wallet' => 'GCash',
@@ -105,13 +107,14 @@ class PaymentVerificationTest extends TestCase
             'confidence' => 0.95,
         ], '1001234567890', 'GCash', 1000.00);
 
-        $this->assertEquals('REJECT', $eval2['status']);
-        $this->assertStringContainsString('Amount mismatch', $eval2['message']);
+        $this->assertEquals('PASS', $eval2['status']);
+        $this->assertEquals('PARTIAL_PAYMENT', $eval2['reason_code']);
+        $this->assertEquals(500.00, $eval2['remaining_amount']);
     }
 
-    public function test_near_amount_discrepancy_triggers_review()
+    public function test_near_amount_partial_payment()
     {
-        // Customer paid ₱950 on a ₱1,000 order (95% >= 90%, but != 1,000) -> REVIEW
+        // Customer paid ₱950 on a ₱1,000 order -> PARTIAL_PAYMENT with remaining ₱50
         $evaluation = AiService::evaluateReceiptEvidence([
             'is_receipt' => true,
             'wallet' => 'GCash',
@@ -122,14 +125,15 @@ class PaymentVerificationTest extends TestCase
             'confidence' => 0.95,
         ], '1001234567890', 'GCash', 1000.00);
 
-        $this->assertEquals('REVIEW', $evaluation['status']);
-        $this->assertStringContainsString('Amount discrepancy', $evaluation['message']);
-        $this->assertStringContainsString('Manual seller review required', $evaluation['message']);
+        $this->assertEquals('PASS', $evaluation['status']);
+        $this->assertEquals('PARTIAL_PAYMENT', $evaluation['reason_code']);
+        $this->assertEquals(50.00, $evaluation['remaining_amount']);
+        $this->assertStringContainsString('Remaining amount: ₱50.00', $evaluation['message']);
     }
 
-    public function test_overpayment_triggers_review()
+    public function test_overpayment_triggers_sukli_detection()
     {
-        // Customer paid ₱1,100 on a ₱1,000 order -> REVIEW
+        // Customer paid ₱1,100 on a ₱1,000 order -> OVERPAYMENT_DETECTED with ₱100 sukli
         $evaluation = AiService::evaluateReceiptEvidence([
             'is_receipt' => true,
             'wallet' => 'GCash',
@@ -140,9 +144,10 @@ class PaymentVerificationTest extends TestCase
             'confidence' => 0.95,
         ], '1001234567890', 'GCash', 1000.00);
 
-        $this->assertEquals('REVIEW', $evaluation['status']);
-        $this->assertStringContainsString('Amount overpayment detected', $evaluation['message']);
-        $this->assertStringContainsString('Manual seller review required', $evaluation['message']);
+        $this->assertEquals('PASS', $evaluation['status']);
+        $this->assertEquals('OVERPAYMENT_DETECTED', $evaluation['reason_code']);
+        $this->assertEquals(100.00, $evaluation['sukli_amount']);
+        $this->assertStringContainsString('Your payment is ₱100.00 more than your order total', $evaluation['message']);
     }
 
     public function test_missing_or_low_confidence_amount_triggers_review()
@@ -158,7 +163,7 @@ class PaymentVerificationTest extends TestCase
         ], '1001234567890', 'GCash', 1000.00);
 
         $this->assertEquals('REVIEW', $evaluation['status']);
-        $this->assertStringContainsString('manually verify payment', $evaluation['message']);
+        $this->assertEquals('AMOUNT_UNCLEAR', $evaluation['reason_code']);
     }
 
     public function test_active_unverified_collision_has_distinct_diagnostic()
@@ -188,7 +193,7 @@ class PaymentVerificationTest extends TestCase
         ], '1007777777777', 'GCash', 1000.00);
 
         $this->assertEquals('REJECT', $evaluation['status']);
-        $this->assertEquals('ACTIVE_REFERENCE_COLLISION', $evaluation['collision_type']);
+        $this->assertEquals('REFERENCE_ALREADY_USED', $evaluation['reason_code']);
     }
 
     public function test_verified_reference_cannot_be_reused()
@@ -232,7 +237,7 @@ class PaymentVerificationTest extends TestCase
         ], '1001234567890', 'GCash', 1000.00);
 
         $this->assertEquals('REJECT', $evaluation['status']);
-        $this->assertStringContainsString('already been verified', $evaluation['message']);
+        $this->assertStringContainsString('already in use', $evaluation['message']);
     }
 
     public function test_rejected_reference_releases_active_claim_and_can_be_reused()
@@ -508,7 +513,7 @@ class PaymentVerificationTest extends TestCase
 
         $this->assertEquals('REVIEW', $evaluation['status']);
         $this->assertEquals('UNREADABLE_REFERENCE', $evaluation['reason_code']);
-        $this->assertStringContainsString('could not be automatically extracted', $evaluation['message']);
+        $this->assertStringContainsString('Please reupload your GCash receipt', $evaluation['message']);
     }
 
     public function test_fake_or_non_receipt_image_triggers_reject()

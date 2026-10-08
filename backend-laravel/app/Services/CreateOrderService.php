@@ -412,81 +412,142 @@ class CreateOrderService
             $shippingFee = round((float) $chosenQuote['shipping_fee'], 2);
             $totalExpectedAmount = round($calculatedSubtotal + $shippingFee, 2);
 
-            // Process Payment Validation / Reference Claiming
+            // Process Payment Validation / Reference Claiming & Accounting
             $paymentReference = null;
             $paymentProofPath = null;
             $initialPaymentStatus = $isCod ? 'Unpaid' : 'Pending';
             $transactionStatus = 'UNVERIFIED';
             $verificationTier = 'REVIEW';
-            $screening = $params['screening'] ?? null;
-            $receiptPath = $params['paymentProof'] ?? null;
+            $validatedReceipts = [];
+            $totalVerifiedPayments = 0.0;
+            $overpaymentAmount = 0.00;
+            $refundMobileNumber = null;
 
             if (!$isCod) {
-                if ($screening && (($screening['status'] ?? '') === 'REJECT' || ($screening['is_receipt'] ?? true) === false)) {
-                    throw new DomainException($screening['message'] ?? 'Payment receipt verification failed. Please attach an authentic payment confirmation.');
+                // Support both multi-receipt array and single receipt parameters
+                $receiptList = [];
+                if (!empty($params['receipts']) && is_array($params['receipts'])) {
+                    $receiptList = $params['receipts'];
+                } elseif (!empty($params['screening']) || !empty($params['paymentProof']) || !empty($params['paymentReference'])) {
+                    $receiptList = [[
+                        'screening'        => $params['screening'] ?? null,
+                        'paymentProof'     => $params['paymentProof'] ?? null,
+                        'paymentReference' => $params['paymentReference'] ?? null,
+                    ]];
                 }
 
-                if ($screening && isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])) {
-                    $detectedAmt = (float) $screening['detected_amount'];
-                    if ($totalExpectedAmount > 0 && $detectedAmt < ($totalExpectedAmount * 0.90)) {
-                        throw new DomainException("Amount mismatch: The receipt shows ₱" . number_format($detectedAmt, 2) . ", but the required order total is ₱" . number_format($totalExpectedAmount, 2) . ". Payment cannot be accepted.");
+                if (empty($receiptList)) {
+                    throw new DomainException('Payment receipt screenshot and reference are required for online payments.');
+                }
+
+                foreach ($receiptList as $rItem) {
+                    $screening = $rItem['screening'] ?? null;
+                    $receiptPath = $rItem['paymentProof'] ?? null;
+
+                    if ($screening && (($screening['status'] ?? '') === 'REJECT' || ($screening['is_receipt'] ?? true) === false)) {
+                        throw new DomainException($screening['message'] ?? 'Payment receipt verification failed. Please attach an authentic payment confirmation.');
                     }
+
+                    $rawSubmittedRef = trim((string)($rItem['paymentReference'] ?? ''));
+                    $cleanSubmittedRef = preg_replace('/\D/', '', $rawSubmittedRef);
+
+                    $detectedRef = !empty($screening['detected_ref']) ? preg_replace('/\D/', '', (string)$screening['detected_ref']) : null;
+                    $resolvedRef = $detectedRef ?: $cleanSubmittedRef;
+
+                    if (empty($resolvedRef)) {
+                        throw new DomainException('Could not detect a valid transaction reference number from the uploaded payment receipt.');
+                    }
+
+                    if ($isGcash && strlen($resolvedRef) !== 13) {
+                        throw new DomainException('GCash reference number extracted from receipt must be exactly 13 digits.');
+                    } elseif ($isMaya && strlen($resolvedRef) !== 12) {
+                        throw new DomainException('Maya reference number extracted from receipt must be exactly 12 digits.');
+                    }
+
+                    if (preg_match('/^(\d)\1+$/', $resolvedRef)) {
+                        throw new DomainException('Invalid payment reference number detected. Repeated digit sequences are not allowed.');
+                    }
+
+                    // Prevent duplicate reference in the same submission batch
+                    if (in_array($resolvedRef, array_column($validatedReceipts, 'reference'), true)) {
+                        throw new DomainException('The reference number used is already in use. Please check your payment receipt or upload a new transaction.');
+                    }
+
+                    // Atomic uniqueness verification for active reference claims in database
+                    $isDuplicate = PaymentTransaction::where('active_reference', $resolvedRef)->exists();
+                    if (!$isDuplicate) {
+                        $isDuplicate = Order::where('paymentReference', $resolvedRef)
+                            ->whereNotIn('status', ['Cancelled', 'Declined'])
+                            ->where('paymentStatus', '!=', 'Payment Rejected')
+                            ->exists();
+                    }
+
+                    if ($isDuplicate) {
+                        throw new DomainException('The reference number used is already in use. Please check your payment receipt or upload a new transaction.');
+                    }
+
+                    $detectedAmt = isset($screening['detected_amount']) && is_numeric($screening['detected_amount'])
+                        ? (float) $screening['detected_amount']
+                        : null;
+
+                    if ($detectedAmt === null && count($receiptList) === 1) {
+                        $detectedAmt = $totalExpectedAmount;
+                    } elseif ($detectedAmt === null) {
+                        $detectedAmt = 0.0;
+                    }
+
+                    $totalVerifiedPayments = round($totalVerifiedPayments + $detectedAmt, 2);
+
+                    $tier = (($screening['status'] ?? '') === 'PASS') ? 'PASS' : 'REVIEW';
+
+                    $validatedReceipts[] = [
+                        'reference'            => $resolvedRef,
+                        'detected_amount'      => $detectedAmt,
+                        'receipt_path'         => $receiptPath,
+                        'screening'            => $screening,
+                        'tier'                 => $tier,
+                    ];
                 }
 
-                $rawSubmittedRef = trim((string)($params['paymentReference'] ?? ''));
-                $cleanSubmittedRef = preg_replace('/\D/', '', $rawSubmittedRef);
+                // Primary reference & proof for order headline record
+                $paymentReference = $validatedReceipts[0]['reference'] ?? null;
+                $paymentProofPath = $validatedReceipts[0]['receipt_path'] ?? null;
 
-                $detectedRef = !empty($screening['detected_ref']) ? preg_replace('/\D/', '', (string)$screening['detected_ref']) : null;
-                $resolvedRef = $detectedRef ?: $cleanSubmittedRef;
+                // Server-side Authoritative Payment Accounting
+                $totalVerified = round($totalVerifiedPayments, 2);
+                $remaining = max(0.0, round($totalExpectedAmount - $totalVerified, 2));
+                $sukli = max(0.0, round($totalVerified - $totalExpectedAmount, 2));
 
-                if (empty($resolvedRef)) {
-                    throw new DomainException('Could not detect a valid transaction reference number from the uploaded payment receipt.');
+                if ($totalVerified < $totalExpectedAmount) {
+                    throw new DomainException("Incomplete payment: ₱" . number_format($totalVerified, 2) . " received, but ₱" . number_format($totalExpectedAmount, 2) . " is required. Remaining balance: ₱" . number_format($remaining, 2) . ".");
                 }
 
-                if ($isGcash && strlen($resolvedRef) !== 13) {
-                    throw new DomainException('GCash reference number extracted from receipt must be exactly 13 digits.');
-                } elseif ($isMaya && strlen($resolvedRef) !== 12) {
-                    throw new DomainException('Maya reference number extracted from receipt must be exactly 12 digits.');
-                }
+                if ($sukli > 0.0) {
+                    $rawMobile = trim((string)($params['refund_mobile_number'] ?? ($params['refundMobileNumber'] ?? '')));
+                    $normMobile = preg_replace('/\D/', '', $rawMobile);
+                    if (str_starts_with($normMobile, '639') && strlen($normMobile) === 12) {
+                        $normMobile = '0' . substr($normMobile, 2);
+                    }
 
-                if (preg_match('/^(\d)\1+$/', $resolvedRef)) {
-                    throw new DomainException('Invalid payment reference number detected. Repeated digit sequences are not allowed.');
-                }
+                    if (!preg_match('/^09\d{9}$/', $normMobile)) {
+                        throw new DomainException("Your payment is ₱" . number_format($sukli, 2) . " more than your order total. Please provide a valid 11-digit Philippine mobile number (09XXXXXXXXX) for your sukli refund.");
+                    }
 
-                // Atomic uniqueness verification for active reference claims
-                $isDuplicate = PaymentTransaction::where('active_reference', $resolvedRef)->exists();
-                if (!$isDuplicate) {
-                    $isDuplicate = Order::where('paymentReference', $resolvedRef)
-                        ->whereNotIn('status', ['Cancelled', 'Declined'])
-                        ->where('paymentStatus', '!=', 'Payment Rejected')
-                        ->exists();
-                }
-
-                if ($isDuplicate) {
-                    throw new DomainException('This payment reference number has already been used in another order. Please provide a new and unique payment receipt.');
-                }
-
-                $paymentReference = $resolvedRef;
-                $paymentProofPath = $receiptPath;
-
-                if (($screening['status'] ?? '') === 'PASS') {
-                    $verificationTier = 'PASS';
-                    // Note: even if AI passed, payment stays UNVERIFIED until order confirmation / seller verification
-                    $transactionStatus = 'UNVERIFIED';
-                    $initialPaymentStatus = 'Pending Verification';
-                } elseif (($screening['status'] ?? '') === 'REVIEW') {
-                    $verificationTier = 'REVIEW';
-                    $transactionStatus = 'UNVERIFIED';
-                    $initialPaymentStatus = 'Pending Verification';
+                    $overpaymentAmount = $sukli;
+                    $refundMobileNumber = $normMobile;
+                    $initialPaymentStatus = 'Pending Verification (Overpayment)';
                 } else {
-                    $verificationTier = 'REVIEW';
-                    $transactionStatus = 'UNVERIFIED';
+                    $overpaymentAmount = 0.00;
+                    $refundMobileNumber = null;
                     $initialPaymentStatus = 'Pending Verification';
                 }
             }
 
             if ($isCod) {
                 $paymentReference = null;
+                $totalVerifiedPayments = 0.0;
+                $overpaymentAmount = 0.00;
+                $refundMobileNumber = null;
                 $initialPaymentStatus = 'Pending Payment (COD)';
                 $transactionStatus = 'UNVERIFIED';
                 $verificationTier = 'COD';
@@ -494,16 +555,19 @@ class CreateOrderService
 
             // Create Order
             $orderAttributes = [
-                'id'                     => (string) Str::uuid(),
-                'customerId'             => $customer->id,
-                'sellerId'               => $sellerId,
-                'totalAmount'            => $totalExpectedAmount,
-                'status'                 => 'Pending',
-                'paymentMethod'          => $paymentMethod,
-                'paymentReference'       => $paymentReference,
-                'paymentProof'           => $paymentProofPath,
-                'paymentStatus'          => $initialPaymentStatus,
-                'shippingAddress'        => $addressData,
+                'id'                      => (string) Str::uuid(),
+                'customerId'              => $customer->id,
+                'sellerId'                => $sellerId,
+                'totalAmount'             => $totalExpectedAmount,
+                'total_verified_payments' => $totalVerifiedPayments,
+                'overpayment_amount'      => $overpaymentAmount,
+                'refund_mobile_number'    => $refundMobileNumber,
+                'status'                  => 'Pending',
+                'paymentMethod'           => $paymentMethod,
+                'paymentReference'        => $paymentReference,
+                'paymentProof'            => $paymentProofPath,
+                'paymentStatus'           => $initialPaymentStatus,
+                'shippingAddress'         => $addressData,
             ];
 
             if (Schema::hasColumn('orders', 'visitorSessionId')) {
@@ -572,31 +636,33 @@ class CreateOrderService
                 ]);
             }
 
-            // Create Payment Transaction & Claim active reference atomically (for digital payments)
-            if ($paymentReference && !$isCod) {
-                $notes = 'Receipt uploaded at checkout.';
-                if ($idempotencyKey) {
-                    $notes .= " [idempotency:{$idempotencyKey}]";
-                }
+            // Create Payment Transactions & Claim active reference atomically (for digital payments)
+            if (!$isCod && !empty($validatedReceipts)) {
+                foreach ($validatedReceipts as $vRec) {
+                    $notes = 'Receipt uploaded at checkout.';
+                    if ($idempotencyKey) {
+                        $notes .= " [idempotency:{$idempotencyKey}]";
+                    }
 
-                PaymentTransaction::create([
-                    'order_id'             => $order->id,
-                    'customer_id'          => $customer->id,
-                    'seller_id'            => $sellerId,
-                    'reference_number'     => $paymentReference,
-                    'active_reference'     => $paymentReference,
-                    'wallet_type'          => $isMaya ? 'Maya' : 'GCash',
-                    'expected_amount'      => $totalExpectedAmount,
-                    'detected_amount'      => $screening['detected_amount'] ?? null,
-                    'amount_confidence'    => $screening['amount_confidence'] ?? null,
-                    'reference_confidence' => $screening['reference_confidence'] ?? null,
-                    'confidence'           => $screening['confidence'] ?? null,
-                    'status'               => $transactionStatus,
-                    'verification_tier'    => $verificationTier,
-                    'receipt_path'         => $paymentProofPath,
-                    'verified_at'          => null,
-                    'notes'                => $notes,
-                ]);
+                    PaymentTransaction::create([
+                        'order_id'             => $order->id,
+                        'customer_id'          => $customer->id,
+                        'seller_id'            => $sellerId,
+                        'reference_number'     => $vRec['reference'],
+                        'active_reference'     => $vRec['reference'],
+                        'wallet_type'          => $isMaya ? 'Maya' : 'GCash',
+                        'expected_amount'      => $totalExpectedAmount,
+                        'detected_amount'      => $vRec['detected_amount'],
+                        'amount_confidence'    => $vRec['screening']['amount_confidence'] ?? null,
+                        'reference_confidence' => $vRec['screening']['reference_confidence'] ?? null,
+                        'confidence'           => $vRec['screening']['confidence'] ?? null,
+                        'status'               => $transactionStatus,
+                        'verification_tier'    => $vRec['tier'],
+                        'receipt_path'         => $vRec['receipt_path'],
+                        'verified_at'          => null,
+                        'notes'                => $notes,
+                    ]);
+                }
             }
 
             // 9. Update Idempotency Record to completed atomically
