@@ -643,13 +643,11 @@
                                     </div>
                                 </template>
 
-                                <!-- Error Alert -->
+                                 <!-- Error Alert -->
                                 <div x-show="screenshotError" x-cloak x-text="screenshotError" class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold mt-1"></div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
                 </div>
             </div>
 
@@ -690,9 +688,9 @@
                         </div>
                     </div>
 
-                    {{-- Primary action buttons inside summary card --}}
+                    {{-- Primary action buttons inside summary card (Desktop only - mobile uses sticky bottom bar) --}}
                     <template x-if="step === 1">
-                        <div class="space-y-2 block w-full">
+                        <div class="space-y-2 hidden lg:block">
                             <div x-show="addressStepError" x-cloak
                                  class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                                  x-text="addressStepError"></div>
@@ -703,7 +701,7 @@
                         </div>
                     </template>
                     <template x-if="step === 2">
-                        <div class="block w-full">
+                        <div class="hidden lg:block">
                             <button type="button" 
                                     @click="if (canPlaceOrder()) requestPlaceOrder()" 
                                     :disabled="!canPlaceOrder()"
@@ -749,11 +747,16 @@
          style="box-sizing: border-box; padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));">
 
         <div class="max-w-4xl mx-auto">
-            {{-- Expandable Price Breakdown --}}
+            {{-- Expandable Price Breakdown (Opens upward above sticky bar) --}}
             <div x-show="showCheckoutBreakdown" 
                  x-cloak
-                 x-transition
-                 class="mb-3 p-3.5 bg-white rounded-2xl border border-[#E2D9C8] text-xs space-y-2 shadow-xs">
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="mb-3 p-3.5 bg-white rounded-2xl border border-[#E2D9C8] text-xs space-y-2 shadow-sm">
                 <div class="flex justify-between items-center text-gray-600">
                     <span>Subtotal ({{ count($cart) }} item{{ count($cart) > 1 ? 's' : '' }})</span>
                     <span class="font-bold text-black">₱{{ number_format($subtotal) }}</span>
@@ -769,12 +772,12 @@
             </div>
 
             <div class="flex items-center justify-between gap-3">
-                {{-- Savings & Total Breakdown Toggle --}}
+                {{-- Total Payment Toggle & Amount --}}
                 <div class="flex-1 min-w-0">
-                    <button type="button" @click="showCheckoutBreakdown = !showCheckoutBreakdown" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#78716C] hover:text-black cursor-pointer">
+                    <button type="button" @click="showCheckoutBreakdown = !showCheckoutBreakdown" class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#78716C] hover:text-black cursor-pointer group">
                         <span>Total Payment</span>
-                        <svg class="w-3 h-3 transition-transform text-[#C49520]" :class="showCheckoutBreakdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7"/>
+                        <svg class="w-3.5 h-3.5 transition-transform duration-200 text-[#C49520]" :class="showCheckoutBreakdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
                         </svg>
                     </button>
                     <div class="text-lg sm:text-xl font-black text-[#1E1915] leading-tight"
@@ -786,8 +789,9 @@
                 {{-- Step 1 Button --}}
                 <template x-if="step === 1">
                     <div class="flex flex-col items-end gap-1 shrink-0">
-                        <button type="button" @click="validateStep1()" class="px-5 sm:px-8 py-2.5 sm:py-3 bg-[#1E1915] text-[#DFC97A] text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl shadow-md border border-[#D4AF37]/40 hover:bg-black active:scale-95 transition-all cursor-pointer whitespace-nowrap">
-                            Proceed to Payment
+                        <button type="button" @click="validateStep1()" class="px-5 sm:px-7 py-2.5 sm:py-3 bg-[#1E1915] text-[#DFC97A] text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl shadow-md border border-[#D4AF37]/40 hover:bg-black active:scale-95 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                            <span>Proceed to Payment</span>
+                            <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                         <div x-show="addressStepError" x-cloak
                              class="text-[9px] font-bold text-red-500 text-right max-w-45"
@@ -798,15 +802,18 @@
                 {{-- Step 2 Dual Button --}}
                 <template x-if="step === 2">
                     <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" @click="step = 1" class="w-10 h-10 border border-[#E2D9C8] bg-white rounded-xl flex items-center justify-center text-gray-700 hover:bg-gray-50 active:scale-95 cursor-pointer">
+                        <button type="button" @click="step = 1" class="w-10 h-10 border border-[#E2D9C8] bg-white rounded-xl flex items-center justify-center text-gray-700 hover:bg-gray-50 active:scale-95 cursor-pointer" title="Back to Step 1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
                         <button type="button" 
                                 @click="if (canPlaceOrder()) requestPlaceOrder()" 
                                 :disabled="!canPlaceOrder()"
                                 :class="!canPlaceOrder() ? 'opacity-40 cursor-not-allowed bg-[#1E1915]/60 text-[#DFC97A]/40 border-transparent shadow-none' : 'bg-[#1E1915] text-[#DFC97A] border-[#D4AF37]/40 hover:bg-black active:scale-95 cursor-pointer shadow-md'"
-                                class="px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap">
-                            <span x-show="!aiChecking && !isPlacingOrder">Place Order</span>
+                                class="px-5 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl border transition-all flex items-center gap-1.5 whitespace-nowrap">
+                            <span x-show="!aiChecking && !isPlacingOrder" class="flex items-center gap-1.5">
+                                <span>Place Order</span>
+                                <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </span>
                             <span x-show="aiChecking && !isPlacingOrder" x-cloak class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 animate-spin text-[#D4AF37]" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
