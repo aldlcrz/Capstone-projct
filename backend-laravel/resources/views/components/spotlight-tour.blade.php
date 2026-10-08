@@ -57,13 +57,17 @@
                         }, 800);
                     }
 
-                    window.addEventListener('resize', () => {
-                        if (this.isActive) this.updatePosition();
-                    }, { passive: true });
+                    let rafId = null;
+                    const throttledUpdate = () => {
+                        if (rafId) return;
+                        rafId = requestAnimationFrame(() => {
+                            rafId = null;
+                            if (this.isActive) this.updatePosition();
+                        });
+                    };
 
-                    window.addEventListener('scroll', () => {
-                        if (this.isActive) this.updatePosition();
-                    }, { passive: true });
+                    window.addEventListener('resize', throttledUpdate, { passive: true });
+                    window.addEventListener('scroll', throttledUpdate, { passive: true });
                 },
 
                 markTourSeen() {
