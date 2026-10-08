@@ -29,7 +29,8 @@
         'name' => auth()->user()->name ?? '',
         'mobileNumber' => auth()->user()->mobileNumber ?? '',
         'mode' => $mode
-    ])
+    ]),
+    {{ (float)$subtotal }}
 )">
     <div class="w-full max-w-6xl mx-auto transition-all duration-300 p-4 sm:p-6"
          style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,0.06);color:#1E1915;">
@@ -1363,11 +1364,13 @@
 </div>
 
 <script>
-function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, initialSeller, initialUserData) {
+function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, initialSeller, initialUserData, initialSubtotal) {
     const userDefaults = initialUserData || {};
     const sellerDefaults = initialSeller || {};
+    const baseSubtotalAmount = Number(initialSubtotal || 0);
 
     return {
+        baseSubtotal: baseSubtotalAmount,
         step: 1,
         paymentMethod: defaultPaymentMethod || 'GCash',
         address: initialAddress || {},
@@ -1425,7 +1428,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             return this.receipts.reduce((sum, r) => sum + (Number(r.detected_amount) || 0), 0);
         },
         get payableAmount() {
-            return Number({{ (float)$subtotal }}) + Number(this.currentShippingFee || 0);
+            return Number(this.baseSubtotal || 0) + Number(this.currentShippingFee || 0);
         },
         get remainingAmount() {
             return Math.max(0, Math.round((this.payableAmount - this.totalVerifiedPayments) * 100) / 100);
