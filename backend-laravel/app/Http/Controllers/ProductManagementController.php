@@ -729,7 +729,13 @@ class ProductManagementController extends Controller
             $product->sale_ends_at = null;
         }
 
-        $product->status = $isDraftAction ? 'draft' : 'pending'; // Draft vs Pending Admin Approval
+        if ($isDraftAction) {
+            $product->status = 'draft';
+        } elseif ($wasApproved) {
+            $product->status = 'approved';
+        } else {
+            $product->status = 'pending';
+        }
 
         // Handle image removal
         $currentImages = is_array($product->image)
@@ -877,13 +883,15 @@ class ProductManagementController extends Controller
             return redirect()->route('seller.products.index')->with('success', 'Product draft saved successfully.');
         }
 
-        // Notify admins about the product update/submission
-        \App\Models\Notification::sendToAdmins(
-            'Product Listing Submitted for Review',
-            "Artisan " . Auth::user()->name . " has submitted product listing: \"{$product->name}\" for review.",
-            'system',
-            '/admin/products'
-        );
+        // Notify admins about the product submission if pending
+        if (!$wasApproved) {
+            \App\Models\Notification::sendToAdmins(
+                'Product Listing Submitted for Review',
+                "Artisan " . Auth::user()->name . " has submitted product listing: \"{$product->name}\" for review.",
+                'system',
+                '/admin/products'
+            );
+        }
 
         // Auto-add restocked wishlisted items to customer cart & send email notification if approved
         if ($wasApproved && $product->status === 'approved') {
@@ -894,7 +902,8 @@ class ProductManagementController extends Controller
             }
         }
 
-        return redirect()->route('seller.products.index')->with('success', 'Product submitted and pending admin review.');
+        $successMsg = $wasApproved ? 'Product updated successfully.' : 'Product submitted and pending admin review.';
+        return redirect()->route('seller.products.index')->with('success', $successMsg);
     }
 
     public function destroy(string $id)

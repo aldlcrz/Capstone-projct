@@ -288,13 +288,16 @@ class ProductController extends Controller
             return response()->json(['message' => 'Product not found or access denied'], 404);
         }
 
+        $wasApproved = ($product->status === 'approved');
+        $newStatus   = $wasApproved ? 'approved' : 'pending';
+
         $product->update(array_merge(
             $request->only([
                 'name', 'description', 'price', 'costPerPiece', 'stock', 
                 'shippingFee', 'shippingDays', 'CategoryId', 
                 'availableColors', 'availableDesigns'
             ]),
-            ['status' => 'pending']
+            ['status' => $newStatus]
         ));
 
         return response()->json($this->serializeProduct($request, $product));
