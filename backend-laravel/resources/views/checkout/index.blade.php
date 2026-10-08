@@ -746,8 +746,7 @@
 
     <!-- Mobile Sticky Place Order / Proceed to Payment Bar (Mobile Only: lg:hidden) -->
     <div class="fixed inset-x-0 bottom-0 z-100 bg-[#FAF8F5]/98 backdrop-blur-md border-t border-[#E2D9C8] shadow-[0_-6px_30px_rgba(0,0,0,0.12)] px-4 py-3 lg:hidden"
-         style="box-sizing: border-box; padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));"
-         x-data="{ showCheckoutBreakdown: false }">
+         style="box-sizing: border-box; padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));">
 
         <div class="max-w-4xl mx-auto">
             {{-- Expandable Price Breakdown --}}
@@ -1369,6 +1368,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         showAddressModal: false,
         showPolicyModal: false,
         showConfirmModal: false,
+        showCheckoutBreakdown: false,
         policyAccepted: false,
         showEditAddressModal: false,
         savingAddress: false,
