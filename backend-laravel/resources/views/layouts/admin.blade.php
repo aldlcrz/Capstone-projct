@@ -105,6 +105,38 @@
                             'OVERVIEW' => [
                                 ['label' => 'Dashboard', 'path' => 'admin/dashboard', 'icon' => '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>']
                             ],
+                            'ORDERS & PAYMENTS' => [
+                                [
+                                    'label' => 'Payment Verification',
+                                    'path'  => 'admin/orders',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
+                                    'badge' => (function() {
+                                        try {
+                                            return \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                                                ->where(function($pq) {
+                                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                                                       ->orWhereNull('paymentStatus');
+                                                })
+                                                ->whereNotIn('status', ['Cancelled'])
+                                                ->count();
+                                        } catch (\Throwable $e) {
+                                            return 0;
+                                        }
+                                    })()
+                                ],
+                                [
+                                    'label' => 'Returns & Refunds',
+                                    'path'  => 'admin/returns',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
+                                    'badge' => (function() {
+                                        try {
+                                            return \App\Models\ReturnRequest::whereIn('status', ['pending', 'requested', 'disputed', 'escalated'])->count();
+                                        } catch (\Throwable $e) {
+                                            return 0;
+                                        }
+                                    })()
+                                ]
+                            ],
                             'USER REGISTRY' => [
                                 ['label' => 'Users',   'path' => 'admin/users',   'icon' => '<path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
                                 ['label' => 'Sellers', 'path' => 'admin/sellers', 'id' => 'tour-admin-sellers-nav', 'icon' => '<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>']

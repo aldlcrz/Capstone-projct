@@ -8,10 +8,13 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\SystemSetting;
 use App\Models\Notification;
+use App\Models\PaymentTransaction;
+use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -1843,5 +1846,282 @@ class AdminController extends Controller
             ->update(['isRead' => true]);
 
         return redirect()->back()->with('success', 'All admin notifications marked as read.');
+    }
+
+    /**
+     * Orders & Incoming Payment Verification Hub
+     */
+    public function orders(Request $request)
+    {
+        $status = strtolower($request->input('status', 'all'));
+        $paymentMethod = strtolower($request->input('payment_method', 'all'));
+        $search = strtolower(trim($request->input('search', '')));
+
+        $query = Order::with([
+            'customer',
+            'seller',
+            'items.product',
+            'latestPaymentTransaction',
+            'paymentTransactions',
+            'shipping.provider'
+        ]);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
+                  ->orWhere(DB::raw('LOWER(paymentReference)'), 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where(DB::raw('LOWER(name)'), 'like', "%{$search}%")
+                         ->orWhere(DB::raw('LOWER(email)'), 'like', "%{$search}%")
+                         ->orWhere('mobileNumber', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where(DB::raw('LOWER(name)'), 'like', "%{$search}%")
+                         ->orWhere(DB::raw('LOWER(shopName)'), 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('paymentTransactions', function ($pq) use ($search) {
+                      $pq->where(DB::raw('LOWER(reference_number)'), 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($paymentMethod !== 'all') {
+            if ($paymentMethod === 'gcash') {
+                $query->where('paymentMethod', 'GCash');
+            } elseif ($paymentMethod === 'maya') {
+                $query->whereIn('paymentMethod', ['Maya', 'PayMaya']);
+            } elseif ($paymentMethod === 'cod') {
+                $query->whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim']);
+            }
+        }
+
+        if ($status !== 'all') {
+            if ($status === 'pending_verification') {
+                $query->whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                      ->where(function($pq) {
+                          $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                             ->orWhereNull('paymentStatus');
+                      })
+                      ->whereNotIn('status', ['Cancelled']);
+            } elseif ($status === 'verified') {
+                $query->where(function($pq) {
+                    $pq->whereIn('paymentStatus', ['Paid', 'Verified'])
+                       ->orWhereHas('latestPaymentTransaction', function($tq) {
+                           $tq->where('status', 'VERIFIED');
+                       });
+                });
+            } elseif ($status === 'rejected') {
+                $query->where(function($pq) {
+                    $pq->whereIn('paymentStatus', ['Payment Rejected', 'Rejected'])
+                       ->orWhereHas('latestPaymentTransaction', function($tq) {
+                           $tq->where('status', 'REJECTED');
+                       });
+                });
+            } elseif ($status === 'cod') {
+                $query->whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim']);
+            }
+        }
+
+        $allOrders = $query->orderBy('createdAt', 'desc')->paginate(15)->withQueryString();
+
+        $counts = [
+            'all'                  => Order::count(),
+            'pending_verification' => Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                                           ->where(function($pq) {
+                                               $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                                                  ->orWhereNull('paymentStatus');
+                                           })
+                                           ->whereNotIn('status', ['Cancelled'])
+                                           ->count(),
+            'verified'             => Order::whereIn('paymentStatus', ['Paid', 'Verified'])->count(),
+            'rejected'             => Order::whereIn('paymentStatus', ['Payment Rejected', 'Rejected'])->count(),
+            'gcash'                => Order::where('paymentMethod', 'GCash')->count(),
+            'maya'                 => Order::whereIn('paymentMethod', ['Maya', 'PayMaya'])->count(),
+            'cod'                  => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim'])->count(),
+        ];
+
+        return view('admin.orders.index', compact('allOrders', 'counts', 'status', 'paymentMethod', 'search'));
+    }
+
+    /**
+     * Verify incoming customer payment (GCash / Maya)
+     */
+    public function verifyPayment(Request $request, string $id)
+    {
+        $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $previousStatus = $order->status;
+            $order->paymentStatus = 'Paid';
+            $order->paymentRejectionReason = null;
+            
+            // Advance order from Pending to To Ship if applicable
+            if (in_array(strtolower($order->status), ['pending', 'processing'])) {
+                $order->status = 'To Ship';
+            }
+            $order->save();
+
+            // Update or create PaymentTransaction
+            $transaction = $order->latestPaymentTransaction;
+            if ($transaction) {
+                $transaction->status = 'VERIFIED';
+                $transaction->verified_at = now();
+                $transaction->notes = 'Approved and verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').';
+                $transaction->save();
+            } else {
+                PaymentTransaction::create([
+                    'order_id' => $order->id,
+                    'customer_id' => $order->customerId,
+                    'seller_id' => $order->sellerId,
+                    'reference_number' => $order->paymentReference ?: 'MANUAL-ADMIN-' . strtoupper(Str::random(6)),
+                    'wallet_type' => strtolower($order->paymentMethod) === 'maya' ? 'maya' : 'gcash',
+                    'expected_amount' => $order->totalAmount,
+                    'detected_amount' => $order->totalAmount,
+                    'status' => 'VERIFIED',
+                    'receipt_path' => $order->paymentProof,
+                    'verified_at' => now(),
+                    'notes' => 'Manually verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').',
+                ]);
+            }
+
+            // Log history
+            OrderStatusHistory::create([
+                'orderId' => $order->id,
+                'previousStatus' => $previousStatus,
+                'newStatus' => $order->status,
+                'updatedBy' => Auth::id(),
+                'userRole' => Auth::user()->role ?? 'admin',
+                'notes' => 'Payment approved and verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').',
+            ]);
+
+            // Notify Customer
+            Notification::send(
+                $order->customerId,
+                'Payment Verified',
+                "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been confirmed and verified. The artisan has been notified to fulfill your order.",
+                'order',
+                "/orders/{$order->id}",
+                'customer'
+            );
+
+            // Notify Seller
+            Notification::send(
+                $order->sellerId,
+                'Payment Verified by Admin',
+                "Payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been verified by platform administration. You can now prepare and ship this order.",
+                'order',
+                "/seller/orders?order_id={$order->id}",
+                'seller'
+            );
+
+            DB::commit();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment for order #' . substr($order->id, -8) . ' verified successfully.',
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Payment for Order #LB-' . strtoupper(substr($order->id, -8)) . ' has been approved and verified.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin payment verification error: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to verify payment: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Failed to verify payment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject incoming customer payment
+     */
+    public function rejectPayment(Request $request, string $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|min:3|max:500',
+        ]);
+
+        $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
+        $reason = trim($request->input('reason'));
+
+        DB::beginTransaction();
+        try {
+            $previousStatus = $order->status;
+            $order->paymentStatus = 'Payment Rejected';
+            $order->paymentRejectionReason = $reason;
+            $order->save();
+
+            $transaction = $order->latestPaymentTransaction;
+            if ($transaction) {
+                $transaction->status = 'REJECTED';
+                $transaction->notes = 'Rejected by Admin: ' . $reason;
+                $transaction->save();
+            } else {
+                PaymentTransaction::create([
+                    'order_id' => $order->id,
+                    'customer_id' => $order->customerId,
+                    'seller_id' => $order->sellerId,
+                    'reference_number' => $order->paymentReference ?: 'NONE',
+                    'wallet_type' => strtolower($order->paymentMethod) === 'maya' ? 'maya' : 'gcash',
+                    'expected_amount' => $order->totalAmount,
+                    'detected_amount' => 0,
+                    'status' => 'REJECTED',
+                    'receipt_path' => $order->paymentProof,
+                    'notes' => 'Rejected by Admin: ' . $reason,
+                ]);
+            }
+
+            OrderStatusHistory::create([
+                'orderId' => $order->id,
+                'previousStatus' => $previousStatus,
+                'newStatus' => $order->status,
+                'updatedBy' => Auth::id(),
+                'userRole' => Auth::user()->role ?? 'admin',
+                'notes' => 'Payment rejected by Administrator: ' . $reason,
+            ]);
+
+            // Notify Customer
+            Notification::send(
+                $order->customerId,
+                '⚠️ Payment Verification Rejected',
+                "Your payment proof for Order #LB-" . strtoupper(substr($order->id, -8)) . " was rejected by Admin. Reason: {$reason}. Please upload a valid receipt or correct reference number.",
+                'order',
+                "/orders/{$order->id}",
+                'customer'
+            );
+
+            // Notify Seller
+            Notification::send(
+                $order->sellerId,
+                'Payment Rejected by Admin',
+                "Payment proof for Order #LB-" . strtoupper(substr($order->id, -8)) . " was marked rejected by Admin (Reason: {$reason}).",
+                'order',
+                "/seller/orders?order_id={$order->id}",
+                'seller'
+            );
+
+            DB::commit();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment for order #' . substr($order->id, -8) . ' has been rejected.',
+                ]);
+            }
+
+            return redirect()->back()->with('error', 'Payment for Order #LB-' . strtoupper(substr($order->id, -8)) . ' has been marked as rejected.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin payment rejection error: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to reject payment: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Failed to reject payment: ' . $e->getMessage());
+        }
     }
 }

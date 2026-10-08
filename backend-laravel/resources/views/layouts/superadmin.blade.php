@@ -135,6 +135,25 @@
                                     'badge' => $unpaidCommissionsCount
                                 ],
                                 [
+                                    'label' => 'Orders & Payments',
+                                    'route' => 'superadmin.orders',
+                                    'path'  => 'superadmin/orders',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
+                                    'badge' => (function() {
+                                        try {
+                                            return \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                                                ->where(function($pq) {
+                                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                                                       ->orWhereNull('paymentStatus');
+                                                })
+                                                ->whereNotIn('status', ['Cancelled'])
+                                                ->count();
+                                        } catch (\Throwable $e) {
+                                            return 0;
+                                        }
+                                    })()
+                                ],
+                                [
                                     'label' => 'Payment Gateways',
                                     'route' => 'superadmin.payment-settings',
                                     'path'  => 'superadmin/payment-settings',
