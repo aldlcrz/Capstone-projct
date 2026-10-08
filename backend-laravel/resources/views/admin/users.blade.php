@@ -31,7 +31,7 @@
         {{-- Left: Title & Subtitle --}}
         <div class="text-left space-y-0.5 shrink-0">
             <div class="inline-flex items-center gap-2">
-                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">User Registry</span>
+                <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">User Management</span>
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Admin Center</span>
             </div>
