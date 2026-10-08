@@ -225,6 +225,38 @@ class AdminPaymentVerificationTest extends TestCase
     }
 
     /** @test */
+    public function cod_and_pay_in_shop_orders_show_seller_verified_and_cannot_be_verified_by_admin()
+    {
+        $codOrder = $this->createTestOrder([
+            'paymentMethod' => 'COD',
+            'paymentStatus' => 'Pending',
+            'paymentReference' => null,
+            'paymentProof' => null,
+        ]);
+
+        $storePickupOrder = $this->createTestOrder([
+            'paymentMethod' => 'Pay in Shop',
+            'paymentStatus' => 'Pending',
+            'paymentReference' => null,
+            'paymentProof' => null,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders', ['status' => 'cod']));
+        $response->assertStatus(200);
+        $response->assertSee('Seller Verified');
+        $response->assertSee('Direct to seller');
+
+        // Verify endpoint rejects COD verification with informative error
+        $verifyRes = $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $codOrder->id));
+        $verifyRes->assertSessionHas('error');
+
+        $rejectRes = $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $storePickupOrder->id), [
+            'reason' => 'Some reason',
+        ]);
+        $rejectRes->assertSessionHas('error');
+    }
+
+    /** @test */
     public function non_admin_cannot_access_payment_verification()
     {
         $order = $this->createTestOrder();

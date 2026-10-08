@@ -1950,6 +1950,14 @@ class AdminController extends Controller
     {
         $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
 
+        if (!in_array(strtolower($order->paymentMethod), ['gcash', 'maya', 'paymaya'])) {
+            $msg = 'Cash on Delivery and Pay in Shop orders are collected and verified directly by the seller upon claim or delivery.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
         DB::beginTransaction();
         try {
             $previousStatus = $order->status;
@@ -2046,6 +2054,15 @@ class AdminController extends Controller
         ]);
 
         $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
+
+        if (!in_array(strtolower($order->paymentMethod), ['gcash', 'maya', 'paymaya'])) {
+            $msg = 'Cash on Delivery and Pay in Shop orders are collected and verified directly by the seller upon claim or delivery.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
         $reason = trim($request->input('reason'));
 
         DB::beginTransaction();

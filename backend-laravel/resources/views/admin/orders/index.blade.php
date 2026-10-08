@@ -376,10 +376,15 @@
                                                 Inspect
                                             </button>
                                         </div>
-                                    @else
+                                    @elseif($isEwallet)
                                         <div class="inline-flex flex-col items-center justify-center text-gray-300 py-1">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             <span class="text-[9px] font-medium text-gray-400 mt-0.5">No receipt</span>
+                                        </div>
+                                    @else
+                                        <div class="inline-flex flex-col items-center justify-center text-slate-400 py-1">
+                                            <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">In-Person Cash</span>
+                                            <span class="text-[9px] font-medium text-slate-400 mt-0.5">Direct to seller</span>
                                         </div>
                                     @endif
                                 </td>
@@ -405,11 +410,12 @@
                                         @elseif($isPendingReview)
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-xs">
                                                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                                Needs Verification
+                                                Needs Admin Verification
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
-                                                {{ $order->paymentStatus ?: 'Unpaid / COD' }}
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                {{ $order->formatted_payment_method ?? $order->paymentMethod ?? 'COD' }} (Seller Verifies)
                                             </span>
                                         @endif
                                     </div>
@@ -418,32 +424,40 @@
                                 {{-- 7. Verification Actions --}}
                                 <td class="px-4 py-3.5 text-right">
                                     <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                                        @if(!$isPaid)
-                                            {{-- Approve / Verify Button --}}
-                                            <button type="button" 
-                                                    @click="openVerify({{ json_encode($order) }})"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                <span>Verify</span>
-                                            </button>
+                                        @if($isEwallet)
+                                            @if(!$isPaid)
+                                                {{-- Approve / Verify Button (GCash / Maya Only) --}}
+                                                <button type="button" 
+                                                        @click="openVerify({{ json_encode($order) }})"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>Verify</span>
+                                                </button>
 
-                                            {{-- Reject Button --}}
-                                            <button type="button" 
-                                                    @click="openReject({{ json_encode($order) }})"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200/80 transition-all cursor-pointer">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                <span>Reject</span>
-                                            </button>
+                                                {{-- Reject Button (GCash / Maya Only) --}}
+                                                <button type="button" 
+                                                        @click="openReject({{ json_encode($order) }})"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200/80 transition-all cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    <span>Reject</span>
+                                                </button>
+                                            @else
+                                                {{-- Already Verified Options --}}
+                                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200/60">
+                                                    ✓ Confirmed
+                                                </span>
+                                                <button type="button" 
+                                                        @click="openReject({{ json_encode($order) }})"
+                                                        class="text-[10px] font-bold text-gray-400 hover:text-rose-600 underline ml-1 cursor-pointer" title="Revert or reject payment">
+                                                    Revoke
+                                                </button>
+                                            @endif
                                         @else
-                                            {{-- Already Verified Options --}}
-                                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200/60">
-                                                ✓ Confirmed
+                                            {{-- COD / Store Pickup: Verified directly by Seller --}}
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200" title="Payment is collected and verified directly by the artisan seller upon store claim or courier delivery.">
+                                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                <span>Seller Verified</span>
                                             </span>
-                                            <button type="button" 
-                                                    @click="openReject({{ json_encode($order) }})"
-                                                    class="text-[10px] font-bold text-gray-400 hover:text-rose-600 underline ml-1 cursor-pointer" title="Revert or reject payment">
-                                                Revoke
-                                            </button>
                                         @endif
                                     </div>
                                 </td>
