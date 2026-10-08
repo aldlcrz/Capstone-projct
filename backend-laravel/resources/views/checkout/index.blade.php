@@ -414,7 +414,7 @@
                                 <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
                                     <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
                                          @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
-                                        @if($gcashQrUrl)
+                                         @if($gcashQrUrl)
                                             <img src="{{ $gcashQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
                                             <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
@@ -427,13 +427,23 @@
                                             <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
                                         @endif
                                     </div>
-                                    <div class="text-center sm:text-left space-y-1">
+                                    <div class="text-center sm:text-left space-y-1 flex-1">
                                         <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
                                         <div class="text-sm font-bold text-gray-900">Scan QR Code using GCash</div>
                                         <p class="text-xs text-gray-600 leading-relaxed">
                                             Tap the QR code to zoom in, then scan or save it using your GCash app. After completing your payment, upload the screenshot receipt below.
                                         </p>
                                     </div>
+                                </div>
+                                {{-- Cancel & Refund Action Strip below QR --}}
+                                <div class="mt-2.5 pt-2.5 border-t border-[#E2D9C8]/80 flex flex-wrap items-center justify-between gap-2">
+                                    <button type="button"
+                                            @click="openCheckoutCancelModal()"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 text-[10px] font-extrabold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span>Cancel Order / Request Refund</span>
+                                    </button>
+                                    <span class="text-[10px] text-gray-400 font-medium">Already transferred or changed your mind?</span>
                                 </div>
                             </div>
                         </div>
@@ -457,7 +467,7 @@
                                 <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
                                     <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
                                          @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
-                                        @if($mayaQrUrl)
+                                         @if($mayaQrUrl)
                                             <img src="{{ $mayaQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
                                             <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
@@ -470,13 +480,23 @@
                                             <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
                                         @endif
                                     </div>
-                                    <div class="text-center sm:text-left space-y-1">
+                                    <div class="text-center sm:text-left space-y-1 flex-1">
                                         <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
                                         <div class="text-sm font-bold text-gray-900">Scan QR Code using Maya</div>
                                         <p class="text-xs text-gray-600 leading-relaxed">
                                             Tap the QR code to zoom in, then scan or save it using your Maya app. After completing your payment, upload the screenshot receipt below.
                                         </p>
                                     </div>
+                                </div>
+                                {{-- Cancel & Refund Action Strip below QR --}}
+                                <div class="mt-2.5 pt-2.5 border-t border-[#E2D9C8]/80 flex flex-wrap items-center justify-between gap-2">
+                                    <button type="button"
+                                            @click="openCheckoutCancelModal()"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 text-[10px] font-extrabold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span>Cancel Order / Request Refund</span>
+                                    </button>
+                                    <span class="text-[10px] text-gray-400 font-medium">Already transferred or changed your mind?</span>
                                 </div>
                             </div>
                         </div>
@@ -1401,7 +1421,224 @@
             </div>
         </div>
     </template>
+
+    <!-- Cancellation & Payment Refund Modal -->
+    <template x-if="showCheckoutCancelModal">
+        <div class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm"
+             @keydown.window.escape="if (!isSubmittingCancel) showCheckoutCancelModal = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            <div @click.stop
+                 class="bg-white rounded-3xl border border-[#ECE3D2] shadow-2xl p-5 sm:p-7 relative max-w-lg w-full max-h-[92vh] overflow-y-auto space-y-4"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center font-bold shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-red-600">Checkout Assistance</div>
+                            <h3 class="font-serif text-lg sm:text-xl font-bold text-gray-900 leading-tight">Cancel Order &amp; Refund Request</h3>
+                        </div>
+                    </div>
+                    <button type="button"
+                            @click="showCheckoutCancelModal = false"
+                            :disabled="isSubmittingCancel"
+                            class="w-8 h-8 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Step 1: Payment Status Question -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-wider text-gray-600 block">
+                        Did you already send / transfer payment for this checkout? <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button"
+                                @click="cancelAlreadyPaid = false"
+                                :class="!cancelAlreadyPaid ? 'border-2 border-[#1E1915] bg-[#FAF6EE] text-[#1E1915] font-extrabold shadow-xs' : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 font-semibold'"
+                                class="p-3 rounded-2xl text-left transition-all cursor-pointer flex items-center gap-2 text-xs">
+                            <span class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0" :class="!cancelAlreadyPaid ? 'border-[#1E1915] bg-[#1E1915]' : 'border-gray-300'">
+                                <span x-show="!cancelAlreadyPaid" class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                            </span>
+                            <span>No, haven't paid</span>
+                        </button>
+                        <button type="button"
+                                @click="cancelAlreadyPaid = true"
+                                :class="cancelAlreadyPaid ? 'border-2 border-red-600 bg-red-50/60 text-red-900 font-extrabold shadow-xs' : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 font-semibold'"
+                                class="p-3 rounded-2xl text-left transition-all cursor-pointer flex items-center gap-2 text-xs">
+                            <span class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0" :class="cancelAlreadyPaid ? 'border-red-600 bg-red-600' : 'border-gray-300'">
+                                <span x-show="cancelAlreadyPaid" class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                            </span>
+                            <span>Yes, already sent money</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scenario A: Not Paid Yet -->
+                <template x-if="!cancelAlreadyPaid">
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Since you haven't transferred any payment, no money will be deducted and your items will safely remain in your shopping cart.
+                        </p>
+                        <div class="flex gap-2.5 pt-1">
+                            <button type="button" @click="showCheckoutCancelModal = false" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all cursor-pointer">
+                                Continue Checkout
+                            </button>
+                            <button type="button" @click="submitCheckoutCancellation()" class="flex-1 py-2.5 rounded-xl bg-[#1E1915] hover:bg-black text-[#DFC97A] text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
+                                Return to Cart
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Scenario B: Already Transferred Payment -->
+                <template x-if="cancelAlreadyPaid">
+                    <form @submit.prevent="submitCheckoutCancellation()" class="space-y-3.5">
+                        <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] text-amber-900 leading-relaxed space-y-1">
+                            <div class="font-bold flex items-center gap-1.5 text-amber-950">
+                                <span>🛡 Admin Direct Refund Guarantee</span>
+                            </div>
+                            <p>Provide your GCash or Maya details below. The Platform Admin will verify your transaction reference and transfer your refund directly to your number.</p>
+                        </div>
+
+                        <!-- E-Wallet Provider Selection -->
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                Refund Destination Wallet <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all"
+                                       :class="cancelRefundMethod === 'GCash' ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold' : 'bg-white border-gray-200 text-gray-600'">
+                                    <input type="radio" value="GCash" x-model="cancelRefundMethod" class="accent-blue-600">
+                                    <span class="text-xs">GCash</span>
+                                </label>
+                                <label class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all"
+                                       :class="cancelRefundMethod === 'Maya' ? 'bg-teal-50 border-teal-500 text-teal-900 font-bold' : 'bg-white border-gray-200 text-gray-600'">
+                                    <input type="radio" value="Maya" x-model="cancelRefundMethod" class="accent-teal-600">
+                                    <span class="text-xs">Maya</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Account Name & Mobile Number -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                    Account Holder Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       x-model="cancelAccountName"
+                                       required
+                                       placeholder="e.g. Juan Dela Cruz"
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                    <span x-text="cancelRefundMethod"></span> Mobile Number <span class="text-red-500">*</span>
+                                </label>
+                                <input type="tel"
+                                       x-model="cancelMobileNumber"
+                                       @input="validateCancelMobile()"
+                                       maxlength="11"
+                                       required
+                                       placeholder="09XXXXXXXXX"
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                                <span x-show="cancelMobileError" x-cloak class="text-[10px] font-bold text-red-600" x-text="cancelMobileError"></span>
+                            </div>
+                        </div>
+
+                        <!-- Amount & Reference Number -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                    Amount Sent (₱) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number"
+                                       step="0.01"
+                                       x-model="cancelAmount"
+                                       @input="validateCancelAmount()"
+                                       required
+                                       placeholder="₱ 0.00"
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                                <span x-show="cancelAmountError" x-cloak class="text-[10px] font-bold text-red-600" x-text="cancelAmountError"></span>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                    Payment Reference #
+                                </label>
+                                <input type="text"
+                                       x-model="cancelReference"
+                                       placeholder="e.g. 5044245900459"
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Reason -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                Reason for Cancellation <span class="text-red-500">*</span>
+                            </label>
+                            <select x-model="cancelReason" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                                <option value="Decided not to proceed">Decided not to proceed / Changed mind</option>
+                                <option value="Wrong payment amount transferred">Wrong payment amount transferred</option>
+                                <option value="Need to change order items or size">Need to change order items or size</option>
+                                <option value="Need to change delivery address">Need to change delivery address</option>
+                                <option value="Other">Other reason</option>
+                            </select>
+                        </div>
+
+                        <!-- Optional Proof Attachment if not already uploaded -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase tracking-wider text-gray-700 block">
+                                Payment Proof Receipt Screenshot (Optional)
+                            </label>
+                            <input type="file" accept="image/*" @change="handleCancelProofChange($event)" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:bg-[#1E1915] file:text-[#DFC97A] hover:file:bg-black cursor-pointer">
+                            <template x-if="cancelProofPreview">
+                                <div class="mt-2 flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
+                                    <img :src="cancelProofPreview" class="w-10 h-10 object-cover rounded-lg border border-gray-300">
+                                    <span class="text-[10px] font-bold text-gray-600">Receipt screenshot attached</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-2.5 pt-2 border-t border-gray-100">
+                            <button type="button"
+                                    @click="showCheckoutCancelModal = false"
+                                    :disabled="isSubmittingCancel"
+                                    class="flex-1 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all cursor-pointer disabled:opacity-40">
+                                Keep Order
+                            </button>
+                            <button type="submit"
+                                    :disabled="isSubmittingCancel"
+                                    class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                                <template x-if="isSubmittingCancel">
+                                    <svg class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                </template>
+                                <span x-text="isSubmittingCancel ? 'Submitting...' : 'Submit Refund Request'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </template>
+            </div>
+        </div>
+    </template>
 </div>
+
+<meta id="checkout-cancel-refund-url" content="{{ route('checkout.cancel_refund') }}">
 
 <script>
 function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, initialSeller, initialUserData, initialSubtotal) {
@@ -1448,6 +1685,23 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         screenshotError: '',
         zoomImage: '',
         showZoomModal: false,
+
+        // Cancel & Refund Modal State
+        showCheckoutCancelModal: false,
+        cancelAlreadyPaid: false,
+        cancelRefundMethod: defaultPaymentMethod || 'GCash',
+        cancelAccountName: userDefaults.name || '',
+        cancelMobileNumber: userDefaults.mobileNumber || '',
+        cancelAmount: 0,
+        cancelReference: '',
+        cancelReason: 'Decided not to proceed',
+        cancelCustomReason: '',
+        cancelProofFile: null,
+        cancelProofPreview: '',
+        cancelMobileError: '',
+        cancelAmountError: '',
+        isSubmittingCancel: false,
+
         paymentRef: '',
         ocrExtracted: false,
         refError: '',
@@ -2954,6 +3208,151 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.isPlacingOrder = true;
             this.showConfirmModal = false;
             document.getElementById('checkout-form')?.submit();
+        },
+
+        // --- Cancellation & Refund Modal Logic ---
+        openCheckoutCancelModal(method) {
+            this.cancelRefundMethod = method || this.paymentMethod || 'GCash';
+            this.cancelAlreadyPaid = (this.receipts && this.receipts.length > 0) || Boolean(this.fileName);
+            this.cancelAmount = this.totalVerifiedPayments > 0 ? this.totalVerifiedPayments : this.payableAmount;
+            if (this.receipts && this.receipts.length > 0 && this.receipts[0].detected_ref) {
+                this.cancelReference = this.receipts[0].detected_ref;
+            } else if (this.paymentRef) {
+                this.cancelReference = this.paymentRef;
+            }
+            this.cancelMobileError = '';
+            this.cancelAmountError = '';
+            this.showCheckoutCancelModal = true;
+        },
+
+        handleCancelProofChange(event) {
+            const file = event.target.files?.[0];
+            if (!file) {
+                this.cancelProofFile = null;
+                this.cancelProofPreview = '';
+                return;
+            }
+            this.cancelProofFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.cancelProofPreview = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+
+        validateCancelMobile() {
+            this.cancelMobileNumber = String(this.cancelMobileNumber || '').replace(/[^0-9]/g, '').slice(0, 11);
+            if (!this.cancelMobileNumber) {
+                this.cancelMobileError = 'Mobile number is required.';
+                return false;
+            }
+            if (!/^09\d{9}$/.test(this.cancelMobileNumber)) {
+                this.cancelMobileError = 'Must be an 11-digit Philippine mobile number starting with 09 (e.g. 09123456789).';
+                return false;
+            }
+            this.cancelMobileError = '';
+            return true;
+        },
+
+        validateCancelAmount() {
+            const amt = parseFloat(this.cancelAmount);
+            if (isNaN(amt) || amt <= 0) {
+                this.cancelAmountError = 'Please enter a valid amount greater than 0.';
+                return false;
+            }
+            this.cancelAmountError = '';
+            return true;
+        },
+
+        async submitCheckoutCancellation() {
+            if (this.isSubmittingCancel) return;
+
+            const endpoint = document.getElementById('checkout-cancel-refund-url')?.getAttribute('content') || '/checkout/cancel-refund';
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+            if (!this.cancelAlreadyPaid) {
+                // Not paid yet: return safely to cart
+                this.isSubmittingCancel = true;
+                try {
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfMeta,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            already_paid: false,
+                            mode: '{{ $mode ?? "cart" }}'
+                        })
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    window.location.href = data.redirect || '{{ route("cart.index") }}';
+                } catch (e) {
+                    console.error('Cancellation error:', e);
+                    window.location.href = '{{ route("cart.index") }}';
+                } finally {
+                    this.isSubmittingCancel = false;
+                }
+                return;
+            }
+
+            // Already paid: validate fields before submission
+            if (!this.cancelAccountName || !this.cancelAccountName.trim()) {
+                alert('Please enter your account holder name.');
+                return;
+            }
+            if (!this.validateCancelMobile()) {
+                return;
+            }
+            if (!this.validateCancelAmount()) {
+                return;
+            }
+
+            this.isSubmittingCancel = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', csrfMeta);
+                formData.append('already_paid', '1');
+                formData.append('refund_method', this.cancelRefundMethod);
+                formData.append('refund_account_name', this.cancelAccountName.trim());
+                formData.append('refund_mobile_number', this.cancelMobileNumber.trim());
+                formData.append('refund_amount', this.cancelAmount);
+                formData.append('refund_reference', this.cancelReference || '');
+                formData.append('reason', this.cancelReason || 'Cancelled during checkout');
+                formData.append('mode', '{{ $mode ?? "cart" }}');
+
+                // Attach receipt screenshot if uploaded in modal or if attached previously
+                if (this.cancelProofFile) {
+                    formData.append('payment_screenshot', this.cancelProofFile);
+                } else if (this.receipts && this.receipts.length > 0 && this.receipts[0].file) {
+                    formData.append('payment_screenshot', this.receipts[0].file);
+                }
+
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfMeta,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.success) {
+                    this.showCheckoutCancelModal = false;
+                    window.location.href = data.redirect || '{{ route("orders") }}';
+                } else {
+                    alert(data.message || 'Failed to submit refund request. Please check your inputs.');
+                }
+            } catch (err) {
+                console.error('Refund request error:', err);
+                alert('A network error occurred while submitting your refund request. Please try again.');
+            } finally {
+                this.isSubmittingCancel = false;
+            }
         }
     };
 }

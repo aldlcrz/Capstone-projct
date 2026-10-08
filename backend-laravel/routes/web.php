@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/selected', [CheckoutController::class, 'fromSelected'])->name('checkout.selected');
     Route::post('/checkout/shipping-quote', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quote');
     Route::post('/checkout/shipping-quotes', [CheckoutController::class, 'getShippingQuote'])->name('checkout.shipping-quotes');
+    Route::post('/checkout/cancel-refund', [CheckoutController::class, 'cancelAndRefund'])->name('checkout.cancel_refund');
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));

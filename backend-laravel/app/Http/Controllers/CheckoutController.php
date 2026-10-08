@@ -7,6 +7,10 @@ use App\Models\OrderItem;
 use App\Models\Address;
 use App\Models\OrderShipping;
 use App\Models\PaymentTransaction;
+use App\Models\RefundTransaction;
+use App\Models\ReturnRequest;
+use App\Models\Notification;
+use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CreateOrderService;
@@ -525,5 +529,244 @@ class CheckoutController extends Controller
             }
             return redirect()->back()->withInput()->with('error', 'Failed to place order: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Cancel checkout and record refund request if the customer already sent GCash / Maya payment.
+     */
+    public function cancelAndRefund(Request $request)
+    {
+        $alreadyPaid = filter_var($request->input('already_paid', false), FILTER_VALIDATE_BOOLEAN);
+
+        if (!$alreadyPaid) {
+            // Simply clear the checkout session and return safely to cart
+            $mode = $request->input('mode', 'cart');
+            if ($mode === 'buy_now') {
+                session()->forget('buy_now_item');
+            } elseif ($mode === 'selected') {
+                session()->forget(['checkout_cart', 'checkout_selected_keys']);
+            }
+
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'Checkout cancelled. No payment was recorded.',
+                    'redirect' => route('cart.index'),
+                ]);
+            }
+            return redirect()->route('cart.index')->with('info', 'Checkout cancelled.');
+        }
+
+        $validated = $request->validate([
+            'refund_method'        => 'required|string|in:GCash,Maya,gcash,maya,Card,card',
+            'refund_account_name'  => 'required|string|max:255',
+            'refund_mobile_number' => 'required|string|regex:/^09\d{9}$/',
+            'refund_amount'        => 'required|numeric|min:1',
+            'refund_reference'     => 'nullable|string|max:100',
+            'reason'               => 'nullable|string|max:500',
+            'payment_screenshot'   => 'nullable|image|max:10240',
+        ], [
+            'refund_mobile_number.regex'   => 'Please enter a valid 11-digit Philippine mobile number starting with 09 (e.g. 09123456789).',
+            'refund_account_name.required' => 'Please enter the account holder name.',
+            'refund_amount.required'       => 'Please enter the amount transferred.',
+        ]);
+
+        $customer = Auth::user();
+        $refundMethod = ucfirst(strtolower($validated['refund_method']));
+        if (strtoupper($refundMethod) === 'GCASH') $refundMethod = 'GCash';
+        if (strtoupper($refundMethod) === 'MAYA') $refundMethod = 'Maya';
+
+        $refundMobile = trim($validated['refund_mobile_number']);
+        $refundAccountName = trim($validated['refund_account_name']);
+        $refundAmount = (float) $validated['refund_amount'];
+        $refundReference = trim($validated['refund_reference'] ?? '');
+        $reason = trim($validated['reason'] ?? 'Customer cancelled during checkout');
+
+        // Store proof receipt if uploaded
+        $paymentProofPath = null;
+        if ($request->hasFile('payment_screenshot')) {
+            $file = $request->file('payment_screenshot');
+            $storedFileName = (string) Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+            $storedPath = $file->storeAs('payments', $storedFileName, 'local');
+            $paymentProofPath = 'private/' . $storedPath;
+        }
+
+        // Determine sellerId from cart or items
+        $mode = $request->input('mode', 'cart');
+        $itemsInput = $request->input('items');
+        if (!empty($itemsInput) && is_array($itemsInput)) {
+            $cart = $itemsInput;
+        } elseif ($mode === 'buy_now') {
+            $cart = [session()->get('buy_now_item')];
+        } elseif ($mode === 'selected') {
+            $cart = session()->get('checkout_cart', []);
+        } else {
+            $cart = session()->get('cart', []);
+        }
+
+        $sellerId = null;
+        foreach ((array) $cart as $item) {
+            if (!empty($item['sellerId'])) {
+                $sellerId = $item['sellerId'];
+                break;
+            }
+            if (!empty($item['id'])) {
+                $p = Product::find($item['id']);
+                if ($p && $p->sellerId) {
+                    $sellerId = $p->sellerId;
+                    break;
+                }
+            }
+        }
+
+        if (!$sellerId && $request->filled('seller_id')) {
+            $sellerId = $request->input('seller_id');
+        }
+        if (!$sellerId) {
+            $sellerId = User::where('role', 'artisan')->value('id') ?? User::whereIn('role', ['admin', 'superadmin'])->value('id');
+        }
+
+        return DB::transaction(function () use (
+            $customer,
+            $sellerId,
+            $refundMethod,
+            $refundMobile,
+            $refundAccountName,
+            $refundAmount,
+            $refundReference,
+            $reason,
+            $paymentProofPath,
+            $request,
+            $mode
+        ) {
+            // Resolve shipping address for order model constraint
+            $shippingAddressStr = 'N/A - Cancelled during checkout';
+            if ($request->filled('shippingAddress')) {
+                $shippingAddressStr = is_array($request->input('shippingAddress')) ? json_encode($request->input('shippingAddress')) : (string)$request->input('shippingAddress');
+            } elseif ($request->filled('address_id')) {
+                $addr = Address::find($request->input('address_id'));
+                if ($addr) {
+                    $shippingAddressStr = "{$addr->houseNo}, {$addr->street}, {$addr->barangay}, {$addr->city}, {$addr->province} {$addr->postalCode}";
+                }
+            } elseif ($customer) {
+                $defaultAddr = Address::where('userId', $customer->id)->where('isDefault', true)->first()
+                    ?? Address::where('userId', $customer->id)->first();
+                if ($defaultAddr) {
+                    $shippingAddressStr = "{$defaultAddr->houseNo}, {$defaultAddr->street}, {$defaultAddr->barangay}, {$defaultAddr->city}, {$defaultAddr->province} {$defaultAddr->postalCode}";
+                }
+            }
+
+            $orderId = (string) Str::uuid();
+
+            // Create cancelled order record so history and refund can be tracked
+            $order = Order::create([
+                'id'                   => $orderId,
+                'customerId'           => $customer ? $customer->id : null,
+                'sellerId'             => $sellerId,
+                'shippingAddress'      => $shippingAddressStr,
+                'totalAmount'          => $refundAmount,
+                'status'               => 'cancelled',
+                'paymentStatus'        => 'Refund Requested',
+                'paymentMethod'        => $refundMethod,
+                'paymentReference'     => $refundReference ?: null,
+                'paymentProof'         => $paymentProofPath,
+                'refund_mobile_number' => $refundMobile,
+                'cancellationReason'   => "Customer cancelled during checkout and requested refund to {$refundMethod} ({$refundMobile}). Reason: {$reason}",
+                'createdAt'            => now(),
+            ]);
+
+            // Record status history
+            OrderStatusHistory::create([
+                'id'             => (string) Str::uuid(),
+                'orderId'        => $order->id,
+                'previousStatus' => 'pending',
+                'newStatus'      => 'cancelled',
+                'userRole'       => $customer ? ($customer->role ?? 'customer') : 'customer',
+                'notes'          => "Order cancelled at checkout. Refund requested to {$refundMethod} ({$refundMobile} - {$refundAccountName}). Reference: " . ($refundReference ?: 'N/A'),
+                'updatedBy'      => $customer ? $customer->id : null,
+                'createdAt'      => now(),
+            ]);
+
+            // Create ReturnRequest / Refund record for centralized Admin dispute & disbursement management
+            $returnReason = "Checkout Payment Refund: Customer transferred ₱" . number_format($refundAmount, 2) . " via {$refundMethod} and cancelled checkout. Send refund to: {$refundMobile} ({$refundAccountName}). Reference: " . ($refundReference ?: 'N/A') . ". Customer Notes: {$reason}";
+
+            $returnReq = ReturnRequest::create([
+                'id'               => (string) Str::uuid(),
+                'orderId'          => $order->id,
+                'customer_id'      => $customer ? $customer->id : null,
+                'seller_id'        => $sellerId,
+                'reason'           => $returnReason,
+                'status'           => 'pending',
+                'return_status'    => 'requested',
+                'refund_status'    => 'pending',
+                'requested_amount' => $refundAmount,
+                'createdAt'        => now(),
+            ]);
+
+            // Create pending RefundTransaction record
+            RefundTransaction::create([
+                'id'                            => (string) Str::uuid(),
+                'order_id'                      => $order->id,
+                'return_request_id'             => $returnReq->id,
+                'payment_method'                => $refundMethod,
+                'refund_method'                 => $refundMethod,
+                'refund_amount'                 => $refundAmount,
+                'destination_account_encrypted' => $refundMobile,
+                'destination_account_masked'    => substr($refundMobile, 0, 4) . '***' . substr($refundMobile, -3),
+                'destination_account_name'      => $refundAccountName,
+                'status'                        => 'pending',
+            ]);
+
+            // Notify Platform Administrators
+            $adminUser = User::whereIn('role', ['admin', 'superadmin'])->first();
+            if ($adminUser) {
+                Notification::create([
+                    'id'         => (string) Str::uuid(),
+                    'userId'     => $adminUser->id,
+                    'targetRole' => 'admin',
+                    'title'      => 'Checkout Refund Request',
+                    'message'    => "Customer " . ($customer ? $customer->name : 'Buyer') . " cancelled checkout after paying ₱" . number_format($refundAmount, 2) . " via {$refundMethod}. Please disburse refund to {$refundMobile} ({$refundAccountName}).",
+                    'type'       => 'refund_requested',
+                    'read'       => false,
+                    'link'       => route('admin.returns.index', ['search' => $order->id]),
+                    'createdAt'  => now(),
+                ]);
+            }
+
+            // Notify Customer in-app
+            if ($customer) {
+                Notification::create([
+                    'id'         => (string) Str::uuid(),
+                    'userId'     => $customer->id,
+                    'targetRole' => 'customer',
+                    'title'      => 'Cancellation & Refund Request Received',
+                    'message'    => "Your request to cancel and refund ₱" . number_format($refundAmount, 2) . " has been submitted to the Admin. The funds will be sent to your {$refundMethod} number ({$refundMobile}) once verified.",
+                    'type'       => 'refund_requested',
+                    'read'       => false,
+                    'link'       => route('orders'),
+                    'createdAt'  => now(),
+                ]);
+            }
+
+            // Cleanup cart / checkout sessions
+            if ($mode === 'buy_now') {
+                session()->forget('buy_now_item');
+            } elseif ($mode === 'selected') {
+                session()->forget(['checkout_cart', 'checkout_selected_keys']);
+            }
+
+            $successMsg = "Your cancellation and refund request of ₱" . number_format($refundAmount, 2) . " has been submitted to the Admin. Your refund will be sent to your {$refundMethod} number ({$refundMobile}) after verification.";
+
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => $successMsg,
+                    'order_id' => $order->id,
+                    'redirect' => route('orders'),
+                ]);
+            }
+
+            return redirect()->route('orders')->with('success', $successMsg);
+        });
     }
 }
