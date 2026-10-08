@@ -21,21 +21,59 @@ class ReturnManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $status = $request->query('status');
-        $query = ReturnRequest::with(['order', 'customer', 'seller', 'evidences', 'refundTransactions'])
-            ->orderBy('createdAt', 'desc');
+        $status = $request->query('status', 'all');
+        $search = trim($request->query('search', ''));
 
-        if ($status) {
-            $query->where('return_status', $status);
+        $query = ReturnRequest::with(['order', 'customer', 'seller', 'evidences', 'refundTransactions']);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('orderId', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                         ->orWhere('shopName', 'like', "%{$search}%");
+                  });
+            });
         }
 
-        $returns = $query->paginate(20);
+        if ($status !== 'all' && !empty($status)) {
+            if ($status === 'pending') {
+                $query->whereIn('return_status', ['pending', 'requested', 'in_review']);
+            } elseif ($status === 'disputed') {
+                $query->whereIn('return_status', ['disputed', 'escalated']);
+            } elseif ($status === 'approved') {
+                $query->whereIn('return_status', ['approved', 'item_shipped', 'item_received']);
+            } elseif ($status === 'refunded') {
+                $query->whereIn('return_status', ['refunded', 'completed', 'resolved']);
+            } elseif ($status === 'rejected') {
+                $query->whereIn('return_status', ['rejected', 'declined']);
+            } else {
+                $query->where('return_status', $status);
+            }
+        }
+
+        $returns = $query->orderBy('createdAt', 'desc')->paginate(15)->withQueryString();
+
+        $counts = [
+            'all'      => ReturnRequest::count(),
+            'pending'  => ReturnRequest::whereIn('return_status', ['pending', 'requested', 'in_review'])->count(),
+            'disputed' => ReturnRequest::whereIn('return_status', ['disputed', 'escalated'])->count(),
+            'approved' => ReturnRequest::whereIn('return_status', ['approved', 'item_shipped', 'item_received'])->count(),
+            'refunded' => ReturnRequest::whereIn('return_status', ['refunded', 'completed', 'resolved'])->count(),
+            'rejected' => ReturnRequest::whereIn('return_status', ['rejected', 'declined'])->count(),
+        ];
 
         if ($request->wantsJson()) {
             return response()->json($returns);
         }
 
-        return view('admin.returns.index', compact('returns'));
+        return view('admin.returns.index', compact('returns', 'counts', 'status', 'search'));
     }
 
     /**
@@ -81,12 +119,16 @@ class ReturnManagementController extends Controller
             $notes
         );
 
-        return response()->json([
-            'success'           => true,
-            'message'           => 'Platform refund transfer processed and recorded successfully.',
-            'refundTransaction' => $refundTx,
-            'returnRequest'     => $returnRequest->fresh(['evidences', 'refundTransactions']),
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success'           => true,
+                'message'           => 'Platform refund transfer processed and recorded successfully.',
+                'refundTransaction' => $refundTx,
+                'returnRequest'     => $returnRequest->fresh(['evidences', 'refundTransactions']),
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Platform refund transfer of ₱' . number_format($amount, 2) . ' recorded successfully.');
     }
 
     /**
@@ -105,10 +147,15 @@ class ReturnManagementController extends Controller
 
         $updated = $this->disputeService->adminResolveDispute($returnRequest, $admin, $decision, $notes);
 
-        return response()->json([
-            'success'       => true,
-            'message'       => 'Dispute resolved.',
-            'returnRequest' => $updated,
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success'       => true,
+                'message'       => 'Dispute resolved successfully.',
+                'returnRequest' => $updated,
+            ]);
+        }
+
+        $decisionLabel = $decision === 'approve_return' ? 'approved for customer return' : 'seller rejection upheld';
+        return redirect()->back()->with('success', "Dispute for Case #RR-" . strtoupper(substr($returnRequest->id, -8)) . " resolved ({$decisionLabel}).");
     }
 }

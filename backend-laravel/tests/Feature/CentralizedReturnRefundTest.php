@@ -424,4 +424,26 @@ class CentralizedReturnRefundTest extends TestCase
         $this->assertEquals(350.00, (float) $commission->commissionAmount);
         $this->assertStringContainsString('Refund adjustment: -₱3000', $commission->notes);
     }
+
+    /** @test */
+    public function admin_can_view_returns_and_refunds_management_page()
+    {
+        [$order, $transaction] = $this->createDeliveredGcashOrder(2500.00);
+
+        ReturnRequest::create([
+            'orderId'          => $order->id,
+            'customer_id'      => $this->customer->id,
+            'seller_id'        => $this->seller->id,
+            'reason'           => 'Damaged embroidery on sleeve',
+            'return_status'    => 'disputed',
+            'requested_amount' => 2500.00,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.returns.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Returns &');
+        $response->assertSee('Refund Claims');
+        $response->assertSee('Damaged embroidery on sleeve');
+    }
 }
