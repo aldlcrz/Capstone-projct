@@ -517,7 +517,7 @@
         x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
         x-transition:leave-end="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
         class="fixed top-24 right-4 sm:top-24 sm:right-6 z-9999 max-w-sm w-[calc(100%-2rem)] rounded-2xl shadow-2xl p-4"
-        style="display:none; background: #FFFCF7; border: 1px solid #E8DECB;">
+        style="background: #FFFCF7; border: 1px solid #E8DECB;">
         <div class="flex items-start gap-3">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
@@ -525,7 +525,7 @@
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-1">
                     <h4 class="text-xs font-black truncate uppercase" x-text="popupNotif?.title || 'Notification'" style="color: #1E1915;"></h4>
-                    <button @click="dismiss()" class="transition-colors shrink-0" style="color: #E8DECB;" onmouseover="this.style.color='#766C60';" onmouseout="this.style.color='#E8DECB';">
+                    <button @click="dismiss()" class="transition-colors shrink-0 cursor-pointer" style="color: #E8DECB;" onmouseover="this.style.color='#766C60';" onmouseout="this.style.color='#E8DECB';">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>

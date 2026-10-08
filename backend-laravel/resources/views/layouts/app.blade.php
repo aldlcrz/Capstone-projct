@@ -557,6 +557,86 @@
         </button>
     </div>
 
+    @auth
+    @if(Auth::user()->role === 'customer')
+    {{-- Live Notification Popup for Customer --}}
+    <div
+        x-data="{
+            popupNotif: null,
+            dismissedIds: [],
+            checkNotifications() {
+                fetch('/api/notifications?role=customer', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.ok ? r.json() : [])
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
+                        if (unread.length > 0) {
+                            const latest = unread[0];
+                            if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                                this.popupNotif = latest;
+                                setTimeout(() => {
+                                    if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                        this.dismiss();
+                                    }
+                                }, 8000);
+                            }
+                        }
+                    }
+                })
+                .catch(() => {});
+            },
+            dismiss() {
+                if (this.popupNotif) {
+                    if (!this.dismissedIds.includes(this.popupNotif.id)) {
+                        this.dismissedIds.push(this.popupNotif.id);
+                    }
+                    this.popupNotif = null;
+                }
+            },
+            init() {
+                this.checkNotifications();
+                setInterval(() => this.checkNotifications(), 10000);
+            }
+        }"
+        x-show="popupNotif" x-cloak
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
+        x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave-end="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
+        class="fixed top-24 right-4 sm:top-24 sm:right-6 z-9999 max-w-sm w-[calc(100%-2rem)] rounded-2xl shadow-2xl p-4 bg-white/95 backdrop-blur-md border border-gray-100">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                    <h4 class="text-xs font-black truncate uppercase text-black" x-text="popupNotif?.title || 'Order Update'"></h4>
+                    <button @click="dismiss()" class="text-gray-300 hover:text-gray-600 transition-colors shrink-0 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p class="text-xs font-medium mt-0.5 line-clamp-2 leading-relaxed text-gray-500" x-text="popupNotif?.message"></p>
+                <div class="mt-2.5 flex items-center justify-between">
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Just now</span>
+                    <a :href="'/notifications/' + (popupNotif?.id) + '/read'"
+                       class="px-3 py-1 bg-black hover:bg-neutral-800 text-white text-[10px] font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1">
+                        <span>View</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endauth
+
     <script>
         function getAppProductImage(raw) {
             if (!raw) return '/uploads/products/default.jpg';

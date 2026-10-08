@@ -570,6 +570,80 @@
                 </div>
             </nav>
         </div>
+    {{-- Live Notification Popup for Super Admin --}}
+    <div
+        x-data="{
+            popupNotif: null,
+            dismissedIds: [],
+            checkNotifications() {
+                fetch('/api/notifications?role=superadmin', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.ok ? r.json() : [])
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
+                        if (unread.length > 0) {
+                            const latest = unread[0];
+                            if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                                this.popupNotif = latest;
+                                setTimeout(() => {
+                                    if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                        this.dismiss();
+                                    }
+                                }, 8000);
+                            }
+                        }
+                    }
+                })
+                .catch(() => {});
+            },
+            dismiss() {
+                if (this.popupNotif) {
+                    if (!this.dismissedIds.includes(this.popupNotif.id)) {
+                        this.dismissedIds.push(this.popupNotif.id);
+                    }
+                    this.popupNotif = null;
+                }
+            },
+            init() {
+                this.checkNotifications();
+                setInterval(() => this.checkNotifications(), 10000);
+            }
+        }"
+        x-show="popupNotif" x-cloak
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
+        x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
+        x-transition:leave-end="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
+        class="fixed top-20 right-4 sm:top-20 sm:right-8 z-9999 max-w-sm w-[calc(100%-2rem)] rounded-2xl shadow-2xl p-4 bg-white/95 backdrop-blur-md border border-gray-200">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-black text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0 shadow-xs">
+                👑
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                    <h4 class="text-xs font-black truncate uppercase text-gray-900" x-text="popupNotif?.title || 'Governance Alert'"></h4>
+                    <button @click="dismiss()" class="text-gray-300 hover:text-gray-600 transition-colors shrink-0 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p class="text-xs font-medium mt-0.5 line-clamp-2 leading-relaxed text-gray-600" x-text="popupNotif?.message"></p>
+                <div class="mt-2.5 flex items-center justify-between">
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Just now</span>
+                    <a :href="'/notifications/' + (popupNotif?.id) + '/read'"
+                       class="px-3 py-1 bg-black hover:bg-[#C0420A] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1">
+                        <span>View</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
     
     <x-confirmation-modal />

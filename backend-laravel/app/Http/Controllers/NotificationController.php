@@ -18,7 +18,17 @@ class NotificationController extends Controller
         $query = Notification::where('userId', $userId);
         
         if ($role) {
-            $query->where('targetRole', $role);
+            if (in_array($role, ['admin', 'superadmin'])) {
+                $query->where(function ($q) {
+                    $q->whereIn('targetRole', ['admin', 'superadmin'])
+                      ->orWhereNull('targetRole');
+                });
+            } else {
+                $query->where(function ($q) use ($role) {
+                    $q->where('targetRole', $role)
+                      ->orWhereNull('targetRole');
+                });
+            }
         }
 
         $notifications = $query->orderBy('createdAt', 'desc')->get();
@@ -37,7 +47,17 @@ class NotificationController extends Controller
         $query = Notification::where('userId', $userId)->where('isRead', false);
         
         if ($role) {
-            $query->where('targetRole', $role);
+            if (in_array($role, ['admin', 'superadmin'])) {
+                $query->where(function ($q) {
+                    $q->whereIn('targetRole', ['admin', 'superadmin'])
+                      ->orWhereNull('targetRole');
+                });
+            } else {
+                $query->where(function ($q) use ($role) {
+                    $q->where('targetRole', $role)
+                      ->orWhereNull('targetRole');
+                });
+            }
         }
 
         $query->update(['isRead' => true]);
@@ -56,7 +76,17 @@ class NotificationController extends Controller
         $query = Notification::where('userId', $userId)->where('isRead', false);
         
         if ($role) {
-            $query->where('targetRole', $role);
+            if (in_array($role, ['admin', 'superadmin'])) {
+                $query->where(function ($q) {
+                    $q->whereIn('targetRole', ['admin', 'superadmin'])
+                      ->orWhereNull('targetRole');
+                });
+            } else {
+                $query->where(function ($q) use ($role) {
+                    $q->where('targetRole', $role)
+                      ->orWhereNull('targetRole');
+                });
+            }
         }
 
         $unreadCount = $query->count();
