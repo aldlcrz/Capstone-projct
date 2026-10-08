@@ -374,12 +374,12 @@
                                     <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base"
-                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in Shop' : (shippingQuote?.provider_code === 'seller_direct' ? 'Special Delivery (COD)' : 'Cash on Delivery')">
-                                            Pay in Shop / Cash on Delivery
+                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in Store' : (shippingQuote?.provider_code === 'seller_direct' ? 'Special Delivery (COD)' : 'Cash on Delivery')">
+                                            Pay in Store / Cash on Delivery
                                         </div>
                                         <div class="text-[10px] lg:text-xs text-gray-500"
-                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in cash upon claiming your item at the workshop' : (shippingQuote?.provider_code === 'seller_direct' ? 'Pay cash upon Special Delivery arrival' : 'Pay cash upon courier delivery')">
-                                            Pay in cash upon workshop claim or arrival
+                                             x-text="shippingQuote?.provider_code === 'store_pickup' ? 'Pay in cash upon claiming your item at the store' : (shippingQuote?.provider_code === 'seller_direct' ? 'Pay cash upon Special Delivery arrival' : 'Pay cash upon courier delivery')">
+                                            Pay in cash upon store claim or arrival
                                         </div>
                                     </div>
                                 </div>
@@ -389,8 +389,8 @@
                             <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
                                 <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
                                     <span class="text-base shrink-0">ℹ️</span>
-                                    <span x-text="shippingQuote?.provider_code === 'store_pickup' ? 'You can pay directly in cash when you pick up and inspect your items at the workshop.' : (shippingQuote?.provider_code === 'seller_direct' ? 'You can pay directly with cash upon Special Delivery arrival. No online receipt screenshot required.' : 'You can pay directly with cash upon courier delivery. No online receipt screenshot required.')">
-                                        You can pay directly in cash when you pick up and inspect your items at the workshop.
+                                    <span x-text="shippingQuote?.provider_code === 'store_pickup' ? 'You can pay directly in cash when you pick up and inspect your items at the store.' : (shippingQuote?.provider_code === 'seller_direct' ? 'You can pay directly with cash upon Special Delivery arrival. No online receipt screenshot required.' : 'You can pay directly with cash upon courier delivery. No online receipt screenshot required.')">
+                                        You can pay directly in cash when you pick up and inspect your items at the store.
                                     </span>
                                 </div>
                             </div>
@@ -985,7 +985,7 @@
             <div class="bg-gray-50/90 border border-gray-200/80 rounded-2xl p-4 text-left space-y-2 text-xs">
                 <div class="flex justify-between items-center text-gray-600">
                     <span>Payment Method:</span>
-                    <span class="font-bold text-gray-900" x-text="paymentMethod"></span>
+                    <span class="font-bold text-gray-900" x-text="paymentMethodDisplayName"></span>
                 </div>
                 <div x-show="paymentMethod !== 'COD'" class="flex justify-between items-center text-gray-600">
                     <span>Reference Number:</span>
@@ -1484,6 +1484,24 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         },
         get isOverpaid() {
             return (this.totalVerifiedPayments - this.payableAmount) >= 0.01;
+        },
+        get paymentMethodDisplayName() {
+            if (this.paymentMethod === 'COD') {
+                if (this.shippingQuote?.provider_code === 'store_pickup') {
+                    return 'Pay in Store';
+                }
+                if (this.shippingQuote?.provider_code === 'seller_direct') {
+                    return 'Special Delivery (COD)';
+                }
+                return 'Cash on Delivery';
+            }
+            if (this.paymentMethod === 'GCash') {
+                return 'GCash e-Wallet';
+            }
+            if (this.paymentMethod === 'Maya') {
+                return 'Maya e-Wallet';
+            }
+            return this.paymentMethod || 'Cash on Delivery';
         },
 
         // Logistics State
