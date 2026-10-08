@@ -669,10 +669,12 @@
     <x-modal-scroll-lock />
 
     @if($isMaintenanceActive)
+    <meta id="sa-keepalive-url" content="{{ route('superadmin.session.keep_alive') }}">
     <script>
     (function() {
-        // Silent keep-alive every 3 minutes to guarantee Super Admin session never expires during maintenance
-        const keepAliveUrl = @json(route('superadmin.session.keep_alive'));
+        var el = document.getElementById('sa-keepalive-url');
+        if (!el) return;
+        var keepAliveUrl = el.getAttribute('content');
         setInterval(function() {
             fetch(keepAliveUrl, {
                 headers: {
