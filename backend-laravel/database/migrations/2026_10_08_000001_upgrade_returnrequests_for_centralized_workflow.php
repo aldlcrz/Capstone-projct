@@ -11,20 +11,47 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Upgrade returnrequests table
-        if (Schema::hasTable('returnrequests')) {
+        // 1. Ensure returnrequests table exists and has all workflow columns
+        if (!Schema::hasTable('returnrequests')) {
+            Schema::create('returnrequests', function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->uuid('orderId')->index();
+                $table->uuid('customer_id')->nullable()->index();
+                $table->uuid('seller_id')->nullable()->index();
+                $table->uuid('order_item_id')->nullable()->index();
+                $table->string('return_status', 50)->default('submitted')->index();
+                $table->string('physical_return_status', 50)->default('not_required');
+                $table->string('refund_status', 50)->default('not_applicable');
+                $table->string('dispute_status', 50)->default('none');
+                $table->string('resolution_type', 50)->default('refund');
+                $table->decimal('requested_amount', 10, 2)->default(0.00);
+                $table->decimal('approved_amount', 10, 2)->default(0.00);
+                $table->text('reason')->nullable();
+                $table->longText('proofImages')->nullable();
+                $table->string('status')->default('Pending')->index();
+                $table->text('adminComment')->nullable();
+                $table->string('seller_assessment', 50)->nullable();
+                $table->text('seller_notes')->nullable();
+                $table->string('admin_decision', 50)->nullable();
+                $table->text('admin_notes')->nullable();
+                $table->uuid('resolved_by')->nullable()->index();
+                $table->timestamp('resolved_at')->nullable();
+                $table->timestamp('createdAt')->nullable();
+                $table->timestamp('updatedAt')->nullable();
+            });
+        } else {
             Schema::table('returnrequests', function (Blueprint $table) {
                 if (!Schema::hasColumn('returnrequests', 'customer_id')) {
-                    $table->uuid('customer_id')->nullable()->after('orderId');
+                    $table->uuid('customer_id')->nullable()->after('orderId')->index();
                 }
                 if (!Schema::hasColumn('returnrequests', 'seller_id')) {
-                    $table->uuid('seller_id')->nullable()->after('customer_id');
+                    $table->uuid('seller_id')->nullable()->after('customer_id')->index();
                 }
                 if (!Schema::hasColumn('returnrequests', 'order_item_id')) {
-                    $table->uuid('order_item_id')->nullable()->after('seller_id');
+                    $table->uuid('order_item_id')->nullable()->after('seller_id')->index();
                 }
                 if (!Schema::hasColumn('returnrequests', 'return_status')) {
-                    $table->string('return_status', 50)->default('submitted')->after('order_item_id');
+                    $table->string('return_status', 50)->default('submitted')->after('order_item_id')->index();
                 }
                 if (!Schema::hasColumn('returnrequests', 'physical_return_status')) {
                     $table->string('physical_return_status', 50)->default('not_required')->after('return_status');
@@ -57,7 +84,7 @@ return new class extends Migration
                     $table->text('admin_notes')->nullable()->after('admin_decision');
                 }
                 if (!Schema::hasColumn('returnrequests', 'resolved_by')) {
-                    $table->uuid('resolved_by')->nullable()->after('admin_notes');
+                    $table->uuid('resolved_by')->nullable()->after('admin_notes')->index();
                 }
                 if (!Schema::hasColumn('returnrequests', 'resolved_at')) {
                     $table->timestamp('resolved_at')->nullable()->after('resolved_by');
@@ -69,18 +96,14 @@ return new class extends Migration
         if (!Schema::hasTable('return_refund_evidences')) {
             Schema::create('return_refund_evidences', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('return_request_id');
-                $table->uuid('uploaded_by');
+                $table->uuid('return_request_id')->index();
+                $table->uuid('uploaded_by')->index();
                 $table->string('type', 50)->default('photo'); // photo, video, unboxing, receipt, transfer_proof
                 $table->string('storage_path', 255);
                 $table->string('mime_type', 100)->nullable();
                 $table->unsignedBigInteger('file_size')->nullable();
                 $table->string('checksum', 64)->nullable();
                 $table->timestamps();
-
-                $table->foreign('return_request_id')->references('id')->on('returnrequests')->onDelete('cascade');
-                $table->foreign('uploaded_by')->references('id')->on('users')->onDelete('cascade');
-                $table->index('return_request_id');
             });
         }
 
@@ -88,9 +111,9 @@ return new class extends Migration
         if (!Schema::hasTable('refund_transactions')) {
             Schema::create('refund_transactions', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('return_request_id');
-                $table->uuid('order_id');
-                $table->uuid('payment_transaction_id')->nullable();
+                $table->uuid('return_request_id')->index();
+                $table->uuid('order_id')->index();
+                $table->uuid('payment_transaction_id')->nullable()->index();
                 
                 $table->string('payment_method', 50); // gcash, maya, cash, cod
                 $table->string('refund_method', 50);  // gcash, maya, cash, store_credit, replacement
@@ -101,23 +124,13 @@ return new class extends Migration
                 $table->string('destination_account_masked', 50)->nullable();
                 $table->string('destination_account_name', 150)->nullable();
 
-                $table->string('status', 50)->default('pending'); // pending, processing, transferred, failed, cancelled
-                $table->string('transfer_reference', 100)->nullable();
+                $table->string('status', 50)->default('pending')->index(); // pending, processing, transferred, failed, cancelled
+                $table->string('transfer_reference', 100)->nullable()->index();
                 $table->string('transfer_proof_path', 255)->nullable();
-                $table->uuid('processed_by')->nullable();
+                $table->uuid('processed_by')->nullable()->index();
                 $table->timestamp('processed_at')->nullable();
                 $table->text('failure_reason')->nullable();
                 $table->timestamps();
-
-                $table->foreign('return_request_id')->references('id')->on('returnrequests')->onDelete('cascade');
-                $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-                $table->foreign('payment_transaction_id')->references('id')->on('payment_transactions')->nullOnDelete();
-                $table->foreign('processed_by')->references('id')->on('users')->nullOnDelete();
-
-                $table->index('order_id');
-                $table->index('return_request_id');
-                $table->index('status');
-                $table->index('transfer_reference');
             });
         }
     }
@@ -131,3 +144,4 @@ return new class extends Migration
         Schema::dropIfExists('return_refund_evidences');
     }
 };
+
