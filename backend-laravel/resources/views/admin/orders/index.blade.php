@@ -38,6 +38,21 @@
         this.rejectReason = text;
     },
 
+    getOrderProductSummary(order) {
+        if (!order || !order.items || !order.items.length) return 'Heritage Piece';
+        const first = order.items[0];
+        const name = first.product_name || (first.product ? first.product.name : 'Heritage Piece');
+        const variant = first.display_variation || first.variation;
+        let text = name;
+        if (variant && variant !== 'Original' && variant !== 'None' && variant !== name) {
+            text += ' (' + variant + ')';
+        }
+        if (order.items.length > 1) {
+            text += ' + ' + (order.items.length - 1) + ' more';
+        }
+        return text;
+    },
+
     copyToClipboard(text) {
         if (!text || text === 'N/A') return;
         navigator.clipboard.writeText(text);
@@ -237,7 +252,7 @@
                 <table class="w-full text-left min-w-220">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/75">
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Order ID & Date</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Product & Variant</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Customer</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Artisan / Seller</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Payment Details</th>
@@ -262,22 +277,63 @@
                                 $orderCommission = round($order->totalAmount * ($activeRate / 100), 2);
                             @endphp
                             <tr class="hover:bg-amber-50/20 transition-colors group">
-                                {{-- 1. Order ID & Date --}}
+                                {{-- 1. Product & Variant / Date --}}
                                 <td class="px-4 py-3.5">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="font-mono text-xs font-black text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/80">
-                                                #LB-{{ strtoupper(substr($order->id, -8)) }}
-                                            </span>
+                                    <div class="space-y-1 max-w-[240px]">
+                                        @php
+                                            $firstItem = $order->items->first();
+                                            $itemCount = $order->items->count();
+                                            $productName = $firstItem ? ($firstItem->product_name ?: ($firstItem->product->name ?? 'Artisan Item')) : 'No Item Details';
+                                            $variant = $firstItem ? ($firstItem->display_variation ?? $firstItem->variation) : null;
+                                            $size = $firstItem ? $firstItem->size : null;
+                                        @endphp
+
+                                        {{-- Primary Product Name --}}
+                                        <div class="text-xs font-bold text-gray-900 leading-snug truncate" title="{{ $productName }}">
+                                            {{ $productName }}
                                         </div>
-                                        <div class="text-[10px] text-gray-400 font-medium">
-                                            {{ $order->createdAt ? $order->createdAt->format('M d, Y · h:i A') : 'N/A' }}
-                                        </div>
-                                        <div class="text-[10px] text-gray-500 font-medium truncate max-w-45">
-                                            {{ $order->items->count() }} {{ $order->items->count() === 1 ? 'item' : 'items' }}
-                                            @if($order->items->first())
-                                                · {{ Str::limit($order->items->first()->product->name ?? 'Artisan Item', 20) }}
-                                            @endif
+
+                                        {{-- Variant & Size Badges --}}
+                                        @if($firstItem)
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                @if(!empty($variant) && strcasecmp($variant, 'Original') !== 0 && strcasecmp($variant, 'None') !== 0 && strcasecmp($variant, $productName) !== 0)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80">
+                                                        {{ $variant }}
+                                                    </span>
+                                                @elseif(!empty($size) && strcasecmp($size, 'Free Size') !== 0 && strcasecmp($size, 'N/A') !== 0 && strcasecmp($size, 'None') !== 0)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                                        Size: {{ $size }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-[10px] text-gray-400 font-medium">Standard</span>
+                                                @endif
+
+                                                @if(!empty($size) && !empty($variant) && strcasecmp($variant, 'Original') !== 0 && strcasecmp($size, 'Free Size') !== 0 && strcasecmp($size, 'N/A') !== 0)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                                        {{ $size }}
+                                                    </span>
+                                                @endif
+
+                                                @if($firstItem->quantity > 1)
+                                                    <span class="text-[10px] font-bold text-gray-500 font-mono">
+                                                        ×{{ $firstItem->quantity }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        {{-- Additional items indicator if multiple items --}}
+                                        @if($itemCount > 1)
+                                            <div class="text-[9px] font-bold text-[#C0422A]">
+                                                + {{ $itemCount - 1 }} more {{ $itemCount - 1 === 1 ? 'item' : 'items' }}
+                                            </div>
+                                        @endif
+
+                                        {{-- Secondary Date & Order ID reference --}}
+                                        <div class="text-[10px] text-gray-400 font-medium flex items-center gap-1.5 pt-0.5">
+                                            <span>{{ $order->createdAt ? $order->createdAt->format('M d, Y · h:i A') : 'N/A' }}</span>
+                                            <span class="text-gray-300">·</span>
+                                            <span class="font-mono text-[9px] text-gray-400">#LB-{{ strtoupper(substr($order->id, -8)) }}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -527,8 +583,12 @@
             <template x-if="selectedOrder">
                 <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-100 space-y-2 text-xs">
                     <div class="flex justify-between">
+                        <span class="text-gray-400 font-medium">Product & Variant:</span>
+                        <span class="font-bold text-gray-900 text-right truncate max-w-[210px]" x-text="getOrderProductSummary(selectedOrder)"></span>
+                    </div>
+                    <div class="flex justify-between">
                         <span class="text-gray-400 font-medium">Order Number:</span>
-                        <span class="font-mono font-bold text-gray-900" x-text="'#LB-' + (selectedOrder.id ? selectedOrder.id.slice(-8).toUpperCase() : '')"></span>
+                        <span class="font-mono font-bold text-gray-700" x-text="'#LB-' + (selectedOrder.id ? selectedOrder.id.slice(-8).toUpperCase() : '')"></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-400 font-medium">Customer:</span>
@@ -664,7 +724,7 @@
                         📷
                     </div>
                     <div>
-                        <h3 class="text-sm font-black text-gray-900">Customer Payment Receipt</h3>
+                        <h3 class="text-sm font-black text-gray-900 truncate max-w-sm" x-text="selectedOrder ? getOrderProductSummary(selectedOrder) : 'Customer Payment Receipt'"></h3>
                         <p class="text-[10px] text-gray-400 font-mono" x-text="selectedOrder ? 'Order #LB-' + selectedOrder.id.slice(-8).toUpperCase() : ''"></p>
                     </div>
                 </div>
