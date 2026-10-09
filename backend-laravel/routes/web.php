@@ -327,6 +327,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/returns/{returnRequest}', [AdminReturnController::class, 'show'])->name('admin.returns.show');
     Route::post('/returns/{returnRequest}/record-transfer', [AdminReturnController::class, 'recordTransfer'])->name('admin.returns.record-transfer');
     Route::post('/returns/{returnRequest}/resolve-dispute', [AdminReturnController::class, 'resolveDispute'])->name('admin.returns.resolve-dispute');
+    Route::post('/returns/orders/{order}/refund-sukli', [AdminReturnController::class, 'processSukliRefund'])->name('admin.returns.refund-sukli');
+    Route::post('/returns/orders/{order}/refund-cancellation', [AdminReturnController::class, 'processCancellationRefund'])->name('admin.returns.refund-cancellation');
 });
 
 // Seller Routes
@@ -491,6 +493,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::get('/returns/{returnRequest}', [AdminReturnController::class, 'show'])->name('superadmin.returns.show');
     Route::post('/returns/{returnRequest}/record-transfer', [AdminReturnController::class, 'recordTransfer'])->name('superadmin.returns.record-transfer');
     Route::post('/returns/{returnRequest}/resolve-dispute', [AdminReturnController::class, 'resolveDispute'])->name('superadmin.returns.resolve-dispute');
+    Route::post('/returns/orders/{order}/refund-sukli', [AdminReturnController::class, 'processSukliRefund'])->name('superadmin.returns.refund-sukli');
+    Route::post('/returns/orders/{order}/refund-cancellation', [AdminReturnController::class, 'processCancellationRefund'])->name('superadmin.returns.refund-cancellation');
 
     // Notifications & Incident Reports Parity
     Route::get('/notifications', [AdminController::class, 'notifications'])->name('superadmin.notifications.index');

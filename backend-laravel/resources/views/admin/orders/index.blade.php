@@ -5,20 +5,8 @@
     verifyModal: false,
     rejectModal: false,
     receiptModal: false,
-    sukliModal: false,
-    sukliInfoModal: false,
-    sukliInfo: null,
-    selectedOrder: null,
-    receiptUrl: '',
-    receiptRef: '',
-    receiptAmount: '',
     rejectReason: '',
     rejectPreset: '',
-    sukliAmount: 0,
-    sukliDestAccount: '',
-    sukliDestName: '',
-    sukliTransferRef: '',
-    sukliNotes: '',
     isSubmitting: false,
 
     openVerify(order) {
@@ -39,29 +27,6 @@
         this.receiptRef = order.paymentReference || (order.latest_payment_transaction ? order.latest_payment_transaction.reference_number : 'N/A');
         this.receiptAmount = order.totalAmount;
         this.receiptModal = true;
-    },
-
-    openSukliInfo(order, info) {
-        this.selectedOrder = order;
-        this.sukliInfo = info;
-        this.sukliInfoModal = true;
-    },
-
-    proceedToDistributeSukli() {
-        this.sukliInfoModal = false;
-        if (this.selectedOrder) {
-            this.openSukliModal(this.selectedOrder);
-        }
-    },
-
-    openSukliModal(order) {
-        this.selectedOrder = order;
-        this.sukliAmount = (order.remaining_sukli_refund_amount !== undefined ? order.remaining_sukli_refund_amount : (order.overpayment_amount || 0));
-        this.sukliDestAccount = order.refund_mobile_number || (order.customer ? (order.customer.phone || order.customer.contactNumber || '') : '');
-        this.sukliDestName = order.customer ? order.customer.name : '';
-        this.sukliTransferRef = '';
-        this.sukliNotes = '';
-        this.sukliModal = true;
     },
 
     setRejectPreset(text) {
@@ -438,52 +403,11 @@
                                 {{-- 4. Payment Details --}}
                                 <td class="px-4 py-3.5">
                                     <div class="space-y-1">
-                                        <div class="flex items-center justify-between gap-1">
-                                            <div class="text-sm font-black text-gray-900 font-mono">
-                                                ₱{{ number_format($order->totalAmount, 2) }}
-                                            </div>
-                                            @if($order->isOverpaid())
-                                                @php
-                                                    $sStatus = $order->sukliRefundStatus();
-                                                    $sStatusLabel = match($sStatus) {
-                                                        'REFUNDED' => 'Refunded',
-                                                        'OVERPAYMENT_PENDING_REFUND' => 'Pending Refund',
-                                                        'REFUND_PROCESSING' => 'Processing',
-                                                        default => 'Awaiting Verification'
-                                                    };
-                                                    $sStatusBadgeClass = match($sStatus) {
-                                                        'REFUNDED' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                                        'OVERPAYMENT_PENDING_REFUND' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                                        'REFUND_PROCESSING' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                                        default => 'bg-amber-50 text-amber-700 border-amber-200'
-                                                    };
-                                                    $sukliInfoPayload = [
-                                                        'id' => $order->id,
-                                                        'order_number' => '#LB-' . strtoupper(substr($order->id, -8)),
-                                                        'customer_name' => $order->customer ? $order->customer->name : 'Customer',
-                                                        'total_amount' => number_format($order->totalAmount, 2),
-                                                        'total_received' => number_format($order->totalReceivedPayments(), 2),
-                                                        'sukli_amount' => number_format($order->authoritativeSukliAmount(), 2),
-                                                        'refund_wallet' => $order->refund_mobile_number ?: ($order->customer ? ($order->customer->phone ?: ($order->customer->contactNumber ?: 'Not specified')) : 'Not specified'),
-                                                        'status' => $sStatus,
-                                                        'status_label' => $sStatusLabel,
-                                                        'status_badge_class' => $sStatusBadgeClass,
-                                                        'payment_method' => strtoupper($order->paymentMethod ?? 'ONLINE'),
-                                                        'ref_number' => $refNumber ?: 'N/A',
-                                                        'can_distribute' => ($sStatus === 'OVERPAYMENT_PENDING_REFUND' && ($isPaid || $order->isPaymentVerified()))
-                                                    ];
-                                                @endphp
-                                                <button type="button"
-                                                        @click="openSukliInfo({{ json_encode($order) }}, {{ json_encode($sukliInfoPayload) }})"
-                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs"
-                                                        title="Click to view Sukli details">
-                                                    <span>💰 Sukli:</span>
-                                                    <span class="font-mono">₱{{ number_format($order->authoritativeSukliAmount(), 2) }}</span>
-                                                </button>
-                                            @endif
+                                        <div class="text-sm font-black text-gray-900 font-mono">
+                                            ₱{{ number_format($order->totalAmount, 2) }}
                                         </div>
 
-                                        {{-- Payment Method Badge & View Sukli Button --}}
+                                        {{-- Payment Method Badge --}}
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             @if($pm === 'gcash')
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
@@ -497,16 +421,6 @@
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
                                                     {{ $order->formatted_payment_method ?? $order->paymentMethod ?? 'COD' }}
                                                 </span>
-                                            @endif
-
-                                            @if($order->isOverpaid())
-                                                <button type="button"
-                                                        @click="openSukliInfo({{ json_encode($order) }}, {{ json_encode($sukliInfoPayload) }})"
-                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all cursor-pointer"
-                                                        title="View Sukli / Overpayment Details">
-                                                    <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                                    <span>View</span>
-                                                </button>
                                             @endif
                                         </div>
 
@@ -893,214 +807,6 @@
             </div>
         </div>
     </div>
-
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    {{-- ═══ 4. SUKLI / OVERPAYMENT DETAILS MODAL ═══ --}}
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    <div x-show="sukliInfoModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-         @keydown.escape.window="sukliInfoModal = false">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4"
-             @click.outside="sukliInfoModal = false">
-            
-            {{-- Header --}}
-            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200 text-lg">
-                        💰
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-gray-900">Sukli / Overpayment Details</h3>
-                        <p class="text-xs text-gray-500" x-text="sukliInfo ? sukliInfo.order_number + ' · ' + sukliInfo.customer_name : ''"></p>
-                    </div>
-                </div>
-                <button type="button" @click="sukliInfoModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <template x-if="sukliInfo">
-                <div class="space-y-3.5">
-                    {{-- Financial Breakdown Card --}}
-                    <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 space-y-2.5">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-gray-600 font-medium">Order Payable Total:</span>
-                            <span class="font-mono font-bold text-gray-900" x-text="'₱' + sukliInfo.total_amount"></span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-gray-600 font-medium">Total Received:</span>
-                            <span class="font-mono font-bold text-gray-900" x-text="'₱' + sukliInfo.total_received"></span>
-                        </div>
-                        <div class="pt-2 border-t border-amber-200/70 flex justify-between items-center">
-                            <span class="text-xs font-black text-amber-950 uppercase tracking-wide">Sukli (Overpayment):</span>
-                            <span class="font-mono font-black text-amber-800 text-base" x-text="'₱' + sukliInfo.sukli_amount"></span>
-                        </div>
-                    </div>
-
-                    {{-- Customer Wallet & Status Details --}}
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200/70 space-y-2.5 text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 font-medium">Payment Method:</span>
-                            <span class="font-bold text-gray-800" x-text="sukliInfo.payment_method"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 font-medium">Reference Number:</span>
-                            <div class="flex items-center gap-1 font-mono font-bold text-gray-900">
-                                <span x-text="sukliInfo.ref_number"></span>
-                                <button type="button" @click="copyToClipboard(sukliInfo.ref_number)" class="text-gray-400 hover:text-gray-700 ml-1" title="Copy Reference">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 font-medium">Refund Wallet:</span>
-                            <span class="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60" x-text="sukliInfo.refund_wallet"></span>
-                        </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-gray-200/60">
-                            <span class="text-gray-500 font-medium">Sukli Status:</span>
-                            <span class="font-bold px-2.5 py-0.5 rounded-full text-[11px] border"
-                                  :class="sukliInfo.status_badge_class"
-                                  x-text="sukliInfo.status_label"></span>
-                        </div>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="sukliInfoModal = false"
-                                class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
-                            Close
-                        </button>
-                        <template x-if="sukliInfo.can_distribute">
-                            <button type="button" @click="proceedToDistributeSukli()"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
-                                <span>💸</span>
-                                <span>Distribute Sukli</span>
-                            </button>
-                        </template>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
-
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    {{-- ═══ 5. DISTRIBUTE SUKLI / OVERPAYMENT REFUND MODAL ═══ --}}
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    <div x-show="sukliModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs"
-         @keydown.escape.window="sukliModal = false">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4"
-             @click.outside="sukliModal = false">
-            
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-200 text-lg">
-                    💸
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Distribute Sukli / Overpayment</h3>
-                    <p class="text-xs text-gray-500">Record customer overpayment refund transfer</p>
-                </div>
-            </div>
-
-            <template x-if="selectedOrder">
-                <div class="bg-indigo-50/50 rounded-xl p-3.5 border border-indigo-100/80 space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Order Number:</span>
-                        <span class="font-mono font-bold text-gray-800" x-text="'#LB-' + (selectedOrder.id ? selectedOrder.id.slice(-8).toUpperCase() : '')"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Customer Name:</span>
-                        <span class="font-bold text-gray-900" x-text="selectedOrder.customer ? selectedOrder.customer.name : 'Customer'"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Order Payable:</span>
-                        <span class="font-mono font-bold text-gray-700" x-text="'₱' + parseFloat(selectedOrder.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
-                    </div>
-                    <div class="flex justify-between border-t border-indigo-100 pt-1.5">
-                        <span class="text-indigo-900 font-bold">Eligible Sukli Balance:</span>
-                        <span class="font-mono font-black text-indigo-700 text-sm" x-text="'₱' + parseFloat(sukliAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
-                    </div>
-                </div>
-            </template>
-
-            <template x-if="selectedOrder">
-                <form :action="(window.location.pathname.startsWith('/superadmin') ? '/superadmin/orders/' : '/admin/orders/') + selectedOrder.id + '/refund-sukli'" 
-                      method="POST" 
-                      enctype="multipart/form-data" 
-                      @submit="isSubmitting = true" 
-                      class="space-y-3.5">
-                    @csrf
-                    
-                    {{-- Refund Amount --}}
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                            Refund Amount (PHP) <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="number" step="0.01" min="0.01" name="refund_amount" required x-model="sukliAmount"
-                                class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                    </div>
-
-                    {{-- Outgoing Transfer Reference Number --}}
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                            Outgoing Reference / Transaction # <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" name="transfer_reference" required x-model="sukliTransferRef"
-                               placeholder="e.g. 100999888877 or GCASH-TXN-12345"
-                               class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                    </div>
-
-                    {{-- Customer Destination Mobile / Account --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                                Destination Mobile / Wallet <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="text" name="destination_account" required x-model="sukliDestAccount"
-                                   placeholder="09XXXXXXXXX"
-                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                                Account Holder Name
-                            </label>
-                            <input type="text" name="destination_name" x-model="sukliDestName"
-                                   placeholder="Customer Full Name"
-                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                        </div>
-                    </div>
-
-                    {{-- Transfer Screenshot / Proof --}}
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                            Distribution Proof / Receipt Screenshot (Optional)
-                        </label>
-                        <input type="file" name="transfer_proof" accept="image/*,.pdf"
-                               class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all">
-                    </div>
-
-                    {{-- Admin Notes --}}
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                            Audit Notes
-                        </label>
-                        <textarea name="notes" rows="2" x-model="sukliNotes"
-                                  placeholder="Add optional internal distribution note..."
-                                  class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="sukliModal = false" :disabled="isSubmitting"
-                                class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="isSubmitting || !sukliTransferRef.trim()"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
-                            <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                            <span x-text="isSubmitting ? 'Recording...' : 'Record Sukli Distribution'"></span>
-                        </button>
-                    </div>
-                </form>
-            </template>
-        </div>
-    </div>
 </div>
 @endsection
+

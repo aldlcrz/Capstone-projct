@@ -223,4 +223,84 @@ class LumbarongSystemMessageService
             return null;
         }
     }
+
+    /**
+     * Send official LumBarong inbox message when a cancelled order's refund is processed.
+     */
+    public static function sendCancellationRefundCompletedMessage(
+        Order $order,
+        RefundTransaction $refundTx,
+        ?User $admin = null
+    ): ?Message {
+        if (empty($order->customerId)) {
+            return null;
+        }
+
+        $systemUser = static::getSystemUser();
+        $idempotencyTag = "<!-- [cancellation_refund:{$refundTx->id}] -->";
+
+        // Idempotency check
+        $existing = Message::where('receiverId', $order->customerId)
+            ->where('content', 'LIKE', "%{$idempotencyTag}%")
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $shortOrderNumber = '#LB-' . strtoupper(substr($order->id, -8));
+        $formattedRefundAmount = '₱' . number_format((float) $refundTx->refund_amount, 2);
+
+        $methodName = ucfirst(strtolower($refundTx->refund_method ?: ($order->paymentMethod ?: 'GCash')));
+        if (strtoupper($methodName) === 'GCASH') $methodName = 'GCash';
+        if (strtoupper($methodName) === 'MAYA') $methodName = 'Maya';
+
+        $maskedDest = $refundTx->destination_account_masked ?: '09*********';
+        $refNumber = $refundTx->transfer_reference ?: 'N/A';
+        $refundDate = $refundTx->processed_at
+            ? ($refundTx->processed_at instanceof \Carbon\Carbon ? $refundTx->processed_at->format('M d, Y h:i A') : \Carbon\Carbon::parse($refundTx->processed_at)->format('M d, Y h:i A'))
+            : now()->format('M d, Y h:i A');
+
+        $lines = [
+            "Hello! This is LumBarong.",
+            "",
+            "The refund for your cancelled Order {$shortOrderNumber} has been processed successfully.",
+            "",
+            "Refund Amount: {$formattedRefundAmount}",
+            "Refund Method: {$methodName}",
+            "Refund Destination: {$maskedDest}",
+            "Refund Reference: {$refNumber}",
+            "Refund Date: {$refundDate}",
+            "",
+        ];
+
+        if (!empty($refundTx->transfer_proof_path)) {
+            $proofUrl = route('orders.refund-proof', ['orderId' => $order->id, 'refundId' => $refundTx->id]);
+            $lines[] = "The refund proof/receipt is attached to this message for your reference.";
+            $lines[] = "";
+            $lines[] = "[View / Download Refund Receipt]({$proofUrl})";
+            $lines[] = "[![Refund Proof Receipt]({$proofUrl})]({$proofUrl})";
+            $lines[] = "";
+        }
+
+        $lines[] = "Thank you for shopping with LumBarong!";
+        $lines[] = "";
+        $lines[] = $idempotencyTag;
+
+        $content = implode("\n", $lines);
+
+        try {
+            return Message::create([
+                'id'         => (string) Str::uuid(),
+                'senderId'   => $systemUser->id,
+                'receiverId' => $order->customerId,
+                'content'    => $content,
+                'read'       => false,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Failed to send LumBarong cancellation refund inbox message: " . $e->getMessage());
+            return null;
+        }
+    }
 }
+

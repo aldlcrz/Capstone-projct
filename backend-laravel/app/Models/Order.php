@@ -273,6 +273,82 @@ class Order extends Model
         return $this->remainingSukliRefundAmount();
     }
 
+    /**
+     * Total authoritative amount paid by customer for this order.
+     */
+    public function totalPaidAmount(): float
+    {
+        $verifiedTx = $this->latestPaymentTransaction && $this->latestPaymentTransaction->status === 'VERIFIED'
+            ? (float) ($this->latestPaymentTransaction->detected_amount ?: $this->latestPaymentTransaction->expected_amount)
+            : 0.0;
+
+        if ($verifiedTx > 0.0) {
+            return round($verifiedTx, 2);
+        }
+
+        $received = $this->totalReceivedPayments();
+        if ($received > 0.0) {
+            return round($received, 2);
+        }
+
+        $paymentStatusLower = strtolower(trim((string) ($this->paymentStatus ?? '')));
+        if (in_array($paymentStatusLower, ['paid', 'verified', 'payment verified'], true)) {
+            return round((float) $this->totalAmount + (float) ($this->overpayment_amount ?? 0), 2);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Sum of all completed / transferred refund transactions on this order.
+     */
+    public function totalRefundedAmount(): float
+    {
+        if ($this->relationLoaded('refundTransactions')) {
+            return (float) $this->refundTransactions
+                ->whereIn('status', ['transferred', 'completed', 'refunded'])
+                ->sum('refund_amount');
+        }
+
+        return (float) $this->refundTransactions()
+            ->whereIn('status', ['transferred', 'completed', 'refunded'])
+            ->sum('refund_amount');
+    }
+
+    /**
+     * Remaining unrefunded balance when order is cancelled.
+     */
+    public function remainingCancellationRefundAmount(): float
+    {
+        $paid = $this->totalPaidAmount();
+        if ($paid <= 0.0) {
+            return 0.0;
+        }
+
+        $refunded = $this->totalRefundedAmount();
+        return max(0.0, round($paid - $refunded, 2));
+    }
+
+    /**
+     * Cancellation refund status.
+     */
+    public function cancellationRefundStatus(): string
+    {
+        $paid = $this->totalPaidAmount();
+        if ($paid <= 0.0) {
+            return 'unpaid';
+        }
+
+        $remaining = $this->remainingCancellationRefundAmount();
+        $refunded = $this->totalRefundedAmount();
+
+        if ($remaining <= 0.0 && $refunded > 0.0) {
+            return 'refunded';
+        }
+
+        return 'pending_refund';
+    }
+
     public function getDecryptedRefundMobileNumberAttribute(): ?string
     {
         $raw = $this->refund_mobile_number ?? ($this->refundMobileNumber ?? null);
