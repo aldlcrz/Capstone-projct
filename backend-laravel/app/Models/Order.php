@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -497,5 +498,29 @@ class Order extends Model
         }
 
         return $this->paymentMethod ?? 'Cash on Delivery';
+    }
+
+    /**
+     * Scope a query to only include orders visible to the seller.
+     * - GCash/Maya orders must be verified by Admin (Paid/Verified) before appearing to the seller.
+     * - Unverified (Pending Verification) or Admin-Rejected GCash/Maya orders are hidden from the seller.
+     * - COD and In-Shop cash orders are directly visible to the seller.
+     */
+    public function scopeVisibleToSeller($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($nonEwallet) {
+                $nonEwallet->whereNotIn(DB::raw('UPPER(TRIM(COALESCE(paymentMethod, "")))'), ['GCASH', 'MAYA', 'PAYMAYA'])
+                    ->where(function ($sub) {
+                        $sub->whereNotIn('paymentStatus', ['Payment Rejected', 'Rejected'])
+                            ->orWhereNull('paymentStatus');
+                    });
+            })
+            ->orWhere(function ($ewallet) {
+                $ewallet->whereIn(DB::raw('UPPER(TRIM(COALESCE(paymentMethod, "")))'), ['GCASH', 'MAYA', 'PAYMAYA'])
+                    ->whereIn('paymentStatus', ['Paid', 'Verified', 'Paid (Verified)'])
+                    ->whereNotIn('paymentStatus', ['Payment Rejected', 'Rejected', 'Pending Verification', 'Pending Verification (Overpayment)']);
+            });
+        });
     }
 }

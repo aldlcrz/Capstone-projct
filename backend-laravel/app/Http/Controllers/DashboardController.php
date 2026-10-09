@@ -341,6 +341,7 @@ class DashboardController extends Controller
 
         // Retrieve all seller orders (unfiltered for historical timeline stats)
         $allOrders = Order::where('sellerId', $sellerId)
+            ->visibleToSeller()
             ->with(['customer:id,name,email', 'items'])
             ->orderBy('createdAt', 'desc')
             ->get();
@@ -348,7 +349,9 @@ class DashboardController extends Controller
         $allActiveOrders = $allOrders->reject(fn ($order) => $this->isCancelledOrder($order->status));
 
         // Filtered orders for date range
-        $ordersQuery = Order::where('sellerId', $sellerId)->with(['customer:id,name,email', 'items']);
+        $ordersQuery = Order::where('sellerId', $sellerId)
+            ->visibleToSeller()
+            ->with(['customer:id,name,email', 'items']);
         if ($from) {
             $ordersQuery->where('createdAt', '>=', $from);
         }
@@ -687,6 +690,7 @@ class DashboardController extends Controller
             $status = strtolower($request->input('status', 'all'));
 
             $query = Order::where('sellerId', $sellerId)
+                ->visibleToSeller()
                 ->with(['customer', 'items.product', 'reviews.customer', 'returnRequests', 'shipping.provider', 'seller']);
 
             if ($request->filled('search')) {

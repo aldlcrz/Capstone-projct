@@ -163,7 +163,7 @@ class AdminPaymentVerificationTest extends TestCase
         $transaction->refresh();
 
         $this->assertEquals('Paid', $order->paymentStatus);
-        $this->assertEquals('To Ship', $order->status);
+        $this->assertEquals('Pending', $order->status);
         $this->assertEquals('VERIFIED', $transaction->status);
         $this->assertNotNull($transaction->verified_at);
 
@@ -177,6 +177,61 @@ class AdminPaymentVerificationTest extends TestCase
             'userId' => $this->seller->id,
             'type' => 'order',
         ]);
+    }
+
+    /** @test */
+    public function unverified_gcash_and_maya_orders_are_hidden_from_seller_until_admin_verifies()
+    {
+        // 1. Create unverified GCash order
+        $unverifiedOrder = $this->createTestOrder([
+            'paymentMethod' => 'GCash',
+            'paymentReference' => 'GCASH-UNVERIFIED-123',
+            'paymentStatus' => 'Pending Verification',
+            'status' => 'Pending',
+        ]);
+
+        // Seller views orders: unverified GCash order should NOT appear
+        $sellerRes = $this->actingAs($this->seller)->get(route('seller.orders'));
+        $sellerRes->assertStatus(200);
+        $sellerRes->assertDontSee($unverifiedOrder->id);
+
+        // 2. Admin verifies the GCash order
+        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $unverifiedOrder->id));
+        $unverifiedOrder->refresh();
+
+        $this->assertEquals('Paid', $unverifiedOrder->paymentStatus);
+        $this->assertEquals('Pending', $unverifiedOrder->status);
+
+        // Seller views orders: verified GCash order NOW appears under Pending
+        $sellerResAfter = $this->actingAs($this->seller)->get(route('seller.orders', ['status' => 'pending']));
+        $sellerResAfter->assertStatus(200);
+        $sellerResAfter->assertSee($unverifiedOrder->id);
+    }
+
+    /** @test */
+    public function rejected_gcash_and_maya_orders_are_hidden_from_seller()
+    {
+        // 1. Create unverified Maya order
+        $rejectedOrder = $this->createTestOrder([
+            'paymentMethod' => 'Maya',
+            'paymentReference' => 'MAYA-REJECTED-456',
+            'paymentStatus' => 'Pending Verification',
+            'status' => 'Pending',
+        ]);
+
+        // 2. Admin rejects payment
+        $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $rejectedOrder->id), [
+            'reason' => 'Invalid receipt uploaded',
+        ]);
+        $rejectedOrder->refresh();
+
+        $this->assertEquals('Payment Rejected', $rejectedOrder->paymentStatus);
+        $this->assertEquals('Cancelled', $rejectedOrder->status);
+
+        // 3. Seller views orders: rejected order should NOT appear in seller orders
+        $sellerRes = $this->actingAs($this->seller)->get(route('seller.orders'));
+        $sellerRes->assertStatus(200);
+        $sellerRes->assertDontSee($rejectedOrder->id);
     }
 
     /** @test */
@@ -215,6 +270,7 @@ class AdminPaymentVerificationTest extends TestCase
 
         $this->assertEquals('Payment Rejected', $order->paymentStatus);
         $this->assertEquals($rejectionReason, $order->paymentRejectionReason);
+        $this->assertEquals('Cancelled', $order->status);
         $this->assertEquals('REJECTED', $transaction->status);
 
         // Assert customer received rejection notification

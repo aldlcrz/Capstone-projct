@@ -1961,15 +1961,10 @@ class AdminController extends Controller
         }
 
         DB::beginTransaction();
-        try {
             $previousStatus = $order->status;
             $order->paymentStatus = 'Paid';
             $order->paymentRejectionReason = null;
-            
-            // Advance order from Pending to To Ship if applicable
-            if (in_array(strtolower($order->status), ['pending', 'processing'])) {
-                $order->status = 'To Ship';
-            }
+            $order->status = 'Pending';
             $order->save();
 
             // Update or create PaymentTransaction
@@ -2068,10 +2063,10 @@ class AdminController extends Controller
         $reason = trim($request->input('reason'));
 
         DB::beginTransaction();
-        try {
             $previousStatus = $order->status;
             $order->paymentStatus = 'Payment Rejected';
             $order->paymentRejectionReason = $reason;
+            $order->status = 'Cancelled';
             $order->save();
 
             $transaction = $order->latestPaymentTransaction;
@@ -2103,7 +2098,7 @@ class AdminController extends Controller
                 'notes' => 'Payment rejected by Administrator: ' . $reason,
             ]);
 
-            // Notify Customer
+            // Notify Customer so they can re-upload or correct payment
             Notification::send(
                 $order->customerId,
                 '⚠️ Payment Verification Rejected',
@@ -2111,16 +2106,6 @@ class AdminController extends Controller
                 'order',
                 "/orders/{$order->id}",
                 'customer'
-            );
-
-            // Notify Seller
-            Notification::send(
-                $order->sellerId,
-                'Payment Rejected by Admin',
-                "Payment proof for Order #LB-" . strtoupper(substr($order->id, -8)) . " was marked rejected by Admin (Reason: {$reason}).",
-                'order',
-                "/seller/orders?order_id={$order->id}",
-                'seller'
             );
 
             DB::commit();
