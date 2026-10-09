@@ -12,19 +12,9 @@ return new class extends Migration
             Schema::create('seller_payouts', function (Blueprint $table) {
                 $table->uuid('id')->primary();
 
-                if (Schema::getConnection()->getDriverName() === 'mysql') {
-                    $table->uuid('order_id')->nullable()->collation('utf8mb4_unicode_ci');
-                    $table->uuid('seller_id')->collation('utf8mb4_unicode_ci');
-                    $table->uuid('processed_by')->nullable()->collation('utf8mb4_unicode_ci');
-                } else {
-                    $table->uuid('order_id')->nullable();
-                    $table->uuid('seller_id');
-                    $table->uuid('processed_by')->nullable();
-                }
-
-                $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-                $table->foreign('seller_id')->references('id')->on('users')->onDelete('cascade');
-                $table->foreign('processed_by')->references('id')->on('users')->onDelete('set null');
+                $table->uuid('order_id')->nullable();
+                $table->uuid('seller_id');
+                $table->uuid('processed_by')->nullable();
 
                 $table->decimal('gross_sales', 12, 2)->default(0.00);
                 $table->decimal('shipping_amount', 12, 2)->default(0.00);
@@ -50,6 +40,24 @@ return new class extends Migration
                 $table->index(['order_id']);
                 $table->index(['transfer_reference']);
             });
+
+            try {
+                Schema::table('seller_payouts', function (Blueprint $table) {
+                    $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+                });
+            } catch (\Throwable $e) {}
+
+            try {
+                Schema::table('seller_payouts', function (Blueprint $table) {
+                    $table->foreign('seller_id')->references('id')->on('users')->onDelete('cascade');
+                });
+            } catch (\Throwable $e) {}
+
+            try {
+                Schema::table('seller_payouts', function (Blueprint $table) {
+                    $table->foreign('processed_by')->references('id')->on('users')->onDelete('set null');
+                });
+            } catch (\Throwable $e) {}
         }
     }
 
