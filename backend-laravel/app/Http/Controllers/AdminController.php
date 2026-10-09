@@ -1961,6 +1961,7 @@ class AdminController extends Controller
         }
 
         DB::beginTransaction();
+        try {
             $previousStatus = $order->status;
             $order->paymentStatus = 'Paid';
             $order->paymentRejectionReason = null;
@@ -2063,6 +2064,7 @@ class AdminController extends Controller
         $reason = trim($request->input('reason'));
 
         DB::beginTransaction();
+        try {
             $previousStatus = $order->status;
             $order->paymentStatus = 'Payment Rejected';
             $order->paymentRejectionReason = $reason;

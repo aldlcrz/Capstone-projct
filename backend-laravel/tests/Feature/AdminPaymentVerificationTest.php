@@ -40,6 +40,8 @@ class AdminPaymentVerificationTest extends TestCase
         $this->seller = User::factory()->create([
             'role' => 'seller',
             'status' => 'active',
+            'isVerified' => true,
+            'email_verified_at' => now(),
             'shopName' => 'Heritage Barong Atelier',
             'email' => 'artisan@lumbarong.test',
         ]);

@@ -731,8 +731,8 @@ class DashboardController extends Controller
             $counts = [
                 'all'                  => $orders->count(),
                 'pending'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['pending', 'cancellation pending', 'cancellation requested']))->count(),
-                'store pickup'         => $orders->filter(fn($o) => ($o instanceof \App\Models\Order) && $o->isStorePickup())->count(),
-                'special delivery'     => $orders->filter(fn($o) => ($o instanceof \App\Models\Order) && $o->isSpecialDelivery())->count(),
+                'store pickup'         => $orders->filter(fn($o) => ($o instanceof Order) && $o->isStorePickup())->count(),
+                'special delivery'     => $orders->filter(fn($o) => ($o instanceof Order) && $o->isSpecialDelivery())->count(),
                 'to ship'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['to ship', 'to_ship', 'processing', 'ready to ship', 'ready_to_ship', 'confirmed', 'packed']))->count(),
                 'shipped'              => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['shipped', 'to receive']))->count(),
                 'in transit'           => $orders->filter(fn($o) => in_array(strtolower($o->status ?? ''), ['in transit', 'in_transit', 'out for delivery']))->count(),
