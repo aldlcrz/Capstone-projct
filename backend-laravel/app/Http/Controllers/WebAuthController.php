@@ -221,6 +221,8 @@ class WebAuthController extends Controller
 
             $request->session()->regenerate();
 
+            Log::info("AUTH_LOGIN_SUCCESS: User \"{$user->name}\" (ID: {$user->id}, Role: {$user->role}, Email: {$user->email}) logged in successfully from IP " . ($request->ip() ?: '127.0.0.1') . " [Device: " . ($request->userAgent() ?: 'Unknown Device') . "].");
+
             // Single-device login: increment user's sessionVersion and bind to this session
             $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
             $user->save();
@@ -971,6 +973,7 @@ class WebAuthController extends Controller
 
             Auth::login($user);
             $request->session()->regenerate();
+            Log::info("AUTH_LOGIN_SUCCESS: User \"{$user->name}\" (ID: {$user->id}, Role: {$user->role}, Email: {$user->email}) logged in successfully from IP " . ($request->ip() ?: '127.0.0.1') . " [Device: " . ($request->userAgent() ?: 'Unknown Device') . "].");
             $user->sessionVersion = ((int) ($user->sessionVersion ?? 1)) + 1;
             $user->save();
             session(['login_session_version' => $user->sessionVersion]);
