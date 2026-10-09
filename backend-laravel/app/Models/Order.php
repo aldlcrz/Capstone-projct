@@ -123,6 +123,14 @@ class Order extends Model
     }
 
     /**
+     * Check if the order's payment has been confirmed/verified.
+     */
+    public function isPaymentVerified(): bool
+    {
+        return in_array($this->paymentStatus, ['Paid', 'Verified', 'PAID', 'VERIFIED']);
+    }
+
+    /**
      * Get the authoritative total payments received for this order across all payment transactions.
      */
     public function totalReceivedPayments(): float

@@ -470,7 +470,7 @@
                                                         'status_badge_class' => $sStatusBadgeClass,
                                                         'payment_method' => strtoupper($order->paymentMethod ?? 'ONLINE'),
                                                         'ref_number' => $refNumber ?: 'N/A',
-                                                        'can_distribute' => ($sStatus === 'OVERPAYMENT_PENDING_REFUND' && $order->isPaymentVerified())
+                                                        'can_distribute' => ($sStatus === 'OVERPAYMENT_PENDING_REFUND' && ($isPaid || $order->isPaymentVerified()))
                                                     ];
                                                 @endphp
                                                 <button type="button"
