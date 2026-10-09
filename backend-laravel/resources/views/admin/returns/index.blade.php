@@ -161,32 +161,47 @@
         </div>
 
         {{-- ═══ 3-TAB WORKFLOW PILLS ═══ --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-1.5 bg-gray-900/90 backdrop-blur-md rounded-2xl border border-gray-800 shadow-lg">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 bg-white/95 backdrop-blur-md rounded-2xl border border-amber-950/10 shadow-xs">
             {{-- Tab 1: Return & Refund Claims --}}
             <a href="{{ url()->current() }}?tab=claims"
-               class="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'claims' ? 'bg-amber-600/20 text-amber-400 border border-amber-500/50 shadow-inner' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5' }}">
-                <svg class="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
+               class="group relative flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'claims' ? 'bg-[#3D2B1F] text-amber-200 border border-[#2D1F16] shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-[#FAF8F5]' }}">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center transition-colors {{ $tab === 'claims' ? 'bg-amber-400/20 text-amber-300' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
                 <span>Return & Refund Claims</span>
+                @if($tab === 'claims')
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                @endif
             </a>
 
             {{-- Tab 2: Sukli / Overpayments --}}
             <a href="{{ url()->current() }}?tab=sukli"
-               class="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'sukli' ? 'bg-amber-600/20 text-amber-400 border border-amber-500/50 shadow-inner' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5' }}">
-                <svg class="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
+               class="group relative flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'sukli' ? 'bg-[#3D2B1F] text-amber-200 border border-[#2D1F16] shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-[#FAF8F5]' }}">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center transition-colors {{ $tab === 'sukli' ? 'bg-amber-400/20 text-amber-300' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
                 <span>Sukli / Overpayments</span>
+                @if($tab === 'sukli')
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                @endif
             </a>
 
             {{-- Tab 3: Order Cancellations --}}
             <a href="{{ url()->current() }}?tab=cancellations"
-               class="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'cancellations' ? 'bg-amber-600/20 text-amber-400 border border-amber-500/50 shadow-inner' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5' }}">
-                <svg class="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
+               class="group relative flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer {{ $tab === 'cancellations' ? 'bg-[#3D2B1F] text-amber-200 border border-[#2D1F16] shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-[#FAF8F5]' }}">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center transition-colors {{ $tab === 'cancellations' ? 'bg-amber-400/20 text-amber-300' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
                 <span>Order Cancellations</span>
+                @if($tab === 'cancellations')
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                @endif
             </a>
         </div>
     </div>
@@ -210,81 +225,99 @@
         @endphp
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isAll ? 'bg-gray-900 text-white border-gray-900 ring-2 ring-gray-900/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isAll ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black leading-none">{{ $counts['all'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider mt-1 {{ $isAll ? 'text-gray-300' : 'text-gray-400' }}">All Cases</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">All Cases</div>
                     </div>
                 </div>
+                @if($isAll)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'disputed', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isDisputed ? 'bg-rose-50 border-rose-600 ring-2 ring-rose-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-200 hover:border-rose-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isDisputed ? 'bg-rose-600 text-white' : 'bg-rose-100 text-rose-700' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isDisputed ? 'bg-rose-50/70 border-rose-600 ring-2 ring-rose-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-100/80 hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isDisputed ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-rose-900 leading-none">{{ $counts['disputed'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-rose-700 mt-1">Disputed</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['disputed'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-rose-600 mt-0.5">Disputed</div>
                     </div>
                 </div>
+                @if($isDisputed)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isPending ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-200 hover:border-amber-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/70 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100/80 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-amber-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-1">Pending</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-amber-600 mt-0.5">Pending</div>
                     </div>
                 </div>
+                @if($isPending)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'approved', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isApproved ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isApproved ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isApproved ? 'bg-sky-50/70 border-sky-600 ring-2 ring-sky-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-sky-100/80 hover:border-sky-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isApproved ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-600 group-hover:bg-sky-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-blue-900 leading-none">{{ $counts['approved'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-blue-700 mt-1">Approved</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['approved'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-sky-600 mt-0.5">Approved</div>
                     </div>
                 </div>
+                @if($isApproved)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-sky-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'refunded', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isRefunded ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRefunded ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100/80 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-emerald-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mt-1">Refunded</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-600 mt-0.5">Refunded</div>
                     </div>
                 </div>
+                @if($isRefunded)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'claims_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isRejected ? 'bg-gray-100 border-gray-600 ring-2 ring-gray-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isRejected ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-500' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-slate-50 border-slate-600 ring-2 ring-slate-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-slate-100/80 hover:border-slate-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRejected ? 'bg-slate-700 text-white' : 'bg-slate-50 text-slate-500 group-hover:bg-slate-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-gray-800 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-500 mt-1">Rejected</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Rejected</div>
                     </div>
                 </div>
+                @if($isRejected)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-700 text-white shadow-xs">Active</span>
+                @endif
             </a>
         </div>
     @elseif($tab === 'sukli')
@@ -296,55 +329,67 @@
         @endphp
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'sukli_page' => 1]) }}"
-               class="rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 {{ $isAll ? 'bg-gray-900 text-white border-gray-900 ring-2 ring-gray-900/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm' }}">
+               class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 {{ $isAll ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-base font-black leading-none">{{ $counts['all'] ?? 0 }}</div>
-                        <div class="text-[10px] font-bold uppercase tracking-wider mt-1 {{ $isAll ? 'text-gray-300' : 'text-gray-400' }}">All Sukli Cases</div>
+                        <div class="text-base font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">All Sukli Cases</div>
                     </div>
                 </div>
+                @if($isAll)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_refund', 'sukli_page' => 1]) }}"
-               class="rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 {{ $isPendingRefund ? 'bg-amber-50 border-amber-600 ring-2 ring-amber-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-200 hover:border-amber-400 hover:shadow-sm' }}">
+               class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPendingRefund ? 'bg-amber-50/70 border-amber-600 ring-2 ring-amber-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100/80 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 {{ $isPendingRefund ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-700' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPendingRefund ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-base font-black text-amber-900 leading-none">{{ $counts['pending_refund'] ?? 0 }}</div>
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700 mt-1">Pending Refund</div>
+                        <div class="text-base font-black text-gray-900 leading-none">{{ $counts['pending_refund'] ?? 0 }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-amber-600 mt-0.5">Pending Refund</div>
                     </div>
                 </div>
+                @if($isPendingRefund)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'refunded', 'sukli_page' => 1]) }}"
-               class="rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 {{ $isRefunded ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm' }}">
+               class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRefunded ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100/80 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <div>
-                        <div class="text-base font-black text-emerald-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mt-1">Sukli Refunded</div>
+                        <div class="text-base font-black text-gray-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mt-0.5">Sukli Refunded</div>
                     </div>
                 </div>
+                @if($isRefunded)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_verification', 'sukli_page' => 1]) }}"
-               class="rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 {{ $isPendingVerif ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm' }}">
+               class="group relative rounded-2xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPendingVerif ? 'bg-sky-50/70 border-sky-600 ring-2 ring-sky-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-sky-100/80 hover:border-sky-300 hover:shadow-sm hover:-translate-y-0.5' }}">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 {{ $isPendingVerif ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPendingVerif ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-600 group-hover:bg-sky-100' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-base font-black text-blue-900 leading-none">{{ $counts['pending_verification'] ?? 0 }}</div>
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-blue-700 mt-1">Pending Verification</div>
+                        <div class="text-base font-black text-gray-900 leading-none">{{ $counts['pending_verification'] ?? 0 }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-sky-600 mt-0.5">Pending Verification</div>
                     </div>
                 </div>
+                @if($isPendingVerif)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-sky-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
         </div>
     @elseif($tab === 'cancellations')
@@ -357,68 +402,83 @@
         @endphp
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <a href="{{ request()->fullUrlWithQuery(['status' => 'all', 'cancel_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isAll ? 'bg-gray-900 text-white border-gray-900 ring-2 ring-gray-900/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isAll ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isAll ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black leading-none">{{ $counts['all'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider mt-1 {{ $isAll ? 'text-gray-300' : 'text-gray-400' }}">All Cancellations</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['all'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">All Cancellations</div>
                     </div>
                 </div>
+                @if($isAll)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gray-900 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_refund', 'cancel_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isPendingRefund ? 'bg-amber-50 border-amber-600 ring-2 ring-amber-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-200 hover:border-amber-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isPendingRefund ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-700' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPendingRefund ? 'bg-amber-50/70 border-amber-600 ring-2 ring-amber-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-100/80 hover:border-amber-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPendingRefund ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-amber-900 leading-none">{{ $counts['pending_refund'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-1">Pending Refund</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending_refund'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-amber-600 mt-0.5">Pending Refund</div>
                     </div>
                 </div>
+                @if($isPendingRefund)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'refunded', 'cancel_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isRefunded ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRefunded ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100/80 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRefunded ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-emerald-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mt-1">Fully Refunded</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['refunded'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-600 mt-0.5">Fully Refunded</div>
                     </div>
                 </div>
+                @if($isRefunded)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'unpaid', 'cancel_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isUnpaid ? 'bg-gray-100 border-gray-600 ring-2 ring-gray-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isUnpaid ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-500' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isUnpaid ? 'bg-slate-50 border-slate-600 ring-2 ring-slate-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-slate-100/80 hover:border-slate-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isUnpaid ? 'bg-slate-700 text-white' : 'bg-slate-50 text-slate-500 group-hover:bg-slate-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-gray-800 leading-none">{{ $counts['unpaid'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-500 mt-1">Unpaid / No Refund</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['unpaid'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Unpaid / No Refund</div>
                     </div>
                 </div>
+                @if($isUnpaid)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-700 text-white shadow-xs">Active</span>
+                @endif
             </a>
 
             <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_approval', 'cancel_page' => 1]) }}"
-               class="rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 {{ $isPendingAppr ? 'bg-indigo-50 border-indigo-600 ring-2 ring-indigo-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-indigo-100 hover:border-indigo-300 hover:shadow-sm' }}">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 {{ $isPendingAppr ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600' }}">
+               class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPendingAppr ? 'bg-indigo-50/70 border-indigo-600 ring-2 ring-indigo-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-indigo-100/80 hover:border-indigo-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPendingAppr ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm sm:text-base font-black text-indigo-900 leading-none">{{ $counts['pending_approval'] ?? 0 }}</div>
-                        <div class="text-[9px] font-bold uppercase tracking-wider text-indigo-700 mt-1">Pending Approval</div>
+                        <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending_approval'] ?? 0 }}</div>
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-indigo-600 mt-0.5">Pending Approval</div>
                     </div>
                 </div>
+                @if($isPendingAppr)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-indigo-600 text-white shadow-xs">Active</span>
+                @endif
             </a>
         </div>
     @endif
