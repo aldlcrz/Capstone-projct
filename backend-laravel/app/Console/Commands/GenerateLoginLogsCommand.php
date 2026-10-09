@@ -95,31 +95,24 @@ class GenerateLoginLogsCommand extends Command
         }
 
         $logEntries = [];
-        $now = Carbon::now();
 
-        foreach ($users as $user) {
+        foreach ($users as $index => $user) {
             $userName = $user->name ?: 'User';
             $userEmail = $user->email ?: 'user@lumbarong.shop';
             $userRole = $user->role ?: 'customer';
             $userId = $user->id;
 
-            // Generate 1 to 4 staggered past login events for each user
-            $loginCount = rand(1, 4);
+            // Generate 1 to 3 staggered past login events for each user within Sept 21 - Sept 30, 2026
+            $loginCount = rand(1, 3);
 
             for ($i = 0; $i < $loginCount; $i++) {
-                // Pick a random time in past $days days
-                $minutesAgo = rand(15, $days * 24 * 60);
-                $timestamp = (clone $now)->subMinutes($minutesAgo);
+                // Distribute across days 21 to 30 of September 2026
+                $targetDay = 21 + (($index + $i * 3) % 10);
+                $hour = 7 + (($index * 3 + $i * 5 + 2) % 16); // 7:00 AM to 11:00 PM
+                $minute = (($index * 19 + $i * 23 + 17) % 60);
+                $second = (($index * 31 + $i * 13 + 7) % 60);
 
-                // Realistic active hours: 07:00 to 23:00
-                $hour = rand(7, 22);
-                $minute = rand(0, 59);
-                $second = rand(0, 59);
-                $timestamp->setTime($hour, $minute, $second);
-
-                if ($timestamp->gt($now)) {
-                    $timestamp = (clone $now)->subMinutes(rand(10, 180));
-                }
+                $timestamp = Carbon::create(2026, 9, $targetDay, $hour, $minute, $second);
 
                 $ip = $this->philippineIps[array_rand($this->philippineIps)];
                 $ua = $this->userAgents[array_rand($this->userAgents)];

@@ -31,14 +31,23 @@ class DummyUserSeeder extends Seeder
         }
 
         $defaultPassword = Hash::make('password123');
+        $totalUsers = count($dummyUsers);
 
-        foreach ($dummyUsers as $data) {
+        foreach ($dummyUsers as $index => $data) {
             $name = (string) ($data['name'] ?? '');
             $email = strtolower(trim((string) ($data['email'] ?? '')));
 
             if (empty($name) || empty($email)) {
                 continue;
             }
+
+            // Distribute registration timestamps across Sept 21 - Sept 30, 2026 with unique hours/minutes/seconds
+            $dayOffset = (int) floor(($index / max(1, $totalUsers)) * 10); // 0 to 9 days -> Sept 21 to Sept 30
+            $targetDay = 21 + min(9, $dayOffset);
+            $hour = 8 + (($index * 2 + 1) % 14); // 8:00 AM to 10:00 PM
+            $minute = (($index * 17) + 23) % 60;
+            $second = (($index * 29) + 11) % 60;
+            $timestamp = \Carbon\Carbon::create(2026, 9, $targetDay, $hour, $minute, $second);
 
             $user = User::withTrashed()->where('email', $email)->first();
 
@@ -54,7 +63,9 @@ class DummyUserSeeder extends Seeder
             $user->status = 'active';
             $user->isVerified = true;
             $user->hasPasswordSet = true;
-            $user->email_verified_at = $user->email_verified_at ?? now();
+            $user->email_verified_at = $timestamp;
+            $user->createdAt = $timestamp;
+            $user->updatedAt = $timestamp;
 
             if (empty($user->password)) {
                 $user->password = $defaultPassword;
