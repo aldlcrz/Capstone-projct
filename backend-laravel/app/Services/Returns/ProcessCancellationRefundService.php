@@ -46,6 +46,7 @@ class ProcessCancellationRefundService
             $adminNotes
         ) {
             // Row-level lock to prevent concurrent double-refunding race conditions
+            /** @var Order $order */
             $order = Order::with(['paymentTransactions', 'refundTransactions', 'customer'])
                 ->where('id', $orderId)
                 ->lockForUpdate()

@@ -122,7 +122,7 @@ class ReturnManagementController extends Controller
 
             // Get all candidate orders to accurately calculate authoritative sukli
             $allCandidates = (clone $query)->orderBy('createdAt', 'desc')->get();
-            $sukliCandidates = $allCandidates->filter(function ($ord) {
+            $sukliCandidates = $allCandidates->filter(function (Order $ord) {
                 return $ord->authoritativeSukliAmount() > 0 || $ord->refundTransactions->whereNull('return_request_id')->count() > 0;
             });
 
@@ -130,17 +130,17 @@ class ReturnManagementController extends Controller
             $filtered = $sukliCandidates;
             if ($status !== 'all' && !empty($status)) {
                 if ($status === 'pending_refund') {
-                    $filtered = $sukliCandidates->filter(function ($ord) {
+                    $filtered = $sukliCandidates->filter(function (Order $ord) {
                         $isVerified = in_array(strtolower($ord->paymentStatus ?? ''), ['paid', 'verified'], true)
                             || ($ord->latestPaymentTransaction && $ord->latestPaymentTransaction->status === 'VERIFIED');
                         return $isVerified && $ord->remainingSukliRefundAmount() > 0;
                     });
                 } elseif ($status === 'refunded') {
-                    $filtered = $sukliCandidates->filter(function ($ord) {
+                    $filtered = $sukliCandidates->filter(function (Order $ord) {
                         return $ord->sukliRefundStatus() === 'refunded';
                     });
                 } elseif ($status === 'pending_verification') {
-                    $filtered = $sukliCandidates->filter(function ($ord) {
+                    $filtered = $sukliCandidates->filter(function (Order $ord) {
                         $isVerified = in_array(strtolower($ord->paymentStatus ?? ''), ['paid', 'verified'], true)
                             || ($ord->latestPaymentTransaction && $ord->latestPaymentTransaction->status === 'VERIFIED');
                         return !$isVerified && $ord->authoritativeSukliAmount() > 0;
@@ -162,9 +162,9 @@ class ReturnManagementController extends Controller
 
             $counts = [
                 'all'                  => $sukliCandidates->count(),
-                'pending_refund'       => $sukliCandidates->filter(fn($o) => in_array(strtolower($o->paymentStatus ?? ''), ['paid', 'verified'], true) && $o->remainingSukliRefundAmount() > 0)->count(),
-                'refunded'             => $sukliCandidates->filter(fn($o) => $o->sukliRefundStatus() === 'refunded')->count(),
-                'pending_verification' => $sukliCandidates->filter(fn($o) => !in_array(strtolower($o->paymentStatus ?? ''), ['paid', 'verified'], true) && $o->authoritativeSukliAmount() > 0)->count(),
+                'pending_refund'       => $sukliCandidates->filter(fn(Order $o) => in_array(strtolower($o->paymentStatus ?? ''), ['paid', 'verified'], true) && $o->remainingSukliRefundAmount() > 0)->count(),
+                'refunded'             => $sukliCandidates->filter(fn(Order $o) => $o->sukliRefundStatus() === 'refunded')->count(),
+                'pending_verification' => $sukliCandidates->filter(fn(Order $o) => !in_array(strtolower($o->paymentStatus ?? ''), ['paid', 'verified'], true) && $o->authoritativeSukliAmount() > 0)->count(),
             ];
         } elseif ($tab === 'cancellations') {
             // ═════════════════════════════════════════════════════════════════
@@ -197,19 +197,19 @@ class ReturnManagementController extends Controller
             $filtered = $allCancellations;
             if ($status !== 'all' && !empty($status)) {
                 if ($status === 'pending_refund') {
-                    $filtered = $allCancellations->filter(function ($ord) {
+                    $filtered = $allCancellations->filter(function (Order $ord) {
                         return $ord->cancellationRefundStatus() === 'pending_refund';
                     });
                 } elseif ($status === 'refunded') {
-                    $filtered = $allCancellations->filter(function ($ord) {
+                    $filtered = $allCancellations->filter(function (Order $ord) {
                         return $ord->cancellationRefundStatus() === 'refunded';
                     });
                 } elseif ($status === 'unpaid') {
-                    $filtered = $allCancellations->filter(function ($ord) {
+                    $filtered = $allCancellations->filter(function (Order $ord) {
                         return $ord->cancellationRefundStatus() === 'unpaid';
                     });
                 } elseif ($status === 'pending_approval') {
-                    $filtered = $allCancellations->filter(function ($ord) {
+                    $filtered = $allCancellations->filter(function (Order $ord) {
                         return strtolower($ord->status) === 'cancellation_pending';
                     });
                 }
@@ -228,10 +228,10 @@ class ReturnManagementController extends Controller
 
             $counts = [
                 'all'              => $allCancellations->count(),
-                'pending_refund'   => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'pending_refund')->count(),
-                'refunded'         => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'refunded')->count(),
-                'unpaid'           => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'unpaid')->count(),
-                'pending_approval' => $allCancellations->filter(fn($o) => strtolower($o->status) === 'cancellation_pending')->count(),
+                'pending_refund'   => $allCancellations->filter(fn(Order $o) => $o->cancellationRefundStatus() === 'pending_refund')->count(),
+                'refunded'         => $allCancellations->filter(fn(Order $o) => $o->cancellationRefundStatus() === 'refunded')->count(),
+                'unpaid'           => $allCancellations->filter(fn(Order $o) => $o->cancellationRefundStatus() === 'unpaid')->count(),
+                'pending_approval' => $allCancellations->filter(fn(Order $o) => strtolower($o->status) === 'cancellation_pending')->count(),
             ];
         }
 
@@ -377,7 +377,7 @@ class ReturnManagementController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Sukli refund of ₱' . number_format($refundTx->refund_amount, 2) . ' recorded successfully. Official LumBarong inbox notification sent to customer.');
+        return redirect()->back()->with('success', 'Sukli refund of ₱' . number_format((float) $refundTx->refund_amount, 2) . ' recorded successfully. Official LumBarong inbox notification sent to customer.');
     }
 
     /**
@@ -418,6 +418,6 @@ class ReturnManagementController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Cancellation refund of ₱' . number_format($refundTx->refund_amount, 2) . ' recorded successfully. Official LumBarong inbox notification sent to customer.');
+        return redirect()->back()->with('success', 'Cancellation refund of ₱' . number_format((float) $refundTx->refund_amount, 2) . ' recorded successfully. Official LumBarong inbox notification sent to customer.');
     }
 }
