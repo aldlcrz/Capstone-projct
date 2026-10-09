@@ -113,10 +113,22 @@
                         $unpaidCommissionsCount = 0;
                         $pendingProductsCount   = 0;
                         $pendingBannersCount    = 0;
+                        $pendingPaymentsCount   = 0;
+                        $pendingReturnsCount    = 0;
+                        $pendingReportsCount    = 0;
                         try {
                             $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
                             $pendingProductsCount   = \App\Models\Product::where('status', 'pending')->count();
                             $pendingBannersCount    = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
+                            $pendingPaymentsCount   = \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                                ->where(function($pq) {
+                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                                       ->orWhereNull('paymentStatus');
+                                })
+                                ->whereNotIn('status', ['Cancelled'])
+                                ->count();
+                            $pendingReturnsCount    = \App\Models\ReturnRequest::whereIn('status', ['pending', 'requested', 'disputed', 'escalated'])->count();
+                            $pendingReportsCount    = \App\Models\Report::where('status', 'Pending')->count();
                         } catch (\Throwable $e) {}
 
                         $sidebarGroups = [
@@ -135,23 +147,18 @@
                                     'badge' => $unpaidCommissionsCount
                                 ],
                                 [
-                                    'label' => 'Orders & Payments',
+                                    'label' => 'Payment Verification',
                                     'route' => 'superadmin.orders',
                                     'path'  => 'superadmin/orders',
+                                    'alt_path' => 'admin/orders',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
-                                    'badge' => (function() {
-                                        try {
-                                            return \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
-                                                ->where(function($pq) {
-                                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
-                                                       ->orWhereNull('paymentStatus');
-                                                })
-                                                ->whereNotIn('status', ['Cancelled'])
-                                                ->count();
-                                        } catch (\Throwable $e) {
-                                            return 0;
-                                        }
-                                    })()
+                                    'badge' => $pendingPaymentsCount
+                                ],
+                                [
+                                    'label' => 'Returns & Refunds',
+                                    'path'  => 'admin/returns',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
+                                    'badge' => $pendingReturnsCount
                                 ],
                                 [
                                     'label' => 'Payment Gateways',
@@ -165,12 +172,14 @@
                                     'label' => 'Product Categories',
                                     'route' => 'superadmin.categories.index',
                                     'path'  => 'superadmin/categories',
+                                    'alt_path' => 'admin/categories',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>'
                                 ],
                                 [
                                     'label' => 'Product Moderation',
                                     'route' => 'superadmin.products',
                                     'path'  => 'superadmin/products',
+                                    'alt_path' => 'admin/products',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>',
                                     'badge' => $pendingProductsCount
                                 ],
@@ -178,6 +187,7 @@
                                     'label' => 'Promotions & Banners',
                                     'route' => 'superadmin.banners.index',
                                     'path'  => 'superadmin/banners',
+                                    'alt_path' => 'admin/banners',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
                                     'badge' => $pendingBannersCount
                                 ],
@@ -187,20 +197,36 @@
                                     'label' => 'Sellers & Shops',
                                     'route' => 'superadmin.sellers',
                                     'path'  => 'superadmin/sellers',
+                                    'alt_path' => 'admin/sellers',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>'
                                 ],
                                 [
                                     'label' => 'Customers',
                                     'route' => 'superadmin.customers',
                                     'path'  => 'superadmin/customers',
+                                    'alt_path' => 'admin/users',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'
                                 ],
                             ],
+                            'LOGISTICS & OPERATIONS' => [
+                                [
+                                    'label' => 'Logistics & Shipping',
+                                    'path'  => 'admin/shipping',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />'
+                                ]
+                            ],
                             'DEVELOPER & SYSTEM' => [
+                                [
+                                    'label' => 'Reports & Concerns',
+                                    'path'  => 'admin/reports',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>',
+                                    'badge' => $pendingReportsCount
+                                ],
                                 [
                                     'label' => 'Archive Vault',
                                     'route' => 'superadmin.archives',
                                     'path'  => 'superadmin/archives',
+                                    'alt_path' => 'admin/archives',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>'
                                 ],
                                 [
@@ -233,7 +259,7 @@
                             <div class="text-[10px] font-black text-gray-500 tracking-widest uppercase px-3 mb-2">{{ $group }}</div>
                             @foreach($items as $item)
                                 @php
-                                    $isActive = request()->is($item['path'] . '*');
+                                    $isActive = request()->is($item['path'] . '*') || (isset($item['alt_path']) && request()->is($item['alt_path'] . '*'));
                                 @endphp
                                 <a href="/{{ $item['path'] }}"
                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ $isActive ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A] font-bold' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
