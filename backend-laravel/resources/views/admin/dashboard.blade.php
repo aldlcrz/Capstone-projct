@@ -287,17 +287,6 @@
 
         {{-- Quick Action Panel --}}
         <div class="space-y-3">
-            <div id="tour-admin-dash-financial-health" class="bg-[#3D2B1F] text-white rounded-3xl p-6">
-                <div class="text-[9px] font-black uppercase tracking-widest text-white/70 mb-1">Financial Health & Margin</div>
-                <div class="text-3xl font-black text-[#DFC97A] mt-2">{{ $stats['totalProfit'] }}</div>
-                <div class="text-[10px] text-white/80 font-medium mt-1">Gross Revenue: {{ $stats['totalRevenue'] }}</div>
-                <div class="text-[10px] text-white/80 font-medium">Platform Capital: {{ $stats['totalCapital'] }}</div>
-                <div class="mt-4 pt-4 border-t border-white/10 flex items-center gap-1.5">
-                    <span class="text-[9px] text-green-400 font-black">↑ Healthy Margin</span>
-                    <span class="text-[9px] text-white/60">Net artisan revenue balance</span>
-                </div>
-            </div>
-
             <div id="tour-admin-dash-quick-links" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
                 <div class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-3">Quick Links</div>
                 <div class="space-y-1.5">
@@ -338,7 +327,6 @@
         ['selector' => '#tour-admin-dash-top-sellers',      'title' => 'Top Performing Artisan Sellers', 'description' => 'Leaderboard ranking the highest-performing artisan workshops by total gross sales, completed orders, and volume percentage share.'],
         ['selector' => '#tour-admin-dash-top-products',     'title' => 'Top Selling Products',       'description' => 'Catalog rankings highlighting top-grossing barong garments, embroidery designs, and popular artisan items with unit sales.'],
         ['selector' => '#tour-admin-dash-activity',         'title' => 'Live Activity Stream',       'description' => 'Real-time streaming log of user actions, new order placements, store updates, and platform events as they happen.'],
-        ['selector' => '#tour-admin-dash-financial-health', 'title' => 'Financial Health & Margin',  'description' => 'Executive financial summary displaying net profit balance, total gross revenue, and platform capital / cost of goods sold.'],
         ['selector' => '#tour-admin-dash-quick-links',      'title' => 'Moderation Shortcuts & Queues', 'description' => 'Quick navigation links with live pending counter badges to jump directly into Products, Sellers, Promotions, or Open Reports.']
     ]"
 />
