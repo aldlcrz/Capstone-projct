@@ -384,6 +384,12 @@ class OrderController extends Controller
                 'userRole' => $user->role,
                 'notes' => $request->notes ?? ($canonicalTarget === 'To Ship' ? "Payment verified and order accepted for preparation." : ($canonicalCurrent !== $canonicalTarget ? "Status updated to {$canonicalTarget}." : "Shipping information updated.")),
             ]);
+
+            try {
+                \App\Services\Financial\FinancialLedgerService::reconcileSellerSettlementForOrder($order->fresh());
+            } catch (\Throwable $e) {
+                Log::warning("Could not reconcile seller settlement for order {$order->id}: " . $e->getMessage());
+            }
         }
 
         if ($isStorePickup) {

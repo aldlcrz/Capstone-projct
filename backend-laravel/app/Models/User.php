@@ -194,6 +194,11 @@ class User extends Authenticatable
         return $this->hasMany(CommissionRecord::class, 'sellerId');
     }
 
+    public function sellerPayouts()
+    {
+        return $this->hasMany(SellerPayout::class, 'seller_id');
+    }
+
     /**
      * Public-facing seller/shop name.
      */

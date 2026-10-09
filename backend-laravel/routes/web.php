@@ -253,6 +253,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/payments', [AdminController::class, 'orders'])->name('admin.payments');
     Route::post('/orders/{id}/verify-payment', [AdminController::class, 'verifyPayment'])->name('admin.orders.verify-payment');
     Route::post('/orders/{id}/reject-payment', [AdminController::class, 'rejectPayment'])->name('admin.orders.reject-payment');
+    Route::post('/orders/{id}/refund-sukli', [AdminController::class, 'processSukliRefund'])->name('admin.orders.refund-sukli');
+
+    // Commission Management & Seller Payouts
+    Route::get('/commissions', [AdminController::class, 'commissions'])->name('admin.commissions');
+    Route::patch('/commissions/{sellerId}/mark-paid', [AdminController::class, 'markPaid'])->name('admin.commissions.mark-paid');
+    Route::get('/payouts', [AdminController::class, 'payouts'])->name('admin.payouts');
+    Route::post('/payouts/{id}/process', [AdminController::class, 'processPayout'])->name('admin.payouts.process');
+    Route::patch('/payouts/{id}/release', [AdminController::class, 'releasePayout'])->name('admin.payouts.release');
+    Route::patch('/payouts/{id}/hold', [AdminController::class, 'holdPayout'])->name('admin.payouts.hold');
 
     // Products
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
@@ -344,6 +353,7 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::post('/returns/{returnRequest}/cash-refund', [SellerReturnController::class, 'cashRefund'])->name('seller.returns.cash-refund');
     Route::get('/customers', [DashboardController::class, 'sellerCustomers'])->name('seller.customers');
     Route::get('/commission', [DashboardController::class, 'sellerCommission'])->name('seller.commission');
+    Route::get('/earnings', [DashboardController::class, 'sellerCommission'])->name('seller.earnings');
     Route::post('/commission', [DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
     Route::patch('/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
     Route::get('/messages', [ChatController::class, 'sellerChatView'])->name('seller.messages');
@@ -389,7 +399,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/shops/{id}/toggle-status', [SuperAdminController::class, 'toggleShopStatus'])->name('superadmin.shops.toggle-status');
     Route::delete('/shops/{id}', [SuperAdminController::class, 'deleteShop'])->name('superadmin.shops.destroy');
     Route::get('/payouts', [SuperAdminController::class, 'payouts'])->name('superadmin.payouts');
+    Route::post('/payouts/{id}/process', [SuperAdminController::class, 'processPayout'])->name('superadmin.payouts.process');
     Route::patch('/payouts/{id}/release', [SuperAdminController::class, 'releasePayout'])->name('superadmin.payouts.release');
+    Route::patch('/payouts/{id}/hold', [SuperAdminController::class, 'holdPayout'])->name('superadmin.payouts.hold');
     Route::get('/users', [SuperAdminController::class, 'users'])->name('superadmin.users');
     Route::patch('/users/{id}/role', [SuperAdminController::class, 'changeRole'])->name('superadmin.users.role');
     Route::patch('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleStatus'])->name('superadmin.users.status');
@@ -401,6 +413,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::get('/payments', [AdminController::class, 'orders'])->name('superadmin.payments');
     Route::post('/orders/{id}/verify-payment', [AdminController::class, 'verifyPayment'])->name('superadmin.orders.verify-payment');
     Route::post('/orders/{id}/reject-payment', [AdminController::class, 'rejectPayment'])->name('superadmin.orders.reject-payment');
+    Route::post('/orders/{id}/refund-sukli', [AdminController::class, 'processSukliRefund'])->name('superadmin.orders.refund-sukli');
     Route::get('/system-health', [SuperAdminController::class, 'systemHealth'])->name('superadmin.system-health');
     Route::post('/system-health/clear-cache', [SuperAdminController::class, 'clearSystemCache'])->name('superadmin.clear-cache');
 

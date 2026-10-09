@@ -130,7 +130,7 @@
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                <nav id="seller-sidebar-nav" class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
                         $sellerAuthId = Auth::id();
                         $unreadMsgCount = 0;
@@ -180,6 +180,7 @@
                                 @php $isActive = request()->is($item['path'] . '*'); @endphp
                                 <a href="/{{ $item['path'] }}"
                                    id="{{ $item['id'] ?? '' }}"
+                                   data-active="{{ $isActive ? 'true' : 'false' }}"
                                    class="flex items-center justify-between px-3.5 py-3 rounded-2xl transition-all duration-200 tracking-wide text-[13px] font-semibold {{ $isActive ? 'seller-nav-active' : 'seller-nav-inactive' }}"
                                    @if(!$isActive)
                                    onmouseover="this.style.color='#1E1915'; this.style.background='rgba(196,149,32,0.08)';"
@@ -565,6 +566,64 @@
         ]"
     />
     @endif
+
+    <script>
+        // LumBarong Seller Sidebar Scroll Preservation
+        (function() {
+            var storageKey = 'lumbarong_seller_sidebar_scroll';
+            
+            function setupSidebarScroll() {
+                var sidebarNav = document.getElementById('seller-sidebar-nav');
+                if (!sidebarNav) return;
+
+                // 1. Restore scroll position immediately
+                var savedPos = sessionStorage.getItem(storageKey);
+                if (savedPos !== null && !isNaN(parseInt(savedPos, 10))) {
+                    sidebarNav.scrollTop = parseInt(savedPos, 10);
+                }
+
+                // 2. Ensure active menu item is visible within the viewport
+                var activeLink = sidebarNav.querySelector('[data-active="true"]') || sidebarNav.querySelector('.seller-nav-active');
+                if (activeLink) {
+                    var navRect = sidebarNav.getBoundingClientRect();
+                    var linkRect = activeLink.getBoundingClientRect();
+                    if (linkRect.top < navRect.top + 20 || linkRect.bottom > navRect.bottom - 20) {
+                        activeLink.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+                    }
+                }
+
+                // 3. Save scroll position on scroll (debounced)
+                var scrollTimer;
+                sidebarNav.addEventListener('scroll', function() {
+                    clearTimeout(scrollTimer);
+                    scrollTimer = setTimeout(function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }, 50);
+                }, { passive: true });
+
+                // 4. Save scroll position immediately on link click
+                sidebarNav.querySelectorAll('a').forEach(function(a) {
+                    a.addEventListener('click', function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    });
+                });
+
+                // 5. Save before window unload
+                window.addEventListener('beforeunload', function() {
+                    if (sidebarNav) {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupSidebarScroll);
+            } else {
+                setupSidebarScroll();
+            }
+            window.addEventListener('load', setupSidebarScroll);
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>

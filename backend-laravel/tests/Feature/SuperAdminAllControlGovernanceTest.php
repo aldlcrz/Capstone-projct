@@ -442,16 +442,35 @@ class SuperAdminAllControlGovernanceTest extends TestCase
 
     public function test_superadmin_can_manage_categories_and_banners(): void
     {
-        // Category creation
+        // 1. Initialize default categories
+        $initResponse = $this->actingAs($this->superAdmin)->post('/superadmin/categories/initialize');
+        $initResponse->assertSessionHas('success');
+
+        // 2. Category creation
         $catResponse = $this->actingAs($this->superAdmin)->post('/superadmin/categories', [
             'name'         => 'Modern Filipiniana',
             'description'  => 'Contemporary Philippine formal attire',
             'target_group' => ['Women'],
         ]);
         $catResponse->assertSessionHas('success');
-        $this->assertDatabaseHas('categories', ['name' => 'Modern Filipiniana']);
+        $category = Category::where('name', 'Modern Filipiniana')->first();
+        $this->assertNotNull($category);
 
-        // Banner creation
+        // 3. Category update
+        $updateCatResponse = $this->actingAs($this->superAdmin)->put("/superadmin/categories/{$category->id}", [
+            'name'         => 'Modern Filipiniana Updated',
+            'description'  => 'Updated description',
+            'target_group' => ['Women', 'Kids'],
+        ]);
+        $updateCatResponse->assertSessionHas('success');
+        $this->assertEquals('Modern Filipiniana Updated', $category->fresh()->name);
+
+        // 4. Category delete
+        $delCatResponse = $this->actingAs($this->superAdmin)->delete("/superadmin/categories/{$category->id}");
+        $delCatResponse->assertSessionHas('success');
+        $this->assertNull(Category::find($category->id));
+
+        // 5. Banner creation
         $bannerResponse = $this->actingAs($this->superAdmin)->post('/superadmin/banners', [
             'title'            => 'Independence Day Grand Showcase',
             'subtitle'         => 'Special heritage collection',
@@ -462,6 +481,44 @@ class SuperAdminAllControlGovernanceTest extends TestCase
             'order_index'      => 1,
         ]);
         $bannerResponse->assertSessionHas('success');
-        $this->assertDatabaseHas('banners', ['title' => 'Independence Day Grand Showcase']);
+        $banner = Banner::where('title', 'Independence Day Grand Showcase')->first();
+        $this->assertNotNull($banner);
+
+        // 6. Banner toggle active status
+        $toggleResponse = $this->actingAs($this->superAdmin)->patch("/superadmin/banners/{$banner->id}/toggle");
+        $toggleResponse->assertSessionHas('success');
+        $this->assertFalse((bool) $banner->fresh()->is_active);
+
+        // 7. Banner update
+        $updateBannerResponse = $this->actingAs($this->superAdmin)->put("/superadmin/banners/{$banner->id}", [
+            'title'            => 'Independence Day Showcase Updated',
+            'subtitle'         => 'Special heritage collection',
+            'button_text_1'    => 'Explore Now',
+            'button_url_1'     => '/shop',
+            'preset_image_url' => '/images/banner.jpg',
+            'is_active'        => true,
+            'order_index'      => 1,
+        ]);
+        $updateBannerResponse->assertSessionHas('success');
+        $this->assertEquals('Independence Day Showcase Updated', $banner->fresh()->title);
+
+        // 8. Banner reorder
+        $banner2 = Banner::create([
+            'image_path'    => '/images/banner2.jpg',
+            'title'         => 'Second Banner',
+            'order_index'   => 2,
+            'is_active'     => true,
+        ]);
+        $reorderResponse = $this->actingAs($this->superAdmin)->post('/superadmin/banners/reorder', [
+            'ordered_ids' => [$banner2->id, $banner->id],
+        ]);
+        $reorderResponse->assertJson(['success' => true]);
+        $this->assertEquals(1, $banner2->fresh()->order_index);
+        $this->assertEquals(2, $banner->fresh()->order_index);
+
+        // 9. Banner delete
+        $delBannerResponse = $this->actingAs($this->superAdmin)->delete("/superadmin/banners/{$banner->id}");
+        $delBannerResponse->assertSessionHas('success');
+        $this->assertNull(Banner::find($banner->id));
     }
 }

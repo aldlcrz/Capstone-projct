@@ -51,6 +51,9 @@ class Order extends Model
         'packing_proof_url',
         'payment_proof_url',
         'resolved_payment_status',
+        'sukli_refund_status',
+        'authoritative_sukli_amount',
+        'remaining_sukli_refund_amount',
     ];
 
     /**
@@ -116,7 +119,51 @@ class Order extends Model
      */
     public function isOverpaid(): bool
     {
-        return (float) ($this->overpayment_amount ?? 0) > 0.0;
+        return (float) ($this->overpayment_amount ?? 0) > 0.0 || $this->authoritativeSukliAmount() > 0.0;
+    }
+
+    /**
+     * Get the authoritative total payments received for this order across all payment transactions.
+     */
+    public function totalReceivedPayments(): float
+    {
+        $validStatuses = ['VERIFIED', 'UNVERIFIED', 'DETECTED', 'PENDING', 'AUTO_VERIFIED', 'COMPLETED'];
+        if ($this->relationLoaded('paymentTransactions') && $this->paymentTransactions->isNotEmpty()) {
+            $sum = (float) $this->paymentTransactions->whereIn('status', $validStatuses)->sum('detected_amount');
+            if ($sum > 0) {
+                return round($sum, 2);
+            }
+        } elseif ($this->paymentTransactions()->exists()) {
+            $sum = (float) $this->paymentTransactions()->whereIn('status', $validStatuses)->sum('detected_amount');
+            if ($sum > 0) {
+                return round($sum, 2);
+            }
+        }
+
+        if ((float) ($this->total_verified_payments ?? 0) > 0.0) {
+            return round((float) $this->total_verified_payments, 2);
+        }
+
+        if ((float) ($this->overpayment_amount ?? 0) > 0.0) {
+            return round((float) $this->totalAmount + (float) $this->overpayment_amount, 2);
+        }
+
+        return round((float) $this->totalAmount, 2);
+    }
+
+    /**
+     * Calculate authoritative sukli amount based on server financial records.
+     */
+    public function authoritativeSukliAmount(): float
+    {
+        if ((float) ($this->overpayment_amount ?? 0) > 0.0) {
+            return round((float) $this->overpayment_amount, 2);
+        }
+
+        $received = $this->totalReceivedPayments();
+        $payable = (float) $this->totalAmount;
+
+        return max(0.0, round($received - $payable, 2));
     }
 
     /**
@@ -124,7 +171,125 @@ class Order extends Model
      */
     public function sukliAmount(): float
     {
-        return round((float) ($this->overpayment_amount ?? 0), 2);
+        return $this->authoritativeSukliAmount();
+    }
+
+    /**
+     * Sum of all disbursed / recorded sukli refunds.
+     */
+    public function sukliRefundedAmount(): float
+    {
+        if ($this->relationLoaded('refundTransactions')) {
+            return (float) $this->refundTransactions
+                ->whereIn('status', ['transferred', 'completed', 'refunded'])
+                ->sum('refund_amount');
+        }
+
+        return (float) $this->refundTransactions()
+            ->whereIn('status', ['transferred', 'completed', 'refunded'])
+            ->sum('refund_amount');
+    }
+
+    /**
+     * Calculate server-authoritative remaining unrefunded sukli amount.
+     */
+    public function remainingSukliRefundAmount(): float
+    {
+        return max(0.0, round($this->authoritativeSukliAmount() - $this->sukliRefundedAmount(), 2));
+    }
+
+    /**
+     * Get the latest sukli refund transaction record.
+     */
+    public function latestSukliRefundTransaction()
+    {
+        if ($this->relationLoaded('refundTransactions')) {
+            return $this->refundTransactions
+                ->whereIn('status', ['transferred', 'completed', 'refunded', 'processing', 'pending'])
+                ->first();
+        }
+
+        return $this->refundTransactions()
+            ->whereIn('status', ['transferred', 'completed', 'refunded', 'processing', 'pending'])
+            ->first();
+    }
+
+    /**
+     * Determine distinct lifecycle stage for sukli overpayment:
+     * - NOT_APPLICABLE: No overpayment on this order
+     * - PENDING_VERIFICATION: Overpayment detected, awaiting Admin incoming payment approval
+     * - OVERPAYMENT_PENDING_REFUND: Incoming payment verified, excess sukli awaiting refund disbursement
+     * - REFUND_PROCESSING: Refund disbursement is initiated/in-progress
+     * - REFUNDED: Excess sukli has been fully refunded & transfer recorded
+     */
+    public function sukliRefundStatus(): string
+    {
+        if (!$this->isOverpaid() && $this->authoritativeSukliAmount() <= 0) {
+            return 'NOT_APPLICABLE';
+        }
+
+        $remaining = $this->remainingSukliRefundAmount();
+        $refunded = $this->sukliRefundedAmount();
+
+        if ($remaining <= 0.0 && $refunded > 0.0) {
+            return 'REFUNDED';
+        }
+
+        $latestTx = $this->latestSukliRefundTransaction();
+        if ($latestTx && in_array($latestTx->status, ['processing', 'pending'], true)) {
+            return 'REFUND_PROCESSING';
+        }
+
+        $isPaymentVerified = in_array(strtolower($this->paymentStatus ?? ''), ['paid', 'verified'], true)
+            || ($this->latestPaymentTransaction && $this->latestPaymentTransaction->status === 'VERIFIED');
+
+        if ($isPaymentVerified) {
+            return 'OVERPAYMENT_PENDING_REFUND';
+        }
+
+        return 'PENDING_VERIFICATION';
+    }
+
+    public function getSukliRefundStatusAttribute(): string
+    {
+        return $this->sukliRefundStatus();
+    }
+
+    public function getAuthoritativeSukliAmountAttribute(): float
+    {
+        return $this->authoritativeSukliAmount();
+    }
+
+    public function getRemainingSukliRefundAmountAttribute(): float
+    {
+        return $this->remainingSukliRefundAmount();
+    }
+
+    public function getDecryptedRefundMobileNumberAttribute(): ?string
+    {
+        $raw = $this->refund_mobile_number ?? ($this->refundMobileNumber ?? null);
+        if (empty($raw)) {
+            return null;
+        }
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($raw);
+        } catch (\Throwable $e) {
+            return $raw;
+        }
+    }
+
+    public function getMaskedRefundPhoneAttribute(): ?string
+    {
+        $phone = $this->decrypted_refund_mobile_number ?? ($this->customer?->mobileNumber ?? ($this->customer?->phone ?? null));
+        if (empty($phone)) {
+            return null;
+        }
+        $clean = preg_replace('/\s+/', '', (string) $phone);
+        $len = strlen($clean);
+        if ($len <= 4) {
+            return $clean;
+        }
+        return substr($clean, 0, 4) . str_repeat('*', max(2, $len - 7)) . substr($clean, -3);
     }
 
     /**
@@ -312,6 +477,22 @@ class Order extends Model
     public function refundTransactions()
     {
         return $this->hasMany(RefundTransaction::class, 'order_id')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get all seller payouts/settlements for this order.
+     */
+    public function sellerPayouts()
+    {
+        return $this->hasMany(SellerPayout::class, 'order_id');
+    }
+
+    /**
+     * Get the primary seller payout for this order.
+     */
+    public function sellerPayout()
+    {
+        return $this->hasOne(SellerPayout::class, 'order_id');
     }
 
     /**

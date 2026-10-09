@@ -106,7 +106,7 @@
                     </a>
                 </div>
 
-                <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                <nav id="admin-sidebar-nav" class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
                         $unpaidCommissionsCount = 0;
                         $pendingProductsCount   = 0;
@@ -152,6 +152,11 @@
                                         'alt_path' => 'admin/orders',
                                         'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
                                         'badge' => $pendingPaymentsCount
+                                    ],
+                                    [
+                                        'label' => 'Seller Payouts',
+                                        'path'  => 'superadmin/payouts',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'
                                     ],
                                     [
                                         'label' => 'Returns & Refunds',
@@ -243,12 +248,23 @@
                                 'OVERVIEW' => [
                                     ['label' => 'Dashboard', 'path' => 'admin/dashboard', 'icon' => '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>']
                                 ],
-                                'ORDERS & PAYMENTS' => [
+                                'FINANCE & ORDERS' => [
                                     [
                                         'label' => 'Payment Verification',
                                         'path'  => 'admin/orders',
                                         'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
                                         'badge' => $pendingPaymentsCount
+                                    ],
+                                    [
+                                        'label' => 'Profit & Commissions',
+                                        'path'  => 'admin/commissions',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+                                        'badge' => $unpaidCommissionsCount
+                                    ],
+                                    [
+                                        'label' => 'Seller Payouts',
+                                        'path'  => 'admin/payouts',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'
                                     ],
                                     [
                                         'label' => 'Returns & Refunds',
@@ -300,6 +316,7 @@
                                 @endphp
                                 <a href="/{{ $item['path'] }}"
                                     id="{{ $item['id'] ?? '' }}"
+                                    data-active="{{ $isActive ? 'true' : 'false' }}"
                                     class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ $isActive ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A] font-bold' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
                                     <div class="flex items-center gap-3">
                                         <svg class="w-5 h-5 {{ $isActive ? 'text-[#C0422A]' : 'text-gray-500 group-hover:text-[#C0420A]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
@@ -840,7 +857,62 @@
                 }
             }
         }
+
+        // ═══ SIDEBAR SCROLL POSITION PERSISTENCE ═══
+        (function() {
+            function setupSidebarScroll() {
+                var sidebarNav = document.getElementById('admin-sidebar-nav') || document.querySelector('aside nav');
+                if (!sidebarNav) return;
+
+                var storageKey = 'lumbarong_admin_sidebar_scroll';
+
+                // 1. Restore scroll position
+                var savedPos = sessionStorage.getItem(storageKey);
+                if (savedPos !== null && !isNaN(parseInt(savedPos, 10))) {
+                    sidebarNav.scrollTop = parseInt(savedPos, 10);
+                }
+
+                // 2. Ensure active menu item is visible within the viewport
+                var activeLink = sidebarNav.querySelector('[data-active="true"]') || sidebarNav.querySelector('a.border-l-4');
+                if (activeLink) {
+                    var navRect = sidebarNav.getBoundingClientRect();
+                    var linkRect = activeLink.getBoundingClientRect();
+                    if (linkRect.top < navRect.top + 20 || linkRect.bottom > navRect.bottom - 20) {
+                        activeLink.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+                    }
+                }
+
+                // 3. Save scroll position on scroll (debounced)
+                var scrollTimer;
+                sidebarNav.addEventListener('scroll', function() {
+                    clearTimeout(scrollTimer);
+                    scrollTimer = setTimeout(function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }, 50);
+                }, { passive: true });
+
+                // 4. Save scroll position immediately on link click
+                sidebarNav.querySelectorAll('a').forEach(function(a) {
+                    a.addEventListener('click', function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    });
+                });
+
+                // 5. Save before window unload
+                window.addEventListener('beforeunload', function() {
+                    if (sidebarNav) {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupSidebarScroll);
+            } else {
+                setupSidebarScroll();
+            }
+            window.addEventListener('load', setupSidebarScroll);
+        })();
     </script>
 </body>
-</html>
 </html>

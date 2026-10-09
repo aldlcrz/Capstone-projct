@@ -31,6 +31,7 @@ class RefundTransaction extends Model
         'processed_by',
         'processed_at',
         'failure_reason',
+        'notes',
     ];
 
     protected function casts(): array

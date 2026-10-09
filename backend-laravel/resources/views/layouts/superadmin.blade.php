@@ -108,7 +108,7 @@
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                <nav id="superadmin-sidebar-nav" class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
                         $unpaidCommissionsCount = 0;
                         $pendingProductsCount   = 0;
@@ -156,6 +156,12 @@
                                     'alt_path' => 'admin/orders',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
                                     'badge' => $pendingPaymentsCount
+                                ],
+                                [
+                                    'label' => 'Seller Payouts',
+                                    'route' => 'superadmin.payouts',
+                                    'path'  => 'superadmin/payouts',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'
                                 ],
                                 [
                                     'label' => 'Returns & Refunds',
@@ -265,6 +271,7 @@
                                     $isActive = request()->is($item['path'] . '*') || (isset($item['alt_path']) && request()->is($item['alt_path'] . '*'));
                                 @endphp
                                 <a href="/{{ $item['path'] }}"
+                                   data-active="{{ $isActive ? 'true' : 'false' }}"
                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ $isActive ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A] font-bold' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
                                     <div class="flex items-center gap-3">
                                         <svg class="w-5 h-5 {{ $isActive ? 'text-[#C0422A]' : 'text-gray-500 group-hover:text-[#C0420A]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
@@ -717,6 +724,64 @@
     })();
     </script>
     @endif
+
+    <script>
+        // LumBarong Super Admin Sidebar Scroll Preservation
+        (function() {
+            var storageKey = 'lumbarong_superadmin_sidebar_scroll';
+            
+            function setupSidebarScroll() {
+                var sidebarNav = document.getElementById('superadmin-sidebar-nav');
+                if (!sidebarNav) return;
+
+                // 1. Restore scroll position immediately
+                var savedPos = sessionStorage.getItem(storageKey);
+                if (savedPos !== null && !isNaN(parseInt(savedPos, 10))) {
+                    sidebarNav.scrollTop = parseInt(savedPos, 10);
+                }
+
+                // 2. Ensure active menu item is visible within the viewport
+                var activeLink = sidebarNav.querySelector('[data-active="true"]') || sidebarNav.querySelector('a.border-l-4');
+                if (activeLink) {
+                    var navRect = sidebarNav.getBoundingClientRect();
+                    var linkRect = activeLink.getBoundingClientRect();
+                    if (linkRect.top < navRect.top + 20 || linkRect.bottom > navRect.bottom - 20) {
+                        activeLink.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+                    }
+                }
+
+                // 3. Save scroll position on scroll (debounced)
+                var scrollTimer;
+                sidebarNav.addEventListener('scroll', function() {
+                    clearTimeout(scrollTimer);
+                    scrollTimer = setTimeout(function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }, 50);
+                }, { passive: true });
+
+                // 4. Save scroll position immediately on link click
+                sidebarNav.querySelectorAll('a').forEach(function(a) {
+                    a.addEventListener('click', function() {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    });
+                });
+
+                // 5. Save before window unload
+                window.addEventListener('beforeunload', function() {
+                    if (sidebarNav) {
+                        sessionStorage.setItem(storageKey, sidebarNav.scrollTop);
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupSidebarScroll);
+            } else {
+                setupSidebarScroll();
+            }
+            window.addEventListener('load', setupSidebarScroll);
+        })();
+    </script>
 
     @stack('scripts')
 </body>

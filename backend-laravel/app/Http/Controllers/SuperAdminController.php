@@ -11,6 +11,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\SellerPayout;
+use App\Services\Financial\FinancialLedgerService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class SuperAdminController extends Controller
 {
@@ -208,7 +211,8 @@ class SuperAdminController extends Controller
 
     public function commissions(Request $request)
     {
-        $rate = $this->getCommissionRate();
+        $ledger = app(FinancialLedgerService::class);
+        $rate = $ledger->getCommissionRate();
         $period = $request->input('period', Carbon::now()->format('Y-m'));
         [$year, $month] = explode('-', $period);
 
@@ -220,32 +224,13 @@ class SuperAdminController extends Controller
             }])
             ->orderBy('name')
             ->get()
-            ->map(function (User $seller) use ($period, $year, $month, $rate) {
-                // Sales for this period
-                $totalSales = (float) Order::whereNotIn('status', ['Cancelled'])
-                    ->where('sellerId', $seller->id)
-                    ->whereYear('createdAt', $year)
-                    ->whereMonth('createdAt', $month)
-                    ->sum('totalAmount');
-
-                $commissionAmount = round($totalSales * ($rate / 100), 2);
+            ->map(function (User $seller) use ($ledger, $period, $year, $month, $rate) {
+                $summary = $ledger->getSellerFinancialSummary($seller, $period);
+                $totalSales = $summary['periodCashProductSales'];
+                $commissionAmount = $summary['commissionDueThisPeriod'];
 
                 // Get or build commission record for selected period
-                $record = $seller->commissionRecords->firstWhere('period', $period);
-
-                // Calculate all-time metrics for this seller
-                $allTimeSales = (float) Order::whereNotIn('status', ['Cancelled'])
-                    ->where('sellerId', $seller->id)
-                    ->sum('totalAmount');
-
-                $allTimePaid = (float) $seller->commissionRecords->where('status', 'paid')->sum('commissionAmount');
-
-                // Total outstanding balance across all unpaid records + current period if not in records yet
-                $unpaidRecords = $seller->commissionRecords->where('status', 'unpaid');
-                $totalOutstandingBalance = (float) $unpaidRecords->sum('commissionAmount');
-                if (!$record && $commissionAmount > 0) {
-                    $totalOutstandingBalance += $commissionAmount;
-                }
+                $record = $summary['currentCommissionRecord'];
 
                 // Format history list
                 $history = $seller->commissionRecords->map(function ($r) {
@@ -283,9 +268,9 @@ class SuperAdminController extends Controller
                     'paymentMethod'           => $record?->paymentMethod,
                     'referenceNumber'         => $record?->referenceNumber,
                     'paymentProof'            => $record?->paymentProof,
-                    'allTimeSales'            => $allTimeSales,
-                    'allTimePaid'             => $allTimePaid,
-                    'totalOutstandingBalance' => $totalOutstandingBalance,
+                    'allTimeSales'            => $summary['periodTotalGrossSales'],
+                    'allTimePaid'             => $summary['totalCommissionPaid'],
+                    'totalOutstandingBalance' => $summary['totalCommissionOutstanding'],
                     'history'                 => $history,
                 ];
             });
@@ -381,16 +366,13 @@ class SuperAdminController extends Controller
     {
         $request->validate(['period' => 'required', 'notes' => 'nullable|string|max:500']);
         $seller = User::findOrFail($sellerId);
-        $rate = $this->getCommissionRate();
+        $ledger = app(FinancialLedgerService::class);
+        $rate = $ledger->getCommissionRate();
         [$year, $month] = explode('-', $request->period);
 
-        $totalSales = (float) Order::whereNotIn('status', ['Cancelled'])
-            ->where('sellerId', $sellerId)
-            ->whereYear('createdAt', $year)
-            ->whereMonth('createdAt', $month)
-            ->sum('totalAmount');
-
-        $commissionAmount = round($totalSales * ($rate / 100), 2);
+        $summary = $ledger->getSellerFinancialSummary($seller, $request->period);
+        $totalSales = $summary['periodCashProductSales'];
+        $commissionAmount = $summary['commissionDueThisPeriod'];
 
         CommissionRecord::updateOrCreate(
             ['sellerId' => $sellerId, 'period' => $request->period],
@@ -596,6 +578,123 @@ class SuperAdminController extends Controller
 
             Log::info("[SuperAdmin] Auto-frozen seller: {$seller->name} ({$seller->id}) for overdue commission period {$overduePeriod}");
         }
+    }
+
+    // ─── Seller Payouts & Settlements ────────────────────────────────────────
+
+    public function payouts(Request $request)
+    {
+        $status = $request->input('status');
+        $search = $request->input('search');
+
+        $query = SellerPayout::with(['seller', 'order', 'processor'])->orderByDesc('created_at');
+
+        if ($status) {
+            $query->where('status', strtoupper($status));
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_id', 'like', "%{$search}%")
+                  ->orWhere('transaction_reference', 'like', "%{$search}%")
+                  ->orWhere('payout_destination_account', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                         ->orWhere('shopName', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $payouts = $query->paginate(15)->withQueryString();
+
+        $allPayouts = SellerPayout::all();
+        $kpis = [
+            'total_settlements' => (float) $allPayouts->sum('net_settlement_amount'),
+            'available_amount'  => (float) $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->sum('net_settlement_amount'),
+            'available_count'   => $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->count(),
+            'pending_amount'    => (float) $allPayouts->where('status', 'PENDING_ELIGIBILITY')->sum('net_settlement_amount'),
+            'pending_count'     => $allPayouts->where('status', 'PENDING_ELIGIBILITY')->count(),
+            'paid_amount'       => (float) $allPayouts->where('status', 'PAID')->sum('net_settlement_amount'),
+            'paid_count'        => $allPayouts->where('status', 'PAID')->count(),
+            'on_hold_amount'    => (float) $allPayouts->where('status', 'ON_HOLD')->sum('net_settlement_amount'),
+            'on_hold_count'     => $allPayouts->where('status', 'ON_HOLD')->count(),
+        ];
+
+        return view('superadmin.payouts', compact('payouts', 'kpis'));
+    }
+
+    public function processPayout(Request $request, string $id)
+    {
+        $request->validate([
+            'transfer_reference' => 'required|string|max:100',
+            'transfer_proof'     => 'nullable|image|max:3072',
+            'admin_notes'        => 'nullable|string|max:500',
+        ]);
+
+        $payout = SellerPayout::findOrFail($id);
+        $admin = Auth::user();
+
+        try {
+            FinancialLedgerService::processManualSellerPayout(
+                $payout,
+                [
+                    'transaction_reference' => $request->transfer_reference,
+                    'transfer_proof' => $request->file('transfer_proof'),
+                    'admin_notes' => $request->admin_notes,
+                ],
+                $admin
+            );
+
+            return redirect()->back()->with('success', 'Seller payout transfer recorded successfully as PAID.');
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Throwable $e) {
+            Log::error('SuperAdmin process payout error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process payout: ' . $e->getMessage());
+        }
+    }
+
+    public function holdPayout(Request $request, string $id)
+    {
+        $request->validate(['hold_reason' => 'required|string|max:500']);
+        $payout = SellerPayout::findOrFail($id);
+
+        if ($payout->status === 'PAID') {
+            return redirect()->back()->with('error', 'Cannot place a hold on an already PAID settlement.');
+        }
+
+        $payout->update([
+            'status'      => 'ON_HOLD',
+            'hold_reason' => $request->hold_reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Settlement payout has been placed on hold.');
+    }
+
+    public function releasePayout(Request $request, string $id)
+    {
+        $payout = SellerPayout::findOrFail($id);
+        $order = $payout->order;
+
+        if ($payout->status === 'PAID') {
+            return redirect()->back()->with('info', 'This settlement is already paid.');
+        }
+
+        if ($order) {
+            $breakdown = FinancialLedgerService::calculateSellerSettlementBreakdown($order, $payout->seller_id);
+            $payout->update([
+                'status'      => $breakdown['status'],
+                'hold_reason' => null,
+            ]);
+        } else {
+            $payout->update([
+                'status'      => 'AVAILABLE_FOR_PAYOUT',
+                'hold_reason' => null,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Hold released. Settlement status restored.');
     }
 
     // ─── Artisan Sellers & Shops Management ───────────────────────────────────
@@ -850,16 +949,6 @@ class SuperAdminController extends Controller
     public function users(Request $request)
     {
         return $this->customers($request);
-    }
-
-    public function payouts(Request $request)
-    {
-        return redirect()->route('superadmin.commissions')->with('info', 'Commission & Payout management view.');
-    }
-
-    public function releasePayout(Request $request, string $id)
-    {
-        return redirect()->back()->with('success', 'Payout release status updated successfully.');
     }
 
     // ─── Customer Directory Management ────────────────────────────────────────
@@ -1523,6 +1612,15 @@ class SuperAdminController extends Controller
     public function banners(Request $request)
     {
         Banner::where('subtitle', 'like', '%macapagal%')->update(['subtitle' => 'LumBarong Shop']);
+
+        // Normalize order indexes to 1, 2, 3...
+        $allB = Banner::orderBy('order_index', 'asc')->orderBy('created_at', 'desc')->get();
+        foreach ($allB as $idx => $b) {
+            $expected = $idx + 1;
+            if ($b->order_index !== $expected) {
+                Banner::where('id', $b->id)->update(['order_index' => $expected]);
+            }
+        }
 
         $banners = Banner::with('user')
             ->orderBy('order_index', 'asc')

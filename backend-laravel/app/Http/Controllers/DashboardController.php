@@ -1116,17 +1116,13 @@ class DashboardController extends Controller
     public function sellerCommission(Request $request)
     {
         $seller = $request->user();
-        $rate = (float) (\App\Models\SystemSetting::where('key', 'commission_rate')->value('value') ?? 5);
-        $period = Carbon::now()->format('Y-m');
-        [$year, $month] = explode('-', $period);
+        $period = $request->input('period', Carbon::now()->format('Y-m'));
+        $financialSummary = \App\Services\Financial\FinancialLedgerService::getSellerFinancialSummary($seller, $period);
 
-        $totalSales = (float) Order::whereNotIn('status', ['Cancelled', 'cancellation pending', 'cancellation requested'])
-            ->where('sellerId', $seller->id)
-            ->whereYear('createdAt', $year)
-            ->whereMonth('createdAt', $month)
-            ->sum('totalAmount');
-
-        $commissionDue = round($totalSales * ($rate / 100), 2);
+        $rate = $financialSummary['commission_rate'];
+        $totalSales = $financialSummary['gross_sales'];
+        $cashSales = $financialSummary['cash_product_sales'];
+        $commissionDue = $financialSummary['commission_due'];
 
         $paymentSettings = [
             'gcash_number' => \App\Models\SystemSetting::where('key', 'superadmin_gcash_number')->value('value') ?? '',
@@ -1135,15 +1131,13 @@ class DashboardController extends Controller
             'maya_qr'      => \App\Models\SystemSetting::where('key', 'superadmin_maya_qr')->value('value') ?? '',
         ];
 
-        $pastRecords = \App\Models\CommissionRecord::where('sellerId', $seller->id)
-            ->orderByDesc('created_at')
-            ->get();
-
-        $currentRecord = $pastRecords->firstWhere('period', $period);
+        $pastRecords = $financialSummary['past_commission_records'];
+        $currentRecord = $financialSummary['current_commission_record'];
+        $payouts = $financialSummary['payouts'];
 
         return view('seller.commission.index', compact(
-            'seller', 'rate', 'period', 'totalSales', 'commissionDue',
-            'paymentSettings', 'pastRecords', 'currentRecord'
+            'seller', 'rate', 'period', 'totalSales', 'cashSales', 'commissionDue',
+            'paymentSettings', 'pastRecords', 'currentRecord', 'payouts', 'financialSummary'
         ));
     }
 
@@ -1158,16 +1152,10 @@ class DashboardController extends Controller
         ]);
 
         $seller = $request->user();
-        $rate = (float) (\App\Models\SystemSetting::where('key', 'commission_rate')->value('value') ?? 5);
-        [$year, $month] = explode('-', $request->period);
-
-        $totalSales = (float) Order::whereNotIn('status', ['Cancelled', 'cancellation pending', 'cancellation requested'])
-            ->where('sellerId', $seller->id)
-            ->whereYear('createdAt', $year)
-            ->whereMonth('createdAt', $month)
-            ->sum('totalAmount');
-
-        $commissionAmount = round($totalSales * ($rate / 100), 2);
+        $financialSummary = \App\Services\Financial\FinancialLedgerService::getSellerFinancialSummary($seller, $request->period);
+        $rate = $financialSummary['commission_rate'];
+        $totalSales = $financialSummary['cash_product_sales'];
+        $commissionAmount = $financialSummary['commission_due'];
 
         $proofPath = '';
         if ($request->hasFile('paymentProof')) {
@@ -1188,7 +1176,7 @@ class DashboardController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Commission payment proof submitted! Awaiting Super Admin verification.');
+        return redirect()->back()->with('success', 'Commission payment proof submitted! Awaiting verification.');
     }
 
     public function sellerCustomers(Request $request)

@@ -632,7 +632,7 @@
                     <span class="text-amber-400/80 font-normal hidden sm:inline">• View-Only Mode</span>
                 </div>
                 <button type="button" @click="shopPreviewModal = false" class="text-xs text-stone-400 hover:text-white flex items-center gap-1 font-bold transition-colors cursor-pointer">
-                    <span>Close</span>
+                    <span>Close Preview</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -647,27 +647,42 @@
 
                 <template x-if="!shopLoading">
                     <div>
-                        {{-- Shop Header --}}
+                        {{-- Shop Header Profile Card --}}
                         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden mb-6">
-                            <div class="w-full md:w-72 p-5 flex flex-col justify-center gap-3 bg-[#1A1A1A] relative overflow-hidden">
+                            <div class="w-full md:w-80 p-5 flex flex-col justify-between shrink-0 bg-[#1A1A1A] relative overflow-hidden">
                                 <div class="absolute inset-0 opacity-[0.04] bg-white"></div>
-                                <div class="relative z-10 flex gap-3 items-center">
+                                <div class="relative z-10 flex gap-3.5 items-center">
                                     <div class="w-14 h-14 rounded-full border-2 border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-2xl text-stone-400">
                                         <template x-if="shopSeller && shopSeller.profilePhoto">
-                                            <img :src="shopSeller.profilePhoto.startsWith('http') ? shopSeller.profilePhoto : '/storage/' + shopSeller.profilePhoto" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" />
+                                            <img :src="getProductImage(shopSeller.profilePhoto)" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" />
                                         </template>
                                         <template x-if="!shopSeller || !shopSeller.profilePhoto">
                                             <span x-text="shopSeller?.shopName ? shopSeller.shopName.charAt(0).toUpperCase() : 'A'"></span>
                                         </template>
                                     </div>
                                     <div class="text-white min-w-0">
-                                        <h2 class="font-serif text-base font-bold text-white leading-tight" x-text="shopSeller?.shopName || 'Artisan Workshop'"></h2>
-                                        <div class="text-white/50 text-[10px] mt-0.5" x-text="'Owner: ' + (shopSeller?.name || '—')"></div>
+                                        <h2 class="font-serif text-base font-bold text-white leading-tight flex items-center gap-1.5 flex-wrap">
+                                            <span x-text="shopSeller?.shopName || 'Artisan Workshop'"></span>
+                                            <template x-if="shopSeller?.isVerified">
+                                                <span class="inline-flex items-center text-emerald-400 text-xs font-bold" title="Verified Store">✓</span>
+                                            </template>
+                                        </h2>
+                                        <div class="text-white/60 text-[10px] mt-0.5" x-text="'Owner: ' + (shopSeller?.name || '—')"></div>
                                         <div class="text-white/40 text-[10px]" x-text="shopSeller?.location || 'Lumban, Laguna'"></div>
                                     </div>
                                 </div>
+                                <div class="relative z-10 flex gap-2 mt-4 pt-3 border-t border-white/10 w-full">
+                                    <button type="button" @click="shopActiveTab = 'policies'" class="flex-1 flex items-center justify-center gap-1.5 border border-white/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-white/10 rounded-lg cursor-pointer">
+                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span>Policies</span>
+                                    </button>
+                                    <button type="button" @click="shopActiveTab = 'all'" class="flex-1 flex items-center justify-center gap-1.5 bg-[#C0422A] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-[#a83720] rounded-lg cursor-pointer">
+                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                                        <span>Pieces</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex-1 p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="flex-1 p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                                 <div class="text-center p-3 bg-stone-50 rounded-xl border border-stone-100">
                                     <div class="text-lg font-black text-gray-900" x-text="shopSeller?.productCount ?? shopProducts.length"></div>
                                     <div class="text-[9px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">Products</div>
@@ -687,18 +702,107 @@
                             </div>
                         </div>
 
-                        {{-- Products Grid --}}
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" x-show="shopProducts.length > 0">
-                            <template x-for="product in shopProducts" :key="product.id">
-                                <div class="group flex flex-col bg-white rounded-2xl shadow-xs hover:shadow-md border border-stone-200 transition-all overflow-hidden">
-                                    <div class="relative aspect-square overflow-hidden bg-stone-50">
-                                        <img :src="product.image && !product.image.startsWith('http') ? '/storage/' + product.image : (product.image || '/uploads/products/default.jpg')" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='/uploads/products/default.jpg'" />
+                        {{-- Filters & Search --}}
+                        <div class="space-y-4 mb-6">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto">
+                                    <button type="button"
+                                        @click="shopActiveTab = 'all'"
+                                        :class="shopActiveTab === 'all' ? 'bg-[#C0420A] text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'"
+                                        class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                                        All Pieces (<span x-text="shopProducts.length"></span>)
+                                    </button>
+                                    <button type="button"
+                                        @click="shopActiveTab = 'sale'"
+                                        :class="shopActiveTab === 'sale' ? 'bg-[#C0420A] text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'"
+                                        class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                                        On Sale
+                                    </button>
+                                    <button type="button"
+                                        @click="shopActiveTab = 'rated'"
+                                        :class="shopActiveTab === 'rated' ? 'bg-[#C0420A] text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'"
+                                        class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                                        Highest Rated
+                                    </button>
+                                    <button type="button"
+                                        @click="shopActiveTab = 'policies'"
+                                        :class="shopActiveTab === 'policies' ? 'bg-[#C0420A] text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'"
+                                        class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span>Policies</span>
+                                    </button>
+                                </div>
+
+                                {{-- Search Input in Shop --}}
+                                <div class="relative w-full sm:w-64" x-show="shopActiveTab !== 'policies'">
+                                    <input type="text" placeholder="Filter shop pieces..." x-model="shopSearchQuery"
+                                        class="w-full pl-9 pr-4 py-2 bg-white border border-stone-200 rounded-full text-xs text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-[#C0422A] shadow-xs">
+                                    <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Dedicated Policies Tab --}}
+                        <div x-show="shopActiveTab === 'policies'" class="space-y-4" x-cloak>
+                            <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-4">
+                                <div class="border-b border-stone-100 pb-3">
+                                    <div class="flex items-center gap-2 text-[#C0422A] text-xs font-black uppercase tracking-widest mb-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        Artisan Trust &amp; Storefront Policies
                                     </div>
-                                    <div class="p-3">
-                                        <h4 class="text-xs font-bold text-gray-900 line-clamp-2 leading-tight" x-text="product.name"></h4>
-                                        <div class="mt-1.5 flex items-center justify-between">
+                                    <h3 class="font-serif text-xl font-bold text-black" x-text="`${shopSeller?.shopName || 'Shop'} Terms & Guarantees`"></h3>
+                                    <p class="text-xs text-stone-500 mt-1">Customer policies maintained by this artisan.</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2">
+                                        <div class="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wider">
+                                            <div class="w-6 h-6 rounded-lg bg-amber-200 flex items-center justify-center text-amber-800 shrink-0">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span>Cancellation Policy</span>
+                                        </div>
+                                        <p class="text-xs text-stone-700 leading-relaxed font-medium" x-text="shopSeller?.cancellation_policy || 'Cancellation requests must be submitted prior to order processing and payment verification. Once payment is confirmed and artisan crafting begins, cancellations may not be accepted.'"></p>
+                                    </div>
+
+                                    <div class="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-2">
+                                        <div class="flex items-center gap-2 text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <div class="w-6 h-6 rounded-lg bg-blue-200 flex items-center justify-center text-blue-800 shrink-0">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span>Refund &amp; Return Policy</span>
+                                        </div>
+                                        <p class="text-xs text-stone-700 leading-relaxed font-medium" x-text="shopSeller?.refund_policy || 'Refund requests are subject to shop evaluation. Custom tailored garments are crafted to provided measurements. Damaged or defective items upon arrival may be submitted for review through our return system.'"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Products Grid --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5" x-show="shopActiveTab !== 'policies' && displayedShopProducts.length > 0">
+                            <template x-for="product in displayedShopProducts" :key="product.id">
+                                <div @click="openProductPreview(product)" class="group flex flex-col bg-white rounded-2xl shadow-xs hover:shadow-md border border-stone-200 hover:border-[#C0422A] transition-all cursor-pointer overflow-hidden">
+                                    <div class="relative aspect-square overflow-hidden bg-stone-50">
+                                        <img :src="getProductImage(product.image)" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='/uploads/products/default.jpg'" />
+                                        <template x-if="product.is_on_sale">
+                                            <div class="absolute top-2 right-2 bg-[#C0420A] text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm z-10">
+                                                Sale <span x-show="parseFloat(product.discount_percentage || 0) > 0" x-text="'-' + Math.round(product.discount_percentage) + '%'"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="p-3 flex flex-1 flex-col justify-between space-y-2">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-gray-900 group-hover:text-[#C0422A] line-clamp-2 transition-colors leading-tight" x-text="product.name"></h4>
+                                            <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-gray-500">
+                                                <span class="text-amber-500">★</span>
+                                                <span x-text="Number(product.rating || 0).toFixed(1)"></span>
+                                                <span class="text-gray-300">•</span>
+                                                <span class="text-stone-400 font-normal" x-text="'Sold ' + (product.soldCount || 0)"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between pt-1 border-t border-stone-100">
                                             <span class="text-xs font-black text-[#C0420A]" x-text="'₱' + parseFloat(product.price || 0).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2})"></span>
-                                            <span class="text-[9px] text-stone-400 font-bold" x-text="'⭐ ' + Number(product.rating || 0).toFixed(1)"></span>
+                                            <span class="text-[9px] text-stone-500 font-bold bg-stone-100 px-1.5 py-0.5 rounded">Inspect ↗</span>
                                         </div>
                                     </div>
                                 </div>
@@ -706,9 +810,9 @@
                         </div>
 
                         {{-- Empty state --}}
-                        <div x-show="shopProducts.length === 0" class="rounded-2xl border-2 border-dashed border-stone-200 p-12 text-center">
+                        <div x-show="shopActiveTab !== 'policies' && displayedShopProducts.length === 0" class="rounded-2xl border-2 border-dashed border-stone-200 p-12 text-center" x-cloak>
                             <svg class="w-10 h-10 mx-auto mb-2 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                            <p class="font-serif italic text-sm text-stone-400">No products listed yet.</p>
+                            <p class="font-serif italic text-sm text-stone-400">No products found in this artisan catalog.</p>
                         </div>
                     </div>
                 </template>
@@ -729,6 +833,68 @@
         </div>
     </div>
 
+    {{-- ─── Super Admin Product Detail Inspection Lightbox (Read-Only) ─── --}}
+    <div x-show="productPreviewModal" class="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-6" style="z-index: 70;" x-cloak>
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="productPreviewModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar z-10 border border-gray-200 p-6 space-y-5">
+            
+            {{-- Modal Header --}}
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-wider rounded">👑 Super Admin Inspection</span>
+                    <span class="text-xs text-gray-500 font-bold">Product ID: <span x-text="selectedProductPreview?.id"></span></span>
+                </div>
+                <button type="button" @click="productPreviewModal = false" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Product Info Grid --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+                <div class="aspect-4/5 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 relative">
+                    <img :src="getProductImage(selectedProductPreview?.image)" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'">
+                </div>
+                <div class="space-y-3.5 text-xs">
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight" x-text="selectedProductPreview?.name"></h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">By <strong class="text-black" x-text="shopSeller?.shopName || 'Artisan'"></strong></p>
+                    </div>
+
+                    <div class="p-3 bg-stone-50 rounded-xl space-y-1.5 border border-stone-200">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 font-medium">Listing Price:</span>
+                            <span class="text-sm font-black text-[#C0422A]" x-text="'₱' + parseFloat(selectedProductPreview?.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 font-medium">Available Stock:</span>
+                            <span class="font-bold text-gray-800" x-text="(selectedProductPreview?.stock || 0) + ' units'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 font-medium">Rating:</span>
+                            <span class="font-bold text-gray-800" x-text="Number(selectedProductPreview?.rating || 0).toFixed(1) + ' ★ (' + (selectedProductPreview?.reviewCount || 0) + ' reviews)'"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Description</span>
+                        <p class="text-gray-700 leading-relaxed max-h-36 overflow-y-auto no-scrollbar whitespace-pre-line" x-text="selectedProductPreview?.description || 'No description provided.'"></p>
+                    </div>
+
+                    {{-- Super Admin Read-Only Notice --}}
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-snug">
+                        <strong>🛡️ Governance Inspection:</strong> Super Admin audit view for catalog verification, pricing review, and artisan compliance.
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button type="button" @click="productPreviewModal = false" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    Back to Shop Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -741,8 +907,12 @@ function superSellerManager() {
         previewTitle: '',
         shopPreviewModal: false,
         shopLoading: false,
+        shopActiveTab: 'all',
+        shopSearchQuery: '',
         shopSeller: {},
         shopProducts: [],
+        productPreviewModal: false,
+        selectedProductPreview: null,
         openReview(seller) {
             this.selectedSeller = seller;
             this.reviewModal = true;
@@ -755,6 +925,8 @@ function superSellerManager() {
         async openShopPreview(sellerId, fallbackShopName) {
             this.shopPreviewModal = true;
             this.shopLoading = true;
+            this.shopActiveTab = 'all';
+            this.shopSearchQuery = '';
             this.shopSeller = { id: sellerId, shopName: fallbackShopName || 'Artisan Workshop', name: '', location: 'Lumban, Laguna', isVerified: false, rating: '0.0', productCount: 0, joined: '—' };
             this.shopProducts = [];
             try {
@@ -770,6 +942,50 @@ function superSellerManager() {
             } finally {
                 this.shopLoading = false;
             }
+        },
+        get displayedShopProducts() {
+            let p = [...this.shopProducts];
+            if (this.shopActiveTab === 'rated') {
+                p.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+            } else if (this.shopActiveTab === 'sale') {
+                p = p.filter(item => item.is_on_sale);
+            }
+            if (this.shopSearchQuery && this.shopSearchQuery.trim()) {
+                const q = this.shopSearchQuery.toLowerCase();
+                p = p.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
+            }
+            return p;
+        },
+        openProductPreview(product) {
+            this.selectedProductPreview = product;
+            this.productPreviewModal = true;
+        },
+        getProductImage(img) {
+            if (!img) return '/uploads/products/default.jpg';
+            let path = '';
+            if (Array.isArray(img)) {
+                if (img.length === 0) return '/uploads/products/default.jpg';
+                const first = img[0];
+                path = (typeof first === 'object' && first !== null) ? (first.url || first.image || '') : String(first);
+            } else if (typeof img === 'object' && img !== null) {
+                path = img.url || img.image || '';
+            } else if (typeof img === 'string') {
+                path = img;
+            }
+            if (!path || path === 'Array' || path === '[]' || path === '[' || path === 'null' || path === 'undefined') {
+                return '/uploads/products/default.jpg';
+            }
+            path = path.trim().replace(/^["']|["']$/g, '');
+            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
+                return path;
+            }
+            if (path.startsWith('/storage/')) return path;
+            if (path.startsWith('storage/')) return '/' + path;
+            if (path.startsWith('/uploads/')) return path;
+            if (path.startsWith('uploads/')) return '/' + path;
+            if (path.startsWith('products/')) return '/storage/' + path;
+            if (path.startsWith('/products/')) return '/storage' + path;
+            return path.startsWith('/') ? path : '/storage/' + path;
         }
     };
 }

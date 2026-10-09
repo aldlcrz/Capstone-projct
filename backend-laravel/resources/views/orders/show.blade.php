@@ -770,6 +770,61 @@
                             ₱{{ number_format($order->totalAmount ?? 0, 2) }}
                         </span>
                     </div>
+
+                    {{-- Customer-Facing Sukli / Overpayment Status Card --}}
+                    @php
+                        $cAuthoritativeSukli = $order->authoritativeSukliAmount();
+                        $cSukliStatus = $order->sukliRefundStatus();
+                        $cLatestSukliTx = $order->latestSukliRefundTransaction();
+                        
+                        $sukliCardClass = match($cSukliStatus) {
+                            'REFUNDED' => 'bg-emerald-50/80 border-emerald-200 text-emerald-950',
+                            'OVERPAYMENT_PENDING_REFUND' => 'bg-blue-50/80 border-blue-200 text-blue-950',
+                            'REFUND_PROCESSING' => 'bg-purple-50/80 border-purple-200 text-purple-950',
+                            default => 'bg-amber-50/80 border-amber-200 text-amber-950',
+                        };
+                        
+                        $sukliBadgeClass = match($cSukliStatus) {
+                            'REFUNDED' => 'bg-emerald-200 text-emerald-900',
+                            'OVERPAYMENT_PENDING_REFUND' => 'bg-blue-200 text-blue-900',
+                            'REFUND_PROCESSING' => 'bg-purple-200 text-purple-900',
+                            default => 'bg-amber-200 text-amber-900',
+                        };
+                    @endphp
+                    @if($cAuthoritativeSukli > 0)
+                        <div class="mt-3 p-3 rounded-xl border text-xs space-y-1.5 transition-all {{ $sukliCardClass }}">
+                            <div class="flex items-center justify-between font-bold">
+                                <span class="flex items-center gap-1.5">
+                                    <span>💸</span>
+                                    <span>Sukli / Excess Payment</span>
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $sukliBadgeClass }}">
+                                    ₱{{ number_format($cAuthoritativeSukli, 2) }}
+                                </span>
+                            </div>
+
+                            <p class="text-[11px] leading-relaxed m-0 font-medium">
+                                @if($cSukliStatus === 'REFUNDED')
+                                    Your <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong> sukli refund has been processed.
+                                @elseif($cSukliStatus === 'OVERPAYMENT_PENDING_REFUND')
+                                    Your payment has been verified. Your <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong> sukli is awaiting refund processing{{ $order->masked_refund_phone ? ' to ' . $order->masked_refund_phone : '' }}.
+                                @elseif($cSukliStatus === 'REFUND_PROCESSING')
+                                    Your <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong> sukli refund is currently being processed.
+                                @else
+                                    Your payment has an excess amount of <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong>. When the Admin verifies your order, your sukli will be processed using the refund details you provided{{ $order->masked_refund_phone ? ' (' . $order->masked_refund_phone . ')' : '' }}.
+                                @endif
+                            </p>
+
+                            @if($cSukliStatus === 'REFUNDED' && $cLatestSukliTx)
+                                <div class="pt-1 border-t border-emerald-200 flex flex-wrap items-center justify-between gap-1 text-[10px] text-emerald-800 font-mono">
+                                    <span>Ref: <strong>{{ $cLatestSukliTx->transfer_reference ?? 'Manual Transfer' }}</strong></span>
+                                    @if($cLatestSukliTx->created_at)
+                                        <span>{{ $cLatestSukliTx->created_at->format('M d, Y g:i A') }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
             </div>

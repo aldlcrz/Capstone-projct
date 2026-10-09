@@ -111,7 +111,7 @@ return new class extends Migration
         if (!Schema::hasTable('refund_transactions')) {
             Schema::create('refund_transactions', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('return_request_id')->index();
+                $table->uuid('return_request_id')->nullable()->index();
                 $table->uuid('order_id')->index();
                 $table->uuid('payment_transaction_id')->nullable()->index();
                 

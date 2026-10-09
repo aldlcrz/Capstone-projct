@@ -1372,17 +1372,28 @@ function sellerManager() {
             if (!img) return '/uploads/products/default.jpg';
             let path = '';
             if (Array.isArray(img)) {
-                path = img.length > 0 ? (typeof img[0] === 'object' ? (img[0].url || '') : img[0]) : '';
+                if (img.length === 0) return '/uploads/products/default.jpg';
+                const first = img[0];
+                path = (typeof first === 'object' && first !== null) ? (first.url || first.image || '') : String(first);
+            } else if (typeof img === 'object' && img !== null) {
+                path = img.url || img.image || '';
             } else if (typeof img === 'string') {
                 path = img;
             }
-            if (!path) return '/uploads/products/default.jpg';
-            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            if (!path || path === 'Array' || path === '[]' || path === '[' || path === 'null' || path === 'undefined') {
+                return '/uploads/products/default.jpg';
+            }
+            path = path.trim().replace(/^["']|["']$/g, '');
+            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
+                return path;
+            }
             if (path.startsWith('/storage/')) return path;
             if (path.startsWith('storage/')) return '/' + path;
             if (path.startsWith('/uploads/')) return path;
             if (path.startsWith('uploads/')) return '/' + path;
-            return '/storage/' + path.replace(/^\//, '');
+            if (path.startsWith('products/')) return '/storage/' + path;
+            if (path.startsWith('/products/')) return '/storage' + path;
+            return path.startsWith('/') ? path : '/storage/' + path;
         }
     };
 }

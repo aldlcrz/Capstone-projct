@@ -10,6 +10,11 @@ use App\Models\SystemSetting;
 use App\Models\Notification;
 use App\Models\PaymentTransaction;
 use App\Models\OrderStatusHistory;
+use App\Models\RefundTransaction;
+use App\Models\CommissionRecord;
+use App\Models\SellerPayout;
+use App\Services\Financial\FinancialLedgerService;
+use App\Services\Returns\ProcessSukliRefundService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -2001,15 +2006,26 @@ class AdminController extends Controller
                 'notes' => 'Payment approved and verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').',
             ]);
 
-            // Notify Customer
-            Notification::send(
-                $order->customerId,
-                'Payment Verified',
-                "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been confirmed and verified. The artisan has been notified to fulfill your order.",
-                'order',
-                "/orders/{$order->id}",
-                'customer'
-            );
+            // Notify Customer (with sukli notification if overpaid)
+            if ($order->isOverpaid()) {
+                Notification::send(
+                    $order->customerId,
+                    'Payment Verified (Sukli Queued)',
+                    "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been verified. Your ₱" . number_format($order->sukliAmount(), 2) . " sukli is awaiting refund processing to the mobile number you provided.",
+                    'order',
+                    "/orders/{$order->id}",
+                    'customer'
+                );
+            } else {
+                Notification::send(
+                    $order->customerId,
+                    'Payment Verified',
+                    "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been confirmed and verified. The artisan has been notified to fulfill your order.",
+                    'order',
+                    "/orders/{$order->id}",
+                    'customer'
+                );
+            }
 
             // Notify Seller
             Notification::send(
@@ -2020,6 +2036,13 @@ class AdminController extends Controller
                 "/seller/orders?order_id={$order->id}",
                 'seller'
             );
+
+            // Reconcile seller settlement for online payment
+            try {
+                app(FinancialLedgerService::class)->reconcileSellerSettlementForOrder($order);
+            } catch (\Throwable $fe) {
+                Log::warning('Settlement reconciliation notice on verifyPayment: ' . $fe->getMessage());
+            }
 
             DB::commit();
 
@@ -2039,6 +2062,62 @@ class AdminController extends Controller
                 return response()->json(['success' => false, 'message' => 'Failed to verify payment: ' . $e->getMessage()], 500);
             }
             return redirect()->back()->with('error', 'Failed to verify payment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process and record a Sukli / Overpayment Refund transfer
+     */
+    public function processSukliRefund(Request $request, string $id, ProcessSukliRefundService $sukliService)
+    {
+        $request->validate([
+            'refund_amount'        => 'required|numeric|min:0.01',
+            'transfer_reference'   => 'required|string|min:4|max:100',
+            'transfer_proof'       => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'destination_account'  => 'nullable|string|max:100',
+            'destination_name'     => 'nullable|string|max:150',
+            'refund_mobile_number' => 'nullable|string|max:100',
+            'refund_account_name'  => 'nullable|string|max:150',
+            'notes'                => 'nullable|string|max:1000',
+        ]);
+
+        $admin = Auth::user();
+        $amount = (float) $request->input('refund_amount');
+        $ref = $request->input('transfer_reference');
+        $proof = $request->file('transfer_proof');
+        $destAcc = $request->input('destination_account') ?: $request->input('refund_mobile_number');
+        $destName = $request->input('destination_name') ?: $request->input('refund_account_name');
+        $notes = $request->input('notes');
+
+        try {
+            $refundTx = $sukliService->processSukliRefund(
+                $id,
+                $admin,
+                $amount,
+                $ref,
+                $proof,
+                $destAcc,
+                $destName,
+                $notes
+            );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sukli refund recorded and disbursed successfully.',
+                    'refundTransaction' => $refundTx,
+                ]);
+            }
+
+            return redirect()->back()->with('success', "Sukli refund of ₱" . number_format($amount, 2) . " processed successfully (Ref: {$ref}).");
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            throw $ve;
+        } catch (\Throwable $e) {
+            Log::error('Sukli refund error: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to process sukli refund: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Failed to process sukli refund: ' . $e->getMessage());
         }
     }
 
@@ -2129,5 +2208,232 @@ class AdminController extends Controller
             }
             return redirect()->back()->with('error', 'Failed to reject payment: ' . $e->getMessage());
         }
+    }
+
+    // ─── Commission & Settlement Management (Admin Parity) ──────────────────────
+
+    public function commissions(Request $request)
+    {
+        $ledger = app(FinancialLedgerService::class);
+        $rate = $ledger->getCommissionRate();
+        $period = $request->input('period', Carbon::now()->format('Y-m'));
+        [$year, $month] = explode('-', $period);
+
+        $sellers = User::where('role', 'seller')
+            ->where('isVerified', true)
+            ->with(['commissionRecords' => function ($q) {
+                $q->orderByDesc('period');
+            }])
+            ->orderBy('name')
+            ->get()
+            ->map(function (User $seller) use ($ledger, $period, $year, $month, $rate) {
+                $summary = $ledger->getSellerFinancialSummary($seller, $period);
+                $record = $summary['currentCommissionRecord'];
+
+                return [
+                    'seller'                  => $seller,
+                    'totalSales'              => $summary['periodCashProductSales'],
+                    'commissionRate'          => $rate,
+                    'commissionAmount'        => $summary['commissionDueThisPeriod'],
+                    'status'                  => $record?->status ?? 'unpaid',
+                    'paidAt'                  => $record?->paidAt,
+                    'dueDate'                 => $record?->dueDate,
+                    'notes'                   => $record?->notes,
+                    'recordId'                => $record?->id,
+                    'paymentMethod'           => $record?->paymentMethod,
+                    'referenceNumber'         => $record?->referenceNumber,
+                    'paymentProof'            => $record?->paymentProof,
+                    'allTimePaid'             => $summary['totalCommissionPaid'],
+                    'totalOutstandingBalance' => $summary['totalCommissionOutstanding'],
+                ];
+            });
+
+        $periodTotalSales  = $sellers->sum('totalSales');
+        $periodTotalDue    = $sellers->sum('commissionAmount');
+        $periodTotalPaid   = $sellers->where('status', 'paid')->sum('commissionAmount');
+        $periodUnpaid      = $sellers->where('status', 'unpaid')->count();
+
+        $dateExpr = DB::getDriverName() === 'sqlite' 
+            ? "strftime('%Y-%m', createdAt) as period" 
+            : "DATE_FORMAT(createdAt, '%Y-%m') as period";
+
+        $periods = Order::selectRaw($dateExpr)
+            ->groupBy('period')
+            ->orderByDesc('period')
+            ->pluck('period');
+
+        return view('admin.commissions', compact(
+            'sellers', 'period', 'periods', 'rate',
+            'periodTotalSales', 'periodTotalDue', 'periodTotalPaid', 'periodUnpaid'
+        ));
+    }
+
+    public function markPaid(Request $request, string $sellerId)
+    {
+        $request->validate(['period' => 'required', 'notes' => 'nullable|string|max:500']);
+        $seller = User::findOrFail($sellerId);
+        $ledger = app(FinancialLedgerService::class);
+        $rate = $ledger->getCommissionRate();
+        [$year, $month] = explode('-', $request->period);
+
+        $summary = $ledger->getSellerFinancialSummary($seller, $request->period);
+        $totalSales = $summary['periodCashProductSales'];
+        $commissionAmount = $summary['commissionDueThisPeriod'];
+
+        CommissionRecord::updateOrCreate(
+            ['sellerId' => $sellerId, 'period' => $request->period],
+            [
+                'totalSales'       => $totalSales,
+                'commissionRate'   => $rate,
+                'commissionAmount' => $commissionAmount,
+                'status'           => 'paid',
+                'paidAt'           => now(),
+                'notes'            => $request->notes,
+            ]
+        );
+
+        if ($seller->status === 'frozen') {
+            $hasOtherOverdue = CommissionRecord::where('sellerId', $sellerId)
+                ->where('status', 'unpaid')
+                ->where('period', '!=', $request->period)
+                ->exists();
+
+            if (!$hasOtherOverdue) {
+                $seller->status = 'active';
+                $seller->save();
+
+                Notification::send(
+                    $seller->id,
+                    '✅ Account Unfrozen',
+                    "Your commission for {$request->period} has been verified and settled. Your shop account is now fully active.",
+                    'system',
+                    '/seller/dashboard',
+                    'seller'
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', "Commission marked as paid for {$seller->name}.");
+    }
+
+    public function payouts(Request $request)
+    {
+        $status = $request->input('status');
+        $search = trim($request->input('search', ''));
+
+        $query = SellerPayout::with(['seller', 'order', 'processor'])->orderByDesc('created_at');
+
+        if (!empty($status)) {
+            $query->where('status', $status);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('transfer_reference', 'like', "%{$search}%")
+                  ->orWhere('payout_destination_account', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                        ->orWhere('shopName', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('order', function ($oq) use ($search) {
+                      $oq->where('id', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $payouts = $query->paginate(20)->withQueryString();
+
+        $allPayouts = SellerPayout::all();
+        $kpis = [
+            'available_amount' => (float) $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->sum('net_settlement_amount'),
+            'available_count'  => $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->count(),
+            'pending_amount'   => (float) $allPayouts->where('status', 'PENDING_ELIGIBILITY')->sum('net_settlement_amount'),
+            'pending_count'    => $allPayouts->where('status', 'PENDING_ELIGIBILITY')->count(),
+            'paid_amount'      => (float) $allPayouts->where('status', 'PAID')->sum('net_settlement_amount'),
+            'paid_count'       => $allPayouts->where('status', 'PAID')->count(),
+            'on_hold_amount'   => (float) $allPayouts->where('status', 'ON_HOLD')->sum('net_settlement_amount'),
+            'on_hold_count'    => $allPayouts->where('status', 'ON_HOLD')->count(),
+        ];
+
+        return view('admin.payouts.index', compact('payouts', 'kpis'));
+    }
+
+    public function processPayout(Request $request, string $id)
+    {
+        $ref = $request->input('transfer_reference') ?: $request->input('transaction_reference');
+        if (empty($ref)) {
+            return redirect()->back()->withErrors(['transfer_reference' => 'The transfer reference field is required.'])->withInput();
+        }
+
+        $payout = SellerPayout::findOrFail($id);
+        $admin = Auth::user();
+
+        try {
+            FinancialLedgerService::processManualSellerPayout(
+                $payout,
+                [
+                    'transaction_reference' => $ref,
+                    'transfer_proof' => $request->file('transfer_proof'),
+                    'admin_notes' => $request->admin_notes ?: $request->notes,
+                    'payout_method' => $request->payout_method,
+                    'payout_destination' => $request->payout_destination,
+                ],
+                $admin
+            );
+
+            return redirect()->back()->with('success', 'Seller payout transfer recorded successfully as PAID.');
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Throwable $e) {
+            Log::error('Process payout error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process payout: ' . $e->getMessage());
+        }
+    }
+
+    public function holdPayout(Request $request, string $id)
+    {
+        $reason = $request->input('hold_reason') ?: $request->input('reason');
+        if (empty($reason)) {
+            return redirect()->back()->withErrors(['hold_reason' => 'A hold reason is required.'])->withInput();
+        }
+        $payout = SellerPayout::findOrFail($id);
+
+        if ($payout->status === 'PAID') {
+            return redirect()->back()->with('error', 'Cannot place a hold on an already PAID settlement.');
+        }
+
+        $payout->update([
+            'status'      => 'ON_HOLD',
+            'hold_reason' => $reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Settlement payout has been placed on hold.');
+    }
+
+    public function releasePayout(Request $request, string $id)
+    {
+        $payout = SellerPayout::findOrFail($id);
+        $order = $payout->order;
+
+        if ($payout->status === 'PAID') {
+            return redirect()->back()->with('info', 'This settlement is already paid.');
+        }
+
+        $ledger = app(FinancialLedgerService::class);
+        if ($order) {
+            $breakdown = $ledger->calculateSellerSettlementBreakdown($order, $payout->seller_id);
+            $payout->update([
+                'status'      => $breakdown['status'],
+                'hold_reason' => null,
+            ]);
+        } else {
+            $payout->update([
+                'status'      => 'AVAILABLE_FOR_PAYOUT',
+                'hold_reason' => null,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Hold released. Settlement status restored.');
     }
 }
