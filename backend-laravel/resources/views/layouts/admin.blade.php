@@ -125,7 +125,10 @@
                                  })
                                 ->whereNotIn('status', ['Cancelled'])
                                 ->count();
-                            $pendingReturnsCount    = \App\Models\ReturnRequest::whereIn('status', ['pending', 'requested', 'disputed', 'escalated'])->count();
+                            $pendingReturnsCount    = \App\Models\ReturnRequest::where(function($rq) {
+                                $rq->whereIn('return_status', ['pending', 'requested', 'in_review', 'disputed', 'escalated'])
+                                   ->orWhereIn('status', ['pending', 'requested', 'in_review', 'disputed', 'escalated']);
+                            })->count();
                             $pendingReportsCount    = \App\Models\Report::where('status', 'Pending')->count();
                         } catch (\Throwable $e) {}
 

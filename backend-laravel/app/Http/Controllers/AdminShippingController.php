@@ -57,8 +57,8 @@ class AdminShippingController extends Controller
     {
         $validated = $request->validate([
             'provider_id' => 'required|string|exists:shipping_providers,id',
-            'origin_zone_id' => 'required|integer|exists:shipping_zones,id',
-            'destination_zone_id' => 'required|integer|exists:shipping_zones,id',
+            'origin_zone_id' => 'required|string|exists:shipping_zones,id',
+            'destination_zone_id' => 'required|string|exists:shipping_zones,id',
             'min_weight' => 'required|numeric|min:0',
             'max_weight' => 'nullable|numeric|gt:min_weight',
             'base_rate' => 'required|numeric|min:0',
@@ -108,7 +108,7 @@ class AdminShippingController extends Controller
     public function storeArea(Request $request)
     {
         $validated = $request->validate([
-            'zone_id' => 'required|integer|exists:shipping_zones,id',
+            'zone_id' => 'required|string|exists:shipping_zones,id',
             'province' => 'required|string|max:100',
             'city' => 'nullable|string|max:100',
             'barangay' => 'nullable|string|max:100',
