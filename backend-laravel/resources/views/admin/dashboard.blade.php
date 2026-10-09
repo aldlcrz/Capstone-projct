@@ -113,7 +113,7 @@
     @endif
 
     {{-- ── KPI Cards ── --}}
-    <div id="tour-admin-dash-kpis" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="tour-admin-dash-kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         @php
         $kpis = [
             ['label' => 'Total Revenue',    'value' => $stats['totalSales'],    'sub' => 'All-time gross sales',         'color' => 'text-[#C0422A]', 'bg' => 'bg-red-50',    'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
@@ -123,7 +123,6 @@
             ['label' => 'Active Customers', 'value' => $userCounts['customers'],'sub' => 'Registered buyers',            'color' => 'text-cyan-600',  'bg' => 'bg-cyan-50',   'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'],
             ['label' => 'Verified Sellers', 'value' => $userCounts['sellers'],  'sub' => 'Active artisan shops',         'color' => 'text-amber-600', 'bg' => 'bg-amber-50',  'icon' => 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z'],
             ['label' => 'Live Products',    'value' => $stats['liveProducts'],  'sub' => 'All listed products',          'color' => 'text-teal-600',  'bg' => 'bg-teal-50',   'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4'],
-            ['label' => 'Platform Capital', 'value' => $stats['totalCapital'],  'sub' => 'Cost of goods sold',           'color' => 'text-gray-600',  'bg' => 'bg-gray-50',   'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
         ];
         @endphp
         @foreach($kpis as $kpi)
@@ -320,7 +319,7 @@
         ['selector' => '#tour-admin-dash-export',           'title' => 'Export Global CSV Report',   'description' => 'Download comprehensive audit reports containing sales figures, order fulfillment logs, active artisan shops, and financial breakdowns.'],
         ['selector' => '#tour-admin-dash-filters',          'title' => 'Date Filtering & Presets',   'description' => 'Filter all dashboard metrics and revenue figures across preset intervals (Today, Last 7 Days, This Month, Last Month) or pick custom date ranges.'],
         ['selector' => '#tour-admin-dash-actions',          'title' => 'Pending Moderation Alerts',  'description' => 'Action badges requiring immediate admin attention: pending product listings, artisan seller applications, promotional banners, or customer reports.'],
-        ['selector' => '#tour-admin-dash-kpis',             'title' => 'Platform Metric Cards',      'description' => 'High-level executive metrics tracking Gross Revenue, Net Profit, Total Orders, Average Order Value (AOV), Active Customers, Verified Artisans, Live Listings, and Platform Capital.'],
+        ['selector' => '#tour-admin-dash-kpis',             'title' => 'Platform Metric Cards',      'description' => 'High-level executive metrics tracking Gross Revenue, Net Profit, Total Orders, Average Order Value (AOV), Active Customers, Verified Artisans, and Live Listings.'],
         ['selector' => '#tour-admin-dash-revenue-chart',    'title' => 'Daily Revenue Velocity',     'description' => 'Interactive 7-day bar chart displaying daily sales volume and platform gross revenue trends over time.'],
         ['selector' => '#tour-admin-dash-status-chart',     'title' => 'Order Status Distribution',  'description' => 'Real-time donut breakdown of order fulfillment states: Completed, Pending, Processing, Shipped, Delivered, and Cancelled.'],
         ['selector' => '#tour-admin-dash-users-chart',      'title' => 'User Registrations & Growth','description' => '7-day onboarding trendline tracking new registered buyers and verified artisan seller accounts.'],
