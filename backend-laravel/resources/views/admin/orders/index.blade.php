@@ -533,11 +533,6 @@
                                                 <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200/60">
                                                     ✓ Confirmed
                                                 </span>
-                                                <button type="button" 
-                                                        @click="openReject({{ json_encode($order) }})"
-                                                        class="text-[10px] font-bold text-gray-400 hover:text-rose-600 underline ml-1 cursor-pointer" title="Revert or reject payment">
-                                                    Revoke
-                                                </button>
                                             @endif
                                         </div>
                                     @else
