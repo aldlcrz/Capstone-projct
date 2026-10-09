@@ -70,7 +70,7 @@ class OrderController extends Controller
      */
     public function getSellerOrders(Request $request)
     {
-        $sellerId = ($request->user()->role === 'admin' && $request->has('sellerId')) 
+        $sellerId = (in_array($request->user()->role, ['admin', 'superadmin'], true) && $request->has('sellerId')) 
             ? $request->sellerId 
             : $request->user()->id;
 
@@ -1083,7 +1083,7 @@ class OrderController extends Controller
         }
 
         $isCustomer = ($user->id === $order->customerId);
-        $isSeller = ($user->id === $order->sellerId || $user->role === 'admin');
+        $isSeller = ($user->id === $order->sellerId || in_array($user->role, ['admin', 'superadmin'], true));
 
         if (!$isCustomer && !$isSeller) {
             return $request->expectsJson()
@@ -1298,7 +1298,7 @@ class OrderController extends Controller
                 : redirect()->route('login');
         }
 
-        $isSeller = ($user->id === $order->sellerId || $user->role === 'admin');
+        $isSeller = ($user->id === $order->sellerId || in_array($user->role, ['admin', 'superadmin'], true));
         if (!$isSeller) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Unauthorized.'], 403)
@@ -1417,7 +1417,7 @@ class OrderController extends Controller
                 : redirect()->route('login');
         }
 
-        $isSeller = ($user->id === $order->sellerId || $user->role === 'admin');
+        $isSeller = ($user->id === $order->sellerId || in_array($user->role, ['admin', 'superadmin'], true));
         if (!$isSeller) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Unauthorized.'], 403)

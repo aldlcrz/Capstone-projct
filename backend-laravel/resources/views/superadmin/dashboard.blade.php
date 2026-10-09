@@ -35,9 +35,15 @@
         <div class="flex items-center gap-2 flex-wrap">
             <button type="button"
                     onclick="window.startSpotlightTour ? window.startSpotlightTour('superadmin-dashboard-guide') : null"
-                    class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5">
+                    class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
                 <span>💡 Guide</span>
             </button>
+            <a href="{{ route('superadmin.export') }}"
+               class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+               title="Export Global CSV Report">
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Export CSV</span>
+            </a>
             <a id="tour-superadmin-dash-breakdown" href="{{ route('superadmin.commissions') }}" class="px-5 py-2.5 bg-[#3D2B1F] hover:bg-[#C0422A] text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center gap-2">
                 <span>Profit Breakdown →</span>
             </a>

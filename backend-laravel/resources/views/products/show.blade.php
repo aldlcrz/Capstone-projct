@@ -964,7 +964,7 @@
                             </p>
 
                             <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
-                                @if(Auth::user()->role === 'admin')
+                                @if($isAdminUser)
                                     @if($productStatus === 'pending' || $productStatus === 'rejected')
                                         <form action="{{ route('admin.products.approve', $product->id) }}" method="POST" class="flex-1">
                                             @csrf

@@ -30,7 +30,7 @@ class AdminBannerController extends Controller
         // Seller-submitted banner requests (for "Seller Requests" tab)
         $sellerBanners = Banner::with('user')
             ->whereNotNull('userId')
-            ->orderByRaw("FIELD(status,'pending','approved','rejected')")
+            ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'approved' THEN 2 WHEN 'rejected' THEN 3 ELSE 4 END")
             ->orderBy('created_at', 'desc')
             ->get();
 

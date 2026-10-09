@@ -7,6 +7,9 @@
     inspectProduct: null,
     inspectActiveImage: 0,
     inspectImages: [],
+    rejectModal: false,
+    rejectProduct: null,
+    rejectReason: '',
     openInspect(product) {
         this.inspectProduct = product;
         this.inspectImages = this.getProductImages(product);
@@ -17,6 +20,16 @@
         this.inspectModal = false;
         this.inspectProduct = null;
         this.inspectImages = [];
+    },
+    openRejectModal(product) {
+        this.rejectProduct = product;
+        this.rejectReason = '';
+        this.rejectModal = true;
+    },
+    closeRejectModal() {
+        this.rejectModal = false;
+        this.rejectProduct = null;
+        this.rejectReason = '';
     },
     getProductImages(product) {
         if (!product) return ['/uploads/products/default.jpg'];
@@ -94,12 +107,12 @@
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Quality Control</span>
                 <span class="text-gray-300 text-xs">·</span>
-                <span class="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">View Only</span>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">Moderation Active</span>
             </div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                 Product <span class="text-[#C0420A] font-light italic">Moderation</span>
             </h1>
-            <p class="text-[11px] text-gray-400 font-medium">Browse artisan product submissions, catalog pricing, and quality standards in view-only mode</p>
+            <p class="text-[11px] text-gray-400 font-medium">Browse artisan product submissions, inspect sizing and fabric details, and execute instant approval or rejection</p>
         </div>
 
         {{-- Search Bar --}}
@@ -237,17 +250,36 @@
                                     </span>
                                 </td>
 
-                                <!-- Actions / Inspect Trigger -->
+                                <!-- Actions / Moderation Controls -->
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end">
+                                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                         <!-- Inspect Modal Trigger -->
                                         <button type="button" 
                                                 @click="openInspect(@js($product))"
-                                                class="px-3 py-1.5 bg-gray-50 hover:bg-gray-200 text-gray-700 border border-gray-200/80 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                                                class="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-200 text-gray-700 border border-gray-200/80 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
                                                 title="Inspect Product Full Details & Sizing">
                                             <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             <span>Inspect</span>
                                         </button>
+
+                                        @if($product->status === 'pending' || $product->status === 'rejected')
+                                            <form action="{{ route('superadmin.products.approve', $product->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" onclick="return confirm('Approve this product and make it live in the catalog?')"
+                                                        class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                                        title="Approve Listing">
+                                                    Approve
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if($product->status === 'pending' || $product->status === 'approved')
+                                            <button type="button" @click="openRejectModal(@js($product))"
+                                                    class="px-2.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                                    title="Reject Listing">
+                                                {{ $product->status === 'approved' ? 'Revoke' : 'Reject' }}
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -440,12 +472,76 @@
             </div>
 
             {{-- Modal Footer with Moderation Actions --}}
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0" x-show="inspectProduct">
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0" x-show="inspectProduct">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <template x-if="inspectProduct && (inspectProduct.status === 'pending' || inspectProduct.status === 'rejected')">
+                        <form :action="'/superadmin/products/' + inspectProduct.id + '/approve'" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Approve this product and make it live in the catalog?')"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <span>Approve Listing</span>
+                            </button>
+                        </form>
+                    </template>
+                    <template x-if="inspectProduct && (inspectProduct.status === 'pending' || inspectProduct.status === 'approved')">
+                        <button type="button" @click="openRejectModal(inspectProduct); closeInspect();"
+                                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <span x-text="inspectProduct.status === 'approved' ? 'Revoke Approval' : 'Reject Product'"></span>
+                        </button>
+                    </template>
+                </div>
                 <button type="button" @click="closeInspect()" class="px-5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition-all cursor-pointer">
                     Close Preview
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    {{-- ==================== REJECT PRODUCT MODAL ==================== --}}
+    <div x-show="rejectModal" 
+         x-cloak 
+         style="display: none;"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+         @keydown.escape.window="closeRejectModal()">
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 border border-gray-100 text-left"
+             @click.away="closeRejectModal()">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2 text-rose-600 font-bold text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>Reject Product Listing</span>
+                </div>
+                <button type="button" @click="closeRejectModal()" class="text-gray-400 hover:text-black text-sm font-bold cursor-pointer">✕</button>
+            </div>
+
+            <p class="text-xs text-gray-600 leading-relaxed">
+                Provide a clear reason for rejecting <strong x-text="rejectProduct ? rejectProduct.name : 'this product'"></strong>. This explanation will be delivered directly to the artisan.
+            </p>
+
+            <form :action="'/superadmin/products/' + (rejectProduct ? rejectProduct.id : '') + '/reject'" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Rejection Reason *</label>
+                    <textarea name="reason" rows="3" required placeholder="e.g. Photo resolution is too low, missing accurate sizing, policy violation..."
+                              x-model="rejectReason"
+                              class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-rose-500 outline-none transition-colors resize-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" @click="closeRejectModal()" 
+                            class="px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer hover:opacity-90 active:scale-98"
+                            style="background-color: #F3F4F6; color: #374151; border: 1px solid #E5E7EB;">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer hover:opacity-95 active:scale-98"
+                            style="background-color: #DC2626; color: #FFFFFF; border: none;">
+                        Confirm Rejection
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

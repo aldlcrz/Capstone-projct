@@ -428,8 +428,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
 
     // Product Moderation
     Route::get('/products', [SuperAdminController::class, 'products'])->name('superadmin.products');
-    Route::post('/products/{id}/approve', [SuperAdminController::class, 'approveProductWeb'])->name('superadmin.products.approve');
-    Route::post('/products/{id}/reject', [SuperAdminController::class, 'rejectProductWeb'])->name('superadmin.products.reject');
+    Route::match(['post', 'patch'], '/products/{id}/approve', [SuperAdminController::class, 'approveProductWeb'])->name('superadmin.products.approve');
+    Route::match(['post', 'patch'], '/products/{id}/reject', [SuperAdminController::class, 'rejectProductWeb'])->name('superadmin.products.reject');
     Route::delete('/products/{id}', [SuperAdminController::class, 'deleteProductWeb'])->name('superadmin.products.delete');
 
     // Hero Banners & Promotions
@@ -454,6 +454,35 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::post('/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('superadmin.maintenance.toggle');
     Route::get('/error-logs', [SuperAdminController::class, 'errorLogs'])->name('superadmin.error-logs');
     Route::post('/error-logs/clear', [SuperAdminController::class, 'clearErrorLogs'])->name('superadmin.error-logs.clear');
+
+    // Enterprise Export & System Configuration Parity
+    Route::get('/export-global-report', [AdminController::class, 'exportGlobalReport'])->name('superadmin.export');
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('superadmin.settings');
+    Route::post('/settings', [AdminSettingsController::class, 'update'])->name('superadmin.settings.update');
+    Route::get('/platform', [AdminSettingsController::class, 'platform'])->name('superadmin.platform');
+
+    // Logistics & Shipping Matrix Management Parity
+    Route::get('/shipping', [AdminShippingController::class, 'index'])->name('superadmin.shipping.index');
+    Route::patch('/shipping/providers/{id}/toggle', [AdminShippingController::class, 'toggleProvider'])->name('superadmin.shipping.providers.toggle');
+    Route::put('/shipping/providers/{id}', [AdminShippingController::class, 'updateProvider'])->name('superadmin.shipping.providers.update');
+    Route::post('/shipping/rates', [AdminShippingController::class, 'storeRate'])->name('superadmin.shipping.rates.store');
+    Route::put('/shipping/rates/{id}', [AdminShippingController::class, 'updateRate'])->name('superadmin.shipping.rates.update');
+    Route::delete('/shipping/rates/{id}', [AdminShippingController::class, 'destroyRate'])->name('superadmin.shipping.rates.destroy');
+    Route::post('/shipping/areas', [AdminShippingController::class, 'storeArea'])->name('superadmin.shipping.areas.store');
+    Route::delete('/shipping/areas/{id}', [AdminShippingController::class, 'destroyArea'])->name('superadmin.shipping.areas.destroy');
+
+    // Return & Refund Resolution Hub Parity
+    Route::get('/returns', [AdminReturnController::class, 'index'])->name('superadmin.returns.index');
+    Route::get('/returns/{returnRequest}', [AdminReturnController::class, 'show'])->name('superadmin.returns.show');
+    Route::post('/returns/{returnRequest}/record-transfer', [AdminReturnController::class, 'recordTransfer'])->name('superadmin.returns.record-transfer');
+    Route::post('/returns/{returnRequest}/resolve-dispute', [AdminReturnController::class, 'resolveDispute'])->name('superadmin.returns.resolve-dispute');
+
+    // Notifications & Incident Reports Parity
+    Route::get('/notifications', [AdminController::class, 'notifications'])->name('superadmin.notifications.index');
+    Route::post('/notifications/read-all', [AdminController::class, 'readAllNotifications'])->name('superadmin.notifications.read-all');
+    Route::get('/reports', [AdminController::class, 'reports'])->name('superadmin.reports');
+    Route::match(['post', 'patch'], '/reports/{id}/resolve', [AdminController::class, 'resolveReport'])->name('superadmin.reports.resolve');
+    Route::delete('/reports/{id}', [AdminController::class, 'deleteReport'])->name('superadmin.reports.delete');
 });
 
 // ─── Storage & Upload Fallback Routes (Hardened & Contained) ─────────────────

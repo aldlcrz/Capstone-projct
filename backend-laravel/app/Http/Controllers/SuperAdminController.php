@@ -307,8 +307,12 @@ class SuperAdminController extends Controller
         $periodTotalPaid   = $sellers->where('status', 'paid')->sum('commissionAmount');
         $periodUnpaid      = $sellers->where('status', 'unpaid')->count();
 
-        // Available periods (months with orders)
-        $periods = Order::selectRaw("DATE_FORMAT(createdAt, '%Y-%m') as period")
+        // Available periods (months with orders) - Database driver compatible (MySQL & SQLite)
+        $dateExpr = DB::getDriverName() === 'sqlite' 
+            ? "strftime('%Y-%m', createdAt) as period" 
+            : "DATE_FORMAT(createdAt, '%Y-%m') as period";
+
+        $periods = Order::selectRaw($dateExpr)
             ->groupBy('period')
             ->orderByDesc('period')
             ->pluck('period');
@@ -1527,7 +1531,7 @@ class SuperAdminController extends Controller
 
         $sellerBanners = Banner::with('user')
             ->whereNotNull('userId')
-            ->orderByRaw("FIELD(status,'pending','approved','rejected')")
+            ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'approved' THEN 2 WHEN 'rejected' THEN 3 ELSE 4 END")
             ->orderBy('created_at', 'desc')
             ->get();
 
