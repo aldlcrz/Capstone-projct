@@ -1,10 +1,13 @@
+@php
+    $isSuperAdmin = Auth::check() && Auth::user()->role === 'superadmin';
+@endphp
 <!DOCTYPE html>
 <html lang="en" x-data="adminApp()" x-init="init()">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Admin Panel' }} | LumBarong</title>
+    <title>{{ $title ?? ($isSuperAdmin ? 'Super Admin' : 'Admin Panel') }} | LumBarong</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -87,13 +90,17 @@
         <aside class="hidden lg:flex flex-col w-70 h-full bg-white border-r border-gray-200 overflow-hidden">
             <div class="p-8 flex flex-col h-full">
                 <div class="mb-10 shrink-0">
-                    <a href="/admin/dashboard" class="flex items-center gap-3 group">
+                    <a href="{{ $isSuperAdmin ? '/superadmin/dashboard' : '/admin/dashboard' }}" class="flex items-center gap-3 group">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong Logo" class="w-9 h-9 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform">
                         <div>
                             <span class="font-serif text-lg font-bold text-[#1F2937] tracking-tight">LUMBARONG</span>
-                            <div class="flex items-center gap-1.5 px-0.5 text-[#C0420A] font-bold tracking-widest text-[9px]">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                CONTROL PANEL
+                            <div class="flex items-center gap-1.5 px-0.5 text-[#C0420A] font-bold tracking-widest text-[9px] uppercase">
+                                @if($isSuperAdmin)
+                                    <span>👑 SUPER ADMIN</span>
+                                @else
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    CONTROL PANEL
+                                @endif
                             </div>
                         </div>
                     </a>
@@ -101,70 +108,173 @@
 
                 <nav class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
                     @php
-                        $sidebarGroups = [
-                            'OVERVIEW' => [
-                                ['label' => 'Dashboard', 'path' => 'admin/dashboard', 'icon' => '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>']
-                            ],
-                            'ORDERS & PAYMENTS' => [
-                                [
-                                    'label' => 'Payment Verification',
-                                    'path'  => 'admin/orders',
-                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
-                                    'badge' => (function() {
-                                        try {
-                                            return \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
-                                                ->where(function($pq) {
-                                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
-                                                       ->orWhereNull('paymentStatus');
-                                                })
-                                                ->whereNotIn('status', ['Cancelled'])
-                                                ->count();
-                                        } catch (\Throwable $e) {
-                                            return 0;
-                                        }
-                                    })()
+                        $unpaidCommissionsCount = 0;
+                        $pendingProductsCount   = 0;
+                        $pendingBannersCount    = 0;
+                        $pendingPaymentsCount   = 0;
+                        $pendingReturnsCount    = 0;
+                        try {
+                            $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
+                            $pendingProductsCount   = \App\Models\Product::where('status', 'pending')->count();
+                            $pendingBannersCount    = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
+                            $pendingPaymentsCount   = \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
+                                ->where(function($pq) {
+                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
+                                       ->orWhereNull('paymentStatus');
+                                })
+                                ->whereNotIn('status', ['Cancelled'])
+                                ->count();
+                            $pendingReturnsCount    = \App\Models\ReturnRequest::whereIn('status', ['pending', 'requested', 'disputed', 'escalated'])->count();
+                        } catch (\Throwable $e) {}
+
+                        if ($isSuperAdmin) {
+                            $sidebarGroups = [
+                                'GOVERNANCE & FINANCE' => [
+                                    [
+                                        'label' => 'Dashboard Overview',
+                                        'path'  => 'superadmin/dashboard',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>'
+                                    ],
+                                    [
+                                        'label' => 'Profit & Commissions',
+                                        'path'  => 'superadmin/commissions',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+                                        'badge' => $unpaidCommissionsCount
+                                    ],
+                                    [
+                                        'label' => 'Payment Verification',
+                                        'path'  => 'superadmin/orders',
+                                        'alt_path' => 'admin/orders',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
+                                        'badge' => $pendingPaymentsCount
+                                    ],
+                                    [
+                                        'label' => 'Returns & Refunds',
+                                        'path'  => 'admin/returns',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
+                                        'badge' => $pendingReturnsCount
+                                    ],
+                                    [
+                                        'label' => 'Payment Gateways',
+                                        'path'  => 'superadmin/payment-settings',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>'
+                                    ],
                                 ],
-                                [
-                                    'label' => 'Returns & Refunds',
-                                    'path'  => 'admin/returns',
-                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
-                                    'badge' => (function() {
-                                        try {
-                                            return \App\Models\ReturnRequest::whereIn('status', ['pending', 'requested', 'disputed', 'escalated'])->count();
-                                        } catch (\Throwable $e) {
-                                            return 0;
-                                        }
-                                    })()
+                                'CATALOG & CONTENT' => [
+                                    [
+                                        'label' => 'Product Categories',
+                                        'path'  => 'superadmin/categories',
+                                        'alt_path' => 'admin/categories',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>'
+                                    ],
+                                    [
+                                        'label' => 'Product Moderation',
+                                        'path'  => 'superadmin/products',
+                                        'alt_path' => 'admin/products',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>',
+                                        'badge' => $pendingProductsCount
+                                    ],
+                                    [
+                                        'label' => 'Promotions & Banners',
+                                        'path'  => 'superadmin/banners',
+                                        'alt_path' => 'admin/banners',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
+                                        'badge' => $pendingBannersCount
+                                    ],
+                                ],
+                                'USER MANAGEMENT' => [
+                                    [
+                                        'label' => 'Sellers & Shops',
+                                        'path'  => 'superadmin/sellers',
+                                        'alt_path' => 'admin/sellers',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>'
+                                    ],
+                                    [
+                                        'label' => 'Customers',
+                                        'path'  => 'superadmin/customers',
+                                        'alt_path' => 'admin/users',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'
+                                    ],
+                                ],
+                                'LOGISTICS & OPERATIONS' => [
+                                    [
+                                        'label' => 'Logistics & Shipping',
+                                        'path'  => 'admin/shipping',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />'
+                                    ]
+                                ],
+                                'DEVELOPER & SYSTEM' => [
+                                    [
+                                        'label' => 'Archive Vault',
+                                        'path'  => 'superadmin/archives',
+                                        'alt_path' => 'admin/archives',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>'
+                                    ],
+                                    [
+                                        'label' => 'System Maintenance',
+                                        'path'  => 'superadmin/maintenance',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>'
+                                    ],
+                                    [
+                                        'label' => 'Audit & Security Logs',
+                                        'path'  => 'superadmin/audit-logs',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>'
+                                    ],
+                                    [
+                                        'label' => 'System Error Logs',
+                                        'path'  => 'superadmin/error-logs',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'
+                                    ],
                                 ]
-                            ],
-                            'USER MANAGEMENT' => [
-                                ['label' => 'Customers', 'path' => 'admin/users', 'icon' => '<path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
-                                ['label' => 'Sellers',   'path' => 'admin/sellers', 'id' => 'tour-admin-sellers-nav', 'icon' => '<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>']
-                            ],
-                            'SYSTEM GOVERNANCE' => [
-                                ['label' => 'Reports',  'path' => 'admin/reports',  'id' => 'tour-admin-governance-nav', 'icon' => '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'],
-                                ['label' => 'Archives', 'path' => 'admin/archives', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>']
-                            ],
-                            'PRODUCT CONTROL' => [
-                                ['label' => 'Products',   'path' => 'admin/products',   'id' => 'tour-admin-products-nav', 'icon' => '<path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
-                                ['label' => 'Categories', 'path' => 'admin/categories', 'icon' => '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>']
-                            ],
-                            'CONTENT MANAGEMENT' => [
-                                [
-                                    'label' => 'Promotions',
-                                    'path'  => 'admin/banners',
-                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
-                                    'badge' => (function() { try { return \App\Models\Banner::whereNotNull('userId')->where('status','pending')->count(); } catch (\Throwable $e) { return 0; } })()
+                            ];
+                        } else {
+                            $sidebarGroups = [
+                                'OVERVIEW' => [
+                                    ['label' => 'Dashboard', 'path' => 'admin/dashboard', 'icon' => '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>']
+                                ],
+                                'ORDERS & PAYMENTS' => [
+                                    [
+                                        'label' => 'Payment Verification',
+                                        'path'  => 'admin/orders',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
+                                        'badge' => $pendingPaymentsCount
+                                    ],
+                                    [
+                                        'label' => 'Returns & Refunds',
+                                        'path'  => 'admin/returns',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
+                                        'badge' => $pendingReturnsCount
+                                    ]
+                                ],
+                                'USER MANAGEMENT' => [
+                                    ['label' => 'Customers', 'path' => 'admin/users', 'icon' => '<path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>'],
+                                    ['label' => 'Sellers',   'path' => 'admin/sellers', 'id' => 'tour-admin-sellers-nav', 'icon' => '<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>']
+                                ],
+                                'SYSTEM GOVERNANCE' => [
+                                    ['label' => 'Reports',  'path' => 'admin/reports',  'id' => 'tour-admin-governance-nav', 'icon' => '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'],
+                                    ['label' => 'Archives', 'path' => 'admin/archives', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>']
+                                ],
+                                'PRODUCT CONTROL' => [
+                                    ['label' => 'Products',   'path' => 'admin/products',   'id' => 'tour-admin-products-nav', 'icon' => '<path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'],
+                                    ['label' => 'Categories', 'path' => 'admin/categories', 'icon' => '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>']
+                                ],
+                                'CONTENT MANAGEMENT' => [
+                                    [
+                                        'label' => 'Promotions',
+                                        'path'  => 'admin/banners',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
+                                        'badge' => $pendingBannersCount
+                                    ]
+                                ],
+                                'LOGISTICS & OPERATIONS' => [
+                                    [
+                                        'label' => 'Logistics & Shipping',
+                                        'path'  => 'admin/shipping',
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />'
+                                    ]
                                 ]
-                            ],
-                            'LOGISTICS & OPERATIONS' => [
-                                [
-                                    'label' => 'Logistics & Shipping',
-                                    'path'  => 'admin/shipping',
-                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />'
-                                ]
-                            ]
-                        ];
+                            ];
+                        }
                     @endphp
 
                     @foreach($sidebarGroups as $group => $items)
@@ -174,12 +284,15 @@
                         <div class="space-y-1">
                             <div class="text-[10px] font-black text-gray-500 tracking-widest uppercase px-3 mb-2">{{ $group }}</div>
                             @foreach($items as $item)
+                                @php
+                                    $isActive = request()->is($item['path'] . '*') || (isset($item['alt_path']) && request()->is($item['alt_path'] . '*'));
+                                @endphp
                                 <a href="/{{ $item['path'] }}"
                                     id="{{ $item['id'] ?? '' }}"
-                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ request()->is($item['path'] . '*') ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A]' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
+                                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group tracking-wide text-sm font-medium {{ $isActive ? 'bg-[rgba(192,66,42,0.08)] text-[#C0420A] border-l-4 border-[#C0420A] font-bold' : 'text-[#1F2937] hover:bg-[#F8F7F4] hover:text-[#C0420A]' }}">
                                     <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 {{ request()->is($item['path'] . '*') ? 'text-[#C0422A]' : 'text-gray-500 group-hover:text-[#C0420A]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
-                                        {{ $item['label'] }}
+                                        <svg class="w-5 h-5 {{ $isActive ? 'text-[#C0422A]' : 'text-gray-500 group-hover:text-[#C0420A]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $item['icon'] !!}</svg>
+                                        <span>{{ $item['label'] }}</span>
                                     </div>
                                     @if(isset($item['badge']) && $item['badge'] > 0)
                                         <span class="px-2 py-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full border border-white shrink-0">{{ $item['badge'] }}</span>
@@ -193,13 +306,23 @@
                 <div class="mt-6 pt-6 border-t border-gray-200 shrink-0 space-y-3">
                     {{-- User card --}}
                     <div class="flex items-center gap-3 px-2">
-                        <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-white flex items-center justify-center font-bold">
-                            {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
-                        </div>
-                        <div>
-                            <div class="text-sm font-bold">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
-                            <div class="text-[10px] text-[#4B5563] font-bold uppercase tracking-widest leading-none">Administrator</div>
-                        </div>
+                        @if($isSuperAdmin)
+                            <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs border border-amber-500/20">
+                                👑
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="text-sm font-bold text-[#1F2937] truncate">{{ Auth::user()->name }}</div>
+                                <div class="text-[10px] text-[#C0420A] font-bold uppercase tracking-widest leading-none">Super Administrator</div>
+                            </div>
+                        @else
+                            <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-white flex items-center justify-center font-bold">
+                                {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="text-sm font-bold text-[#1F2937] truncate">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
+                                <div class="text-[10px] text-[#4B5563] font-bold uppercase tracking-widest leading-none">Administrator</div>
+                            </div>
+                        @endif
                     </div>
                     <form x-ref="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -225,26 +348,31 @@
             <!-- Header -->
             <header class="sticky top-0 z-40 bg-white border-b border-gray-200 h-16 lg:h-18 flex items-center shrink-0 px-4 lg:px-10 justify-between">
                 <div class="flex items-center gap-2">
-                    <a href="/admin/dashboard" class="lg:hidden flex items-center gap-2">
+                    <a href="{{ $isSuperAdmin ? '/superadmin/dashboard' : '/admin/dashboard' }}" class="lg:hidden flex items-center gap-2">
                         <img src="{{ asset('images/logo-icon.png') }}" alt="LumBarong" class="w-7 h-7 object-contain rounded-full shadow-xs">
                         <span class="font-serif font-bold text-[#2A2A2A] tracking-tight text-base">LUMBARONG</span>
-                        <span class="text-[9px] font-black text-[#C0420A] px-1.5 py-0.5 bg-[#C0420A]/10 rounded uppercase">Admin</span>
+                        <span class="text-[9px] font-black text-[#C0420A] px-1.5 py-0.5 bg-[#C0420A]/10 rounded uppercase">{{ $isSuperAdmin ? 'Super Admin' : 'Admin' }}</span>
                     </a>
                 </div>
                 <div class="hidden lg:block"></div>
                 <div class="flex items-center gap-4">
-                    <!-- Admin Notifications -->
+                    <!-- Admin / Superadmin Notifications -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
                         @php
                             $unreadCount = 0;
                             $recentNotifications = collect([]);
                             try {
-                                $unreadCount = \App\Models\Notification::where('userId', Auth::id())
-                                    ->where('targetRole', 'admin')
+                                $targetRoles = $isSuperAdmin ? ['superadmin', 'admin'] : ['admin'];
+                                $unreadCount = \App\Models\Notification::where(function($q) use ($targetRoles) {
+                                        $q->where('userId', Auth::id())
+                                          ->orWhereIn('targetRole', $targetRoles);
+                                    })
                                     ->where('isRead', false)
                                     ->count();
-                                $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
-                                    ->where('targetRole', 'admin')
+                                $recentNotifications = \App\Models\Notification::where(function($q) use ($targetRoles) {
+                                        $q->where('userId', Auth::id())
+                                          ->orWhereIn('targetRole', $targetRoles);
+                                    })
                                     ->orderBy('createdAt', 'desc')
                                     ->limit(5)
                                     ->get();
@@ -271,7 +399,7 @@
                              style="display: none;"
                              x-cloak>
                             <div class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Admin Notifications</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ $isSuperAdmin ? 'Super Admin Notifications' : 'Admin Notifications' }}</span>
                                 @if($unreadCount > 0)
                                     <form action="{{ route('admin.notifications.read-all') }}" method="POST" class="inline">
                                         @csrf
@@ -291,7 +419,7 @@
                                     </a>
                                 @empty
                                     <div class="p-8 text-center">
-                                        <div class="text-xs text-gray-400 italic">No admin notifications yet</div>
+                                        <div class="text-xs text-gray-400 italic">No notifications yet</div>
                                     </div>
                                 @endforelse
                             </div>
@@ -299,21 +427,23 @@
                         </div>
                     </div>
                     
-                    <!-- Admin Profile Dropdown with Overflow Tools -->
+                    <!-- Profile Dropdown -->
                     <div x-data="{ profileOpen: false }" class="relative" @click.away="profileOpen = false">
-                        <button @click="profileOpen = !profileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="Admin Profile & Settings">
+                        <button @click="profileOpen = !profileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="{{ $isSuperAdmin ? 'Super Admin Profile & Settings' : 'Admin Profile & Settings' }}">
                             <div class="text-right hidden sm:block">
                                 <div class="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
-                                    {{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}
-                                    <span class="text-xs text-[#C0420A]" title="System Administrator">🛡️</span>
+                                    {{ $isSuperAdmin ? Auth::user()->name : (in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name) }}
+                                    <span class="text-xs {{ $isSuperAdmin ? 'text-amber-500' : 'text-[#C0420A]' }}" title="{{ $isSuperAdmin ? 'Super Administrator' : 'System Administrator' }}">{{ $isSuperAdmin ? '👑' : '🛡️' }}</span>
                                 </div>
                                 <div class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">
-                                    Administrator
+                                    {{ $isSuperAdmin ? 'Super Administrator' : 'Administrator' }}
                                 </div>
                             </div>
-                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black text-white flex items-center justify-center font-bold shadow-md overflow-hidden shrink-0 border-2 border-white">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl {{ $isSuperAdmin ? 'bg-[#1F2937] text-amber-400 border-amber-500/30' : 'bg-black text-white border-white' }} flex items-center justify-center font-bold shadow-md overflow-hidden shrink-0 border-2">
                                 @if(Auth::user()->profilePhoto)
                                     <img src="{{ str_starts_with(Auth::user()->profilePhoto, 'http') || str_starts_with(Auth::user()->profilePhoto, '/') ? Auth::user()->profilePhoto : asset('storage/' . Auth::user()->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                @elseif($isSuperAdmin)
+                                    👑
                                 @else
                                     {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                                 @endif
@@ -323,7 +453,7 @@
                             </svg>
                         </button>
 
-                        <!-- Admin Profile & Overflow Menu Dropdown Panel -->
+                        <!-- Profile & Overflow Menu Dropdown Panel -->
                         <div x-show="profileOpen"
                              x-transition:enter="transition ease-out duration-200"
                              x-transition:enter-start="opacity-0 translate-y-1 scale-95"
@@ -335,13 +465,17 @@
                              style="display: none;"
                              x-cloak>
                             
-                            <!-- Header / Admin Info -->
+                            <!-- Header / Info -->
                             <div class="px-4 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                    {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
+                                <div class="w-9 h-9 rounded-xl {{ $isSuperAdmin ? 'bg-[#1F2937] text-amber-400' : 'bg-black text-white' }} flex items-center justify-center font-bold text-xs shrink-0">
+                                    @if($isSuperAdmin)
+                                        👑
+                                    @else
+                                        {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
+                                    @endif
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-xs font-bold text-gray-900 truncate">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
+                                    <div class="text-xs font-bold text-gray-900 truncate">{{ $isSuperAdmin ? Auth::user()->name : (in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name) }}</div>
                                     <div class="text-[10px] text-gray-400 truncate">{{ Auth::user()->email }}</div>
                                 </div>
                             </div>
@@ -448,54 +582,93 @@
                             </div>
                         </template>
                     </div>
+
                     @yield('content')
                 </div>
             </main>
 
-            <!-- Admin Mobile Fixed Bottom Navigation Bar -->
+            <!-- Admin / Superadmin Mobile Fixed Bottom Navigation Bar -->
             <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200/80 h-16 flex items-center justify-around px-2 z-40 shadow-lg">
-                <!-- Dashboard -->
-                <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/dashboard') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Dashboard</span>
-                </a>
+                @if($isSuperAdmin)
+                    <!-- Dashboard -->
+                    <a href="{{ route('superadmin.dashboard') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('superadmin/dashboard') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Dashboard</span>
+                    </a>
 
-                <!-- Users -->
-                <a href="{{ route('admin.users') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/users*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Users</span>
-                </a>
+                    <!-- Commissions -->
+                    <a href="{{ route('superadmin.commissions') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('superadmin/commissions*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Profit</span>
+                    </a>
 
-                <!-- Sellers -->
-                <a href="{{ route('admin.sellers') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/sellers*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Sellers</span>
-                </a>
+                    <!-- Sellers -->
+                    <a href="{{ route('superadmin.sellers') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('superadmin/sellers*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Sellers</span>
+                    </a>
 
-                <!-- Products -->
-                <a href="{{ route('admin.products') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/products*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
-                    <span class="text-[9px] font-semibold">Products</span>
-                </a>
+                    <!-- Products -->
+                    <a href="{{ route('superadmin.products') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('superadmin/products*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Products</span>
+                    </a>
+                @else
+                    <!-- Dashboard -->
+                    <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/dashboard') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Dashboard</span>
+                    </a>
 
-                <!-- Admin Profile / More Tools Sheet -->
+                    <!-- Users -->
+                    <a href="{{ route('admin.users') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/users*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Users</span>
+                    </a>
+
+                    <!-- Sellers -->
+                    <a href="{{ route('admin.sellers') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/sellers*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Sellers</span>
+                    </a>
+
+                    <!-- Products -->
+                    <a href="{{ route('admin.products') }}" class="flex flex-col items-center gap-0.5 px-2.5 py-1 {{ request()->is('admin/products*') ? 'text-[#C0420A]' : 'text-gray-500 hover:text-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span class="text-[9px] font-semibold">Products</span>
+                    </a>
+                @endif
+
+                <!-- Profile / More Tools Sheet -->
                 <div x-data="{ mobileMoreOpen: false }" class="relative">
                     <button @click="mobileMoreOpen = !mobileMoreOpen" class="flex flex-col items-center gap-0.5 px-2.5 py-1 text-gray-500 hover:text-gray-700 cursor-pointer">
-                        <div class="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold overflow-hidden border border-white">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        <div class="w-6 h-6 rounded-full {{ $isSuperAdmin ? 'bg-[#1F2937] text-amber-400' : 'bg-black text-white' }} flex items-center justify-center text-[10px] font-bold overflow-hidden border border-white">
+                            @if($isSuperAdmin)
+                                👑
+                            @else
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            @endif
                         </div>
                         <span class="text-[9px] font-semibold">More ▾</span>
                     </button>
 
-                    <!-- Admin Profile Overflow Menu Popup -->
+                    <!-- Profile Overflow Menu Popup -->
                     <div x-show="mobileMoreOpen"
                          @click.away="mobileMoreOpen = false"
                          x-transition:enter="transition ease-out duration-200"
@@ -509,23 +682,38 @@
                          x-cloak>
                         
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
-                            <div class="text-xs font-bold text-gray-900 truncate">{{ in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name }}</div>
-                            <div class="text-[9px] font-bold text-[#C0420A] uppercase tracking-wider">System Administrator</div>
+                            <div class="text-xs font-bold text-gray-900 truncate">{{ $isSuperAdmin ? Auth::user()->name : (in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name) }}</div>
+                            <div class="text-[9px] font-bold text-[#C0420A] uppercase tracking-wider">{{ $isSuperAdmin ? 'Super Administrator' : 'System Administrator' }}</div>
                         </div>
 
                         <div class="py-1">
-                            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                                <span>Categories</span>
-                            </a>
-                            <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <span>Promotions</span>
-                            </a>
-                            <a href="{{ route('admin.reports') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                <span>Reports</span>
-                            </a>
+                            @if($isSuperAdmin)
+                                <a href="{{ route('superadmin.categories.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    <span>Categories</span>
+                                </a>
+                                <a href="{{ route('superadmin.banners.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span>Promotions</span>
+                                </a>
+                                <a href="{{ route('superadmin.payment-settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>Payment Gateways</span>
+                                </a>
+                            @else
+                                <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    <span>Categories</span>
+                                </a>
+                                <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span>Promotions</span>
+                                </a>
+                                <a href="{{ route('admin.reports') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span>Reports</span>
+                                </a>
+                            @endif
                         </div>
 
                         <div class="p-2 border-t border-gray-100 bg-gray-50">
@@ -549,13 +737,13 @@
                 </div>
             </nav>
         </div>
-    {{-- Live Notification Popup for Admin --}}
+    {{-- Live Notification Popup --}}
     <div
         x-data="{
             popupNotif: null,
             dismissedIds: [],
             checkNotifications() {
-                fetch('/api/notifications?role=admin', {
+                fetch('/api/notifications?role={{ $isSuperAdmin ? "superadmin" : "admin" }}', {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
@@ -643,4 +831,5 @@
         }
     </script>
 </body>
+</html>
 </html>
