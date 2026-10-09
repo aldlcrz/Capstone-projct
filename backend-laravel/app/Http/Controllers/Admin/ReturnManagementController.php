@@ -95,7 +95,7 @@ class ReturnManagementController extends Controller
             // 2. SUKLI / OVERPAYMENT REFUNDS WORKFLOW
             // ═════════════════════════════════════════════════════════════════
             // Find all orders that have payment transactions or refund transactions
-            $query = Order::with(['customer', 'seller', 'paymentTransactions', 'refundTransactions.processor', 'statusHistories.user'])
+            $query = Order::with(['customer', 'seller', 'paymentTransactions', 'refundTransactions.processor', 'statusHistories.updater'])
                 ->where(function ($q) {
                     $q->whereHas('paymentTransactions', function ($pq) {
                         $pq->where('detected_amount', '>', 0);
@@ -170,10 +170,9 @@ class ReturnManagementController extends Controller
             // ═════════════════════════════════════════════════════════════════
             // 3. ORDER CANCELLATIONS WORKFLOW
             // ═════════════════════════════════════════════════════════════════
-            $query = Order::with(['customer', 'seller', 'paymentTransactions', 'refundTransactions.processor', 'statusHistories.user'])
+            $query = Order::with(['customer', 'seller', 'paymentTransactions', 'refundTransactions.processor', 'statusHistories.updater'])
                 ->where(function ($q) {
                     $q->whereIn('status', ['cancelled', 'cancellation_pending'])
-                      ->orWhereNotNull('cancellation_status')
                       ->orWhereNotNull('cancellationReason');
                 });
 
@@ -211,7 +210,7 @@ class ReturnManagementController extends Controller
                     });
                 } elseif ($status === 'pending_approval') {
                     $filtered = $allCancellations->filter(function ($ord) {
-                        return strtolower($ord->status) === 'cancellation_pending' || strtolower($ord->cancellation_status ?? '') === 'pending';
+                        return strtolower($ord->status) === 'cancellation_pending';
                     });
                 }
             }
@@ -232,7 +231,7 @@ class ReturnManagementController extends Controller
                 'pending_refund'   => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'pending_refund')->count(),
                 'refunded'         => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'refunded')->count(),
                 'unpaid'           => $allCancellations->filter(fn($o) => $o->cancellationRefundStatus() === 'unpaid')->count(),
-                'pending_approval' => $allCancellations->filter(fn($o) => strtolower($o->status) === 'cancellation_pending' || strtolower($o->cancellation_status ?? '') === 'pending')->count(),
+                'pending_approval' => $allCancellations->filter(fn($o) => strtolower($o->status) === 'cancellation_pending')->count(),
             ];
         }
 

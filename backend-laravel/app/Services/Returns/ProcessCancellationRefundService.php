@@ -52,7 +52,7 @@ class ProcessCancellationRefundService
                 ->firstOrFail();
 
             // 1. Verify that order is cancelled or cancellation pending
-            if (!in_array(strtolower($order->status), ['cancelled', 'cancellation_pending'], true) && empty($order->cancellation_status)) {
+            if (!in_array(strtolower($order->status), ['cancelled', 'cancellation_pending'], true) && empty($order->cancellationReason)) {
                 throw ValidationException::withMessages([
                     'order' => ['Refunds in this tab are only applicable to cancelled or cancellation-pending orders.'],
                 ]);
