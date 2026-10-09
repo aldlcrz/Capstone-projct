@@ -109,13 +109,13 @@ class SukliOverpaymentRefundWorkflowTest extends TestCase
     }
 
     /**
-     * Test 1: Admin can see overpayment details and sukli breakdown in the order verification list.
+     * Test 1: Admin can see overpayment details and sukli breakdown in the Return & Refund Center sukli tab.
      */
     public function test_admin_can_see_overpayment_details_and_sukli_breakdown(): void
     {
         [$order] = $this->createOverpaidOrder(900.00, 1000.00);
 
-        $response = $this->actingAs($this->admin)->get(route('admin.orders'));
+        $response = $this->actingAs($this->admin)->get(route('admin.returns.index', ['tab' => 'sukli']));
 
         $response->assertOk();
         $response->assertSee('#LB-' . strtoupper(substr($order->id, -8)));
@@ -124,13 +124,13 @@ class SukliOverpaymentRefundWorkflowTest extends TestCase
     }
 
     /**
-     * Test 2: Super Admin can see the exact same operational overpayment details.
+     * Test 2: Super Admin can see the exact same operational overpayment details in Return & Refund Center sukli tab.
      */
     public function test_super_admin_can_see_same_operational_overpayment_details(): void
     {
         [$order] = $this->createOverpaidOrder(900.00, 1000.00);
 
-        $response = $this->actingAs($this->superAdmin)->get(route('superadmin.orders'));
+        $response = $this->actingAs($this->superAdmin)->get(route('superadmin.returns.index', ['tab' => 'sukli']));
 
         $response->assertOk();
         $response->assertSee('#LB-' . strtoupper(substr($order->id, -8)));
