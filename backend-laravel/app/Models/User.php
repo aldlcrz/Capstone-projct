@@ -391,4 +391,12 @@ class User extends Authenticatable
 
         return $query;
     }
+
+    /**
+     * Get or create the official LumBarong system user.
+     */
+    public static function getSystemUser(): self
+    {
+        return \App\Services\Messaging\LumbarongSystemMessageService::getSystemUser();
+    }
 }

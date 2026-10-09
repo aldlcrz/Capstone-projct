@@ -2189,6 +2189,13 @@ class AdminController extends Controller
                 'customer'
             );
 
+            // Send Official LumBarong Inbox Message
+            \App\Services\Messaging\LumbarongSystemMessageService::sendOrderCancelledMessage(
+                $order,
+                "Payment verification rejected by Administrator: {$reason}",
+                'LumBarong Administration'
+            );
+
             DB::commit();
 
             if ($request->wantsJson()) {

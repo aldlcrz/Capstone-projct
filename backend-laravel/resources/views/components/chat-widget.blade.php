@@ -664,8 +664,16 @@ body.chat-open {
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- Official Platform Badge (visible when chatting with LumBarong) -->
+                    <template x-if="mainMode === 'artisan' && activeTab === 'messages' && activeUser && (activeUser.isSystem || activeUser.role === 'system' || activeUser.name === 'LumBarong')">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider rounded-lg border border-amber-400/30 shadow-xs">
+                            <svg class="w-3 h-3 text-amber-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            <span>Official</span>
+                        </span>
+                    </template>
+
                     <!-- Visit Shop Button (visible when chatting with artisan) -->
-                    <template x-if="mainMode === 'artisan' && activeTab === 'messages' && activeUser && activeUser.id">
+                    <template x-if="mainMode === 'artisan' && activeTab === 'messages' && activeUser && activeUser.id && !(activeUser.isSystem || activeUser.role === 'system' || activeUser.name === 'LumBarong')">
                         <a :href="'/shops/' + activeUser.id"
                            title="Visit Artisan Shop"
                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#C0422A] hover:bg-[#A33520] text-white text-[10px] font-extrabold uppercase tracking-wider rounded-lg transition-all shadow-xs border border-white/20">
@@ -858,18 +866,41 @@ body.chat-open {
                         <template x-if="conv && conv.otherUser">
                             <div
                                 @click="startConversation(conv.otherUser.id, conv.otherUser.name || 'Artisan')"
-                                class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-black/20 hover:shadow-md transition-all cursor-pointer"
+                                class="flex items-center justify-between p-3.5 bg-white rounded-2xl border hover:border-[#C0422A]/30 hover:shadow-md transition-all cursor-pointer relative"
+                                :class="(conv.otherUser.isSystem || conv.otherUser.role === 'system' || conv.otherUser.name === 'LumBarong') ? 'border-amber-200/80 bg-linear-to-r from-amber-50/30 to-white' : 'border-gray-100'"
                             >
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
-                                         x-text="(conv.otherUser.name || 'A').charAt(0)"></div>
+                                    <template x-if="conv.otherUser.isSystem || conv.otherUser.role === 'system' || conv.otherUser.name === 'LumBarong'">
+                                        <div class="w-10 h-10 rounded-xl bg-[#3D2B1F] flex items-center justify-center shrink-0 border border-amber-400/40 shadow-xs">
+                                            <span class="text-xs font-black text-amber-300 font-serif">LB</span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!(conv.otherUser.isSystem || conv.otherUser.role === 'system' || conv.otherUser.name === 'LumBarong')">
+                                        <template x-if="conv.otherUser.profileImage">
+                                            <img :src="conv.otherUser.profileImage" class="w-10 h-10 rounded-xl object-cover border border-gray-200 shrink-0">
+                                        </template>
+                                    </template>
+                                    <template x-if="!(conv.otherUser.isSystem || conv.otherUser.role === 'system' || conv.otherUser.name === 'LumBarong') && !conv.otherUser.profileImage">
+                                        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-600 shrink-0 uppercase border border-gray-200"
+                                             x-text="(conv.otherUser.name || 'A').charAt(0)"></div>
+                                    </template>
                                     <div class="min-w-0">
-                                        <div class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name || 'Artisan'"></div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs font-bold text-gray-900 truncate" x-text="conv.otherUser.name || 'Artisan'"></span>
+                                            <template x-if="conv.otherUser.isSystem || conv.otherUser.role === 'system' || conv.otherUser.name === 'LumBarong'">
+                                                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                            </template>
+                                        </div>
                                         <div class="text-[11px] text-gray-500 truncate" x-text="formatPreviewText(conv.lastMessage ? (conv.lastMessage.body || conv.lastMessage.content || conv.lastMessage || '') : '')"></div>
                                     </div>
                                 </div>
-                                <div class="text-[9px] text-gray-400 font-medium shrink-0 ml-2" 
-                                     x-text="formatMessageDate(conv.timestamp || (conv.lastMessage && (conv.lastMessage.createdAt || conv.lastMessage.created_at)))"></div>
+                                <div class="flex flex-col items-end gap-1 shrink-0 ml-2">
+                                    <span class="text-[9px] text-gray-400 font-medium" 
+                                          x-text="formatMessageDate(conv.timestamp || (conv.lastMessage && (conv.lastMessage.createdAt || conv.lastMessage.created_at)))"></span>
+                                    <template x-if="conv.unreadCount > 0">
+                                        <span class="px-1.5 py-0.5 bg-[#C0422A] text-white text-[9px] font-black rounded-full" x-text="conv.unreadCount"></span>
+                                    </template>
+                                </div>
                             </div>
                         </template>
                     </template>

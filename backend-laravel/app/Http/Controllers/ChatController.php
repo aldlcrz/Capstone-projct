@@ -118,16 +118,30 @@ class ChatController extends Controller
             $isSender = $lastMessage->senderId === $userId;
             $otherUser = $isSender ? $lastMessage->receiver : $lastMessage->sender;
 
-            $displayName = ($otherUser && $otherUser->role === 'seller' && !empty($otherUser->shopName)) 
-                ? $otherUser->shopName 
-                : ($otherUser->name ?? 'Artisan');
+            $isSystem = ($otherUser && in_array($otherUser->role, ['admin', 'superadmin'], true))
+                || ($otherUser && str_contains(strtolower($otherUser->name ?? ''), 'lumbarong'));
+
+            if ($isSystem) {
+                $displayName = 'LumBarong';
+                $profileImage = asset('images/logo-icon.png');
+                $role = 'system';
+            } elseif ($otherUser && $otherUser->role === 'seller' && !empty($otherUser->shopName)) {
+                $displayName = $otherUser->shopName;
+                $profileImage = $otherUser->profile_photo_url ?? ($otherUser->profilePhoto ? (str_starts_with($otherUser->profilePhoto, 'http') || str_starts_with($otherUser->profilePhoto, '/') ? $otherUser->profilePhoto : asset('storage/' . $otherUser->profilePhoto)) : null);
+                $role = 'seller';
+            } else {
+                $displayName = $otherUser->name ?? 'Artisan';
+                $profileImage = $otherUser ? ($otherUser->profile_photo_url ?? ($otherUser->profilePhoto ? (str_starts_with($otherUser->profilePhoto, 'http') || str_starts_with($otherUser->profilePhoto, '/') ? $otherUser->profilePhoto : asset('storage/' . $otherUser->profilePhoto)) : null)) : null;
+                $role = $otherUser->role ?? 'customer';
+            }
 
             $conversations[] = [
                 'otherUser' => [
                     'id' => $otherUser->id ?? $otherId,
                     'name' => $displayName,
-                    'profileImage' => $otherUser ? ($otherUser->profile_photo_url ?? ($otherUser->profilePhoto ? (str_starts_with($otherUser->profilePhoto, 'http') || str_starts_with($otherUser->profilePhoto, '/') ? $otherUser->profilePhoto : asset('storage/' . $otherUser->profilePhoto)) : null)) : null,
-                    'role' => $otherUser->role ?? 'seller',
+                    'profileImage' => $profileImage,
+                    'role' => $role,
+                    'isSystem' => $isSystem,
                 ],
                 'lastMessage' => [
                     'body' => $lastMessage->content,

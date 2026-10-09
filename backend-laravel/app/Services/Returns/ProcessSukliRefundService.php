@@ -176,6 +176,13 @@ class ProcessSukliRefundService
                 'customer'
             );
 
+            // 9. Send Official LumBarong Inbox Message with Attached Refund Proof
+            \App\Services\Messaging\LumbarongSystemMessageService::sendSukliRefundCompletedMessage(
+                $order,
+                $refundTransaction,
+                $admin
+            );
+
             return $refundTransaction;
         });
     }

@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\RefundTransaction;
+use App\Services\Messaging\LumbarongSystemMessageService;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -921,6 +924,13 @@ class OrderController extends Controller
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_status_updated', $customerUser->id, 'Order', $order->id);
             }
 
+            // Send official LumBarong inbox message
+            LumbarongSystemMessageService::sendOrderCancelledMessage(
+                $order,
+                "Payment rejected: {$reason}",
+                $user->role === 'seller' ? ($user->shopName ?: 'Artisan Seller') : ($user->name ?: 'LumBarong Administration')
+            );
+
             DB::commit();
 
             return response()->json([
@@ -1264,6 +1274,13 @@ class OrderController extends Controller
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_cancelled', $customerUser->id, 'Order', $order->id);
             }
 
+            // Send official LumBarong inbox message
+            LumbarongSystemMessageService::sendOrderCancelledMessage(
+                $order,
+                $reason,
+                $user->role === 'seller' ? ($user->shopName ?: 'Artisan Seller') : ($user->name ?: 'LumBarong Administration')
+            );
+
             DB::commit();
 
             if ($request->expectsJson() || $request->is('api/*') || $request->is('seller/api/*')) {
@@ -1383,6 +1400,13 @@ class OrderController extends Controller
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_cancellation_approved', $customerUser->id, 'Order', $order->id);
             }
 
+            // Send official LumBarong inbox message
+            LumbarongSystemMessageService::sendOrderCancelledMessage(
+                $order,
+                $order->cancellationReason ?: 'Cancellation request approved by artisan',
+                $user->role === 'seller' ? ($user->shopName ?: 'Artisan Seller') : ($user->name ?: 'LumBarong Administration')
+            );
+
             DB::commit();
 
             if ($request->expectsJson() || $request->is('api/*') || $request->is('seller/api/*')) {
@@ -1493,5 +1517,71 @@ class OrderController extends Controller
             }
             return redirect()->back()->with('error', 'Failed to decline cancellation: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Securely stream / download the outgoing refund proof receipt.
+     * Authorization strictly enforced: only Customer, Seller, or Admin/SuperAdmin can access.
+     */
+    public function viewRefundProof(Request $request, string $orderId, string $refundId)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        $order = Order::find($orderId);
+        if (!$order) {
+            abort(404, 'Order not found.');
+        }
+
+        $refund = RefundTransaction::where('order_id', $order->id)
+            ->where('id', $refundId)
+            ->first();
+
+        if (!$refund) {
+            abort(404, 'Refund transaction record not found.');
+        }
+
+        $isCustomer = ((string) $user->id === (string) $order->customerId);
+        $isSeller = ((string) $user->id === (string) $order->sellerId);
+        $isAdmin = in_array($user->role, ['admin', 'superadmin'], true);
+
+        if (!$isCustomer && !$isSeller && !$isAdmin) {
+            abort(403, 'Unauthorized. You do not have permission to access this refund proof document.');
+        }
+
+        if (empty($refund->transfer_proof_path)) {
+            abort(404, 'No refund proof document attached to this transaction.');
+        }
+
+        $proofPath = $refund->transfer_proof_path;
+
+        // Check disks
+        $diskPath = null;
+        if (Storage::disk('public')->exists($proofPath)) {
+            $diskPath = Storage::disk('public')->path($proofPath);
+        } elseif (Storage::disk('local')->exists($proofPath)) {
+            $diskPath = Storage::disk('local')->path($proofPath);
+        } elseif (file_exists(storage_path('app/public/' . $proofPath))) {
+            $diskPath = storage_path('app/public/' . $proofPath);
+        } elseif (file_exists(storage_path('app/' . $proofPath))) {
+            $diskPath = storage_path('app/' . $proofPath);
+        } elseif (file_exists(public_path('storage/' . $proofPath))) {
+            $diskPath = public_path('storage/' . $proofPath);
+        }
+
+        if (!$diskPath || !file_exists($diskPath)) {
+            abort(404, 'Refund proof file not found on disk.');
+        }
+
+        $mimeType = mime_content_type($diskPath) ?: 'image/jpeg';
+        $filename = 'Refund_Proof_' . strtoupper(substr($order->id, -8)) . '.' . pathinfo($diskPath, PATHINFO_EXTENSION);
+
+        return response()->file($diskPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
+        ]);
     }
 }

@@ -168,6 +168,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/seller/api/orders/{id}/dispatch-special-delivery', [OrderController::class, 'dispatchSpecialDelivery'])->name('orders.dispatch-special-delivery');
     Route::get('/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('orders.payment-proof');
     Route::get('/seller/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('seller.orders.payment-proof');
+    Route::get('/orders/{orderId}/refund-proof/{refundId}', [OrderController::class, 'viewRefundProof'])->name('orders.refund-proof');
+
 
 
     // Notifications

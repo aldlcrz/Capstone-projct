@@ -734,7 +734,6 @@ class CheckoutController extends Controller
             }
 
             // Notify Customer in-app
-            if ($customer) {
                 Notification::create([
                     'id'         => (string) Str::uuid(),
                     'userId'     => $customer->id,
@@ -746,6 +745,13 @@ class CheckoutController extends Controller
                     'link'       => route('orders'),
                     'createdAt'  => now(),
                 ]);
+
+                // Send Official LumBarong Inbox Message
+                \App\Services\Messaging\LumbarongSystemMessageService::sendOrderCancelledMessage(
+                    $order,
+                    "Checkout cancelled by customer: {$reason}. Refund requested to {$refundMethod} ({$refundMobile}).",
+                    'Customer'
+                );
             }
 
             // Cleanup cart / checkout sessions
