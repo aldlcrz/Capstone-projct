@@ -22,8 +22,8 @@ class ShippingLogisticsSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'SPX Express',
-                'code' => 'spx',
+                'name' => 'Flash Express',
+                'code' => 'flash',
                 'default_volumetric_divisor' => 3500,
                 'is_active' => true,
             ],
@@ -134,7 +134,7 @@ class ShippingLogisticsSeeder extends Seeder
                     // Development baseline pricing multiplier based on courier and geographic relation
                     $multiplier = match($code) {
                         'jnt' => 1.0,
-                        'spx' => 1.15,
+                        'flash' => 1.10,
                         'lbc' => 1.45,
                         default => 1.0,
                     };

@@ -2350,7 +2350,6 @@ function sellerOrdersManager() {
                                      <select x-model="courierName" @change="onCourierChange()" :disabled="isShippingLocked(detailsOrder)"
                                          class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500 cursor-pointer">
                                          <option value="J&T Express">J&T Express (Default)</option>
-                                         <option value="SPX Express">SPX Express</option>
                                          <option value="LBC Express">LBC Express</option>
                                          <option value="Flash Express">Flash Express</option>
                                          <option value="Ninja Van">Ninja Van</option>

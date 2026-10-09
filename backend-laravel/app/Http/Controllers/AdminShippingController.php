@@ -13,7 +13,10 @@ class AdminShippingController extends Controller
 {
     public function index()
     {
-        $providers = ShippingProvider::withCount('rates')->orderBy('name')->get();
+        $providers = ShippingProvider::withCount('rates')
+            ->whereNotIn('code', ['store_pickup', 'seller_direct'])
+            ->orderBy('name')
+            ->get();
         $zones = ShippingZone::withCount('areas')->orderBy('code')->get();
         $zoneAreas = ShippingZoneArea::with('zone')->orderBy('province')->orderBy('city')->paginate(20, ['*'], 'areas_page');
         $rates = ShippingRate::with(['provider', 'originZone', 'destinationZone'])

@@ -339,9 +339,9 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $product = $this->createTestProduct($seller);
 
         $jnt = ShippingProvider::where('code', 'jnt')->firstOrFail();
-        $spx = ShippingProvider::where('code', 'spx')->firstOrFail();
+        $flash = ShippingProvider::where('code', 'flash')->firstOrFail();
 
-        // Seller enables J&T, disables SPX
+        // Seller enables J&T, disables Flash Express
         SellerShippingProvider::create([
             'seller_id' => $seller->id,
             'provider_id' => $jnt->id,
@@ -349,7 +349,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
         SellerShippingProvider::create([
             'seller_id' => $seller->id,
-            'provider_id' => $spx->id,
+            'provider_id' => $flash->id,
             'is_enabled' => false,
         ]);
 
@@ -359,7 +359,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $providerCodes = collect($quotes)->pluck('provider_code')->all();
         $this->assertContains('jnt', $providerCodes);
-        $this->assertNotContains('spx', $providerCodes);
+        $this->assertNotContains('flash', $providerCodes);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -623,16 +623,16 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'shopPostalCode' => '4014',
         ]);
 
-        $spxProvider = ShippingProvider::where('code', 'spx')->first();
-        if ($spxProvider) {
+        $flashProvider = ShippingProvider::where('code', 'flash')->first();
+        if ($flashProvider) {
             SellerShippingProvider::create([
                 'seller_id' => $seller->id,
-                'provider_id' => $spxProvider->id,
+                'provider_id' => $flashProvider->id,
                 'is_enabled' => true,
                 'is_default' => true,
             ]);
         }
-        foreach (ShippingProvider::where('id', '!=', $spxProvider?->id)->get() as $otherP) {
+        foreach (ShippingProvider::where('id', '!=', $flashProvider?->id)->get() as $otherP) {
             SellerShippingProvider::create([
                 'seller_id' => $seller->id,
                 'provider_id' => $otherP->id,
@@ -678,11 +678,11 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // Verify quotes exist for providers
         $this->assertNotEmpty($quotes);
         $jntQuote = collect($quotes)->firstWhere('provider_code', 'jnt');
-        $spxQuote = collect($quotes)->firstWhere('provider_code', 'spx');
+        $flashQuote = collect($quotes)->firstWhere('provider_code', 'flash');
         $lbcQuote = collect($quotes)->firstWhere('provider_code', 'lbc');
 
         $this->assertNotNull($jntQuote);
-        $this->assertNotNull($spxQuote);
+        $this->assertNotNull($flashQuote);
         $this->assertNotNull($lbcQuote);
 
         // Verify estimated delivery includes handling days (2 days handling + provider transit days)
@@ -690,14 +690,14 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $screenshot = UploadedFile::fake()->image('maya_receipt_screenshot.jpg', 600, 1200);
 
-        // 2. Select SPX Express and Checkout
+        // 2. Select Flash Express and Checkout
         $checkoutResponse = $this->actingAs($buyer)->post('/checkout', [
             'seller_id' => $seller->id,
             'address_id' => $buyerAddress->id,
             'paymentMethod' => 'Maya',
             'paymentReference' => '900' . sprintf('%05d%04d', mt_rand(10000, 99999), mt_rand(1000, 9999)),
             'paymentScreenshot' => $screenshot,
-            'shipping_provider_id' => $spxQuote['provider_id'],
+            'shipping_provider_id' => $flashQuote['provider_id'],
             'shipping_quote_token' => $quoteToken,
             'items' => [
                 [
@@ -716,16 +716,16 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // 3. Verify Order and Immutable Snapshot
         $order = Order::where('customerId', $buyer->id)->latest('createdAt')->first();
         $this->assertNotNull($order);
-        $this->assertEquals((float) $spxQuote['shipping_fee'], (float) $order->shippingFee);
-        $this->assertEquals(850.00 + (float) $spxQuote['shipping_fee'], (float) $order->totalAmount);
+        $this->assertEquals((float) $flashQuote['shipping_fee'], (float) $order->shippingFee);
+        $this->assertEquals(850.00 + (float) $flashQuote['shipping_fee'], (float) $order->totalAmount);
 
         $shippingSnapshot = OrderShipping::where('order_id', $order->id)->first();
         $this->assertNotNull($shippingSnapshot);
-        $this->assertEquals('SPX Express', $shippingSnapshot->provider_name);
+        $this->assertEquals('Flash Express', $shippingSnapshot->provider_name);
         $this->assertEquals('South Luzon', $shippingSnapshot->origin_zone_name);
         $this->assertEquals('National Capital Region (NCR)', $shippingSnapshot->destination_zone_name);
         $this->assertEquals(1.00, (float) $shippingSnapshot->chargeable_weight);
-        $this->assertEquals((float) $spxQuote['shipping_fee'], (float) $shippingSnapshot->shipping_fee);
+        $this->assertEquals((float) $flashQuote['shipping_fee'], (float) $shippingSnapshot->shipping_fee);
 
         // 4. Verify Stock was decremented safely
         $this->assertEquals(14, $product->fresh()->stock);
