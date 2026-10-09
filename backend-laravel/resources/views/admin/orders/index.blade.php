@@ -42,10 +42,22 @@
         if (!order || !order.items || !order.items.length) return 'Heritage Piece';
         const first = order.items[0];
         const name = first.product_name || (first.product ? first.product.name : 'Heritage Piece');
-        const variant = first.display_variation || first.variation;
+        const variant = (first.display_variation || first.variation || '').trim();
+        const size = (first.size || '').trim();
+        
+        let details = [];
+        if (variant && variant.toLowerCase() !== 'original' && variant.toLowerCase() !== 'none' && variant.toLowerCase() !== name.toLowerCase()) {
+            details.push(variant);
+        }
+        if (size && size.toLowerCase() !== 'free size' && size.toLowerCase() !== 'n/a' && size.toLowerCase() !== 'none') {
+            if (!details.some(d => d.toLowerCase() === size.toLowerCase())) {
+                details.push('Size: ' + size);
+            }
+        }
+
         let text = name;
-        if (variant && variant !== 'Original' && variant !== 'None' && variant !== name) {
-            text += ' (' + variant + ')';
+        if (details.length > 0) {
+            text += ' (' + details.join(', ') + ')';
         }
         if (order.items.length > 1) {
             text += ' + ' + (order.items.length - 1) + ' more';
@@ -284,8 +296,21 @@
                                             $firstItem = $order->items->first();
                                             $itemCount = $order->items->count();
                                             $productName = $firstItem ? ($firstItem->product_name ?: ($firstItem->product->name ?? 'Artisan Item')) : 'No Item Details';
-                                            $variant = $firstItem ? ($firstItem->display_variation ?? $firstItem->variation) : null;
-                                            $size = $firstItem ? $firstItem->size : null;
+                                            $rawVariant = $firstItem ? ($firstItem->display_variation ?? $firstItem->variation) : null;
+                                            $rawSize = $firstItem ? $firstItem->size : null;
+
+                                            $hasVariant = !empty($rawVariant) 
+                                                && strcasecmp($rawVariant, 'Original') !== 0 
+                                                && strcasecmp($rawVariant, 'None') !== 0 
+                                                && strcasecmp($rawVariant, 'N/A') !== 0
+                                                && strcasecmp($rawVariant, $productName) !== 0;
+
+                                            $hasSize = !empty($rawSize) 
+                                                && strcasecmp($rawSize, 'Free Size') !== 0 
+                                                && strcasecmp($rawSize, 'N/A') !== 0 
+                                                && strcasecmp($rawSize, 'None') !== 0;
+
+                                            $isSameVariantAndSize = $hasVariant && $hasSize && (strcasecmp(trim($rawVariant), trim($rawSize)) === 0);
                                         @endphp
 
                                         {{-- Primary Product Name --}}
@@ -296,24 +321,27 @@
                                         {{-- Variant & Size Badges --}}
                                         @if($firstItem)
                                             <div class="flex items-center gap-1.5 flex-wrap">
-                                                @if(!empty($variant) && strcasecmp($variant, 'Original') !== 0 && strcasecmp($variant, 'None') !== 0 && strcasecmp($variant, $productName) !== 0)
+                                                {{-- Distinct Variant (e.g. Color / Style) --}}
+                                                @if($hasVariant && !$isSameVariantAndSize)
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80">
-                                                        {{ $variant }}
+                                                        {{ $rawVariant }}
                                                     </span>
-                                                @elseif(!empty($size) && strcasecmp($size, 'Free Size') !== 0 && strcasecmp($size, 'N/A') !== 0 && strcasecmp($size, 'None') !== 0)
+                                                @endif
+
+                                                {{-- Size Badge --}}
+                                                @if($hasSize)
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                                                        Size: {{ $size }}
+                                                        Size: {{ $rawSize }}
                                                     </span>
-                                                @else
+                                                @elseif($hasVariant && $isSameVariantAndSize)
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                                        Size: {{ $rawVariant }}
+                                                    </span>
+                                                @elseif(!$hasVariant)
                                                     <span class="text-[10px] text-gray-400 font-medium">Standard</span>
                                                 @endif
 
-                                                @if(!empty($size) && !empty($variant) && strcasecmp($variant, 'Original') !== 0 && strcasecmp($size, 'Free Size') !== 0 && strcasecmp($size, 'N/A') !== 0)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                                                        {{ $size }}
-                                                    </span>
-                                                @endif
-
+                                                {{-- Quantity --}}
                                                 @if($firstItem->quantity > 1)
                                                     <span class="text-[10px] font-bold text-gray-500 font-mono">
                                                         ×{{ $firstItem->quantity }}
