@@ -158,6 +158,14 @@ class StorePickupAndSpecialDeliveryFinancialWorkflowTest extends TestCase
             ['provider_id' => $this->courierProvider->id, 'origin_zone_id' => $zone->id, 'destination_zone_id' => $zone->id],
             ['id' => (string) Str::uuid(), 'base_rate' => 0.00, 'base_weight_kg' => 1.0, 'additional_rate_per_kg' => 0.00, 'estimated_days_min' => 1, 'estimated_days_max' => 2]
         );
+
+        \App\Models\SellerSpecialDeliveryRate::create([
+            'seller_id' => $this->seller->id,
+            'municipality_key' => 'lumban',
+            'municipality_name' => 'Lumban',
+            'surcharge' => 0.00,
+            'is_enabled' => true,
+        ]);
     }
 
     protected function createDirectOrder(string $providerCode = 'store_pickup', array $overrides = []): Order

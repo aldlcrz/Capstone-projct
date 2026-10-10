@@ -1022,6 +1022,14 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
 
         $product = $this->createTestProduct($seller);
 
+        \App\Models\SellerSpecialDeliveryRate::create([
+            'seller_id' => $seller->id,
+            'municipality_key' => 'pagsanjan',
+            'municipality_name' => 'Pagsanjan',
+            'surcharge' => 0.00,
+            'is_enabled' => true,
+        ]);
+
         $localQuoteResponse = $this->actingAs($customer)->postJson('/checkout/shipping-quote', [
             'seller_id' => $seller->id,
             'address_id' => $localAddress->id,

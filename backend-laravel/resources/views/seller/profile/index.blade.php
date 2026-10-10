@@ -659,7 +659,7 @@
                         </div>
                     </button>
 
-                    {{-- Payout Accounts & Logistics (GCash & Maya for Superadmin Disbursal) --}}
+                    {{-- Seller Payout Accounts (GCash & Maya for Superadmin Disbursal) --}}
                     <button type="button"
                             @click="showPaymentModal = true; paymentEditing = false;"
                             style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
@@ -671,8 +671,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Payout Accounts &amp; Logistics</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash &amp; Maya for Superadmin Disbursals, Special Delivery</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Seller Payout Accounts</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash &amp; Maya for Superadmin Disbursals</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -682,6 +682,27 @@
                             </svg>
                         </div>
                     </button>
+
+                    {{-- Special Delivery Settings (Dedicated Page) --}}
+                    <a href="{{ route('seller.special-delivery.index') }}"
+                       style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
+                       class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#EBF7EB;border:1px solid #C8E6C9;display:flex;align-items:center;justify-content:center;color:#2E7D32;flex-shrink:0;font-size:16px;" class="group-hover:scale-105 transition-transform">
+                                🏍️
+                            </div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Special Delivery Settings</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">Local Rider, Laguna Coverage &amp; Delivery Fees</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:800;color:#2E7D32;background-color:#EBF7EB;border:1px solid #C8E6C9;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">Configure</span>
+                            <svg width="16" height="16" fill="none" stroke="#8C827A" viewBox="0 0 24 24" stroke-width="2.2" class="group-hover:translate-x-0.5 transition-transform">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
 
                     {{-- Change Password --}}
                     <a href="{{ route('profile.change-password') }}"
@@ -1597,73 +1618,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        {{-- Special Delivery (Local Artisan Rider) Card --}}
-                        @php
-                            $sdProvider = isset($shippingProviders) ? $shippingProviders->firstWhere('code', 'seller_direct') : null;
-                            $sdConfig = ($sdProvider && isset($sellerShippingProviders)) ? ($sellerShippingProviders[$sdProvider->id] ?? null) : null;
-                            $sdHasAnyRows = isset($sellerShippingProviders) && $sellerShippingProviders->isNotEmpty();
-                            $sdEnabled = $sdConfig ? (bool) $sdConfig->is_enabled : !$sdHasAnyRows;
-                            $sdFee = ($sdConfig && $sdConfig->custom_fee !== null) ? (float) $sdConfig->custom_fee : 25.00;
-                        @endphp
-                        @if($sdProvider)
-                        <div class="rounded-2xl border overflow-hidden" style="border-color: #E8DECB;"
-                             x-data="{ sdEditing: {{ $errors->has('special_delivery_fee') ? 'true' : 'false' }}, sdEnabled: {{ $sdEnabled ? 'true' : 'false' }}, sdFee: '{{ old('special_delivery_fee', number_format($sdFee, 2, '.', '')) }}' }">
-                            <div class="flex items-center justify-between px-4 py-2.5" style="background: #1E1915; color: #FFFCF7;">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ Special Delivery</span>
-                                </div>
-                                @if($sdEnabled)
-                                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase" style="background: rgba(196,149,32,0.25); color: #FFFCF7;">Active</span>
-                                @else
-                                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase opacity-60">Off</span>
-                                @endif
-                            </div>
-
-                            {{-- Display --}}
-                            <div x-show="!sdEditing" class="p-4 flex items-start gap-4" style="background: #FFFFFF;">
-                                <div class="shrink-0 w-20 h-20 rounded-xl border flex items-center justify-center text-3xl" style="border-color: #E8DECB; background: #FDF8EE;">🏍️</div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Shipping Fee</div>
-                                    <div class="text-base font-bold font-sans" style="color: #1E1915;">₱{{ number_format($sdFee, 2) }}</div>
-                                    <div class="text-[10px] mt-1 leading-snug" style="color: #766C60;">Flat fee charged to nearby buyers delivered by your own local rider.</div>
-                                    <button type="button" @click="sdEditing = true" class="mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all hover:bg-[#1E1915] hover:text-[#DFC97A]" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
-                                        Set Fee
-                                    </button>
-                                </div>
-                            </div>
-
-                            {{-- Edit --}}
-                            <form x-show="sdEditing" style="display: none; background: #FFFFFF;" action="{{ route('seller.special-delivery.update') }}" method="POST" class="p-4 space-y-3">
-                                @csrf
-                                <label class="flex items-center justify-between gap-3 cursor-pointer">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #766C60;">Offer Special Delivery</span>
-                                    <input type="hidden" name="special_delivery_enabled" :value="sdEnabled ? 1 : 0">
-                                    <button type="button" @click="sdEnabled = !sdEnabled" role="switch" :aria-checked="sdEnabled.toString()"
-                                            class="relative w-10 h-5 rounded-full transition-colors cursor-pointer"
-                                            :style="sdEnabled ? 'background:#4A6741' : 'background:#D6CCBA'">
-                                        <span class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" :class="sdEnabled ? 'translate-x-5' : ''"></span>
-                                    </button>
-                                </label>
-                                <div class="space-y-1">
-                                    <label for="specialDeliveryFee" class="text-[9px] font-bold uppercase" style="color: #766C60;">Shipping Fee (₱)</label>
-                                    <div class="flex items-center rounded-xl border bg-white overflow-hidden" style="border-color: #E8DECB;">
-                                        <span class="px-3 text-xs font-bold" style="color: #A16D19;">₱</span>
-                                        <input type="number" id="specialDeliveryFee" name="special_delivery_fee" x-model="sdFee" min="0" max="10000" step="0.01" required
-                                               class="w-full py-2.5 pr-3 text-xs font-bold outline-none bg-white" placeholder="e.g. 50.00">
-                                    </div>
-                                    @error('special_delivery_fee')
-                                        <p class="text-[10px] text-red-600 font-semibold">{{ $message }}</p>
-                                    @enderror
-                                    <p class="text-[10px]" style="color: #A09585;">Set ₱0 for free local delivery. Applied at checkout for buyers within your local area.</p>
-                                </div>
-                                <div class="flex items-center gap-2 pt-1">
-                                    <button type="submit" class="flex-1 py-2.5 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-md cursor-pointer" style="background: #1E1915;">Save Delivery Fee</button>
-                                    <button type="button" @click="sdEditing = false" class="px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-                        @endif
                     </div>
 
                     {{-- Edit Mode Form --}}

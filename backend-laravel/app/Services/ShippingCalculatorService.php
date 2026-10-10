@@ -125,19 +125,13 @@ class ShippingCalculatorService
         // Proximity Evaluation: Local Cluster vs Non-Local Destination
         $isLocal = $this->isLocalCluster($seller, $destinationAddress);
 
-        if (!$specificProviderId) {
-            if ($isLocal) {
-                $localProviders = $providers->filter(fn($p) => in_array($p->code, ['store_pickup', 'seller_direct']));
-                if ($localProviders->isNotEmpty()) {
-                    $providers = $localProviders;
-                }
-            } else {
-                $nonLocalProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
-                if ($nonLocalProviders->isNotEmpty()) {
-                    $providers = $nonLocalProviders;
-                }
-            }
+        $destProvinceStr = strtolower(trim((string) $destProvince));
+        $isDestLaguna = !empty($destProvinceStr) ? str_contains($destProvinceStr, 'laguna') : true;
+        if (!empty($destProvinceStr) && !str_contains($destProvinceStr, 'laguna')) {
+            $isDestLaguna = false;
         }
+
+        $destMuniKey = $isDestLaguna ? \App\Services\Shipping\LagunaMunicipalityCatalog::resolveKey($destCity) : null;
 
         $quotes = [];
 
@@ -145,6 +139,10 @@ class ShippingCalculatorService
         foreach ($providers as $provider) {
             // Special handling for local-only standard providers (store_pickup & seller_direct)
             if ($provider->code === 'store_pickup') {
+                if (!$isLocal && !$specificProviderId) {
+                    continue;
+                }
+
                 $shopAddressParts = array_filter([
                     $seller->shopHouseNo,
                     $seller->shopStreet,
@@ -184,13 +182,33 @@ class ShippingCalculatorService
             }
 
             if ($provider->code === 'seller_direct') {
+                // Special Delivery is strictly restricted to Laguna province only
+                if (!$isDestLaguna || empty($destMuniKey)) {
+                    continue;
+                }
+
+                // Check seller-configured municipality coverage
+                $muniRate = \App\Models\SellerSpecialDeliveryRate::where('seller_id', $seller->id)
+                    ->where('municipality_key', $destMuniKey)
+                    ->where('is_enabled', true)
+                    ->first();
+
+                // If seller has not enabled Special Delivery for this municipality, skip
+                if (!$muniRate) {
+                    continue;
+                }
+
                 $sellerProviderConfig = \Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'custom_fee')
                     ? SellerShippingProvider::where('seller_id', $seller->id)->where('provider_id', $provider->id)->first()
                     : null;
 
-                $customFee = ($sellerProviderConfig && $sellerProviderConfig->custom_fee !== null && $sellerProviderConfig->custom_fee >= 0)
+                $baseFee = ($sellerProviderConfig && $sellerProviderConfig->custom_fee !== null && $sellerProviderConfig->custom_fee >= 0)
                     ? (float) $sellerProviderConfig->custom_fee
-                    : 25.00;
+                    : 50.00;
+
+                $surcharge = (float) ($muniRate->surcharge ?? 0.00);
+                $finalFee = round($baseFee + $surcharge, 2);
+                $muniDisplayName = \App\Services\Shipping\LagunaMunicipalityCatalog::getName($destMuniKey);
 
                 $quotes[] = [
                     'provider_id'                     => $provider->id,
@@ -204,13 +222,17 @@ class ShippingCalculatorService
                     'actual_weight'                   => round($totalActualWeight, 2),
                     'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
                     'chargeable_weight'               => round($totalActualWeight, 2),
-                    'rate_base_snapshot'              => $customFee,
-                    'additional_weight_rate_snapshot' => 0.00,
+                    'rate_base_snapshot'              => $baseFee,
+                    'additional_weight_rate_snapshot' => $surcharge,
                     'volumetric_divisor_snapshot'     => 3500,
-                    'shipping_fee'                    => $customFee,
+                    'shipping_fee'                    => $finalFee,
                     'estimated_days_min'              => 1,
                     'estimated_days_max'              => 1,
-                    'delivery_estimate_display'       => '1 Day (Local Delivery)',
+                    'delivery_estimate_display'       => '1 Day (Special Delivery - ' . $muniDisplayName . ')',
+                    'municipality_key'                => $destMuniKey,
+                    'municipality_name'               => $muniDisplayName,
+                    'base_fee'                        => $baseFee,
+                    'surcharge'                       => $surcharge,
                 ];
                 continue;
             }

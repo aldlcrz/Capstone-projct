@@ -379,6 +379,20 @@ class GcashOrderingAndAiTest extends TestCase
     public function test_special_delivery_seller_direct_ordering_and_fulfillment_flow(): void
     {
         $shippingCalc = app(ShippingCalculatorService::class);
+
+        \App\Models\SellerShippingProvider::updateOrCreate(
+            ['seller_id' => $this->seller->id, 'provider_id' => $this->sellerDirectProvider->id],
+            ['is_enabled' => true, 'custom_fee' => 25.00]
+        );
+
+        \App\Models\SellerSpecialDeliveryRate::create([
+            'seller_id' => $this->seller->id,
+            'municipality_key' => 'santa_cruz',
+            'municipality_name' => 'Santa Cruz',
+            'surcharge' => 0.00,
+            'is_enabled' => true,
+        ]);
+
         $sellerItems = [
             [
                 'id' => $this->product->id,

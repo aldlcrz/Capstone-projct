@@ -28,6 +28,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\Customer\ReturnRequestController as CustomerReturnController;
 use App\Http\Controllers\Seller\ReturnReviewController as SellerReturnController;
 use App\Http\Controllers\Admin\ReturnManagementController as AdminReturnController;
+use App\Http\Controllers\SellerSpecialDeliveryController;
 use App\Http\Controllers\ProductShippingController;
 use Illuminate\Support\Facades\Route;
 
@@ -346,7 +347,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::get('/profile', [DashboardController::class, 'sellerProfile'])->name('seller.profile');
     Route::match(['post', 'put'], '/profile', [DashboardController::class, 'updateSellerProfile'])->name('seller.profile.update');
     Route::post('/shipping-providers', [DashboardController::class, 'updateShippingProviders'])->name('seller.shipping-providers.update');
-    Route::post('/special-delivery', [DashboardController::class, 'updateSpecialDelivery'])->name('seller.special-delivery.update');
+    Route::get('/special-delivery', [SellerSpecialDeliveryController::class, 'index'])->name('seller.special-delivery.index');
+    Route::post('/special-delivery', [SellerSpecialDeliveryController::class, 'update'])->name('seller.special-delivery.update');
     Route::get('/policies', [DashboardController::class, 'sellerPolicies'])->name('seller.policies.index');
     Route::put('/policies', [DashboardController::class, 'updateSellerPolicies'])->name('seller.policies.update');
     Route::post('/policies/ai-assist', [AiController::class, 'assistPolicy'])->name('seller.policies.ai');

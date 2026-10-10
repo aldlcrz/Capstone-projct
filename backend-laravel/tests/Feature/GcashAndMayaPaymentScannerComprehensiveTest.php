@@ -1029,6 +1029,14 @@ class GcashAndMayaPaymentScannerComprehensiveTest extends TestCase
             ]
         );
 
+        \App\Models\SellerSpecialDeliveryRate::create([
+            'seller_id' => $this->product900->sellerId,
+            'municipality_key' => 'santa_cruz',
+            'municipality_name' => 'Santa Cruz',
+            'surcharge' => 0.00,
+            'is_enabled' => true,
+        ]);
+
         $service = app(CreateOrderService::class);
         $order = $service->createOrder([
             'customer' => $this->customer,

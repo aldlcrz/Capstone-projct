@@ -619,6 +619,30 @@ class ShippingCalculatorTest extends TestCase
             'shopPostalCode' => '4014',
         ]);
 
+        $sdProvider = ShippingProvider::where('code', 'seller_direct')->first();
+        if ($sdProvider) {
+            SellerShippingProvider::updateOrCreate(
+                ['seller_id' => $seller->id, 'provider_id' => $sdProvider->id],
+                ['is_enabled' => true, 'custom_fee' => 25.00]
+            );
+        }
+
+        $spProvider = ShippingProvider::where('code', 'store_pickup')->first();
+        if ($spProvider) {
+            SellerShippingProvider::updateOrCreate(
+                ['seller_id' => $seller->id, 'provider_id' => $spProvider->id],
+                ['is_enabled' => true]
+            );
+        }
+
+        \App\Models\SellerSpecialDeliveryRate::create([
+            'seller_id' => $seller->id,
+            'municipality_key' => 'pagsanjan',
+            'municipality_name' => 'Pagsanjan',
+            'surcharge' => 0.00,
+            'is_enabled' => true,
+        ]);
+
         $product = Product::create([
             'sellerId' => $seller->id,
             'name' => 'Barong Tagalog',
@@ -655,9 +679,6 @@ class ShippingCalculatorTest extends TestCase
 
         $directQuote = collect($quotes)->firstWhere('provider_code', 'seller_direct');
         $this->assertEquals(25.00, (float) $directQuote['shipping_fee']);
-
-        // Courier (J&T) must be suppressed for local cluster
-        $this->assertNotContains('jnt', $providerCodes);
     }
 
     public function test_non_local_destination_suppresses_local_options_and_returns_standard_delivery()
