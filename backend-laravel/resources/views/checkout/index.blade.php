@@ -246,9 +246,6 @@
                                                 <div>
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="q.provider_name"></span>
-                                                        <template x-if="q.provider_code === 'store_pickup'">
-                                                            <span class="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
-                                                        </template>
                                                         <template x-if="q.provider_code === 'seller_direct'">
                                                             <span class="text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">LOCAL RIDER</span>
                                                         </template>
