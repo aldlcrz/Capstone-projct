@@ -122,9 +122,6 @@ class ShippingCalculatorService
             throw new \Exception("No logistics couriers are currently active or supported for this seller.");
         }
 
-        // Proximity Evaluation: Local Cluster vs Non-Local Destination
-        $isLocal = $this->isLocalCluster($seller, $destinationAddress);
-
         $destProvinceStr = strtolower(trim((string) $destProvince));
         $isDestLaguna = !empty($destProvinceStr) ? str_contains($destProvinceStr, 'laguna') : true;
         if (!empty($destProvinceStr) && !str_contains($destProvinceStr, 'laguna')) {
@@ -133,13 +130,36 @@ class ShippingCalculatorService
 
         $destMuniKey = $isDestLaguna ? \App\Services\Shipping\LagunaMunicipalityCatalog::resolveKey($destCity) : null;
 
+        // Check if destination municipality is in the seller's active Special Delivery coverage
+        $hasSellerSpecialDelivery = $isDestLaguna && !empty($destMuniKey) && \App\Models\SellerSpecialDeliveryRate::where('seller_id', $seller->id)
+            ->where('municipality_key', $destMuniKey)
+            ->where('is_enabled', true)
+            ->exists();
+
+        // Proximity Evaluation: Local Cluster vs Non-Local Destination
+        $isLocal = $hasSellerSpecialDelivery || $this->isLocalCluster($seller, $destinationAddress);
+
+        $candidateProviders = $providers;
+        if (!$specificProviderId) {
+            if ($hasSellerSpecialDelivery) {
+                // If destination is covered by seller's special delivery, only show local options (Store Pickup & Special Delivery)
+                $localCandidates = $providers->filter(fn($p) => in_array($p->code, ['store_pickup', 'seller_direct']));
+                if ($localCandidates->isNotEmpty()) {
+                    $candidateProviders = $localCandidates;
+                }
+            } else {
+                // Destination not in seller's special delivery coverage: show only standard couriers
+                $candidateProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
+            }
+        }
+
         $quotes = [];
 
         // 5. Calculate provider-specific quotes
-        foreach ($providers as $provider) {
+        foreach ($candidateProviders as $provider) {
             // Special handling for local-only standard providers (store_pickup & seller_direct)
             if ($provider->code === 'store_pickup') {
-                if (!$isLocal && !$specificProviderId) {
+                if (!$hasSellerSpecialDelivery && !$specificProviderId) {
                     continue;
                 }
 
@@ -300,6 +320,61 @@ class ShippingCalculatorService
                 'estimated_days_max'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_max),
                 'delivery_estimate_display'    => ((int) ($maxHandlingDays + $matchingRate->estimated_days_min)) . '–' . ((int) ($maxHandlingDays + $matchingRate->estimated_days_max)) . ' Days',
             ];
+        }
+
+        // Fallback: If local providers yielded no quotes (e.g. unselected municipality and pickup disabled), fall back to standard couriers
+        if (empty($quotes) && !$specificProviderId && $isLocal) {
+            $nonLocalCandidates = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
+            foreach ($nonLocalCandidates as $provider) {
+                $rateQuery = ShippingRate::where('provider_id', $provider->id)
+                    ->where('origin_zone_id', $originZone->id)
+                    ->where('destination_zone_id', $destinationZone->id)
+                    ->where('is_active', true);
+
+                $candidateRates = (clone $rateQuery)->orderBy('min_weight', 'asc')->get();
+                if ($candidateRates->isEmpty()) continue;
+
+                $divisor = $candidateRates->first()->volumetric_divisor ?: ($provider->default_volumetric_divisor ?: 3500);
+                if ($divisor <= 0) $divisor = 3500;
+
+                $volumetricWeight = round($totalPackedVolume / $divisor, 2);
+                $chargeableWeight = max($totalActualWeight, $volumetricWeight);
+
+                $matchingRate = $candidateRates->first(function ($rate) use ($chargeableWeight) {
+                    if ($chargeableWeight < $rate->min_weight) return false;
+                    if ($rate->max_weight !== null && $chargeableWeight > $rate->max_weight) return false;
+                    return true;
+                });
+
+                if (!$matchingRate) continue;
+
+                $shippingFee = (float) $matchingRate->base_rate;
+                if ($matchingRate->max_weight === null && $matchingRate->additional_weight_rate > 0) {
+                    $extraWeight = ceil(max(0, $chargeableWeight - $matchingRate->min_weight));
+                    $shippingFee += ($extraWeight * (float) $matchingRate->additional_weight_rate);
+                }
+
+                $quotes[] = [
+                    'provider_id'                  => $provider->id,
+                    'provider_name'                => $provider->name,
+                    'provider_code'                => $provider->code,
+                    'shipping_rate_id'             => $matchingRate->id,
+                    'origin_zone_id'               => $originZone->id,
+                    'origin_zone_name'             => $originZone->name,
+                    'destination_zone_id'          => $destinationZone->id,
+                    'destination_zone_name'        => $destinationZone->name,
+                    'actual_weight'                => round($totalActualWeight, 2),
+                    'volumetric_weight'            => $volumetricWeight,
+                    'chargeable_weight'            => round($chargeableWeight, 2),
+                    'rate_base_snapshot'           => (float) $matchingRate->base_rate,
+                    'additional_weight_rate_snapshot' => (float) $matchingRate->additional_weight_rate,
+                    'volumetric_divisor_snapshot'  => $divisor,
+                    'shipping_fee'                 => round($shippingFee, 2),
+                    'estimated_days_min'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_min),
+                    'estimated_days_max'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_max),
+                    'delivery_estimate_display'    => ((int) ($maxHandlingDays + $matchingRate->estimated_days_min)) . '–' . ((int) ($maxHandlingDays + $matchingRate->estimated_days_max)) . ' Days',
+                ];
+            }
         }
 
         if (empty($quotes)) {
