@@ -137,6 +137,8 @@
                         $seller = $payout->seller;
                         $shopName = $seller?->shopName ?: ($seller?->name ?: 'Artisan');
                         $destAcc = $payout->payout_destination_account ?: ($payout->payout_method === 'Maya' ? $seller?->mayaNumber : $seller?->gcashNumber);
+                        $sellerQrRaw = strtoupper($payout->payout_method) === 'MAYA' ? $seller?->mayaQrCode : $seller?->gcashQrCode;
+                        $sellerQrUrl = $sellerQrRaw ? (str_starts_with($sellerQrRaw, 'http') ? $sellerQrRaw : asset('storage/' . ltrim($sellerQrRaw, '/'))) : '';
                         $isReady = ($payout->status === 'AVAILABLE_FOR_PAYOUT');
                         $isPaid = ($payout->status === 'PAID');
                         $isHold = ($payout->status === 'ON_HOLD');
@@ -203,7 +205,7 @@
                             <div class="flex items-center justify-end gap-2">
                                 @if($isReady)
                                     <button type="button"
-                                            @click="openDisburseModal('{{ $payout->id }}', '{{ addslashes($shopName) }}', '{{ number_format($payout->net_settlement_amount, 2) }}', '{{ $payout->payout_method ?: 'GCash' }}', '{{ $destAcc }}', '{{ $order ? strtoupper(substr($order->id, -8)) : '' }}')"
+                                            @click="openDisburseModal('{{ $payout->id }}', '{{ addslashes($shopName) }}', '{{ number_format($payout->net_settlement_amount, 2) }}', '{{ $payout->payout_method ?: 'GCash' }}', '{{ $destAcc }}', '{{ $order ? strtoupper(substr($order->id, -8)) : '' }}', '{{ $sellerQrUrl }}')"
                                             class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
                                         💳 Disburse Payout
                                     </button>
@@ -274,7 +276,7 @@
                 </div>
 
                 <!-- Payout Details Summary Card -->
-                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2 text-xs">
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2.5 text-xs">
                     <div class="flex justify-between items-center">
                         <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Artisan Shop:</span>
                         <span class="font-bold text-gray-900" x-text="targetShopName"></span>
@@ -285,8 +287,21 @@
                     </div>
                     <div class="flex justify-between items-center border-t border-gray-200/80 pt-2">
                         <span class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Destination Channel:</span>
-                        <span class="font-bold text-gray-900" x-text="targetMethod + ' · ' + targetDestination"></span>
+                        <span class="font-bold text-gray-900 select-all" x-text="targetMethod + ' · ' + targetDestination"></span>
                     </div>
+
+                    <!-- Seller QR Code Display for Scanning -->
+                    <template x-if="targetQrUrl">
+                        <div class="pt-2 border-t border-gray-200/80 flex items-center gap-3">
+                            <a :href="targetQrUrl" target="_blank" class="block shrink-0 group">
+                                <img :src="targetQrUrl" class="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-xl border border-gray-200 bg-white p-1 shadow-2xs group-hover:scale-105 transition-transform" alt="Seller Payout QR">
+                            </a>
+                            <div class="space-y-0.5">
+                                <span class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">Seller Payout QR Code</span>
+                                <p class="text-[11px] text-gray-500 leading-snug">Scan with your e-wallet app or click to view full size.</p>
+                            </div>
+                        </div>
+                    </template>
                 </div>
 
                 <form x-bind:action="disburseActionUrl" method="POST" enctype="multipart/form-data" class="space-y-4">
@@ -296,7 +311,7 @@
                             Outgoing Transfer Reference Number *
                         </label>
                         <input type="text" name="transfer_reference" required placeholder="e.g. 90283741829"
-                               class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-xs font-mono font-bold focus:outline-none focus:border-emerald-600 transition-all">
+                                class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-xs font-mono font-bold focus:outline-none focus:border-emerald-600 transition-all">
                     </div>
 
                     <div>
@@ -304,7 +319,7 @@
                             Transfer Receipt Screenshot (Optional)
                         </label>
                         <input type="file" name="transfer_proof" accept="image/*"
-                               class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
+                                class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
                     </div>
 
                     <div>
@@ -424,6 +439,7 @@ function sellerPayoutsPage() {
         targetMethod: 'GCash',
         targetDestination: '',
         targetOrderId: '',
+        targetQrUrl: '',
         disburseActionUrl: '',
         holdActionUrl: '',
         proofUrl: null,
@@ -433,13 +449,14 @@ function sellerPayoutsPage() {
         proofDate: '',
         proofProcessor: 'Super Admin',
 
-        openDisburseModal(id, shopName, amount, method, destination, orderId) {
+        openDisburseModal(id, shopName, amount, method, destination, orderId, qrUrl = '') {
             this.targetPayoutId = id;
             this.targetShopName = shopName;
             this.targetAmount = amount;
             this.targetMethod = method;
             this.targetDestination = destination;
             this.targetOrderId = orderId;
+            this.targetQrUrl = qrUrl;
             this.disburseActionUrl = `/superadmin/payouts/${id}/process`;
             this.showDisburseModal = true;
         },

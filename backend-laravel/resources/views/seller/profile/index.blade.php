@@ -659,7 +659,7 @@
                         </div>
                     </button>
 
-                    {{-- Payment Methods (GCash & Maya) --}}
+                    {{-- Payout Accounts & Logistics (GCash & Maya for Superadmin Disbursal) --}}
                     <button type="button"
                             @click="showPaymentModal = true; paymentEditing = false;"
                             style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;"
@@ -671,8 +671,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Payment Methods</div>
-                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash, Maya &amp; Special Delivery</div>
+                                <div style="font-size:14px;font-weight:700;color:#1E1915;">Payout Accounts &amp; Logistics</div>
+                                <div style="font-size:11.5px;color:#8C827A;margin-top:1px;">GCash &amp; Maya for Superadmin Disbursals, Special Delivery</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -869,9 +869,9 @@
                                     </div>
 
                                     <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Customer Payouts</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Seller Payout Account</span>
                                         <span class="text-xs font-bold {{ ($user->gcashNumber || $user->mayaNumber) ? 'text-[#4A6741]' : 'text-amber-700' }}">
-                                            {{ ($user->gcashNumber || $user->mayaNumber) ? '✓ Ready (GCash/Maya)' : '⚠️ Setup Pending' }}
+                                            {{ ($user->gcashNumber || $user->mayaNumber) ? '✓ Configured (Superadmin Payouts)' : '⚠️ Setup Pending' }}
                                         </span>
                                     </div>
                                 </div>
@@ -1470,8 +1470,8 @@
             <div class="w-full sm:max-w-lg md:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
                 <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB;">
                     <div>
-                        <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Payment Accounts</h2>
-                        <p class="text-[10px] sm:text-xs" style="color: #766C60;" x-text="paymentEditing ? 'Edit your mobile numbers and upload QR code files' : 'Your customer payout accounts & QR codes'"></p>
+                        <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Seller Payout Accounts</h2>
+                        <p class="text-[10px] sm:text-xs" style="color: #766C60;" x-text="paymentEditing ? 'Edit your mobile numbers and upload QR code files for Superadmin transfers' : 'Your payout accounts & QR codes for Superadmin earnings disbursals'"></p>
                     </div>
                     <button @click="showPaymentModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; color: #766C60;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1480,6 +1480,14 @@
 
                 {{-- Modal Body --}}
                 <div class="overflow-y-auto flex-1 p-5 space-y-4">
+                    {{-- Superadmin Disbursal Notice Banner --}}
+                    <div class="p-3 bg-[#FAF5EA] border border-[#E6D8BA] rounded-2xl flex items-start gap-2.5 text-xs">
+                        <span class="text-sm shrink-0">ℹ️</span>
+                        <p class="text-[11px] text-[#7A6439] leading-relaxed">
+                            <strong>Earnings Disbursals:</strong> The Superadmin (Finance) transfers your shop's sales revenue directly to your registered GCash or Maya account using your provided mobile number or QR code.
+                        </p>
+                    </div>
+
                     {{-- Frozen / Suspended Account Notice Banner --}}
                     @if($user->status === 'frozen')
                         <div class="p-3.5 bg-orange-50 border border-orange-200 rounded-2xl flex items-start justify-between gap-3 text-orange-900 text-xs">
@@ -1514,7 +1522,7 @@
                         <div class="rounded-2xl border overflow-hidden" style="border-color: #E8DECB;">
                             <div class="flex items-center justify-between px-4 py-2.5" style="background: #1E1915; color: #FFFCF7;">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ GCash Account</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ GCash Payout Account</span>
                                 </div>
                                 @if($user->gcashNumber)
                                     <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase" style="background: rgba(196,149,32,0.25); color: #FFFCF7;">Active</span>
@@ -1541,7 +1549,7 @@
                                     @if($user->gcashNumber)
                                         <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->gcashNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
-                                            ✓ Ready to receive customer payments
+                                            ✓ Ready for Superadmin earnings disbursal
                                         </div>
                                     @else
                                         <div class="text-xs italic" style="color: #A09585;">Not configured</div>
@@ -1554,7 +1562,7 @@
                         <div class="rounded-2xl border overflow-hidden" style="border-color: #E8DECB;">
                             <div class="flex items-center justify-between px-4 py-2.5" style="background: #1E1915; color: #FFFCF7;">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ Maya Account</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ Maya Payout Account</span>
                                 </div>
                                 @if($user->mayaNumber)
                                     <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase" style="background: rgba(196,149,32,0.25); color: #FFFCF7;">Active</span>
@@ -1581,7 +1589,7 @@
                                     @if($user->mayaNumber)
                                         <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->mayaNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
-                                            ✓ Ready to receive customer payments
+                                            ✓ Ready for Superadmin earnings disbursal
                                         </div>
                                     @else
                                         <div class="text-xs italic" style="color: #A09585;">Not configured</div>
@@ -1670,33 +1678,33 @@
 
                             {{-- GCash Edit --}}
                             <div class="p-4 rounded-2xl space-y-3" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                                <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">GCash Configuration</div>
+                                <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">GCash Payout Configuration</div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">GCash Mobile Number</label>
+                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">GCash Payout Mobile Number</label>
                                     <input type="text" id="modalGcashNumber" name="gcashNumber" value="{{ old('gcashNumber', $user->gcashNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border" style="border-color: #E8DECB;">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">GCash QR Code Image</label>
+                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">GCash QR Code Image (for Superadmin transfers)</label>
                                     <input type="file" id="modalGcashQr" name="gcashQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white">
                                 </div>
                             </div>
 
                             {{-- Maya Edit --}}
                             <div class="p-4 rounded-2xl space-y-3" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                                <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Maya Configuration</div>
+                                <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Maya Payout Configuration</div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">Maya Mobile Number</label>
+                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">Maya Payout Mobile Number</label>
                                     <input type="text" id="modalMayaNumber" name="mayaNumber" value="{{ old('mayaNumber', $user->mayaNumber) }}" placeholder="e.g. 0917 123 4567" class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold outline-none bg-white border" style="border-color: #E8DECB;">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">Maya QR Code Image</label>
+                                    <label class="text-[9px] font-bold uppercase" style="color: #766C60;">Maya QR Code Image (for Superadmin transfers)</label>
                                     <input type="file" id="modalMayaQr" name="mayaQrCode" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1E1915] file:text-white">
                                 </div>
                             </div>
 
                             <div class="pt-2 flex items-center gap-3">
                                 <button type="submit" class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md cursor-pointer" style="background: #1E1915;">
-                                    Save Payment Info
+                                    Save Payout Accounts
                                 </button>
                                 <button type="button" @click="paymentEditing = false" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
                                     Cancel
@@ -1711,11 +1719,11 @@
                 <div x-show="!paymentEditing" class="px-5 py-4 border-t shrink-0 flex flex-wrap items-center gap-2 sm:gap-3" style="border-color: #E8DECB;">
                     <button type="button" @click="showPaymentHistoryModal = true" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#FAF6EE] text-[#78716C] hover:bg-[#1E1915] hover:text-[#DFC97A] border border-[#E2D9C8] transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                        <span>Payment History</span>
+                        <span>Payout History</span>
                     </button>
                     @if(!in_array($user->status, ['frozen', 'suspended']))
                         <button @click="paymentEditing = true" class="flex-1 py-2.5 px-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 cursor-pointer" style="background: #1E1915;">
-                            <span>Edit Accounts</span>
+                            <span>Edit Payout Accounts</span>
                         </button>
                     @endif
                     <button @click="showPaymentModal = false" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
@@ -1737,8 +1745,8 @@
                             💳
                         </div>
                         <div>
-                            <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Seller Payment History</h2>
-                            <p class="text-[10px] sm:text-xs" style="color: #766C60;">Recent customer payment verifications &amp; transactions</p>
+                            <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Seller Payout History</h2>
+                            <p class="text-[10px] sm:text-xs" style="color: #766C60;">Recent earnings disbursals &amp; payout transfers from Superadmin</p>
                         </div>
                     </div>
                     <button @click="showPaymentHistoryModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; color: #766C60;">
