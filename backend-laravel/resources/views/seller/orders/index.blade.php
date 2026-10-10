@@ -3374,7 +3374,11 @@ function sellerOrdersManager() {
                     <template x-if="!['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
                         <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
                             <span class="font-black uppercase tracking-wider block mb-0.5" x-text="isStorePickup(verifyOrderTarget) ? 'ℹ️ In-Shop Store Pickup' : (isSpecialDelivery(verifyOrderTarget) ? 'ℹ️ Special Delivery Order' : 'ℹ️ Cash on Delivery Order')"></span>
-                            <span x-text="isStorePickup(verifyOrderTarget) ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly in cash when the customer claims the order at the workshop.' : 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected from the customer upon delivery. No online payment reference verification is required. Please proceed to accept and prepare the order.'"></span>
+                            <span x-text="isStorePickup(verifyOrderTarget) 
+                                ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly when the customer claims the order at the workshop. Seller will set an appointment for customer pickup. Please proceed to accept and prepare the order.'
+                                : (isSpecialDelivery(verifyOrderTarget)
+                                    ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly upon delivery by the local artisan rider. Seller will set an appointment with the customer for delivery. Please proceed to accept and prepare the order.'
+                                    : 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected from the customer upon courier delivery. Please proceed to accept and prepare the order.')"></span>
                         </div>
                     </template>
                 </div>
