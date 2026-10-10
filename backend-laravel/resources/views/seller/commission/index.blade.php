@@ -5,9 +5,9 @@
     {{-- Header with Guide Button --}}
     <div id="tour-commission-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
-            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Financial Ledger &amp; Earnings</div>
+            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Monthly Commission Remittance</div>
             <div class="flex items-center gap-3 flex-wrap">
-                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Earnings &amp; Payouts</span></h1>
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Platform Commission</span></h1>
                 {{-- Guide Button --}}
                 <button type="button" 
                         onclick="window.startSpotlightTour('seller-commission-guide')"
@@ -19,114 +19,15 @@
                     <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>Financial Guide</span>
+                    <span>Commission Guide</span>
                 </button>
             </div>
-            <p class="text-xs text-[#766C60] mt-1 font-medium">Track your online GCash/Maya payouts, cash sales commissions, and verified platform settlements.</p>
+            <p class="text-xs text-[#766C60] mt-1 font-medium">Review your monthly platform commission dues on cash sales (Store Pickup &amp; COD) and submit your remittance payment to Superadmin.</p>
         </div>
     </div>
 
-    {{-- SECTION 1: ONLINE GCASH/MAYA SETTLEMENTS & PAYOUTS --}}
+    {{-- CASH SALES PLATFORM COMMISSION --}}
     <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h2 class="text-sm font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Online Payment Settlements (GCash / Maya)
-            </h2>
-            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                0% Platform Commission Policy
-            </span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div class="rounded-2xl p-4 sm:p-5 shadow-xs space-y-1 bg-[#FFFCF7] border border-[#E8DECB]">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Available for Payout</div>
-                <div class="text-xl sm:text-2xl font-black font-sans text-emerald-600">₱{{ number_format($financialSummary['online_available_for_payout'] ?? 0, 2) }}</div>
-                <div class="text-[10px] text-[#766C60]">Orders delivered &amp; verified</div>
-            </div>
-
-            <div class="rounded-2xl p-4 sm:p-5 shadow-xs space-y-1 bg-[#FFFCF7] border border-[#E8DECB]">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Pending Eligibility</div>
-                <div class="text-xl sm:text-2xl font-black font-sans text-amber-600">₱{{ number_format($financialSummary['online_pending_settlement'] ?? 0, 2) }}</div>
-                <div class="text-[10px] text-[#766C60]">Fulfillment / delivery in-transit</div>
-            </div>
-
-            <div class="rounded-2xl p-4 sm:p-5 shadow-xs space-y-1 bg-[#FFFCF7] border border-[#E8DECB]">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Processing Payouts</div>
-                <div class="text-xl sm:text-2xl font-black font-sans text-blue-600">₱{{ number_format($financialSummary['online_payout_processing'] ?? 0, 2) }}</div>
-                <div class="text-[10px] text-[#766C60]">In admin queue</div>
-            </div>
-
-            <div class="rounded-2xl p-4 sm:p-5 shadow-xs space-y-1 bg-[#1E1915] text-white border border-[#C49520]">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-amber-200/70">Total Disbursed</div>
-                <div class="text-xl sm:text-2xl font-black font-sans text-[#E6CA65]">₱{{ number_format($financialSummary['online_paid_payouts'] ?? 0, 2) }}</div>
-                <div class="text-[10px] text-amber-100/70">Completed manual &amp; auto payouts</div>
-            </div>
-        </div>
-
-        {{-- Online Settlements & Payouts Table --}}
-        <div class="rounded-2xl shadow-xs overflow-hidden bg-[#FFFCF7] border border-[#E8DECB]">
-            <div class="px-4 sm:px-6 py-3.5 border-b border-[#E8DECB] flex items-center justify-between">
-                <h3 class="text-xs font-black uppercase tracking-widest text-[#1E1915]">Online Order Disbursements &amp; Settlements</h3>
-                <span class="text-[10px] text-[#766C60] font-semibold">{{ $payouts->count() }} Record(s)</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left min-w-162.5">
-                    <thead>
-                        <tr class="border-b bg-[#FDF8EE] border-[#E8DECB]">
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Order ID</th>
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Product Sales</th>
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Shipping</th>
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Net Settlement</th>
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Disbursement Ref</th>
-                            <th class="px-4 sm:px-6 py-3 text-[9px] font-black uppercase tracking-widest text-[#766C60]">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[#F0EAE1] text-xs font-sans text-[#1E1915]">
-                        @forelse($payouts as $payout)
-                        <tr class="hover:bg-[#FAF7F2] transition-all">
-                            <td class="px-4 sm:px-6 py-3.5">
-                                <span class="font-bold font-mono text-[#C0420A]">#{{ substr($payout->order_id, 0, 8) }}</span>
-                                <div class="text-[10px] text-gray-500">{{ $payout->created_at ? $payout->created_at->format('M d, Y') : '—' }}</div>
-                            </td>
-                            <td class="px-4 sm:px-6 py-3.5 font-semibold">₱{{ number_format($payout->gross_sales, 2) }}</td>
-                            <td class="px-4 sm:px-6 py-3.5 font-semibold text-gray-600">₱{{ number_format($payout->shipping_amount, 2) }}</td>
-                            <td class="px-4 sm:px-6 py-3.5 font-black text-emerald-700">₱{{ number_format($payout->net_settlement_amount, 2) }}</td>
-                            <td class="px-4 sm:px-6 py-3.5">
-                                @if($payout->transaction_reference)
-                                    <div class="font-bold text-[11px]">{{ $payout->payout_method }}</div>
-                                    <div class="text-[10px] font-mono text-[#766C60]">Ref: {{ $payout->transaction_reference }}</div>
-                                @else
-                                    <span class="text-gray-400 italic text-[11px]">Awaiting Transfer</span>
-                                @endif
-                            </td>
-                            <td class="px-4 sm:px-6 py-3.5">
-                                @if($payout->status === 'PAID')
-                                    <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[9px] font-black uppercase tracking-widest">Disbursed ✓</span>
-                                @elseif($payout->status === 'AVAILABLE_FOR_PAYOUT')
-                                    <span class="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-[9px] font-black uppercase tracking-widest">Available</span>
-                                @elseif($payout->status === 'PAYOUT_PROCESSING')
-                                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[9px] font-black uppercase tracking-widest">Processing</span>
-                                @elseif($payout->status === 'ON_HOLD')
-                                    <span class="px-2.5 py-0.5 bg-rose-100 text-rose-800 rounded-full text-[9px] font-black uppercase tracking-widest">On Hold</span>
-                                @else
-                                    <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-black uppercase tracking-widest">Pending</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="py-8 text-center text-xs text-gray-400 italic">No online payment settlements recorded yet.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    {{-- SECTION 2: CASH SALES PLATFORM COMMISSION --}}
-    <div class="space-y-4 pt-4 border-t border-[#E8DECB]">
         <div class="flex items-center justify-between">
             <h2 class="text-sm font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[#C49520]"></span>
@@ -306,8 +207,8 @@
         $commissionTourSteps = [
             [
                 'selector' => '#tour-commission-header',
-                'title' => '💵 Financial Settlement & Payouts',
-                'text' => 'Welcome to your Earnings & Settlement hub! Here you track online GCash/Maya settlements and monthly platform cash sales commission dues.',
+                'title' => '💵 Platform Commission Remittance',
+                'text' => 'Welcome to your Commission Remittance hub! Here you track monthly platform commission dues for cash sales (Store Pickup & COD) and submit remittances to Superadmin.',
                 'position' => 'bottom'
             ],
             [

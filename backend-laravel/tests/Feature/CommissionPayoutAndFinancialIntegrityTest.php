@@ -458,7 +458,7 @@ class CommissionPayoutAndFinancialIntegrityTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('financialSummary');
         $response->assertViewHas('payouts');
-        $response->assertSee('Online Payment Settlements');
+        $response->assertSee('Cash Sales Platform Commission');
         $response->assertSee('Platform Commission Due');
     }
 }
