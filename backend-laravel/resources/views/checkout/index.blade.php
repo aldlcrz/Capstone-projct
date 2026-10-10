@@ -479,7 +479,7 @@
                             </div>
                             @endif
 
-                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
+                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? true))
                             <!-- Maya Option -->
                             <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                                 <label class="flex items-center justify-between cursor-pointer">
