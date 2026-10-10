@@ -236,9 +236,173 @@ function sellerOrdersManager() {
         paymentBadge(order) {
             const ps = String(order?.paymentStatus || '').toLowerCase();
             if (ps.includes('rejected')) return { text: '✕ Payment Rejected', class: 'bg-red-50 text-red-700 border-red-200' };
+            if (ps === 'paid' || ps === 'verified') return { text: '✓ Verified / Paid', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            if (ps.includes('pickup')) return { text: '⏳ Pay at Store', class: 'bg-sky-50 text-sky-800 border-sky-300' };
+            if (ps.includes('special')) return { text: '⏳ Direct Settlement', class: 'bg-purple-50 text-purple-800 border-purple-300' };
+            if (ps.includes('cod')) return { text: '⏳ Pay on Delivery', class: 'bg-amber-50 text-amber-800 border-amber-300' };
             if (ps.includes('submitted') || (order?.paymentProof && !ps.includes('verified') && !ps.includes('paid'))) return { text: '⏳ Verify Payment', class: 'bg-amber-50 text-amber-800 border-amber-300' };
-            if (ps.includes('verified') || ps.includes('paid') || (order?.status && order.status !== 'Pending')) return { text: '✓ Verified', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-            return { text: 'Pending Submission', class: 'bg-gray-50 text-gray-600 border-gray-200' };
+            return { text: 'Pending Payment', class: 'bg-gray-50 text-gray-600 border-gray-200' };
+        },
+
+        isDirectSettlementOrder(order) {
+            if (!order) return false;
+            const pm = String(order.paymentMethod || '').toLowerCase();
+            const cn = String(order.courierName || '').toLowerCase();
+            const ps = String(order.paymentStatus || '').toLowerCase();
+            return this.isStorePickup(order) || this.isSpecialDelivery(order) || pm === 'cod' || pm === 'cash on delivery' || ps.includes('pickup') || ps.includes('special') || ps.includes('cod');
+        },
+
+        canRecordPayment(order) {
+            if (!order) return false;
+            if (!this.isDirectSettlementOrder(order)) return false;
+            const ps = String(order.paymentStatus || '').toLowerCase();
+            const st = String(order.status || '').toLowerCase();
+            if (st === 'cancelled' || st === 'declined') return false;
+            return !ps.includes('paid') && !ps.includes('verified');
+        },
+
+        canRecordDirectRefund(order) {
+            if (!order) return false;
+            if (!this.isDirectSettlementOrder(order)) return false;
+            const ps = String(order.paymentStatus || '').toLowerCase();
+            const st = String(order.status || '').toLowerCase();
+            const isPaid = ps.includes('paid') || ps.includes('verified') || Number(order.total_verified_payments || 0) > 0;
+            return isPaid && (st === 'cancelled' || st.includes('return'));
+        },
+
+        showRecordPaymentModal: false,
+        recordPaymentTarget: null,
+        recordPaymentMethod: 'Cash',
+        recordPaymentAmount: 0,
+        recordPaymentDate: '',
+        recordPaymentReference: '',
+        recordPaymentNotes: '',
+        recordPaymentFile: null,
+        recordPaymentLoading: false,
+        recordPaymentError: '',
+
+        openRecordPaymentModal(order) {
+            this.recordPaymentTarget = order;
+            const alreadyPaid = Number(order.total_verified_payments || 0);
+            const total = Number(order.totalAmount || 0);
+            const outstanding = Math.max(0, total - alreadyPaid);
+            this.recordPaymentAmount = outstanding > 0 ? outstanding : total;
+            this.recordPaymentMethod = this.isStorePickup(order) ? 'Cash' : (this.isSpecialDelivery(order) ? 'Direct Transfer / Cash' : 'Cash');
+            this.recordPaymentDate = new Date().toISOString().slice(0, 16);
+            this.recordPaymentReference = '';
+            this.recordPaymentNotes = '';
+            this.recordPaymentFile = null;
+            this.recordPaymentError = '';
+            this.showRecordPaymentModal = true;
+        },
+
+        async submitRecordPayment() {
+            if (!this.recordPaymentTarget || this.recordPaymentLoading) return;
+            this.recordPaymentLoading = true;
+            this.recordPaymentError = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('payment_method', this.recordPaymentMethod);
+                formData.append('amount_received', this.recordPaymentAmount);
+                if (this.recordPaymentDate) formData.append('received_at', this.recordPaymentDate);
+                if (this.recordPaymentReference) formData.append('reference_number', this.recordPaymentReference);
+                if (this.recordPaymentNotes) formData.append('notes', this.recordPaymentNotes);
+                if (this.recordPaymentFile) formData.append('proof_file', this.recordPaymentFile);
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch(`/seller/api/orders/${this.recordPaymentTarget.id}/record-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || data.error || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Failed to record payment.'));
+                }
+
+                this.showToast('Payment successfully recorded! Order marked as Paid.');
+                this.showRecordPaymentModal = false;
+
+                if (data.order) {
+                    const idx = this.orders.findIndex(o => String(o.id) === String(data.order.id));
+                    if (idx !== -1) {
+                        this.orders[idx].paymentStatus = data.order.paymentStatus;
+                        this.orders[idx].total_verified_payments = data.order.total_verified_payments;
+                    }
+                    if (this.detailsOrder && String(this.detailsOrder.id) === String(data.order.id)) {
+                        this.detailsOrder.paymentStatus = data.order.paymentStatus;
+                        this.detailsOrder.total_verified_payments = data.order.total_verified_payments;
+                    }
+                }
+            } catch (err) {
+                this.recordPaymentError = err.message;
+            } finally {
+                this.recordPaymentLoading = false;
+            }
+        },
+
+        showSellerRefundModal: false,
+        sellerRefundTarget: null,
+        sellerRefundAmount: 0,
+        sellerRefundMethod: 'cash',
+        sellerRefundReason: '',
+        sellerRefundFile: null,
+        sellerRefundLoading: false,
+        sellerRefundError: '',
+
+        openSellerRefundModal(order) {
+            this.sellerRefundTarget = order;
+            this.sellerRefundAmount = Number(order.total_verified_payments || order.totalAmount || 0);
+            this.sellerRefundMethod = 'cash';
+            this.sellerRefundReason = 'Direct refund settlement for cancelled/returned order';
+            this.sellerRefundFile = null;
+            this.sellerRefundError = '';
+            this.showSellerRefundModal = true;
+        },
+
+        async submitSellerRefund() {
+            if (!this.sellerRefundTarget || this.sellerRefundLoading) return;
+            this.sellerRefundLoading = true;
+            this.sellerRefundError = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('refund_amount', this.sellerRefundAmount);
+                formData.append('payment_method', this.sellerRefundMethod);
+                formData.append('reason', this.sellerRefundReason);
+                if (this.sellerRefundFile) formData.append('proof_file', this.sellerRefundFile);
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch(`/seller/orders/${this.sellerRefundTarget.id}/cash-refund`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || data.error || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Failed to record refund.'));
+                }
+
+                this.showToast('Direct refund successfully recorded! Customer notified.');
+                this.showSellerRefundModal = false;
+
+                if (this.detailsOrder && String(this.detailsOrder.id) === String(this.sellerRefundTarget.id)) {
+                    this.detailsOrder.cancellation_refund_status = 'refunded';
+                }
+            } catch (err) {
+                this.sellerRefundError = err.message;
+            } finally {
+                this.sellerRefundLoading = false;
+            }
         },
 
         async executeVerifyClaimCode(order) {
@@ -2596,6 +2760,26 @@ function sellerOrdersManager() {
                                     </button>
                                 </div>
                             </template>
+                            <template x-if="canRecordPayment(detailsOrder)">
+                                <div class="pt-3 border-t border-gray-200/60">
+                                    <button type="button" 
+                                        @click="openRecordPaymentModal(detailsOrder)"
+                                        class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <span>💰</span> Record Payment Received
+                                    </button>
+                                    <p class="text-[9px] text-gray-500 mt-1 text-center">Record tender when customer pays at workshop or upon handover.</p>
+                                </div>
+                            </template>
+                            <template x-if="canRecordDirectRefund(detailsOrder)">
+                                <div class="pt-3 border-t border-gray-200/60">
+                                    <button type="button" 
+                                        @click="openSellerRefundModal(detailsOrder)"
+                                        class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <span>↩️</span> Record Direct Refund
+                                    </button>
+                                    <p class="text-[9px] text-gray-500 mt-1 text-center">Record cash / direct refund returned to buyer for this order.</p>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
@@ -3750,6 +3934,197 @@ function sellerOrdersManager() {
                     @click="takePhoto()"
                     class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                     <span>📸 Capture Photo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Record Direct Payment Received Modal (Store Pickup / Special Delivery / COD) --}}
+    <div x-show="showRecordPaymentModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showRecordPaymentModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-emerald-500 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0">
+                    💰
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Payment Received</h3>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="recordPaymentTarget ? '#LB-' + recordPaymentTarget.id.slice(-8).toUpperCase() + ' · ' + (recordPaymentTarget.customer?.name || 'Customer') : ''"></p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="recordPaymentError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="recordPaymentError"></div>
+                </template>
+
+                <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-center justify-between text-emerald-950">
+                    <div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-emerald-800 block">Total Payable</span>
+                        <span class="font-extrabold text-base">₱<span x-text="Number(recordPaymentTarget?.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})"></span></span>
+                        <template x-if="Number(recordPaymentTarget?.total_verified_payments || 0) > 0">
+                            <span class="text-[9px] text-emerald-700 block font-medium">Already paid: ₱<span x-text="Number(recordPaymentTarget.total_verified_payments).toLocaleString('en-US', {minimumFractionDigits: 2})"></span></span>
+                        </template>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] font-bold text-emerald-700 block">Arrangement</span>
+                        <span class="font-bold text-xs" x-text="formatPaymentMethod(recordPaymentTarget)"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Actual Tender Received <span class="text-red-500">*</span></label>
+                    <select x-model="recordPaymentMethod" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-emerald-500 focus:bg-white transition-all">
+                        <option value="Cash">Cash (Handed directly to Artisan)</option>
+                        <option value="Direct GCash Transfer">Direct GCash Transfer (to Artisan's Personal Number)</option>
+                        <option value="Direct Maya Transfer">Direct Maya Transfer (to Artisan's Personal Number)</option>
+                        <option value="Direct Bank Transfer">Direct Bank Transfer</option>
+                        <option value="Other Direct Tender">Other Direct Settlement</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Amount Received (₱) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" min="0.01" x-model="recordPaymentAmount" 
+                           class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-emerald-500 focus:bg-white transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-500">Date & Time Received</label>
+                        <input type="datetime-local" x-model="recordPaymentDate" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[11px] font-medium outline-none focus:border-emerald-500 focus:bg-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase tracking-widest text-gray-500">Reference / Receipt No.</label>
+                        <input type="text" x-model="recordPaymentReference" placeholder="e.g. 100987654321" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[11px] font-medium outline-none focus:border-emerald-500 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Supporting Proof / Photo <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <input type="file" @change="recordPaymentFile = $event.target.files[0]" accept="image/*" class="w-full text-[10px] file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Internal Notes <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <input type="text" x-model="recordPaymentNotes" placeholder="e.g. Paid in full at workshop front counter" class="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-emerald-500 focus:bg-white">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showRecordPaymentModal = false"
+                    :disabled="recordPaymentLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="submitRecordPayment()"
+                    :disabled="recordPaymentLoading"
+                    class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="recordPaymentLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="recordPaymentLoading ? 'Recording...' : '✓ Confirm Payment Received'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Record Direct Refund Modal (Seller-Held Funds) --}}
+    <div x-show="showSellerRefundModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
+         @click.self="showSellerRefundModal = false"
+         x-cloak
+         style="display: none;">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 border border-gray-100 relative overflow-hidden">
+            <div class="h-1.5 w-full bg-amber-500 absolute top-0 left-0"></div>
+
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg shrink-0">
+                    ↩️
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Refund</h3>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="sellerRefundTarget ? '#LB-' + sellerRefundTarget.id.slice(-8).toUpperCase() + ' · ' + (sellerRefundTarget.customer?.name || 'Customer') : ''"></p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <template x-if="sellerRefundError">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-[10px] font-bold text-red-600" x-text="sellerRefundError"></div>
+                </template>
+
+                <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex items-center justify-between text-amber-950">
+                    <div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-amber-800 block">Funds Held By</span>
+                        <span class="font-bold text-xs">Artisan Seller Directly</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] font-black uppercase tracking-widest text-amber-800 block">Eligible Refund</span>
+                        <span class="font-extrabold text-sm">₱<span x-text="Number(sellerRefundTarget?.total_verified_payments || sellerRefundTarget?.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})"></span></span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Refund Amount (₱) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" min="0.01" x-model="sellerRefundAmount" 
+                           class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Refund Method <span class="text-red-500">*</span></label>
+                    <select x-model="sellerRefundMethod" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition-all">
+                        <option value="cash">Cash Returned to Customer</option>
+                        <option value="gcash">Direct GCash Transfer back to Customer</option>
+                        <option value="maya">Direct Maya Transfer back to Customer</option>
+                        <option value="bank_transfer">Direct Bank Transfer</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Refund Reason <span class="text-red-500">*</span></label>
+                    <input type="text" x-model="sellerRefundReason" placeholder="e.g. Order cancelled upon customer store visit; cash returned" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-amber-500 focus:bg-white">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Refund Receipt / Proof <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <input type="file" @change="sellerRefundFile = $event.target.files[0]" accept="image/*,application/pdf" class="w-full text-[10px] file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" 
+                    @click="showSellerRefundModal = false"
+                    :disabled="sellerRefundLoading"
+                    class="flex-1 py-3 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" 
+                    @click="submitSellerRefund()"
+                    :disabled="sellerRefundLoading"
+                    class="flex-1 py-3 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <template x-if="sellerRefundLoading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    </template>
+                    <span x-text="sellerRefundLoading ? 'Recording...' : '✓ Complete Direct Refund'"></span>
                 </button>
             </div>
         </div>

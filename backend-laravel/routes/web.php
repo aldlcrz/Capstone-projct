@@ -167,8 +167,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/seller/api/orders/{id}/verify-claim-code', [OrderController::class, 'verifyClaimCode'])->name('orders.verify-claim-code');
     Route::post('/seller/api/orders/{id}/dispatch-special-delivery', [OrderController::class, 'dispatchSpecialDelivery'])->name('orders.dispatch-special-delivery');
     Route::get('/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('orders.payment-proof');
-    Route::get('/seller/orders/{id}/payment-proof', [OrderController::class, 'paymentProof'])->name('seller.orders.payment-proof');
     Route::get('/orders/{orderId}/refund-proof/{refundId}', [OrderController::class, 'viewRefundProof'])->name('orders.refund-proof');
+    Route::post('/seller/api/orders/{id}/record-payment', [OrderController::class, 'recordSellerDirectPayment'])->name('seller.orders.record-payment');
+    Route::post('/seller/orders/{order}/record-payment', [OrderController::class, 'recordSellerDirectPayment'])->name('seller.orders.direct-payment');
+    Route::post('/api/orders/{id}/record-payment', [OrderController::class, 'recordSellerDirectPayment']);
 
 
 
@@ -355,6 +357,8 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::post('/returns/{returnRequest}/review', [SellerReturnController::class, 'review'])->name('seller.returns.review');
     Route::post('/returns/{returnRequest}/receive', [SellerReturnController::class, 'receive'])->name('seller.returns.receive');
     Route::post('/returns/{returnRequest}/cash-refund', [SellerReturnController::class, 'cashRefund'])->name('seller.returns.cash-refund');
+    Route::post('/orders/{order}/cash-refund', [SellerReturnController::class, 'orderCashRefund'])->name('seller.orders.cash-refund');
+    Route::post('/api/orders/{id}/cash-refund', [SellerReturnController::class, 'orderCashRefund']);
     Route::get('/customers', [DashboardController::class, 'sellerCustomers'])->name('seller.customers');
     Route::get('/commission', [DashboardController::class, 'sellerCommission'])->name('seller.commission');
     Route::get('/earnings', [DashboardController::class, 'sellerCommission'])->name('seller.earnings');

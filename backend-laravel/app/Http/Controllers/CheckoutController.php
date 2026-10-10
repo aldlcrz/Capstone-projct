@@ -348,18 +348,38 @@ class CheckoutController extends Controller
                 ->with('error', 'Administrators cannot place orders.');
         }
 
-        $paymentMethod = trim($request->input('paymentMethod', 'GCash'));
+        $shippingProviderId = $request->input('shipping_provider_id') ?: ($request->input('selected_provider_id') ?: null);
+        $provider = $shippingProviderId ? \App\Models\ShippingProvider::find($shippingProviderId) : null;
+        $providerCode = strtolower((string)($provider?->code ?? ''));
+
+        $rawMethod = trim((string)$request->input('paymentMethod', ''));
+        $isStorePickup = $providerCode === 'store_pickup'
+            || in_array(strtolower($rawMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true);
+        $isSpecialDelivery = in_array($providerCode, ['seller_direct', 'special_delivery'], true)
+            || in_array(strtolower($rawMethod), ['special_delivery', 'special delivery', 'seller_direct'], true);
+
+        if ($isStorePickup) {
+            $paymentMethod = 'Store Pickup';
+        } elseif ($isSpecialDelivery) {
+            $paymentMethod = 'Special Delivery';
+        } else {
+            $paymentMethod = $rawMethod ?: 'GCash';
+        }
+
         $isCod   = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0;
         $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
         $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
 
+        $isDirectSellerPayment = $isStorePickup || $isSpecialDelivery;
+        $requiresOnlineReceipt = !$isDirectSellerPayment && !$isCod;
+
         $validationRules = [
-            'paymentMethod'   => 'required|string',
+            'paymentMethod'   => 'nullable|string',
             'address_id'      => 'required_without:shippingAddress|nullable|string',
             'shippingAddress' => 'required_without:address_id|nullable',
         ];
 
-        if (!$isCod) {
+        if ($requiresOnlineReceipt) {
             $validationRules['paymentReference'] = 'nullable|string';
             if ($request->hasFile('paymentScreenshots')) {
                 $validationRules['paymentScreenshots'] = 'required|array|min:1';
@@ -398,7 +418,7 @@ class CheckoutController extends Controller
 
             // 2. Handle Receipt Upload & Screening for Online Payments (Single or Multi-Receipt)
             $receiptList = [];
-            if (!$isCod) {
+            if ($requiresOnlineReceipt) {
                 $uploadedFiles = [];
                 if ($request->hasFile('paymentScreenshots')) {
                     $uploadedFiles = (array) $request->file('paymentScreenshots');

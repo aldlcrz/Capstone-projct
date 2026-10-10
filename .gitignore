@@ -20,6 +20,7 @@ backend-laravel/vendor.zip
 database.sql latest
 database_latest.sql
 backend-laravel/storage/check_passwords.php
+backend-laravel/scratch/
 
 # Uploads & User Files
 backend-laravel/public/uploads/requirements/*

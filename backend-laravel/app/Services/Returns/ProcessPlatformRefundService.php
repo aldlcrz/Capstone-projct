@@ -53,6 +53,13 @@ class ProcessPlatformRefundService
                 ]);
             }
 
+            // Platform Administrators only disburse refunds for platform-held funds (GCash / Maya platform prepayments)
+            if ($order->isSellerHeldPayment()) {
+                throw ValidationException::withMessages([
+                    'order' => ['This order is a Store Pickup, Special Delivery, or seller-collected transaction where funds were received directly by the seller. Platform financial disbursement is not applicable; the seller handles the direct refund.'],
+                ]);
+            }
+
             // Check for duplicate transfer reference idempotency
             $cleanRef = trim($transferReference);
             $existingTx = RefundTransaction::where('transfer_reference', $cleanRef)

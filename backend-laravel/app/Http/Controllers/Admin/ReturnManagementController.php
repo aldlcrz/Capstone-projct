@@ -288,16 +288,25 @@ class ReturnManagementController extends Controller
         $destName = $request->input('destination_name');
         $notes = $request->input('notes');
 
-        $refundTx = $this->refundService->processPlatformRefund(
-            $returnRequest,
-            $admin,
-            $amount,
-            $ref,
-            $proofFile,
-            $destAcc,
-            $destName,
-            $notes
-        );
+        try {
+            $refundTx = $this->refundService->processPlatformRefund(
+                $returnRequest,
+                $admin,
+                $amount,
+                $ref,
+                $proofFile,
+                $destAcc,
+                $destName,
+                $notes
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $e->getMessage()], 422);
+            }
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -358,16 +367,25 @@ class ReturnManagementController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        $refundTx = $this->sukliRefundService->processSukliRefund(
-            orderId: $id,
-            admin: $admin,
-            refundAmount: (float) $request->input('refund_amount'),
-            transferReference: trim((string) $request->input('transfer_reference')),
-            transferProofFile: $request->file('transfer_proof'),
-            destinationAccount: $request->input('destination_account'),
-            destinationName: $request->input('destination_name'),
-            adminNotes: $request->input('notes')
-        );
+        try {
+            $refundTx = $this->sukliRefundService->processSukliRefund(
+                orderId: $id,
+                admin: $admin,
+                refundAmount: (float) $request->input('refund_amount'),
+                transferReference: trim((string) $request->input('transfer_reference')),
+                transferProofFile: $request->file('transfer_proof'),
+                destinationAccount: $request->input('destination_account'),
+                destinationName: $request->input('destination_name'),
+                adminNotes: $request->input('notes')
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $e->getMessage()], 422);
+            }
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -399,16 +417,25 @@ class ReturnManagementController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        $refundTx = $this->cancellationRefundService->processCancellationRefund(
-            orderId: $id,
-            admin: $admin,
-            refundAmount: (float) $request->input('refund_amount'),
-            transferReference: trim((string) $request->input('transfer_reference')),
-            transferProofFile: $request->file('transfer_proof'),
-            destinationAccount: $request->input('destination_account'),
-            destinationName: $request->input('destination_name'),
-            adminNotes: $request->input('notes')
-        );
+        try {
+            $refundTx = $this->cancellationRefundService->processCancellationRefund(
+                orderId: $id,
+                admin: $admin,
+                refundAmount: (float) $request->input('refund_amount'),
+                transferReference: trim((string) $request->input('transfer_reference')),
+                transferProofFile: $request->file('transfer_proof'),
+                destinationAccount: $request->input('destination_account'),
+                destinationName: $request->input('destination_name'),
+                adminNotes: $request->input('notes')
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $e->getMessage()], 422);
+            }
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

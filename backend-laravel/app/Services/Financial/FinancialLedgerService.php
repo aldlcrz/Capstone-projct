@@ -12,6 +12,7 @@ use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -58,8 +59,8 @@ class FinancialLedgerService
     {
         $targetSellerId = $sellerId ?: $order->sellerId;
 
-        // Online payments (GCash / Maya) do NOT incur platform commission under current policy
-        if (static::isOnlinePaymentMethod($order->paymentMethod)) {
+        // Platform-held online payments (prepaid through LumBarong official platform QR) do NOT incur platform commission under current policy.
+        if ($order->isPlatformHeldPayment()) {
             return 0.00;
         }
 
@@ -69,12 +70,20 @@ class FinancialLedgerService
             return 0.00;
         }
 
+        // Unpaid direct-settlement or COD orders do not automatically accrue commission
+        if ($order->totalPaidAmount() <= 0.0) {
+            return 0.00;
+        }
+
         // Calculate product revenue attributable to this seller from order items
         $items = $order->relationLoaded('items') ? $order->items : $order->items()->with('product')->get();
 
+        // Commissionable sales strictly exclude refunds and cannot exceed net retained funds
+        $netPaid = max(0.00, round($order->totalPaidAmount() - $order->totalRefundedAmount(), 2));
+
         if ($items->isNotEmpty()) {
             $sellerItems = $items->filter(function ($item) use ($targetSellerId, $order) {
-                $itemSellerId = $item->seller_id ?? ($item->product?->userId ?? $order->sellerId);
+                $itemSellerId = $item->seller_id ?? ($item->product?->sellerId ?? ($item->product?->userId ?? $order->sellerId));
                 return (string) $itemSellerId === (string) $targetSellerId;
             });
 
@@ -82,15 +91,54 @@ class FinancialLedgerService
                 $productRevenue = (float) $sellerItems->sum(function ($item) {
                     return (float) $item->price * (int) $item->quantity;
                 });
-                return round(max(0.00, $productRevenue), 2);
+
+                // Calculate completed refunds attributable specifically to this seller
+                $refunds = $order->relationLoaded('refundTransactions')
+                    ? $order->refundTransactions
+                    : $order->refundTransactions()->with('returnRequest.orderItem.product')->get();
+
+                $completedRefunds = $refunds->whereIn('status', ['transferred', 'completed', 'refunded']);
+                $sellerRefunded = 0.0;
+
+                $allSellerIds = $items->map(fn($i) => (string) ($i->seller_id ?? ($i->product?->sellerId ?? ($i->product?->userId ?? $order->sellerId))))->unique()->values();
+                $isMultiSeller = $allSellerIds->count() > 1;
+
+                foreach ($completedRefunds as $ref) {
+                    $refSellerId = null;
+                    if ($ref->returnRequest) {
+                        $refSellerId = $ref->returnRequest->seller_id
+                            ?? ($ref->returnRequest->orderItem?->seller_id
+                            ?? ($ref->returnRequest->orderItem?->product?->sellerId ?? ($ref->returnRequest->orderItem?->product?->userId ?? null)));
+                    } elseif ($ref->processed_by) {
+                        $refSellerId = $ref->processed_by;
+                    }
+
+                    if ($refSellerId !== null) {
+                        if ((string) $refSellerId === (string) $targetSellerId) {
+                            $sellerRefunded += (float) $ref->refund_amount;
+                        }
+                    } else {
+                        if (!$isMultiSeller && (string) ($allSellerIds->first() ?? $order->sellerId) === (string) $targetSellerId) {
+                            $sellerRefunded += (float) $ref->refund_amount;
+                        } elseif ($isMultiSeller && $allSellerIds->contains((string) $targetSellerId)) {
+                            $totalProductRev = (float) $items->sum(fn($i) => (float) $i->price * (int) $i->quantity);
+                            if ($totalProductRev > 0) {
+                                $sellerRefunded += round((float) $ref->refund_amount * ($productRevenue / $totalProductRev), 2);
+                            }
+                        }
+                    }
+                }
+
+                $sellerNetRetained = max(0.00, round($productRevenue - $sellerRefunded, 2));
+                return round(min($sellerNetRetained, $netPaid), 2);
             }
         }
 
-        // Fallback: order totalAmount minus shipping fee
+        // Fallback: order totalAmount minus shipping fee and refunds
         $shippingFee = (float) ($order->shipping_fee ?: ($order->shipping?->shipping_fee ?: 0));
         $net = (float) $order->totalAmount - $shippingFee;
 
-        return round(max(0.00, $net), 2);
+        return round(max(0.00, min($net, $netPaid)), 2);
     }
 
     /**
@@ -104,7 +152,7 @@ class FinancialLedgerService
 
         $items = $order->relationLoaded('items') ? $order->items : $order->items()->with('product')->get();
         $sellerItems = $items->filter(function ($item) use ($targetSellerId, $order) {
-            $itemSellerId = $item->seller_id ?? ($item->product?->userId ?? $order->sellerId);
+            $itemSellerId = $item->seller_id ?? ($item->product?->sellerId ?? ($item->product?->userId ?? $order->sellerId));
             return (string) $itemSellerId === (string) $targetSellerId;
         });
 
@@ -133,13 +181,50 @@ class FinancialLedgerService
 
         // Check if there are active unresolved return/dispute requests
         $hasActiveDispute = ReturnRequest::where('orderId', $order->id)
+            ->where(function ($rq) use ($targetSellerId) {
+                $rq->where('seller_id', $targetSellerId)
+                   ->orWhereNull('seller_id');
+            })
             ->whereIn('return_status', ['pending', 'requested', 'in_review', 'under_review', 'disputed', 'escalated', 'approved'])
             ->exists();
 
-        $hasRefundDisbursed = RefundTransaction::where('order_id', $order->id)
-            ->whereIn('status', ['transferred', 'completed', 'refunded'])
-            ->where('refund_amount', '>=', $netSettlement)
-            ->exists();
+        // Check completed refunds attributable to this seller
+        $refunds = $order->relationLoaded('refundTransactions')
+            ? $order->refundTransactions
+            : $order->refundTransactions()->with('returnRequest.orderItem.product')->get();
+
+        $completedRefunds = $refunds->whereIn('status', ['transferred', 'completed', 'refunded']);
+        $sellerRefunded = 0.0;
+        $allSellerIds = $items->map(fn($i) => (string) ($i->seller_id ?? ($i->product?->sellerId ?? ($i->product?->userId ?? $order->sellerId))))->unique()->values();
+        $isMultiSeller = $allSellerIds->count() > 1;
+
+        foreach ($completedRefunds as $ref) {
+            $refSellerId = null;
+            if ($ref->returnRequest) {
+                $refSellerId = $ref->returnRequest->seller_id
+                    ?? ($ref->returnRequest->orderItem?->seller_id
+                    ?? ($ref->returnRequest->orderItem?->product?->sellerId ?? ($ref->returnRequest->orderItem?->product?->userId ?? null)));
+            } elseif ($ref->processed_by) {
+                $refSellerId = $ref->processed_by;
+            }
+
+            if ($refSellerId !== null) {
+                if ((string) $refSellerId === (string) $targetSellerId) {
+                    $sellerRefunded += (float) $ref->refund_amount;
+                }
+            } else {
+                if (!$isMultiSeller && (string) ($allSellerIds->first() ?? $order->sellerId) === (string) $targetSellerId) {
+                    $sellerRefunded += (float) $ref->refund_amount;
+                } elseif ($isMultiSeller && $allSellerIds->contains((string) $targetSellerId)) {
+                    $totalProductRev = (float) $items->sum(fn($i) => (float) $i->price * (int) $i->quantity);
+                    if ($totalProductRev > 0) {
+                        $sellerRefunded += round((float) $ref->refund_amount * ($productGross / $totalProductRev), 2);
+                    }
+                }
+            }
+        }
+
+        $hasRefundDisbursed = $sellerRefunded >= $netSettlement && $netSettlement > 0;
 
         $isEligible = $isOnline && $isPaymentVerified && $isOrderFulfilled && !$hasActiveDispute && !$hasRefundDisbursed;
 
@@ -273,7 +358,7 @@ class FinancialLedgerService
             $admin = $dataOrAdmin;
             $transferReference = (string) $adminOrRef;
         } else {
-            $admin = $adminOrRef instanceof User ? $adminOrRef : auth()->user();
+            $admin = $adminOrRef instanceof User ? $adminOrRef : Auth::user();
             $transferReference = $dataOrAdmin['transaction_reference'] ?? ($dataOrAdmin['transfer_reference'] ?? ($dataOrAdmin['reference_number'] ?? ''));
             $proofFile = $proofFile ?: ($dataOrAdmin['transfer_proof'] ?? null);
             $adminNotes = $adminNotes ?: ($dataOrAdmin['notes'] ?? ($dataOrAdmin['admin_notes'] ?? null));
@@ -385,12 +470,12 @@ class FinancialLedgerService
             return $created->year == (int) $year && $created->month == (int) $month;
         });
 
-        // 1. Sales categorization
-        $cashOrders = $periodOrders->filter(fn($o) => static::isCashPaymentMethod($o->paymentMethod));
-        $onlineOrders = $periodOrders->filter(fn($o) => static::isOnlinePaymentMethod($o->paymentMethod));
+        // 1. Sales categorization (Seller-collected direct settlements vs platform-held online prepayments)
+        $cashOrders = $periodOrders->filter(fn(Order $o) => $o->isSellerHeldPayment());
+        $onlineOrders = $periodOrders->filter(fn(Order $o) => $o->isPlatformHeldPayment());
 
-        $periodCashProductSales = (float) $cashOrders->sum(fn($o) => static::calculateCommissionableSales($o, $sellerId));
-        $periodOnlineGrossSales = (float) $onlineOrders->sum(fn($o) => (float) $o->totalAmount - (float) ($o->overpayment_amount ?? 0));
+        $periodCashProductSales = (float) $cashOrders->sum(fn(Order $o) => static::calculateCommissionableSales($o, $sellerId));
+        $periodOnlineGrossSales = (float) $onlineOrders->sum(fn(Order $o) => (float) $o->totalAmount - (float) ($o->overpayment_amount ?? 0));
         $periodTotalGrossSales  = $periodCashProductSales + $periodOnlineGrossSales;
 
         // 2. Commission calculation (ONLY on eligible cash sales)

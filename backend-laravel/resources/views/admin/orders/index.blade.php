@@ -530,17 +530,10 @@
                                                     ✓ Confirmed
                                                 </span>
 
-                                                {{-- Sukli Distribute Action when Verified & Overpaid --}}
+                                                {{-- Sukli Status Badge when Verified & Overpaid --}}
                                                 @if($order->isOverpaid())
                                                     @php $sStatus = $order->sukliRefundStatus(); @endphp
-                                                    @if($sStatus === 'OVERPAYMENT_PENDING_REFUND')
-                                                        <button type="button"
-                                                                @click="openSukliModal({{ json_encode($order) }})"
-                                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white border border-indigo-200 shadow-xs transition-all cursor-pointer">
-                                                            <span>💸</span>
-                                                            <span>Distribute Sukli</span>
-                                                        </button>
-                                                    @elseif($sStatus === 'REFUNDED')
+                                                    @if($sStatus === 'REFUNDED')
                                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60" title="Sukli already distributed">
                                                             <span>✓ Sukli Sent</span>
                                                         </span>

@@ -66,7 +66,9 @@ class NetworkResilienceAndIdempotencyAuditTest extends TestCase
 
         $this->seed(\Database\Seeders\ShippingLogisticsSeeder::class);
 
-        $this->provider = ShippingProvider::where('is_active', true)->first();
+        $this->provider = ShippingProvider::where('is_active', true)
+            ->whereNotIn('code', ['store_pickup', 'seller_direct'])
+            ->first() ?: ShippingProvider::where('code', 'jnt')->first();
 
         $this->address = Address::create([
             'userId'       => $this->customer->id,

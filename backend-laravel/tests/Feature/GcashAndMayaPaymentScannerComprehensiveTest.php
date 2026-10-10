@@ -1000,59 +1000,62 @@ class GcashAndMayaPaymentScannerComprehensiveTest extends TestCase
         $this->assertEquals(0.00, (float)$order->overpayment_amount);
     }
 
-    public function test_39_gcash_with_store_pickup_requires_receipt_verification()
+    public function test_39_store_pickup_bypasses_receipt_scanner_and_sets_direct_payment_status()
     {
         $service = app(CreateOrderService::class);
         $order = $service->createOrder([
             'customer' => $this->customer,
             'items' => [['id' => $this->product900->id, 'quantity' => 1]],
             'address_id' => $this->address->id,
-            'paymentMethod' => 'GCash',
-            'paymentReference' => '1001234567890',
-            'receipts' => [
-                ['screening' => ['detected_amount' => 900.00, 'status' => 'PASS'], 'paymentProof' => 'p1.jpg', 'paymentReference' => '1001234567890'],
-            ],
             'selectedProviderId' => $this->storePickupProvider->id,
         ]);
 
-        $this->assertEquals('GCash', $order->paymentMethod);
-        $this->assertEquals('Pending Verification', $order->paymentStatus);
-        $this->assertEquals('1001234567890', $order->paymentReference);
-    }
-
-    public function test_40_maya_with_store_pickup_requires_receipt_verification()
-    {
-        $service = app(CreateOrderService::class);
-        $order = $service->createOrder([
-            'customer' => $this->customer,
-            'items' => [['id' => $this->product900->id, 'quantity' => 1]],
-            'address_id' => $this->address->id,
-            'paymentMethod' => 'Maya',
-            'paymentReference' => '987654321012',
-            'receipts' => [
-                ['screening' => ['detected_amount' => 900.00, 'status' => 'PASS'], 'paymentProof' => 'p1.jpg', 'paymentReference' => '987654321012'],
-            ],
-            'selectedProviderId' => $this->storePickupProvider->id,
-        ]);
-
-        $this->assertEquals('Maya', $order->paymentMethod);
-        $this->assertEquals('Pending Verification', $order->paymentStatus);
-        $this->assertEquals('987654321012', $order->paymentReference);
-    }
-
-    public function test_41_cod_with_store_pickup_bypasses_receipt_verification()
-    {
-        $service = app(CreateOrderService::class);
-        $order = $service->createOrder([
-            'customer' => $this->customer,
-            'items' => [['id' => $this->product900->id, 'quantity' => 1]],
-            'address_id' => $this->address->id,
-            'paymentMethod' => 'COD',
-            'selectedProviderId' => $this->storePickupProvider->id,
-        ]);
-
-        $this->assertEquals('COD', $order->paymentMethod);
-        $this->assertEquals('Pending Payment (COD)', $order->paymentStatus);
+        $this->assertEquals('Store Pickup', $order->paymentMethod);
+        $this->assertEquals('Pending Payment (Store Pickup)', $order->paymentStatus);
         $this->assertNull($order->paymentReference);
+        $this->assertNull($order->paymentProof);
+        $this->assertEquals(0.00, (float)$order->total_verified_payments);
+    }
+
+    public function test_40_special_delivery_bypasses_receipt_scanner_and_sets_direct_payment_status()
+    {
+        $specialDeliveryProvider = ShippingProvider::firstOrCreate(
+            ['code' => 'seller_direct'],
+            [
+                'id' => (string) Str::uuid(),
+                'name' => 'Artisan Special Direct Delivery',
+                'is_active' => true,
+                'calculation_type' => 'flat',
+            ]
+        );
+
+        $service = app(CreateOrderService::class);
+        $order = $service->createOrder([
+            'customer' => $this->customer,
+            'items' => [['id' => $this->product900->id, 'quantity' => 1]],
+            'address_id' => $this->address->id,
+            'selectedProviderId' => $specialDeliveryProvider->id,
+        ]);
+
+        $this->assertEquals('Special Delivery', $order->paymentMethod);
+        $this->assertEquals('Pending Payment (Special Delivery)', $order->paymentStatus);
+        $this->assertNull($order->paymentReference);
+        $this->assertNull($order->paymentProof);
+        $this->assertEquals(0.00, (float)$order->total_verified_payments);
+    }
+
+    public function test_41_store_pickup_and_special_delivery_do_not_create_platform_payment_transactions()
+    {
+        $service = app(CreateOrderService::class);
+        $order = $service->createOrder([
+            'customer' => $this->customer,
+            'items' => [['id' => $this->product900->id, 'quantity' => 1]],
+            'address_id' => $this->address->id,
+            'selectedProviderId' => $this->storePickupProvider->id,
+        ]);
+
+        $this->assertEquals(0, PaymentTransaction::where('order_id', $order->id)->count());
+        $this->assertTrue($order->isSellerHeldPayment());
+        $this->assertFalse($order->isPlatformHeldPayment());
     }
 }

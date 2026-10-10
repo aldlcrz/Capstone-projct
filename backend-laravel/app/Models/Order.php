@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -135,14 +136,14 @@ class Order extends Model
      */
     public function totalReceivedPayments(): float
     {
-        $validStatuses = ['VERIFIED', 'UNVERIFIED', 'DETECTED', 'PENDING', 'AUTO_VERIFIED', 'COMPLETED'];
+        $validStatuses = ['VERIFIED', 'UNVERIFIED', 'DETECTED', 'PENDING', 'AUTO_VERIFIED', 'COMPLETED', 'REFUNDED'];
         if ($this->relationLoaded('paymentTransactions') && $this->paymentTransactions->isNotEmpty()) {
-            $sum = (float) $this->paymentTransactions->whereIn('status', $validStatuses)->sum('detected_amount');
+            $sum = (float) $this->paymentTransactions->whereIn('status', $validStatuses)->sum(fn($tx) => (float) ($tx->detected_amount ?: $tx->expected_amount));
             if ($sum > 0) {
                 return round($sum, 2);
             }
         } elseif ($this->paymentTransactions()->exists()) {
-            $sum = (float) $this->paymentTransactions()->whereIn('status', $validStatuses)->sum('detected_amount');
+            $sum = (float) $this->paymentTransactions()->whereIn('status', $validStatuses)->selectRaw('SUM(COALESCE(detected_amount, expected_amount)) as total')->value('total');
             if ($sum > 0) {
                 return round($sum, 2);
             }
@@ -156,7 +157,12 @@ class Order extends Model
             return round((float) $this->totalAmount + (float) $this->overpayment_amount, 2);
         }
 
-        return round((float) $this->totalAmount, 2);
+        $paymentStatusLower = strtolower(trim((string) ($this->paymentStatus ?? '')));
+        if (in_array($paymentStatusLower, ['paid', 'verified', 'payment verified', 'refunded'], true)) {
+            return round((float) $this->totalAmount, 2);
+        }
+
+        return 0.00;
     }
 
     /**
@@ -274,29 +280,51 @@ class Order extends Model
     }
 
     /**
+     * Historical gross amount actually received across all verified payment transactions and direct collections.
+     * Does not count refunds as newly received money.
+     * Strictly 0.00 for unpaid orders.
+     */
+    public function historicalGrossReceived(): float
+    {
+        $validStatuses = ['VERIFIED', 'AUTO_VERIFIED', 'COMPLETED', 'REFUNDED'];
+
+        if ($this->relationLoaded('paymentTransactions') && $this->paymentTransactions->isNotEmpty()) {
+            $sum = (float) $this->paymentTransactions
+                ->whereIn('status', $validStatuses)
+                ->sum(fn($tx) => (float) ($tx->detected_amount ?: $tx->expected_amount));
+            if ($sum > 0.0) {
+                return round($sum, 2);
+            }
+        } elseif ($this->paymentTransactions()->whereIn('status', $validStatuses)->exists()) {
+            $sum = (float) $this->paymentTransactions()
+                ->whereIn('status', $validStatuses)
+                ->selectRaw('SUM(COALESCE(detected_amount, expected_amount)) as total')
+                ->value('total');
+            if ($sum > 0.0) {
+                return round($sum, 2);
+            }
+        }
+
+        $sellerPaid = (float) ($this->total_verified_payments ?? 0.0);
+        if ($sellerPaid > 0.0) {
+            return round($sellerPaid, 2);
+        }
+
+        $paymentStatusLower = strtolower(trim((string) ($this->paymentStatus ?? '')));
+        if (in_array($paymentStatusLower, ['paid', 'verified', 'payment verified', 'refunded'], true)) {
+            $overpayment = (float) ($this->overpayment_amount ?? 0.0);
+            return round((float) $this->totalAmount + $overpayment, 2);
+        }
+
+        return 0.00;
+    }
+
+    /**
      * Total authoritative amount paid by customer for this order.
      */
     public function totalPaidAmount(): float
     {
-        $verifiedTx = $this->latestPaymentTransaction && $this->latestPaymentTransaction->status === 'VERIFIED'
-            ? (float) ($this->latestPaymentTransaction->detected_amount ?: $this->latestPaymentTransaction->expected_amount)
-            : 0.0;
-
-        if ($verifiedTx > 0.0) {
-            return round($verifiedTx, 2);
-        }
-
-        $received = $this->totalReceivedPayments();
-        if ($received > 0.0) {
-            return round($received, 2);
-        }
-
-        $paymentStatusLower = strtolower(trim((string) ($this->paymentStatus ?? '')));
-        if (in_array($paymentStatusLower, ['paid', 'verified', 'payment verified'], true)) {
-            return round((float) $this->totalAmount + (float) ($this->overpayment_amount ?? 0), 2);
-        }
-
-        return 0.0;
+        return $this->historicalGrossReceived();
     }
 
     /**
@@ -305,14 +333,30 @@ class Order extends Model
     public function totalRefundedAmount(): float
     {
         if ($this->relationLoaded('refundTransactions')) {
-            return (float) $this->refundTransactions
+            return round((float) $this->refundTransactions
                 ->whereIn('status', ['transferred', 'completed', 'refunded'])
-                ->sum('refund_amount');
+                ->sum('refund_amount'), 2);
         }
 
-        return (float) $this->refundTransactions()
+        return round((float) $this->refundTransactions()
             ->whereIn('status', ['transferred', 'completed', 'refunded'])
-            ->sum('refund_amount');
+            ->sum('refund_amount'), 2);
+    }
+
+    /**
+     * Calculate server-authoritative remaining refundable balance.
+     * Subtracts completed refunds from historical gross received exactly once.
+     * Strictly 0.00 for unpaid orders.
+     */
+    public function remainingRefundableAmount(): float
+    {
+        $gross = $this->historicalGrossReceived();
+        if ($gross <= 0.0) {
+            return 0.00;
+        }
+
+        $alreadyRefunded = $this->totalRefundedAmount();
+        return max(0.00, round($gross - $alreadyRefunded, 2));
     }
 
     /**
@@ -320,13 +364,27 @@ class Order extends Model
      */
     public function remainingCancellationRefundAmount(): float
     {
-        $paid = $this->totalPaidAmount();
-        if ($paid <= 0.0) {
-            return 0.0;
-        }
+        return $this->remainingRefundableAmount();
+    }
 
+    /**
+     * Outstanding payment balance remaining to be paid by customer.
+     */
+    public function outstandingPaymentBalance(): float
+    {
+        $gross = $this->historicalGrossReceived();
+        $payable = (float) $this->totalAmount;
+        return max(0.00, round($payable - $gross, 2));
+    }
+
+    /**
+     * Current net funds retained for this order (gross received minus completed refunds).
+     */
+    public function currentNetFundsRetained(): float
+    {
+        $gross = $this->historicalGrossReceived();
         $refunded = $this->totalRefundedAmount();
-        return max(0.0, round($paid - $refunded, 2));
+        return round($gross - $refunded, 2);
     }
 
     /**
@@ -334,16 +392,20 @@ class Order extends Model
      */
     public function cancellationRefundStatus(): string
     {
-        $paid = $this->totalPaidAmount();
-        if ($paid <= 0.0) {
+        $gross = $this->historicalGrossReceived();
+        if ($gross <= 0.0) {
             return 'unpaid';
         }
 
-        $remaining = $this->remainingCancellationRefundAmount();
+        $remaining = $this->remainingRefundableAmount();
         $refunded = $this->totalRefundedAmount();
 
-        if ($remaining <= 0.0 && $refunded > 0.0) {
+        if ($refunded > 0.0 && $remaining <= 0.0) {
             return 'refunded';
+        }
+
+        if ($refunded > 0.0 && $remaining > 0.0) {
+            return 'partially_refunded';
         }
 
         return 'pending_refund';
@@ -465,17 +527,45 @@ class Order extends Model
             return 'Failed';
         }
 
-        if (in_array(strtolower((string) $this->status), [
-            'processing', 'to ship', 'ready_to_ship', 'shipped', 'to receive', 'in_transit', 'out_for_delivery', 'delivered', 'completed',
-        ], true)) {
-            return 'Verified';
-        }
-
         if ($paymentStatus === 'payment submitted' || $paymentStatus === 'submitted' || !empty($this->paymentProof)) {
             return 'Payment Submitted';
         }
 
         return 'Pending Submission';
+    }
+
+    /**
+     * Check if this order is a platform-held payment (prepaid via LumBarong official platform QR).
+     */
+    public function isPlatformHeldPayment(): bool
+    {
+        // Store Pickup and Special Delivery are direct-to-seller payment arrangements, NOT platform-held
+        if ($this->isStorePickup() || $this->isSpecialDelivery()) {
+            return false;
+        }
+
+        $method = strtoupper(trim((string) $this->paymentMethod));
+        if (in_array($method, [
+            'STORE PICKUP', 'PAY AT STORE', 'PAY IN SHOP', 'SPECIAL DELIVERY',
+            'SELLER DIRECT', 'DIRECT TO SELLER', 'COD', 'CASH ON DELIVERY', 'CASH'
+        ], true)) {
+            return false;
+        }
+
+        // Direct-to-seller transfer indicators
+        if (str_contains($method, 'DIRECT') || str_contains($method, 'SELLER')) {
+            return false;
+        }
+
+        return \App\Services\Financial\FinancialLedgerService::isOnlinePaymentMethod($this->paymentMethod);
+    }
+
+    /**
+     * Check if this order's funds are held/managed directly by the seller.
+     */
+    public function isSellerHeldPayment(): bool
+    {
+        return !$this->isPlatformHeldPayment();
     }
 
     /**
@@ -579,22 +669,6 @@ class Order extends Model
         return $this->hasOne(SellerPayout::class, 'order_id');
     }
 
-    /**
-     * Calculate server-authoritative remaining refundable balance.
-     */
-    public function remainingRefundableAmount(): float
-    {
-        $paidAmount = (float) $this->totalAmount;
-        if ($this->latestPaymentTransaction && $this->latestPaymentTransaction->status === 'VERIFIED') {
-            $paidAmount = (float) ($this->latestPaymentTransaction->detected_amount ?: $this->totalAmount);
-        }
-
-        $alreadyRefunded = (float) $this->refundTransactions()
-            ->whereIn('status', ['transferred', 'completed'])
-            ->sum('refund_amount');
-
-        return max(0.0, round($paidAmount - $alreadyRefunded, 2));
-    }
 
     /**
      * Check if this order is fulfilled / completed.
@@ -615,7 +689,7 @@ class Order extends Model
     /**
      * Scope query to only include completed / delivered orders.
      */
-    public function scopeCompleted($query)
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->whereIn('status', \App\Support\OrderStatus::completedStatuses());
     }
@@ -623,7 +697,7 @@ class Order extends Model
     /**
      * Scope query to only include active (non-cancelled) orders.
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->whereNotIn('status', ['Cancelled', 'cancelled', 'cancellation pending', 'cancellation requested']);
     }
@@ -740,13 +814,27 @@ class Order extends Model
     {
         $method = strtoupper(trim((string) ($this->paymentMethod ?? '')));
 
-        if ($method === 'COD' || $method === '' || $method === 'CASH ON DELIVERY' || $method === 'PAY ON CLAIM' || $method === 'PAY IN SHOP') {
-            if ($this->isStorePickup()) {
-                return 'Pay in Shop';
+        if ($this->isStorePickup()) {
+            if ($method === 'STORE PICKUP' || $method === 'PAY AT STORE' || $method === 'PAY IN SHOP' || $method === '') {
+                return 'Store Pickup (Pay at Shop)';
             }
-            if ($this->isSpecialDelivery()) {
-                return 'Special Delivery (COD)';
+            if ($method === 'CASH') return 'Cash (In-Shop)';
+            if (str_contains($method, 'GCASH')) return 'Direct GCash (To Artisan)';
+            if (str_contains($method, 'MAYA')) return 'Direct Maya (To Artisan)';
+            return $this->paymentMethod;
+        }
+
+        if ($this->isSpecialDelivery()) {
+            if ($method === 'SPECIAL DELIVERY' || $method === 'SELLER DIRECT' || $method === '') {
+                return 'Special Delivery (Pay to Rider)';
             }
+            if ($method === 'CASH' || $method === 'COD') return 'Cash on Delivery (Artisan Rider)';
+            if (str_contains($method, 'GCASH')) return 'Direct GCash (To Artisan/Rider)';
+            if (str_contains($method, 'MAYA')) return 'Direct Maya (To Artisan/Rider)';
+            return $this->paymentMethod;
+        }
+
+        if ($method === 'COD' || $method === '' || $method === 'CASH ON DELIVERY' || $method === 'PAY ON CLAIM') {
             return 'Cash on Delivery';
         }
 
@@ -767,11 +855,11 @@ class Order extends Model
 
     /**
      * Scope a query to only include orders visible to the seller.
-     * - GCash/Maya orders must be verified by Admin (Paid/Verified) before appearing to the seller.
-     * - Unverified (Pending Verification) or Admin-Rejected GCash/Maya orders are hidden from the seller.
-     * - COD and In-Shop cash orders are directly visible to the seller.
+     * - Platform GCash/Maya orders must be verified by Admin (Paid/Verified) before appearing to the seller.
+     * - Unverified (Pending Verification) or Admin-Rejected platform GCash/Maya orders are hidden from the seller.
+     * - Store Pickup, Special Delivery, COD, and seller-direct orders are directly visible to the seller.
      */
-    public function scopeVisibleToSeller($query)
+    public function scopeVisibleToSeller(Builder $query): Builder
     {
         return $query->where(function ($q) {
             $q->where(function ($nonEwallet) {
@@ -782,6 +870,7 @@ class Order extends Model
                     });
             })
             ->orWhere(function ($ewallet) {
+                // Verified platform e-wallet orders
                 $ewallet->whereIn(DB::raw('UPPER(TRIM(COALESCE(paymentMethod, "")))'), ['GCASH', 'MAYA', 'PAYMAYA'])
                     ->whereIn('paymentStatus', ['Paid', 'Verified', 'Paid (Verified)'])
                     ->whereNotIn('paymentStatus', ['Payment Rejected', 'Rejected', 'Pending Verification', 'Pending Verification (Overpayment)']);

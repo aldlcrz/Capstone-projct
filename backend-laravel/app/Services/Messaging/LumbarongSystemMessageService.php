@@ -302,5 +302,85 @@ class LumbarongSystemMessageService
             return null;
         }
     }
+
+    /**
+     * Send official LumBarong inbox message when a seller completes a cash refund.
+     */
+    public static function sendCashRefundCompletedMessage(
+        Order $order,
+        RefundTransaction $refundTx,
+        ?User $seller = null,
+        ?string $reason = null
+    ): ?Message {
+        if (empty($order->customerId)) {
+            return null;
+        }
+
+        $systemUser = static::getSystemUser();
+        $idempotencyTag = "<!-- [cash_refund:{$refundTx->id}] -->";
+
+        // Idempotency check: prevent duplicate messages for the same cash refund
+        $existing = Message::where('receiverId', $order->customerId)
+            ->where('content', 'LIKE', "%{$idempotencyTag}%")
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $shortOrderNumber = '#LB-' . strtoupper(substr($order->id, -8));
+        $formattedRefundAmount = '₱' . number_format((float) $refundTx->refund_amount, 2);
+        $refundDate = $refundTx->processed_at
+            ? ($refundTx->processed_at instanceof \Carbon\Carbon ? $refundTx->processed_at->format('M d, Y h:i A') : \Carbon\Carbon::parse($refundTx->processed_at)->format('M d, Y h:i A'))
+            : now()->format('M d, Y h:i A');
+
+        $sellerName = $seller?->name ?: ($order->seller?->name ?: 'Artisan / Seller');
+        $displayReason = trim((string) ($reason ?: ($refundTx->notes ?: 'Cash refund completed directly with customer')));
+
+        $lines = [
+            "Hello! This is LumBarong.",
+            "",
+            "The artisan/seller ({$sellerName}) has recorded a completed cash refund for Order {$shortOrderNumber}.",
+            "",
+            "Cash Refund Details:",
+            "Order Number: {$shortOrderNumber}",
+            "Refund Amount: {$formattedRefundAmount}",
+            "Refund Method: Cash (Pay at Store / Seller Cash Settlement)",
+            "Refund Date: {$refundDate}",
+            "Reason: {$displayReason}",
+            "Handled By: {$sellerName}",
+            "",
+        ];
+
+        if (!empty($refundTx->transfer_proof_path)) {
+            $proofUrl = route('orders.refund-proof', ['orderId' => $order->id, 'refundId' => $refundTx->id]);
+            $lines[] = "The cash refund receipt or acknowledgment is attached to this message:";
+            $lines[] = "";
+            $lines[] = "[View / Download Refund Receipt]({$proofUrl})";
+            $lines[] = "[![Refund Proof Receipt]({$proofUrl})]({$proofUrl})";
+            $lines[] = "";
+        }
+
+        $lines[] = "Please review your order history if you need further details.";
+        $lines[] = "";
+        $lines[] = "Thank you for shopping with LumBarong!";
+        $lines[] = "";
+        $lines[] = $idempotencyTag;
+
+        $content = implode("\n", $lines);
+
+        try {
+            return Message::create([
+                'id'         => (string) Str::uuid(),
+                'senderId'   => $systemUser->id,
+                'receiverId' => $order->customerId,
+                'content'    => $content,
+                'read'       => false,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Failed to send LumBarong cash refund inbox message: " . $e->getMessage());
+            return null;
+        }
+    }
 }
 

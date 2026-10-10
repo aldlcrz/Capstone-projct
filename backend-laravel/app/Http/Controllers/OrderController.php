@@ -1207,22 +1207,24 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // Restore inventory stock for each product & size
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    $item->product->increment('stock', $item->quantity);
-                    if (!empty($item->product->size_stocks) && !empty($item->size)) {
-                        $sizeStocks = $item->product->size_stocks;
-                        if (isset($sizeStocks[$item->size])) {
-                            $sizeStocks[$item->size] = (int)$sizeStocks[$item->size] + (int)$item->quantity;
-                            $item->product->size_stocks = $sizeStocks;
-                            $item->product->save();
+            $prevStatus = $order->status;
+            // Restore inventory stock for each product & size exactly once
+            if ($prevStatus !== 'Cancelled') {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock', $item->quantity);
+                        if (!empty($item->product->size_stocks) && !empty($item->size)) {
+                            $sizeStocks = $item->product->size_stocks;
+                            if (isset($sizeStocks[$item->size])) {
+                                $sizeStocks[$item->size] = (int)$sizeStocks[$item->size] + (int)$item->quantity;
+                                $item->product->size_stocks = $sizeStocks;
+                                $item->product->save();
+                            }
                         }
                     }
                 }
             }
 
-            $prevStatus = $order->status;
             $order->status = 'Cancelled';
             $order->cancellationReason = $reason;
             $order->save();
@@ -1337,22 +1339,24 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // Restore inventory stock
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    $item->product->increment('stock', $item->quantity);
-                    if (!empty($item->product->size_stocks) && !empty($item->size)) {
-                        $sizeStocks = $item->product->size_stocks;
-                        if (isset($sizeStocks[$item->size])) {
-                            $sizeStocks[$item->size] = (int)$sizeStocks[$item->size] + (int)$item->quantity;
-                            $item->product->size_stocks = $sizeStocks;
-                            $item->product->save();
+            $prevStatus = $order->status;
+            // Restore inventory stock exactly once if not already cancelled
+            if ($prevStatus !== 'Cancelled') {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock', $item->quantity);
+                        if (!empty($item->product->size_stocks) && !empty($item->size)) {
+                            $sizeStocks = $item->product->size_stocks;
+                            if (isset($sizeStocks[$item->size])) {
+                                $sizeStocks[$item->size] = (int)$sizeStocks[$item->size] + (int)$item->quantity;
+                                $item->product->size_stocks = $sizeStocks;
+                                $item->product->save();
+                            }
                         }
                     }
                 }
             }
 
-            $prevStatus = $order->status;
             $order->status = 'Cancelled';
             $order->save();
 
@@ -1584,4 +1588,44 @@ class OrderController extends Controller
             'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
         ]);
     }
+
+    /**
+     * Seller records an actual direct payment received for Store Pickup, Special Delivery, or COD.
+     */
+    public function recordSellerDirectPayment(Request $request, $id, \App\Services\Orders\RecordSellerPaymentService $service)
+    {
+        $request->validate([
+            'payment_method'   => 'required|string|max:50',
+            'amount_received'  => 'required|numeric|min:0.01',
+            'received_at'      => 'nullable|date',
+            'reference_number' => 'nullable|string|max:100',
+            'payment_proof'    => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'notes'            => 'nullable|string|max:1000',
+        ]);
+
+        $order = Order::findOrFail($id);
+        $seller = Auth::user();
+
+        $updatedOrder = $service->recordPayment(
+            $order,
+            $seller,
+            $request->input('payment_method'),
+            (float) $request->input('amount_received'),
+            $request->filled('received_at') ? new \DateTime($request->input('received_at')) : now(),
+            $request->input('reference_number'),
+            $request->file('payment_proof'),
+            $request->input('notes')
+        );
+
+        if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Direct payment successfully recorded.',
+                'order'   => $updatedOrder->fresh(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Payment recorded successfully.');
+    }
 }
+

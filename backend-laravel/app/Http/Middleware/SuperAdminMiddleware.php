@@ -15,6 +15,10 @@ class SuperAdminMiddleware
             return $next($request);
         }
 
+        if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
+            return response()->json(['message' => 'Access denied. Super Admin only.'], 403);
+        }
+
         return redirect('/superadmin/login')->with('error', 'Access denied. Super Admin only.');
     }
 }

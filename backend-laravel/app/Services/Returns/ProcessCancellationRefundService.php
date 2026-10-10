@@ -59,23 +59,14 @@ class ProcessCancellationRefundService
                 ]);
             }
 
-            // 2. Validate authoritative eligible refund balance
-            $remainingRefund = $order->remainingCancellationRefundAmount();
-            if ($remainingRefund <= 0) {
+            // Platform Administrators only disburse refunds for platform-held funds (GCash / Maya platform prepayments)
+            if ($order->isSellerHeldPayment()) {
                 throw ValidationException::withMessages([
-                    'refund' => ['This cancelled order has no outstanding refundable balance or has already been fully refunded.'],
+                    'order' => ['This order is a Store Pickup, Special Delivery, or seller-collected transaction where funds were received directly by the seller. Platform financial disbursement is not applicable; the seller handles the direct refund.'],
                 ]);
             }
 
-            if ($refundAmount <= 0 || round($refundAmount, 2) > round($remainingRefund, 2)) {
-                throw ValidationException::withMessages([
-                    'refund_amount' => [
-                        "The refund amount (₱" . number_format($refundAmount, 2) . ") exceeds the remaining eligible refund balance of ₱" . number_format($remainingRefund, 2) . "."
-                    ],
-                ]);
-            }
-
-            // 3. Prevent duplicate transfer reference (idempotency)
+            // 2. Prevent duplicate transfer reference (idempotency)
             $cleanRef = trim($transferReference);
             if (empty($cleanRef)) {
                 throw ValidationException::withMessages([
@@ -90,6 +81,22 @@ class ProcessCancellationRefundService
             if ($duplicateTx) {
                 throw ValidationException::withMessages([
                     'transfer_reference' => ['This transfer reference number has already been recorded in the refund ledger.'],
+                ]);
+            }
+
+            // 3. Validate authoritative eligible refund balance
+            $remainingRefund = $order->remainingCancellationRefundAmount();
+            if ($remainingRefund <= 0) {
+                throw ValidationException::withMessages([
+                    'refund' => ['This cancelled order has no outstanding refundable balance or has already been fully refunded.'],
+                ]);
+            }
+
+            if ($refundAmount <= 0 || round($refundAmount, 2) > round($remainingRefund, 2)) {
+                throw ValidationException::withMessages([
+                    'refund_amount' => [
+                        "The refund amount (₱" . number_format($refundAmount, 2) . ") exceeds the remaining eligible refund balance of ₱" . number_format($remainingRefund, 2) . "."
+                    ],
                 ]);
             }
 

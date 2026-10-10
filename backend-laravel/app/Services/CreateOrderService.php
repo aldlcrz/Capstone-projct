@@ -405,6 +405,13 @@ class CreateOrderService
             $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $sellerItemsForShipping, $providerId);
             $chosenQuote = $quotes[0] ?? null;
 
+            if ($isCod && !$selectedProviderId && count($quotes) > 1) {
+                $courierQuote = collect($quotes)->first(fn($q) => ($q['provider_code'] ?? '') !== 'store_pickup');
+                if ($courierQuote) {
+                    $chosenQuote = $courierQuote;
+                }
+            }
+
             if (!$chosenQuote) {
                 throw new DomainException('Shipping service is currently not available for this delivery route or package specifications.');
             }
@@ -412,18 +419,34 @@ class CreateOrderService
             $shippingFee = round((float) $chosenQuote['shipping_fee'], 2);
             $totalExpectedAmount = round($calculatedSubtotal + $shippingFee, 2);
 
+            // Determine Fulfillment and Direct Seller Payment Arrangement
+            $chosenProviderCode = strtolower((string)($chosenQuote['provider_code'] ?? ''));
+            $isStorePickup = ($chosenProviderCode === 'store_pickup' && !$isCod) 
+                || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true);
+            $isSpecialDelivery = (in_array($chosenProviderCode, ['seller_direct', 'special_delivery'], true) && !$isCod)
+                || in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true);
+
+            if ($isStorePickup) {
+                $paymentMethod = 'Store Pickup';
+            } elseif ($isSpecialDelivery) {
+                $paymentMethod = 'Special Delivery';
+            }
+
+            $isDirectSellerPayment = $isStorePickup || $isSpecialDelivery;
+            $requiresOnlineReceipt = !$isDirectSellerPayment && !$isCod;
+
             // Process Payment Validation / Reference Claiming & Accounting
             $paymentReference = null;
             $paymentProofPath = null;
-            $initialPaymentStatus = $isCod ? 'Unpaid' : 'Pending';
+            $initialPaymentStatus = $isCod ? 'Unpaid' : ($isStorePickup ? 'Pending Payment (Store Pickup)' : ($isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Pending'));
             $transactionStatus = 'UNVERIFIED';
-            $verificationTier = 'REVIEW';
+            $verificationTier = $isCod ? 'COD' : ($isStorePickup ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'REVIEW'));
             $validatedReceipts = [];
             $totalVerifiedPayments = 0.0;
             $overpaymentAmount = 0.00;
             $refundMobileNumber = null;
 
-            if (!$isCod) {
+            if ($requiresOnlineReceipt) {
                 // Support both multi-receipt array and single receipt parameters
                 $receiptList = [];
                 if (!empty($params['receipts']) && is_array($params['receipts'])) {
@@ -567,6 +590,7 @@ class CreateOrderService
                 'paymentReference'        => $paymentReference,
                 'paymentProof'            => $paymentProofPath,
                 'paymentStatus'           => $initialPaymentStatus,
+                'courierName'             => $isStorePickup ? 'Store Pickup' : ($isSpecialDelivery ? 'Special Delivery (Local Artisan Rider)' : ($chosenQuote['provider_name'] ?? 'Standard Delivery')),
                 'shippingAddress'         => $addressData,
             ];
 
