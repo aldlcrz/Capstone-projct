@@ -330,6 +330,40 @@
                 @endif
             </div>
 
+            {{-- 1.5 APPOINTMENT BANNER (STORE PICKUP & SPECIAL DELIVERY) --}}
+            @if($order->appointment_date && !$isCancelled)
+                <div class="px-4 sm:px-5 pb-3 pt-0">
+                    <div style="background: linear-gradient(135deg, {{ $isStorePickup ? '#FEF3C7 0%, #FDE68A 100%' : '#EFF6FF 0%, #DBEAFE 100%' }}); border: 1px solid {{ $isStorePickup ? '#F59E0B' : '#93C5FD' }}; border-radius: 14px; padding: 12px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-start sm:items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl {{ $isStorePickup ? 'bg-amber-100 border border-amber-300 text-amber-900' : 'bg-blue-100 border border-blue-300 text-blue-900' }} flex items-center justify-center shrink-0 text-base">
+                                {{ $isStorePickup ? '🏬' : '🏍️' }}
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-black uppercase tracking-wider {{ $isStorePickup ? 'text-amber-900' : 'text-blue-900' }}">
+                                    {{ $isStorePickup ? '📅 In-Shop Store Visit Appointment' : '📅 Special Delivery Scheduled Date' }}
+                                </div>
+                                <div class="text-xs sm:text-sm font-extrabold {{ $isStorePickup ? 'text-amber-950' : 'text-blue-950' }} mt-0.5">
+                                    {{ \Carbon\Carbon::parse($order->appointment_date)->format('l, F j, Y') }}
+                                    @if($order->appointment_time)
+                                        &bull; <span class="font-bold {{ $isStorePickup ? 'text-amber-900' : 'text-blue-900' }}">{{ $order->appointment_time }}</span>
+                                    @endif
+                                </div>
+                                @if($order->appointment_notes)
+                                    <div class="text-[11px] {{ $isStorePickup ? 'text-amber-800' : 'text-blue-800' }} mt-0.5 italic">
+                                        &ldquo;{{ $order->appointment_notes }}&rdquo;
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 {{ $isStorePickup ? 'bg-amber-900 text-amber-50' : 'bg-blue-900 text-blue-50' }} text-[10px] font-black uppercase tracking-wider rounded-full shadow-xs">
+                                Confirmed by Artisan
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- 2. STATUS ACTION BANNERS --}}
             @if(in_array($statusLower, ['delivered'], true))
                 <div class="px-4 sm:px-5 pb-4 pt-0">

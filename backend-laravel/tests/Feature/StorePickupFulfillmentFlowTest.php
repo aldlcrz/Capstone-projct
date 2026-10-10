@@ -508,5 +508,53 @@ class StorePickupFulfillmentFlowTest extends TestCase
         $response->assertSee('Ready for Pickup');
         $response->assertSee('Self-Pickup at Workshop');
     }
+
+    public function test_seller_can_set_appointment_when_accepting_store_pickup_order(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'orderID' => 'LB-' . strtoupper(Str::random(8)),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'shippingAddress' => json_encode([
+                'fullName' => 'Juan dela Cruz',
+                'phone' => '09171234567',
+                'address' => 'Barangay 1',
+                'city' => 'Lumban',
+                'province' => 'Laguna',
+            ]),
+            'totalAmount' => 3500.00,
+            'shippingFee' => 0.00,
+            'paymentMethod' => 'Pay in Shop',
+            'paymentStatus' => 'Unpaid',
+            'status' => 'Pending',
+        ]);
+
+        $this->attachShipping($order, $this->storePickupProvider);
+
+        $this->actingAs($this->seller);
+
+        $apptDate = date('Y-m-d', strtotime('+2 days'));
+        $response = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'Shipped',
+            'appointment_date' => $apptDate,
+            'appointment_time' => 'Morning (9:00 AM - 12:00 PM)',
+            'appointment_notes' => 'Please ask for Mang Juan upon arrival.',
+        ]);
+
+        $response->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals($apptDate, $order->appointment_date->format('Y-m-d'));
+        $this->assertEquals('Morning (9:00 AM - 12:00 PM)', $order->appointment_time);
+        $this->assertEquals('Please ask for Mang Juan upon arrival.', $order->appointment_notes);
+
+        // Verify customer view renders the appointment banner
+        $this->actingAs($this->customer);
+        $customerView = $this->get(route('orders.show', $order->id));
+        $customerView->assertStatus(200);
+        $customerView->assertSee('In-Shop Store Visit Appointment');
+        $customerView->assertSee('Morning (9:00 AM - 12:00 PM)');
+        $customerView->assertSee('Please ask for Mang Juan upon arrival.');
+    }
 }
 

@@ -168,6 +168,9 @@ function sellerOrdersManager() {
         showVerifyModal: false,
         verifyOrderTarget: null,
         verifyingPayment: false,
+        appointmentDateInput: '',
+        appointmentTimeInput: '',
+        appointmentNotesInput: '',
         showRejectModal: false,
         rejectOrderTarget: null,
         showCancelOrderModal: false,
@@ -493,29 +496,68 @@ function sellerOrdersManager() {
             }
         },
 
+        formatAppointmentDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const s = String(dateStr).split('T')[0];
+                const parts = s.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+                return new Date(dateStr).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch(e) {
+                return dateStr;
+            }
+        },
+
         openVerifyPaymentModal(order) {
             this.verifyOrderTarget = order || this.detailsOrder;
             this.verifyingPayment = false;
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const defaultDate = tomorrow.toISOString().split('T')[0];
+            this.appointmentDateInput = this.verifyOrderTarget?.appointment_date 
+                ? String(this.verifyOrderTarget.appointment_date).split('T')[0] 
+                : defaultDate;
+            this.appointmentTimeInput = this.verifyOrderTarget?.appointment_time || '';
+            this.appointmentNotesInput = this.verifyOrderTarget?.appointment_notes || '';
             this.showVerifyModal = true;
         },
 
         async executeVerifyPayment() {
             if (!this.verifyOrderTarget || this.verifyingPayment || this.statusUpdating) return;
+            const isPickup = this.isStorePickup(this.verifyOrderTarget);
+            const isSpecial = this.isSpecialDelivery(this.verifyOrderTarget);
+
+            if ((isPickup || isSpecial) && !this.appointmentDateInput) {
+                this.showToast('Please select a scheduled appointment date for the customer.');
+                return;
+            }
+
             this.verifyingPayment = true;
             try {
                 let targetStatus = 'To Ship';
-                if (this.isStorePickup(this.verifyOrderTarget)) {
+                if (isPickup) {
                     targetStatus = 'Shipped'; // Directly Ready for Store Pickup
-                } else if (this.isSpecialDelivery(this.verifyOrderTarget)) {
+                } else if (isSpecial) {
                     targetStatus = 'In Transit'; // Directly Out for Special Delivery
                 }
-                const success = await this.updateStatus(this.verifyOrderTarget, targetStatus);
+
+                const extraPayload = {};
+                if (isPickup || isSpecial) {
+                    extraPayload.appointment_date = this.appointmentDateInput;
+                    extraPayload.appointment_time = this.appointmentTimeInput;
+                    extraPayload.appointment_notes = this.appointmentNotesInput;
+                }
+
+                const success = await this.updateStatus(this.verifyOrderTarget, targetStatus, extraPayload);
                 if (success) {
                     this.showVerifyModal = false;
-                    if (this.isStorePickup(this.verifyOrderTarget)) {
-                        this.showToast('✓ Store pickup order accepted and marked Ready for Pickup!');
-                    } else if (this.isSpecialDelivery(this.verifyOrderTarget)) {
-                        this.showToast('✓ Special delivery order accepted and dispatched with rider!');
+                    if (isPickup) {
+                        this.showToast('✓ Store pickup order accepted! Customer appointment set for ' + this.formatAppointmentDate(this.appointmentDateInput));
+                    } else if (isSpecial) {
+                        this.showToast('✓ Special delivery order accepted! Delivery scheduled for ' + this.formatAppointmentDate(this.appointmentDateInput));
                     }
                 }
             } finally {
@@ -1674,7 +1716,7 @@ function sellerOrdersManager() {
             }
         },
 
-        async updateStatus(targetOrder, statusToSave) {
+        async updateStatus(targetOrder, statusToSave, extraPayload = {}) {
             const target = targetOrder || this.detailsOrder || this.activeOrder;
             const statusVal = statusToSave || this.newStatus;
             if (!target || !statusVal) return false;
@@ -1716,7 +1758,8 @@ function sellerOrdersManager() {
                     status: statusVal,
                     courierName: currentCourier,
                     trackingNumber: currentTracking || null,
-                    trackingLink: currentLink
+                    trackingLink: currentLink,
+                    ...extraPayload
                 };
 
                 const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
@@ -2454,12 +2497,31 @@ function sellerOrdersManager() {
                                     </div>
                                     <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
                                 </div>
-                            </template>
-
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
                                 <div class="pt-2 border-t border-gray-200/60 text-xs">
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
                                     <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                                </div>
+                            </template>
+
+                            <template x-if="detailsOrder.appointment_date">
+                                <div class="pt-2.5 border-t border-amber-200/60 bg-amber-50/60 p-2.5 rounded-xl space-y-1 text-xs">
+                                    <div class="text-[9px] font-black text-amber-900 uppercase tracking-wider flex items-center justify-between">
+                                        <span class="flex items-center gap-1">
+                                            <span>📅</span>
+                                            <span x-text="isStorePickup(detailsOrder) ? 'In-Shop Pickup Appointment' : 'Scheduled Special Delivery Date'"></span>
+                                        </span>
+                                        <span class="text-[8px] font-black px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 uppercase tracking-widest">Scheduled</span>
+                                    </div>
+                                    <div class="font-extrabold text-amber-950 text-xs flex items-center gap-1.5">
+                                        <span x-text="formatAppointmentDate(detailsOrder.appointment_date)"></span>
+                                        <template x-if="detailsOrder.appointment_time">
+                                            <span class="text-amber-800 font-semibold" x-text="'· ' + detailsOrder.appointment_time"></span>
+                                        </template>
+                                    </div>
+                                    <template x-if="detailsOrder.appointment_notes">
+                                        <div class="text-[10px] text-amber-900 font-medium italic mt-0.5" x-text="'Instructions: ' + detailsOrder.appointment_notes"></div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -3155,10 +3217,62 @@ function sellerOrdersManager() {
                         <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
                             <span class="font-black uppercase tracking-wider block mb-0.5" x-text="isStorePickup(verifyOrderTarget) ? 'ℹ️ In-Shop Store Pickup' : (isSpecialDelivery(verifyOrderTarget) ? 'ℹ️ Special Delivery Order' : 'ℹ️ Cash on Delivery Order')"></span>
                             <span x-text="isStorePickup(verifyOrderTarget) 
-                                ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly when the customer claims the order at the workshop. Seller will set an appointment for customer pickup. Please proceed to accept and prepare the order.'
+                                ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly when the customer claims the order at the workshop. Please schedule the pickup appointment below.'
                                 : (isSpecialDelivery(verifyOrderTarget)
-                                    ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly upon delivery by the local artisan rider. Seller will set an appointment with the customer for delivery. Please proceed to accept and prepare the order.'
+                                    ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly upon delivery by the local artisan rider. Please set the delivery appointment below.'
                                     : 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected from the customer upon courier delivery. Please proceed to accept and prepare the order.')"></span>
+                        </div>
+                    </template>
+
+                    {{-- Set Appointment Section for Store Pickup & Special Delivery --}}
+                    <template x-if="isStorePickup(verifyOrderTarget) || isSpecialDelivery(verifyOrderTarget)">
+                        <div class="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+                                    <span>📅</span>
+                                    <span x-text="isStorePickup(verifyOrderTarget) ? 'Set In-Shop Pickup Appointment' : 'Set Special Delivery Appointment'"></span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <span class="text-[9px] font-black text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-full uppercase tracking-wider"
+                                      x-text="isStorePickup(verifyOrderTarget) ? 'Customer Store Visit' : 'Artisan Local Delivery'"></span>
+                            </div>
+
+                            <p class="text-[10px] text-amber-900/90 leading-relaxed font-medium"
+                               x-text="isStorePickup(verifyOrderTarget) 
+                                   ? 'Select the date when the customer is scheduled to visit your boutique/workshop in Lumban to inspect and claim this order:' 
+                                   : 'Select the scheduled date when you or your local artisan rider will deliver this order to the customer:'">
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <label class="text-[9px] font-bold text-gray-700 uppercase block mb-1">
+                                        <span x-text="isStorePickup(verifyOrderTarget) ? 'Visit / Pickup Date' : 'Delivery Date'"></span> <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           x-model="appointmentDateInput" 
+                                           :min="new Date().toISOString().split('T')[0]"
+                                           required
+                                           class="w-full h-9 px-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-gray-700 uppercase block mb-1">Preferred Time / Slot</label>
+                                    <select x-model="appointmentTimeInput" 
+                                            class="w-full h-9 px-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all cursor-pointer">
+                                        <option value="">Anytime during shop hours (9 AM - 6 PM)</option>
+                                        <option value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</option>
+                                        <option value="Afternoon (1:00 PM - 5:00 PM)">Afternoon (1:00 PM - 5:00 PM)</option>
+                                        <option value="Evening (5:00 PM - 7:00 PM)">Evening (5:00 PM - 7:00 PM)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-700 uppercase block mb-1">Appointment Instructions for Customer (Optional)</label>
+                                <input type="text" 
+                                       x-model="appointmentNotesInput" 
+                                       :placeholder="isStorePickup(verifyOrderTarget) ? 'e.g. Please look for Master Artisan Mang Juan at the atelier front desk' : 'e.g. Rider Kuya Noel will arrive around lunchtime'"
+                                       class="w-full h-8 px-3 bg-white border border-amber-200 rounded-xl text-xs font-medium text-gray-800 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all">
+                            </div>
                         </div>
                     </template>
                 </div>

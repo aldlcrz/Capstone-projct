@@ -40,6 +40,9 @@ class Order extends Model
         'visitorSessionId',
         'commission_rate',
         'commission_amount',
+        'appointment_date',
+        'appointment_time',
+        'appointment_notes',
     ];
 
     /**
@@ -51,6 +54,7 @@ class Order extends Model
         'commission_rate'   => 'decimal:2',
         'commission_amount' => 'decimal:2',
         'totalAmount'       => 'decimal:2',
+        'appointment_date'  => 'date:Y-m-d',
     ];
 
     /**

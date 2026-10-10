@@ -322,6 +322,20 @@ class OrderController extends Controller
             }
         }
 
+        // Handle appointment scheduling for Store Pickup and Special Delivery
+        if ($request->has('appointment_date') || $request->has('appointmentDate')) {
+            $rawDate = $request->input('appointment_date') ?? $request->input('appointmentDate');
+            if (!empty($rawDate)) {
+                $order->appointment_date = date('Y-m-d', strtotime($rawDate));
+            }
+        }
+        if ($request->has('appointment_time') || $request->has('appointmentTime')) {
+            $order->appointment_time = trim($request->input('appointment_time') ?? $request->input('appointmentTime') ?? '');
+        }
+        if ($request->has('appointment_notes') || $request->has('appointmentNotes')) {
+            $order->appointment_notes = trim($request->input('appointment_notes') ?? $request->input('appointmentNotes') ?? '');
+        }
+
         $order->status = $canonicalTarget;
         if ($canonicalTarget === 'To Ship') {
             if (strcasecmp($order->paymentMethod, 'COD') === 0 || strcasecmp($order->paymentMethod, 'Cash on Delivery') === 0) {
@@ -385,13 +399,33 @@ class OrderController extends Controller
         }
 
         if ($canonicalCurrent !== $canonicalTarget || $shippingUpdated) {
+            $historyNotes = $request->notes;
+            if (!$historyNotes) {
+                if ($order->appointment_date && in_array($canonicalTarget, ['To Ship', 'Shipped', 'In Transit'], true)) {
+                    $apptStr = \Carbon\Carbon::parse($order->appointment_date)->format('M d, Y') . ($order->appointment_time ? " ({$order->appointment_time})" : '');
+                    if ($isStorePickup) {
+                        $historyNotes = "Order accepted. In-shop pickup appointment set for {$apptStr}.";
+                    } elseif ($isSpecialDelivery) {
+                        $historyNotes = "Order accepted. Special delivery scheduled for {$apptStr}.";
+                    } else {
+                        $historyNotes = "Order accepted with appointment scheduled for {$apptStr}.";
+                    }
+                } elseif ($canonicalTarget === 'To Ship') {
+                    $historyNotes = "Payment verified and order accepted for preparation.";
+                } elseif ($canonicalCurrent !== $canonicalTarget) {
+                    $historyNotes = "Status updated to {$canonicalTarget}.";
+                } else {
+                    $historyNotes = "Shipping information updated.";
+                }
+            }
+
             OrderStatusHistory::create([
                 'orderId' => $order->id,
                 'previousStatus' => $canonicalCurrent,
                 'newStatus' => $canonicalTarget,
                 'updatedBy' => $user->id,
                 'userRole' => $user->role,
-                'notes' => $request->notes ?? ($canonicalTarget === 'To Ship' ? "Payment verified and order accepted for preparation." : ($canonicalCurrent !== $canonicalTarget ? "Status updated to {$canonicalTarget}." : "Shipping information updated.")),
+                'notes' => $historyNotes,
             ]);
 
             try {
@@ -402,17 +436,19 @@ class OrderController extends Controller
         }
 
         if ($isStorePickup) {
+            $apptStr = $order->appointment_date ? \Carbon\Carbon::parse($order->appointment_date)->format('M d, Y') . ($order->appointment_time ? " ({$order->appointment_time})" : '') : null;
             $statusMsgMap = [
-                'To Ship' => 'Your order is being processed and prepared for in-shop pickup.',
-                'Shipped' => 'Your handcrafted order is packed and ready for in-shop pickup at our Lumban workshop!',
+                'To Ship' => $apptStr ? "Your store pickup order is being prepared. Your scheduled pickup date is {$apptStr}." : 'Your order is being processed and prepared for in-shop pickup.',
+                'Shipped' => $apptStr ? "Your handcrafted order is ready for in-shop pickup! Your appointment is set for {$apptStr} at our Lumban workshop." : 'Your handcrafted order is packed and ready for in-shop pickup at our Lumban workshop!',
                 'Delivered' => 'Your order has been claimed and picked up. Please inspect your item and rate your purchase.',
                 'Completed' => 'Your store pickup order has been marked as completed.',
             ];
         } elseif ($isSpecialDelivery) {
+            $apptStr = $order->appointment_date ? \Carbon\Carbon::parse($order->appointment_date)->format('M d, Y') . ($order->appointment_time ? " ({$order->appointment_time})" : '') : null;
             $statusMsgMap = [
-                'To Ship' => 'Your order is being processed and prepared for special artisan delivery.',
-                'Shipped' => 'Your handcrafted order is packed and being prepared for dispatch via local artisan rider.',
-                'In Transit' => 'Your order is out for special delivery via local artisan rider.',
+                'To Ship' => $apptStr ? "Your order is accepted! Special delivery is scheduled for {$apptStr}." : 'Your order is being processed and prepared for special artisan delivery.',
+                'Shipped' => $apptStr ? "Your order is packed! Special delivery appointment scheduled for {$apptStr}." : 'Your handcrafted order is packed and being prepared for dispatch via local artisan rider.',
+                'In Transit' => $apptStr ? "Your order is out for special delivery! Estimated arrival: {$apptStr}." : 'Your order is out for special delivery via local artisan rider.',
                 'Delivered' => 'Your order has been delivered by our artisan rider. Please inspect your item and rate your purchase.',
                 'Completed' => 'Your special delivery order has been marked as completed.',
             ];
