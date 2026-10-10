@@ -254,6 +254,7 @@ function sellerOrdersManager() {
 
         canRecordPayment(order) {
             if (!order) return false;
+            if (this.isStorePickup(order) || this.isSpecialDelivery(order)) return false;
             if (!this.isDirectSettlementOrder(order)) return false;
             const ps = String(order.paymentStatus || '').toLowerCase();
             const st = String(order.status || '').toLowerCase();
@@ -2539,7 +2540,7 @@ function sellerOrdersManager() {
                                     </button>
                                 </div>
                             </template>
-                            <template x-if="canRecordPayment(detailsOrder)">
+                            <template x-if="canRecordPayment(detailsOrder) && !isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
                                 <div class="pt-3 border-t border-gray-200/60">
                                     <button type="button" 
                                         @click="openRecordPaymentModal(detailsOrder)"
