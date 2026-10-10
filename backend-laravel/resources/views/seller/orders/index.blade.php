@@ -2082,7 +2082,7 @@ function sellerOrdersManager() {
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
          @click.self="detailsModal = false">
         
-        <div class="w-full sm:max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="w-full sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
             {{-- Modal Header Banner --}}
             <div class="relative bg-linear-to-br from-[#2A2A28] to-black p-6 text-white text-center shrink-0">
@@ -2497,6 +2497,7 @@ function sellerOrdersManager() {
                                     </div>
                                     <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
                                 </div>
+                            </template>
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
                                 <div class="pt-2 border-t border-gray-200/60 text-xs">
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</div>
@@ -2628,7 +2629,7 @@ function sellerOrdersManager() {
             </div>
 
             {{-- Modal Footer Actions --}}
-            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex flex-col gap-3 shrink-0">
+            <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex flex-col gap-3 shrink-0 overflow-hidden">
                 <template x-if="shippingError || packingUploadError">
                     <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 flex items-center gap-2">
                         <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -2694,7 +2695,7 @@ function sellerOrdersManager() {
                                 @click="openVerifyPaymentModal(detailsOrder)"
                                 :disabled="statusUpdating || verifyingPayment"
                                 style="background-color: #059669; color: #ffffff;"
-                                class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                                class="flex-1 sm:flex-none px-5 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
                                 <template x-if="statusUpdating || verifyingPayment">
                                     <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>
@@ -2702,10 +2703,12 @@ function sellerOrdersManager() {
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
                                 <span x-text="(statusUpdating || verifyingPayment) ? 'Processing Acceptance...' : (
-                                    isStorePickup(detailsOrder) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Mark Ready for Pickup' : 'Accept & Mark Ready for Pickup') : (
-                                    isSpecialDelivery(detailsOrder) ? (['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Dispatch Rider' : 'Accept & Dispatch Rider') : (
-                                    ['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept' : 'Accept Order'
-                                )))"></span>
+                                    ['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept Order' : (
+                                        isStorePickup(detailsOrder) ? 'Accept & Prepare Order' : (
+                                            isSpecialDelivery(detailsOrder) ? 'Accept & Prepare Order' : 'Accept Order'
+                                        )
+                                    )
+                                )"></span>
                                 <span x-show="!statusUpdating && !verifyingPayment" class="text-xs">➔</span>
                             </button>
                         </div>
