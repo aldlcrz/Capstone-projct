@@ -150,37 +150,118 @@
                     <div class="text-[10px] mt-0.5 font-sans" style="color: #766C60;">Last Year: ₱{{ number_format($salesAnalytics['prevYearSales'], 2) }}</div>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase font-sans {{ $salesAnalytics['yearGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                         {{ $salesAnalytics['yearGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['yearGrowthPct']) }}%
-                    </span>
+                    </spa        {{-- Sales Trend Visualizer Line Graph --}}
+        <div id="tour-analytics-sales-trend" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Trend Overview</h3>
+                    <p class="text-[10px] font-bold uppercase tracking-widest mt-0.5" style="color: #A16D19;">Revenue Trend (₱)</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] font-semibold text-[#8C827A]">Peak: </span>
+                    <span class="text-xs font-bold font-sans text-[#1E1915]">₱{{ number_format($salesTrendChart['max'] ?? 0) }}</span>
+                </div>
+            </div>
+
+            @php
+                $chartPoints = $salesTrendChart['points'] ?? [];
+                $maxRev = ($salesTrendChart['max'] ?? 0) > 0 ? (float) $salesTrendChart['max'] : 1.0;
+                $ptCount = count($chartPoints);
+                $svgW = 700;
+                $svgH = 160;
+                $padX = 35;
+                $padTop = 20;
+                $padBottom = 25;
+                $plotW = $svgW - ($padX * 2);
+                $plotH = $svgH - $padTop - $padBottom;
+
+                $coords = [];
+                foreach ($chartPoints as $idx => $pt) {
+                    $cx = $ptCount > 1 ? $padX + ($idx / ($ptCount - 1)) * $plotW : ($svgW / 2);
+                    $rev = (float) ($pt['revenue'] ?? 0);
+                    $cy = ($svgH - $padBottom) - (($rev / $maxRev) * $plotH);
+                    $coords[] = [
+                        'x' => round($cx, 1),
+                        'y' => round($cy, 1),
+                        'label' => $pt['label'] ?? '',
+                        'revenue' => $rev,
+                    ];
+                }
+
+                $lineD = '';
+                $areaD = '';
+                if (!empty($coords)) {
+                    $lineD = "M {$coords[0]['x']} {$coords[0]['y']}";
+                    for ($i = 1; $i < count($coords); $i++) {
+                        $p0 = $coords[$i - 1];
+                        $p1 = $coords[$i];
+                        $cpX1 = round($p0['x'] + ($p1['x'] - $p0['x']) / 2, 1);
+                        $cpY1 = $p0['y'];
+                        $cpX2 = round($p0['x'] + ($p1['x'] - $p0['x']) / 2, 1);
+                        $cpY2 = $p1['y'];
+                        $lineD .= " C {$cpX1} {$cpY1}, {$cpX2} {$cpY2}, {$p1['x']} {$p1['y']}";
+                    }
+                    $baseY = $svgH - $padBottom;
+                    $startX = $coords[0]['x'];
+                    $endX = $coords[count($coords) - 1]['x'];
+                    $areaD = $lineD . " L {$endX} {$baseY} L {$startX} {$baseY} Z";
+                }
+            @endphp
+
+            <div class="overflow-x-auto no-scrollbar">
+                <div class="min-w-80 space-y-2">
+                    {{-- SVG Line Graph --}}
+                    <div class="relative w-full h-44 sm:h-48">
+                        <svg viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-full overflow-visible" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="analyticsGoldGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#C49520" stop-opacity="0.32" />
+                                    <stop offset="60%" stop-color="#C49520" stop-opacity="0.08" />
+                                    <stop offset="100%" stop-color="#C49520" stop-opacity="0.0" />
+                                </linearGradient>
+                                <filter id="glowAnalyticsLine" x="-10%" y="-10%" width="120%" height="120%">
+                                    <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#C49520" flood-opacity="0.25" />
+                                </filter>
+                            </defs>
+
+                            {{-- Horizontal Reference Guidelines --}}
+                            <line x1="{{ $padX }}" y1="{{ $padTop }}" x2="{{ $svgW - $padX }}" y2="{{ $padTop }}" stroke="#ECE3D2" stroke-width="1" stroke-dasharray="3,3" opacity="0.75" />
+                            <line x1="{{ $padX }}" y1="{{ $padTop + ($plotH / 2) }}" x2="{{ $svgW - $padX }}" y2="{{ $padTop + ($plotH / 2) }}" stroke="#ECE3D2" stroke-width="1" stroke-dasharray="3,3" opacity="0.75" />
+                            <line x1="{{ $padX }}" y1="{{ $svgH - $padBottom }}" x2="{{ $svgW - $padX }}" y2="{{ $svgH - $padBottom }}" stroke="#E2D7C3" stroke-width="1.2" />
+
+                            {{-- Gradient Fill Area Under Curve --}}
+                            @if(!empty($areaD))
+                                <path d="{{ $areaD }}" fill="url(#analyticsGoldGradient)" />
+                            @endif
+
+                            {{-- Smooth Spline Line --}}
+                            @if(!empty($lineD))
+                                <path d="{{ $lineD }}" fill="none" stroke="#C49520" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowAnalyticsLine)" />
+                            @endif
+
+                            {{-- Data Nodes (Dots) --}}
+                            @foreach($coords as $c)
+                                <g class="group">
+                                    <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="8" fill="#C49520" fill-opacity="0.15" class="transition-all duration-300 group-hover:scale-125" />
+                                    <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="4.5" fill="#FFFFFF" stroke="#A16D19" stroke-width="2.5" class="transition-all duration-300 group-hover:r-6 cursor-pointer" />
+                                </g>
+                            @endforeach
+                        </svg>
+                    </div>
+
+                    {{-- X-Axis Day & Revenue Markers --}}
+                    <div class="flex justify-between items-start pt-2 border-t border-[#ECE3D2]/70 px-1">
+                        @foreach($coords as $c)
+                            <div class="flex-1 flex flex-col items-center text-center">
+                                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider" style="color: #8C827A;">{{ $c['label'] }}</div>
+                                <div class="text-[9px] sm:text-[10px] font-bold font-sans mt-0.5" style="color: #1E1915;">₱{{ number_format($c['revenue']) }}</div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
-
-        {{-- Sales Trend Visualizer Chart --}}
-        <div id="tour-analytics-sales-trend" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
-            <div class="flex items-center justify-between">
-                <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Sales Trend Overview</h3>
-                <span class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Revenue Trend (₱)</span>
-            </div>
-            <div class="overflow-x-auto no-scrollbar">
-                <div class="flex items-end justify-between gap-3 h-44 min-w-80 pt-4">
-                    @foreach($salesTrendChart['points'] as $pt)
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            @php 
-                                $heightPct = $salesTrendChart['max'] > 0 
-                                    ? ($pt['revenue'] > 0 ? max(8, round(($pt['revenue'] / $salesTrendChart['max']) * 100)) : 4) 
-                                    : 4; 
-                            @endphp
-                            <div class="w-full max-w-12 rounded-t-xl relative overflow-hidden h-32" style="background: #FAF7F2;">
-                                <div class="absolute inset-x-0 bottom-0 rounded-t-xl transition-all duration-500" 
-                                     style="<?php echo 'height: ' . $heightPct . '%; background: linear-gradient(180deg, #C49520 0%, #A16D19 100%);'; ?>"></div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-[9px] font-bold uppercase" style="color: #8C827A;">{{ $pt['label'] }}</div>
-                                <div class="text-[9px] font-bold font-sans" style="color: #1E1915;">₱{{ number_format($pt['revenue']) }}</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+    </div>              </div>
             </div>
         </div>
     </div>

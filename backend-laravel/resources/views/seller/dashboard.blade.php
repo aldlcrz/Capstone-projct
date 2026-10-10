@@ -228,30 +228,114 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-            <!-- Revenue Trend Chart (Amber bars) -->
+            <!-- Revenue Trajectory (Line Graph) -->
             <div id="tour-seller-revenue-chart" class="lg:col-span-8 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4" style="background: #FFFCF7; border: 1px solid #E8DECB; box-shadow: 0 2px 8px rgba(30,25,21,0.03);">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-serif text-sm sm:text-base font-bold uppercase" style="color: #1E1915;">Revenue Trajectory</h3>
                         <p class="text-[10px] font-bold uppercase tracking-widest mt-0.5" style="color: #C49520;">Period: {{ $filters['chart_label'] ?? ($filters['label'] ?? 'Last 7 Days') }}</p>
                     </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-semibold text-[#8C827A]">Peak: </span>
+                        <span class="text-xs font-bold font-sans text-[#1E1915]">₱{{ number_format($maxChartRevenue ?? 0) }}</span>
+                    </div>
                 </div>
+
+                @php
+                    $dashPoints = $revenueChart ?? [];
+                    $dashMax = ($maxChartRevenue ?? 0) > 0 ? (float) $maxChartRevenue : 1.0;
+                    $dashCount = count($dashPoints);
+                    $dW = 700;
+                    $dH = 160;
+                    $dPadX = 35;
+                    $dPadTop = 20;
+                    $dPadBottom = 25;
+                    $dPlotW = $dW - ($dPadX * 2);
+                    $dPlotH = $dH - $dPadTop - $dPadBottom;
+
+                    $dashCoords = [];
+                    foreach ($dashPoints as $idx => $pt) {
+                        $cx = $dashCount > 1 ? $dPadX + ($idx / ($dashCount - 1)) * $dPlotW : ($dW / 2);
+                        $rev = (float) ($pt['revenue'] ?? 0);
+                        $cy = ($dH - $dPadBottom) - (($rev / $dashMax) * $dPlotH);
+                        $dashCoords[] = [
+                            'x' => round($cx, 1),
+                            'y' => round($cy, 1),
+                            'label' => $pt['label'] ?? '',
+                            'revenue' => $rev,
+                        ];
+                    }
+
+                    $dashLineD = '';
+                    $dashAreaD = '';
+                    if (!empty($dashCoords)) {
+                        $dashLineD = "M {$dashCoords[0]['x']} {$dashCoords[0]['y']}";
+                        for ($i = 1; $i < count($dashCoords); $i++) {
+                            $p0 = $dashCoords[$i - 1];
+                            $p1 = $dashCoords[$i];
+                            $cpX1 = round($p0['x'] + ($p1['x'] - $p0['x']) / 2, 1);
+                            $cpY1 = $p0['y'];
+                            $cpX2 = round($p0['x'] + ($p1['x'] - $p0['x']) / 2, 1);
+                            $cpY2 = $p1['y'];
+                            $dashLineD .= " C {$cpX1} {$cpY1}, {$cpX2} {$cpY2}, {$p1['x']} {$p1['y']}";
+                        }
+                        $baseY = $dH - $dPadBottom;
+                        $startX = $dashCoords[0]['x'];
+                        $endX = $dashCoords[count($dashCoords) - 1]['x'];
+                        $dashAreaD = $dashLineD . " L {$endX} {$baseY} L {$startX} {$baseY} Z";
+                    }
+                @endphp
+
                 <div class="overflow-x-auto -mx-2 px-2 no-scrollbar">
-                    <div class="flex items-end justify-between gap-2.5 h-40 min-w-70">
-                        @foreach($revenueChart as $day)
-                            <div class="flex-1 flex flex-col items-center gap-2">
-                                <div class="w-full flex items-end justify-center h-28">
-                                    @php $barHeightPct = $maxChartRevenue > 0 ? max(8, ($day['revenue'] / $maxChartRevenue) * 100) : 8; @endphp
-                                    <div class="h-full w-full max-w-10 rounded-t-lg relative group flex items-end justify-center" style="background: #FDF8EE; border: 1px solid rgba(232,222,203,0.5);">
-                                        <div class="w-full rounded-t-lg transition-all duration-300" style="<?php echo 'height: ' . $barHeightPct . '%; background: #B5870F;'; ?>" onmouseover="this.style.background='#A16D19';" onmouseout="this.style.background='#B5870F';"></div>
-                                    </div>
+                    <div class="min-w-70 space-y-2">
+                        {{-- SVG Line Graph --}}
+                        <div class="relative w-full h-40 sm:h-44">
+                            <svg viewBox="0 0 {{ $dW }} {{ $dH }}" class="w-full h-full overflow-visible" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="dashGoldGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#C49520" stop-opacity="0.32" />
+                                        <stop offset="60%" stop-color="#C49520" stop-opacity="0.08" />
+                                        <stop offset="100%" stop-color="#C49520" stop-opacity="0.0" />
+                                    </linearGradient>
+                                    <filter id="glowDashLine" x="-10%" y="-10%" width="120%" height="120%">
+                                        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#C49520" flood-opacity="0.25" />
+                                    </filter>
+                                </defs>
+
+                                {{-- Horizontal Reference Guidelines --}}
+                                <line x1="{{ $dPadX }}" y1="{{ $dPadTop }}" x2="{{ $dW - $dPadX }}" y2="{{ $dPadTop }}" stroke="#E8DECB" stroke-width="1" stroke-dasharray="3,3" opacity="0.75" />
+                                <line x1="{{ $dPadX }}" y1="{{ $dPadTop + ($dPlotH / 2) }}" x2="{{ $dW - $dPadX }}" y2="{{ $dPadTop + ($dPlotH / 2) }}" stroke="#E8DECB" stroke-width="1" stroke-dasharray="3,3" opacity="0.75" />
+                                <line x1="{{ $dPadX }}" y1="{{ $dH - $dPadBottom }}" x2="{{ $dW - $dPadX }}" y2="{{ $dH - $dPadBottom }}" stroke="#D6C8AF" stroke-width="1.2" />
+
+                                {{-- Gradient Fill Area Under Curve --}}
+                                @if(!empty($dashAreaD))
+                                    <path d="{{ $dashAreaD }}" fill="url(#dashGoldGradient)" />
+                                @endif
+
+                                {{-- Smooth Spline Line --}}
+                                @if(!empty($dashLineD))
+                                    <path d="{{ $dashLineD }}" fill="none" stroke="#B5870F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowDashLine)" />
+                                @endif
+
+                                {{-- Data Nodes (Dots) --}}
+                                @foreach($dashCoords as $c)
+                                    <g class="group">
+                                        <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="8" fill="#B5870F" fill-opacity="0.15" class="transition-all duration-300 group-hover:scale-125" />
+                                        <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="4.5" fill="#FFFFFF" stroke="#A16D19" stroke-width="2.5" class="transition-all duration-300 group-hover:r-6 cursor-pointer" />
+                                    </g>
+                                @endforeach
+                            </svg>
+                        </div>
+
+                        {{-- X-Axis Day & Revenue Markers --}}
+                        <div class="flex justify-between items-start pt-2 border-t border-[#E8DECB]/70 px-1">
+                            @foreach($dashCoords as $c)
+                                <div class="flex-1 flex flex-col items-center text-center">
+                                    <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider" style="color: #766C60;">{{ $c['label'] }}</div>
+                                    <div class="text-[9px] sm:text-[10px] font-bold font-sans mt-0.5" style="color: #1E1915;">₱{{ number_format($c['revenue']) }}</div>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-[9px] font-bold uppercase" style="color: #766C60;">{{ $day['label'] }}</div>
-                                    <div class="text-[9px] font-bold font-sans" style="color: #1E1915;">₱{{ number_format($day['revenue']) }}</div>
-                                </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
