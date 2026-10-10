@@ -349,6 +349,12 @@ class OrderController extends Controller
                     Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
                 }
             }
+        } elseif ($canonicalTarget === 'Delivered') {
+            if (in_array(strtoupper($order->paymentMethod ?? ''), ['COD', 'CASH ON DELIVERY', 'PAY IN SHOP', 'PAY ON CLAIM'], true) || $isStorePickup) {
+                if (!in_array(strtolower($order->paymentStatus ?? ''), ['paid', 'verified'], true)) {
+                    $order->paymentStatus = 'Paid';
+                }
+            }
         }
         $order->save();
 

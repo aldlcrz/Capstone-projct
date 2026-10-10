@@ -2679,17 +2679,17 @@ function sellerOrdersManager() {
                                         <span>🖨️</span> Print Invoice
                                     </button>
                                     <button type="button"
-                                        @click="claimCodeInput ? executeVerifyClaimCode(detailsOrder) : showToast('Please enter the customer\'s 8-character claim code in the box above.')"
-                                        :disabled="claimCodeLoading"
-                                        style="background-color: #C49520; color: #ffffff;"
-                                        class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-[#C49520] hover:bg-[#B38519] disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
-                                        <template x-if="claimCodeLoading">
+                                        @click="confirmMarkAsDelivered(detailsOrder)"
+                                        :disabled="statusUpdating || deliveryConfirmLoading"
+                                        style="background-color: #059669; color: #ffffff;"
+                                        class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+                                        <template x-if="statusUpdating || deliveryConfirmLoading">
                                             <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                         </template>
-                                        <template x-if="!claimCodeLoading">
+                                        <template x-if="!statusUpdating && !deliveryConfirmLoading">
                                             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                         </template>
-                                        <span x-text="claimCodeLoading ? 'Verifying Code...' : 'Verify Claim Code & Hand Over ➔'"></span>
+                                        <span x-text="(statusUpdating || deliveryConfirmLoading) ? 'Updating...' : 'Confirm Handed Over & Claimed ➔'"></span>
                                     </button>
                                 </div>
                             </template>
