@@ -181,21 +181,6 @@
         </div>
     </div>
 
-    {{-- ── User Registrations Chart ── --}}
-    <div id="tour-admin-dash-users-chart" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Last 7 Days</div>
-                <h3 class="text-base font-bold text-black">User Registrations</h3>
-            </div>
-            <div class="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest flex-wrap">
-                <span class="text-gray-400">New (7d): <span class="text-black">{{ ($userCounts['new_customers_7d'] ?? 0) + ($userCounts['new_sellers_7d'] ?? 0) }}</span></span>
-                <span class="text-gray-400">Total Buyers: <span class="text-black">{{ $userCounts['customers'] }}</span></span>
-                <span class="text-gray-400">Total Artisans: <span class="text-black">{{ $userCounts['sellers'] }}</span></span>
-            </div>
-        </div>
-        <canvas id="userChart" height="55"></canvas>
-    </div>
 
     {{-- ── Tables Row ── --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -407,36 +392,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ── User Registrations Chart ────────────────────────────────────────────────
-    const userEl = document.getElementById('userChart');
-    if (userEl) {
-        new Chart(userEl, {
-            type: 'line',
-            data: {
-                labels: chartData.userLabels || [],
-                datasets: [{
-                    label: 'New Users',
-                    data: chartData.userData || [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59,130,246,0.06)',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#3b82f6',
-                    fill: true,
-                    tension: 0.4,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' }, color: '#9ca3af' } },
-                    y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af', stepSize: 1 }, beginAtZero: true }
-                }
-            }
-        });
-    }
 });
 </script>
 @endpush
