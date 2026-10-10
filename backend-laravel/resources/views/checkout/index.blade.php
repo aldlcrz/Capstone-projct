@@ -342,7 +342,10 @@
                 <div x-show="step === 2" x-transition class="space-y-4">
                     <div class="mb-4">
                         <h2 class="font-serif text-xl lg:text-2xl font-bold text-[#1E1915] mb-1">Select Payment Channel</h2>
-                        <p class="text-xs lg:text-sm text-[#78716C] font-medium">Choose your e-wallet payment option below and submit your reference receipt.</p>
+                        <p class="text-xs lg:text-sm text-[#78716C] font-medium"
+                           x-text="isDirectPaymentOrder() ? 'Direct transaction arranged between customer and seller.' : 'Choose your e-wallet payment option below and submit your reference receipt.'">
+                            Choose your e-wallet payment option below and submit your reference receipt.
+                        </p>
                     </div>
                     @php
                         $resolveQrUrl = function ($qrPath) {
@@ -379,10 +382,10 @@
                                 <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
                                     <div class="flex items-start gap-2 text-[#996515] font-bold">
                                         <span class="text-sm shrink-0">ℹ️</span>
-                                        <span>No online prepayment or receipt screenshot is required at checkout.</span>
+                                        <span>Seller will set an appointment for you, please wait.</span>
                                     </div>
                                     <p class="text-gray-700">
-                                        You and the artisan will arrange direct payment (Cash, personal GCash/Maya transfer, or other direct agreement) when you claim your items at the workshop. The artisan will record your payment upon collection.
+                                        This is a direct transaction between customer and seller. The artisan will coordinate your pickup schedule and record your payment upon collection at the workshop.
                                     </p>
                                 </div>
                             </div>
@@ -399,10 +402,10 @@
                                 <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
                                     <div class="flex items-start gap-2 text-[#996515] font-bold">
                                         <span class="text-sm shrink-0">ℹ️</span>
-                                        <span>No online prepayment or receipt screenshot is required at checkout.</span>
+                                        <span>Seller will set an appointment for you, please wait.</span>
                                     </div>
                                     <p class="text-gray-700">
-                                        You and the artisan rider will arrange direct payment (Cash, direct transfer, or other direct agreement) upon delivery arrival and inspection. The artisan will record your payment upon fulfillment.
+                                        This is a direct transaction between customer and seller. The artisan rider will coordinate your delivery schedule and record your payment upon handover.
                                     </p>
                                 </div>
                             </div>
@@ -521,8 +524,13 @@
                         </div>
                     </div>
 
+                    <!-- Direct Payment Form Inputs -->
+                    <template x-if="isDirectPaymentOrder()">
+                        <input type="hidden" name="paymentMethod" :value="paymentMethod">
+                    </template>
+
                     <!-- Payment Proof Upload & Automated Extraction (Only for GCash / Maya) -->
-                    <div x-show="paymentMethod !== 'COD'" x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
+                    <div x-show="paymentMethod !== 'COD' && !isDirectPaymentOrder()" x-cloak x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
                         <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2.5">
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-[#C49520]"></div>
@@ -548,7 +556,7 @@
                                        id="paymentScreenshotInput" 
                                        name="paymentScreenshot" 
                                        accept="image/*" 
-                                       :disabled="paymentMethod === 'COD'"
+                                       :disabled="paymentMethod === 'COD' || isDirectPaymentOrder()"
                                        @change="handleFileChange($event)" 
                                        class="sr-only">
 
@@ -1014,7 +1022,7 @@
                 </div>
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Confirm Your Order</h3>
                 <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto"
-                   x-text="paymentMethod === 'COD' ? 'Please ensure that your delivery address and order details are accurate before placing your order.' : 'Please ensure that your delivery address and payment receipt details are accurate before placing your order.'">
+                   x-text="paymentMethod === 'COD' || isDirectPaymentOrder() ? 'Please ensure that your delivery address and order details are accurate before placing your order.' : 'Please ensure that your delivery address and payment receipt details are accurate before placing your order.'">
                     Please ensure that your delivery address and order details are accurate before placing your order.
                 </p>
             </div>
@@ -1025,7 +1033,7 @@
                     <span>Payment Method:</span>
                     <span class="font-bold text-gray-900" x-text="paymentMethodDisplayName"></span>
                 </div>
-                <div x-show="paymentMethod !== 'COD'" class="flex justify-between items-center text-gray-600">
+                <div x-show="paymentMethod !== 'COD' && !isDirectPaymentOrder()" class="flex justify-between items-center text-gray-600">
                     <span>Reference Number:</span>
                     <span class="font-mono font-bold text-gray-900" x-text="paymentRef"></span>
                 </div>
@@ -1073,7 +1081,7 @@
             <div>
                 <h4 class="font-serif text-lg font-bold text-gray-900">Placing Your Order</h4>
                 <p class="text-xs text-gray-500 mt-1 leading-relaxed"
-                   x-text="paymentMethod === 'COD' ? 'Please wait while we process and secure your order. Do not refresh or close this page.' : 'Please wait while we secure your order and verify payment details. Do not refresh or close this page.'">
+                   x-text="paymentMethod === 'COD' || isDirectPaymentOrder() ? 'Please wait while we process and secure your order. Do not refresh or close this page.' : 'Please wait while we secure your order and verify payment details. Do not refresh or close this page.'">
                     Please wait while we process and secure your order. Do not refresh or close this page.
                 </p>
             </div>
@@ -1527,7 +1535,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         },
         isDirectPaymentOrder() {
             const code = this.shippingQuote?.provider_code;
-            return code === 'store_pickup' || code === 'seller_direct';
+            return code === 'store_pickup' || code === 'seller_direct' || this.paymentMethod === 'Store Pickup' || this.paymentMethod === 'Special Delivery';
         },
         get paymentMethodDisplayName() {
             if (this.isDirectPaymentOrder()) {
@@ -1743,7 +1751,10 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 }
 
                 if (this.shippingQuote?.provider_code === 'store_pickup') {
+                    this.paymentMethod = 'Store Pickup';
                     this.initStorePickupMap();
+                } else if (this.shippingQuote?.provider_code === 'seller_direct') {
+                    this.paymentMethod = 'Special Delivery';
                 }
             } catch (err) {
                 clearTimeout(timeoutId);
