@@ -335,21 +335,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const chartData = JSON.parse(rawData.textContent || '{}');
     const rust  = '#C0422A';
 
-    // ── Revenue Chart ───────────────────────────────────────────────────────────
+    // ── Revenue Line Chart ──────────────────────────────────────────────────────
     const revEl = document.getElementById('revenueChart');
     if (revEl) {
         new Chart(revEl, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: chartData.revenueLabels || [],
                 datasets: [{
                     label: 'Revenue (₱)',
                     data: chartData.revenueData || [],
-                    backgroundColor: 'rgba(192,66,42,0.12)',
+                    backgroundColor: 'rgba(192,66,42,0.08)',
                     borderColor: rust,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: rust,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.35,
                 }]
             },
             options: {
