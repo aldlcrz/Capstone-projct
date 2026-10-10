@@ -321,11 +321,12 @@ class SuperAdminController extends Controller
     public function updateCommissionRate(Request $request)
     {
         $request->validate(['rate' => 'required|numeric|min:0|max:100']);
+        $rate = number_format((float) $request->rate, 2, '.', '');
         SystemSetting::updateOrCreate(
             ['key' => 'commission_rate'],
-            ['value' => $request->rate]
+            ['value' => $rate]
         );
-        return redirect()->back()->with('success', "Commission rate updated to {$request->rate}%.");
+        return redirect()->back()->with('success', "Commission rate updated to {$rate}%.");
     }
 
     public function updatePaymentSettings(Request $request)
@@ -371,14 +372,16 @@ class SuperAdminController extends Controller
         [$year, $month] = explode('-', $request->period);
 
         $summary = $ledger->getSellerFinancialSummary($seller, $request->period);
-        $totalSales = $summary['periodCashProductSales'];
-        $commissionAmount = $summary['commissionDueThisPeriod'];
+        $existing = CommissionRecord::where('sellerId', $sellerId)->where('period', $request->period)->first();
+        $totalSales = ($existing && (float)$existing->totalSales > 0) ? (float)$existing->totalSales : $summary['periodCashProductSales'];
+        $commissionRate = ($existing && (float)$existing->commissionRate > 0) ? (float)$existing->commissionRate : $rate;
+        $commissionAmount = ($existing && (float)$existing->commissionAmount > 0) ? (float)$existing->commissionAmount : $summary['commissionDueThisPeriod'];
 
         CommissionRecord::updateOrCreate(
             ['sellerId' => $sellerId, 'period' => $request->period],
             [
                 'totalSales'       => $totalSales,
-                'commissionRate'   => $rate,
+                'commissionRate'   => $commissionRate,
                 'commissionAmount' => $commissionAmount,
                 'status'           => 'paid',
                 'paidAt'           => now(),
@@ -502,21 +505,17 @@ class SuperAdminController extends Controller
                 continue;
             }
 
-            $totalSales = (float) Order::whereNotIn('status', ['Cancelled'])
-                ->where('sellerId', $seller->id)
-                ->whereYear('createdAt', Carbon::now()->year)
-                ->whereMonth('createdAt', Carbon::now()->month)
-                ->sum('totalAmount');
+            $summary = FinancialLedgerService::getSellerFinancialSummary($seller, $period);
+            $totalSales = $summary['cash_product_sales'];
+            $commissionAmount = $summary['commission_due'];
 
             if ($totalSales <= 0) continue;
 
-            $commissionAmount = round($totalSales * ($rate / 100), 2);
-
             CommissionRecord::updateOrCreate(
-                ['sellerId' => $seller->id, 'period' => $period],
+                ['sellerId' => $sellerId, 'period' => $period],
                 [
                     'totalSales'      => $totalSales,
-                    'commissionRate'  => $rate,
+                    'commissionRate'  => $summary['commission_rate'],
                     'commissionAmount'=> $commissionAmount,
                     'status'         => 'unpaid',
                     'dueDate'        => $dueDate,
@@ -1475,7 +1474,7 @@ class SuperAdminController extends Controller
 
     private function getCommissionRate(): float
     {
-        return (float) (SystemSetting::where('key', 'commission_rate')->value('value') ?? 5.00);
+        return \App\Services\Financial\FinancialLedgerService::getCommissionRate();
     }
 
     private function sendNotification(string $userId, string $title, string $message, string $type = 'system', ?string $link = null, string $role = 'seller'): void

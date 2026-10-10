@@ -29,7 +29,7 @@ class AdminSettingsController extends Controller
             'site_tagline'         => 'Authentic Filipino Barong Marketplace',
             'support_email'        => 'support@lumbarong.com',
             'max_banner_per_seller'=> '3',
-            'commission_rate'      => '10',
+            'commission_rate'      => (string) \App\Services\Financial\FinancialLedgerService::getCommissionRate(),
             'min_withdrawal'       => '500',
             'allow_registration'   => '1',
             'allow_seller_signup'  => '1',
@@ -47,6 +47,26 @@ class AdminSettingsController extends Controller
     public function update(Request $request)
     {
         $data = $request->except(['_token', '_method']);
+
+        if (array_key_exists('commission_rate', $data)) {
+            $user = Auth::user();
+            if (!$user || !in_array($user->role, ['admin', 'superadmin'], true)) {
+                abort(403, 'Unauthorized to modify platform commission rate.');
+            }
+
+            $request->validate([
+                'commission_rate' => 'required|numeric|min:0|max:100',
+            ]);
+
+            $rateFloat = (float) $data['commission_rate'];
+            if (!is_finite($rateFloat) || $rateFloat < 0 || $rateFloat > 100) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'commission_rate' => 'The commission rate must be a valid number between 0 and 100.',
+                ]);
+            }
+
+            $data['commission_rate'] = (string) $data['commission_rate'];
+        }
 
         foreach ($data as $key => $value) {
             SystemSetting::updateOrCreate(['key' => $key], ['value' => $value]);

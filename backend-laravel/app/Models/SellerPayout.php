@@ -32,6 +32,7 @@ class SellerPayout extends Model
         'shipping_amount',
         'discount_amount',
         'commission_deducted',
+        'commission_rate',
         'net_settlement_amount',
         'status',
         'payout_method',
@@ -43,6 +44,15 @@ class SellerPayout extends Model
         'admin_notes',
         'processed_by',
         'processed_at',
+    ];
+
+    protected $casts = [
+        'gross_sales'           => 'decimal:2',
+        'shipping_amount'       => 'decimal:2',
+        'discount_amount'       => 'decimal:2',
+        'commission_deducted'   => 'decimal:2',
+        'commission_rate'       => 'decimal:2',
+        'net_settlement_amount' => 'decimal:2',
     ];
 
     public function getTransactionReferenceAttribute(): ?string

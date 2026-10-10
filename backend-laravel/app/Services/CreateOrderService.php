@@ -602,6 +602,10 @@ class CreateOrderService
                 $orderAttributes['paymentRejectionReason'] = null;
             }
 
+            if (Schema::hasColumn('orders', 'commission_rate')) {
+                $orderAttributes['commission_rate'] = \App\Services\Financial\FinancialLedgerService::getCommissionRate();
+            }
+
             $order = Order::create($orderAttributes);
 
             // Create Order Shipping Snapshot (Immutable pricing data)

@@ -118,9 +118,10 @@ class RecordCashRefundService
                         ->first();
 
                     if ($activeCommission) {
-                        $rate = (float) ($activeCommission->commissionRate ?: 0.05);
+                        $rate = (float) ($activeCommission->commissionRate ?? \App\Services\Financial\FinancialLedgerService::getCommissionRate());
+                        $rateMultiplier = $rate > 1.0 ? ($rate / 100.0) : $rate;
                         $adjustedSales = max(0, (float) $activeCommission->totalSales - $refundAmount);
-                        $adjustedComm = round($adjustedSales * $rate, 2);
+                        $adjustedComm = round($adjustedSales * $rateMultiplier, 2);
                         
                         $activeCommission->update([
                             'totalSales'       => $adjustedSales,
@@ -230,9 +231,10 @@ class RecordCashRefundService
                         ->first();
 
                     if ($activeCommission) {
-                        $rate = (float) ($activeCommission->commissionRate ?: 0.05);
+                        $rate = (float) ($activeCommission->commissionRate ?? \App\Services\Financial\FinancialLedgerService::getCommissionRate());
+                        $rateMultiplier = $rate > 1.0 ? ($rate / 100.0) : $rate;
                         $adjustedSales = max(0, (float) $activeCommission->totalSales - $refundAmount);
-                        $adjustedComm = round($adjustedSales * $rate, 2);
+                        $adjustedComm = round($adjustedSales * $rateMultiplier, 2);
 
                         $activeCommission->update([
                             'totalSales'       => $adjustedSales,

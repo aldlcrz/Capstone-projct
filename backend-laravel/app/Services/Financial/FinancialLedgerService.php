@@ -27,7 +27,10 @@ class FinancialLedgerService
     {
         $setting = SystemSetting::where('key', 'commission_rate')->value('value');
         if ($setting !== null && is_numeric($setting)) {
-            return (float) $setting;
+            $val = (float) $setting;
+            if ($val >= 0 && $val <= 100 && is_finite($val)) {
+                return round($val, 2);
+            }
         }
         return 5.00;
     }
@@ -165,7 +168,9 @@ class FinancialLedgerService
         
         // Under current policy: 0% platform commission on online payments (GCash / Maya).
         // Cash sales: configured commission rate applied to productGross.
-        $commissionRate = static::getCommissionRate();
+        $commissionRate = ($order->commission_rate !== null && is_numeric($order->commission_rate))
+            ? (float) $order->commission_rate
+            : static::getCommissionRate();
         $commissionDeducted = $isOnline ? 0.00 : round($productGross * ($commissionRate / 100), 2);
 
         // Net settlement calculation: product proceeds + shipping minus discounts and commission (excluding sukli)
@@ -315,7 +320,8 @@ class FinancialLedgerService
                 'gross_sales'               => $breakdown['gross_sales'],
                 'shipping_amount'           => $breakdown['shipping_amount'],
                 'discount_amount'           => $breakdown['discount_amount'],
-                'commission_deducted'       => 0.00, // 0 for online GCash/Maya under current rule
+                'commission_deducted'       => $breakdown['commission_deducted'],
+                'commission_rate'           => $breakdown['commission_rate'],
                 'net_settlement_amount'     => $breakdown['net_settlement_amount'],
                 'status'                    => $newStatus,
                 'payout_method'             => $existing->payout_method ?: $payoutMethod,
@@ -334,7 +340,8 @@ class FinancialLedgerService
             'gross_sales'               => $breakdown['gross_sales'],
             'shipping_amount'           => $breakdown['shipping_amount'],
             'discount_amount'           => $breakdown['discount_amount'],
-            'commission_deducted'       => 0.00,
+            'commission_deducted'       => $breakdown['commission_deducted'],
+            'commission_rate'           => $breakdown['commission_rate'],
             'net_settlement_amount'     => $breakdown['net_settlement_amount'],
             'status'                    => $breakdown['status'],
             'payout_method'             => $payoutMethod,
@@ -479,14 +486,22 @@ class FinancialLedgerService
         $periodTotalGrossSales  = $periodCashProductSales + $periodOnlineGrossSales;
 
         // 2. Commission calculation (ONLY on eligible cash sales)
-        $commissionDueThisPeriod = round($periodCashProductSales * ($rate / 100), 2);
-
         // 3. Commission records and arrears
         $commissionRecords = CommissionRecord::where('sellerId', $sellerId)
             ->orderByDesc('period')
             ->get();
 
         $currentCommissionRecord = $commissionRecords->firstWhere('period', $period);
+
+        // Historical preservation: If a commission record already exists for this period, retain its historically recorded rate and amount!
+        if ($currentCommissionRecord && (float) $currentCommissionRecord->commissionRate > 0) {
+            $effectiveRate = (float) $currentCommissionRecord->commissionRate;
+            $commissionDueThisPeriod = (float) $currentCommissionRecord->commissionAmount;
+        } else {
+            $effectiveRate = $rate;
+            $commissionDueThisPeriod = round($periodCashProductSales * ($rate / 100), 2);
+        }
+
         $totalCommissionPaid = (float) $commissionRecords->where('status', 'paid')->sum('commissionAmount');
         $unpaidCommissionRecords = $commissionRecords->whereIn('status', ['unpaid', 'verification_pending']);
         $totalCommissionOutstanding = (float) $unpaidCommissionRecords->sum('commissionAmount');
@@ -510,8 +525,8 @@ class FinancialLedgerService
         return [
             'seller'                      => $seller,
             'period'                      => $period,
-            'commission_rate'             => $rate,
-            'commissionRate'              => $rate,
+            'commission_rate'             => $effectiveRate,
+            'commissionRate'              => $effectiveRate,
             'gross_sales'                 => $periodTotalGrossSales,
             'cash_product_sales'          => $periodCashProductSales,
             'commission_due'              => $commissionDueThisPeriod,

@@ -1946,7 +1946,7 @@ class AdminController extends Controller
             'cod'                  => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim'])->count(),
         ];
 
-        $commissionRate = (float) (SystemSetting::where('key', 'commission_rate')->value('value') ?? 5.0);
+        $commissionRate = \App\Services\Financial\FinancialLedgerService::getCommissionRate();
 
         return view('admin.orders.index', compact('allOrders', 'counts', 'status', 'paymentMethod', 'search', 'commissionRate'));
     }
@@ -2285,14 +2285,16 @@ class AdminController extends Controller
         [$year, $month] = explode('-', $request->period);
 
         $summary = $ledger->getSellerFinancialSummary($seller, $request->period);
-        $totalSales = $summary['periodCashProductSales'];
-        $commissionAmount = $summary['commissionDueThisPeriod'];
+        $existing = CommissionRecord::where('sellerId', $sellerId)->where('period', $request->period)->first();
+        $totalSales = ($existing && (float)$existing->totalSales > 0) ? (float)$existing->totalSales : $summary['periodCashProductSales'];
+        $commissionRate = ($existing && (float)$existing->commissionRate > 0) ? (float)$existing->commissionRate : $rate;
+        $commissionAmount = ($existing && (float)$existing->commissionAmount > 0) ? (float)$existing->commissionAmount : $summary['commissionDueThisPeriod'];
 
         CommissionRecord::updateOrCreate(
             ['sellerId' => $sellerId, 'period' => $request->period],
             [
                 'totalSales'       => $totalSales,
-                'commissionRate'   => $rate,
+                'commissionRate'   => $commissionRate,
                 'commissionAmount' => $commissionAmount,
                 'status'           => 'paid',
                 'paidAt'           => now(),

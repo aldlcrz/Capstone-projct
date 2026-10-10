@@ -38,6 +38,19 @@ class Order extends Model
         'cancellationReason',
         'paymentRejectionReason',
         'visitorSessionId',
+        'commission_rate',
+        'commission_amount',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'commission_rate'   => 'decimal:2',
+        'commission_amount' => 'decimal:2',
+        'totalAmount'       => 'decimal:2',
     ];
 
     /**

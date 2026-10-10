@@ -95,7 +95,7 @@
             <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
                 <span>⚙️ Global Commission Rate Configuration</span>
             </h3>
-            <p class="text-xs text-gray-500">Default rate is <strong class="text-gray-800 font-bold">5%</strong> of product price per completed order across all registered shops.</p>
+            <p class="text-xs text-gray-500">Configured platform rate is <strong class="text-gray-800 font-bold">{{ $rate }}%</strong> of commissionable sales per eligible order across all registered shops.</p>
         </div>
 
         <form action="{{ route('superadmin.commission-rate') }}" method="POST" class="flex items-center gap-2">

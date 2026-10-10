@@ -478,7 +478,7 @@
             </div>
 
             <div class="p-4 sm:p-6 rounded-2xl shadow-2xs" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
-                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Platform Commission (10%)</div>
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #8C827A;">Platform Commission ({{ $financialAnalytics['commissionRate'] ?? 5 }}%)</div>
                 <div class="text-lg sm:text-2xl font-black font-sans" style="color: #A16D19;">₱{{ number_format($financialAnalytics['commissionFee'], 2) }}</div>
             </div>
 
@@ -502,7 +502,7 @@
                     <span class="font-bold">₱{{ number_format($financialAnalytics['grossSales'], 2) }}</span>
                 </div>
                 <div class="py-3 flex justify-between font-sans" style="color: #A16D19;">
-                    <span>LumBarong Marketplace Commission Fee (10%)</span>
+                    <span>LumBarong Marketplace Commission Fee ({{ $financialAnalytics['commissionRate'] ?? 5 }}%)</span>
                     <span class="font-bold">- ₱{{ number_format($financialAnalytics['commissionFee'], 2) }}</span>
                 </div>
                 <div class="py-3 flex justify-between text-rose-600 font-sans">
@@ -618,7 +618,7 @@
         ['selector' => '#tour-analytics-guide-btn',          'title' => 'Financial Settlement Guide',   'text' => 'Review your marketplace earnings, platform commission breakdown, voucher deductions, and net payouts.'],
         ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter financial statements across your chosen billing periods.'],
         ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
-        ['selector' => '#tour-analytics-financial-cards',   'title' => 'Financial Breakdown Cards',    'text' => 'Compares Gross Sales, LumBarong 10% Platform Commission fee, Discounts/Refunds deductions, and your Net Seller Earnings.'],
+        ['selector' => '#tour-analytics-financial-cards',   'title' => 'Financial Breakdown Cards',    'text' => 'Compares Gross Sales, LumBarong Marketplace Commission fee, Discounts/Refunds deductions, and your Net Seller Earnings.'],
         ['selector' => '#tour-analytics-financial-statement','title' => 'Official Settlement Statement','text' => 'Itemized financial ledger displaying the exact payout calculation for your artisan boutique.'],
     ]"
 />

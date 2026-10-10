@@ -56,17 +56,22 @@ class AnalyticsController extends Controller
 
         $averageOrderValue = $orderCount > 0 ? $totalSales / $orderCount : 0;
 
-        // Platform commission rate = 10%
-        $commissionFee = $totalSales * 0.10;
-        $grossSales    = $totalSales + $commissionFee;
+        // Authoritative platform commission rate from system setting
+        $commissionRate = \App\Services\Financial\FinancialLedgerService::getCommissionRate();
+        $grossSales     = $totalSales; // Actual gross item sales, NEVER inflated by adding commission fee
         $totalDiscounts = (float) $activeOrders->sum('discount_amount');
         $totalRefunds   = (float) Order::where('sellerId', $sellerId)
             ->whereIn('status', ['refunded', 'returned', 'return requested'])
             ->sum('totalAmount');
 
-        $totalShippingFees = (float) $activeOrders->sum('shippingFee');
-        $netSales          = max(0, $totalSales - $totalDiscounts - $totalRefunds);
-        $sellerEarnings    = max(0, $netSales - $commissionFee);
+        $totalShippingFees   = (float) $activeOrders->sum('shippingFee');
+        // Commissionable sales base: gross sales minus refunds and discounts (eligible revenue)
+        $commissionableSales = max(0.00, round($grossSales - $totalDiscounts - $totalRefunds, 2));
+        $commissionFee       = round($commissionableSales * ($commissionRate / 100), 2);
+
+        $netSales            = max(0.00, round($grossSales - $totalDiscounts - $totalRefunds, 2));
+        // Seller Net Earnings / Payout: Gross Sales - Platform Commission - Discounts - Refunds
+        $sellerEarnings      = max(0.00, round($netSales - $commissionFee, 2));
 
         // Time Period Comparisons (Month vs Last Month, Year vs Last Year, Week vs Previous Week)
         $now = Carbon::now();
@@ -183,13 +188,15 @@ class AnalyticsController extends Controller
             'customerAnalytics'  => $customerMetrics,
             'categorySales'      => $categorySales,
             'financialAnalytics' => [
-                'grossSales'        => $grossSales,
-                'commissionFee'     => $commissionFee,
-                'discounts'          => $totalDiscounts,
-                'refunds'            => $totalRefunds,
-                'shippingFees'       => $totalShippingFees,
-                'netSales'          => $netSales,
-                'sellerEarnings'    => $sellerEarnings,
+                'grossSales'          => $grossSales,
+                'commissionRate'      => $commissionRate,
+                'commissionFee'       => $commissionFee,
+                'commissionableSales' => $commissionableSales,
+                'discounts'           => $totalDiscounts,
+                'refunds'             => $totalRefunds,
+                'shippingFees'        => $totalShippingFees,
+                'netSales'            => $netSales,
+                'sellerEarnings'      => $sellerEarnings,
             ],
             'marketingAnalytics' => $marketingMetrics,
             'salesTrendChart'    => $salesTrendChart,

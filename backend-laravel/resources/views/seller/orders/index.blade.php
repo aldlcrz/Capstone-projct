@@ -4269,7 +4269,7 @@ function sellerOrdersManager() {
                 [
                     'selector' => '#tour-orders-list',
                     'title' => '💵 Net Payout & Commission Calculation',
-                    'text' => 'Earnings from completed orders are finalized and credited toward your net seller balance, with the 10% platform commission itemized.',
+                    'text' => 'Earnings from completed orders are finalized and credited toward your net seller balance, with the platform commission itemized.',
                     'position' => 'top'
                 ],
                 [
