@@ -48,7 +48,7 @@ function printSellerOrder(order) {
             + '</tr>';
     }).join('');
 
-    const html = '<!DOCTYPE html><html><head><title>Receipt ' + orderId + '</title>'
+    const html = '<!DOCTYPE html><html><head><title>Invoice ' + orderId + '</title>'
         + '<style>'
         + 'body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}'
         + 'h1{font-size:22px;margin:0 0 4px;}'
@@ -59,7 +59,7 @@ function printSellerOrder(order) {
         + 'th{text-align:left;padding:8px;border-bottom:2px solid #ddd;font-size:11px;text-transform:uppercase;color:#666;}'
         + '.total{text-align:right;font-size:18px;font-weight:bold;margin-top:16px;}'
         + '</style></head><body>'
-        + '<h1>LumBarong — Order Receipt</h1>'
+        + '<h1>LumBarong — Invoice</h1>'
         + '<div class="meta">' + orderId + ' · ' + date + ' · Status: ' + order.status + '</div>'
         + '<h2>Buyer Information</h2>'
         + '<div class="box"><strong>' + (order.customer?.name || 'Unknown Customer') + '</strong><br>'
@@ -2676,7 +2676,7 @@ function sellerOrdersManager() {
                                     <button type="button"
                                         @click="printOrderDetails()"
                                         class="px-4 py-2.5 sm:py-3 border border-stone-300 hover:bg-stone-100 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer flex items-center gap-1">
-                                        <span>🖨️</span> Print Pass
+                                        <span>🖨️</span> Print Invoice
                                     </button>
                                     <button type="button"
                                         @click="claimCodeInput ? executeVerifyClaimCode(detailsOrder) : showToast('Please enter the customer\'s 8-character claim code in the box above.')"
