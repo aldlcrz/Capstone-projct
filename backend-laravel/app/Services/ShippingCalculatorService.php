@@ -136,203 +136,137 @@ class ShippingCalculatorService
             ->where('is_enabled', true)
             ->exists();
 
-        // Proximity Evaluation: Local Cluster vs Non-Local Destination
-        $isLocal = $hasSellerSpecialDelivery || $this->isLocalCluster($seller, $destinationAddress);
-
-        $candidateProviders = $providers;
-        if (!$specificProviderId) {
-            if ($hasSellerSpecialDelivery) {
-                // If destination is covered by seller's special delivery, only show local options (Store Pickup & Special Delivery)
-                $localCandidates = $providers->filter(fn($p) => in_array($p->code, ['store_pickup', 'seller_direct']));
-                if ($localCandidates->isNotEmpty()) {
-                    $candidateProviders = $localCandidates;
-                }
-            } else {
-                // Destination not in seller's special delivery coverage: show only standard couriers
-                $candidateProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
-            }
-        }
-
         $quotes = [];
 
-        // 5. Calculate provider-specific quotes
-        foreach ($candidateProviders as $provider) {
-            // Special handling for local-only standard providers (store_pickup & seller_direct)
-            if ($provider->code === 'store_pickup') {
-                if (!$hasSellerSpecialDelivery && !$specificProviderId) {
-                    continue;
-                }
+        // 1. STORE PICKUP (Universal across all scenarios)
+        // Store pickup is always available for customers who wish to visit the artisan's workshop in Lumban, Laguna.
+        $storePickupProvider = $providers->firstWhere('code', 'store_pickup')
+            ?: ShippingProvider::where('code', 'store_pickup')->where('is_active', true)->first();
 
-                $shopAddressParts = array_filter([
-                    $seller->shopHouseNo,
-                    $seller->shopStreet,
-                    $seller->shopBarangay,
-                    $seller->shopCity ?: 'Lumban',
-                    $seller->shopProvince ?: 'Laguna',
-                    $seller->shopPostalCode
-                ]);
-                $formattedShopAddress = !empty($shopAddressParts) ? implode(', ', $shopAddressParts) : 'Lumban, Laguna';
+        if ($storePickupProvider && (!$specificProviderId || $specificProviderId === $storePickupProvider->id)) {
+            $shopAddressParts = array_filter([
+                $seller->shopHouseNo,
+                $seller->shopStreet,
+                $seller->shopBarangay,
+                $seller->shopCity ?: 'Lumban',
+                $seller->shopProvince ?: 'Laguna',
+                $seller->shopPostalCode
+            ]);
+            $formattedShopAddress = !empty($shopAddressParts) ? implode(', ', $shopAddressParts) : 'Lumban, Laguna';
 
-                $quotes[] = [
-                    'provider_id'                     => $provider->id,
-                    'provider_name'                   => 'Store Pickup (In-Shop Collection)',
-                    'provider_code'                   => 'store_pickup',
-                    'shipping_rate_id'                => null,
-                    'origin_zone_id'                  => $originZone->id,
-                    'origin_zone_name'                => $originZone->name,
-                    'destination_zone_id'             => $destinationZone->id,
-                    'destination_zone_name'           => $destinationZone->name,
-                    'actual_weight'                   => round($totalActualWeight, 2),
-                    'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
-                    'chargeable_weight'               => round($totalActualWeight, 2),
-                    'rate_base_snapshot'              => 0.00,
-                    'additional_weight_rate_snapshot' => 0.00,
-                    'volumetric_divisor_snapshot'     => 3500,
-                    'shipping_fee'                    => 0.00,
-                    'estimated_days_min'              => 0,
-                    'estimated_days_max'              => 1,
-                    'delivery_estimate_display'       => 'Same Day / Next Day Pickup',
-                    'shop_name'                       => $seller->shopName ?: ($seller->name ?: 'Artisan Workshop'),
-                    'shop_latitude'                   => (float) ($seller->shopLatitude ?: 14.2952),
-                    'shop_longitude'                  => (float) ($seller->shopLongitude ?: 121.4647),
-                    'shop_address'                    => $formattedShopAddress,
-                    'shop_phone'                      => $seller->mobileNumber ?: '',
-                ];
-                continue;
-            }
+            $quotes[] = [
+                'provider_id'                     => $storePickupProvider->id,
+                'provider_name'                   => 'Store Pickup (In-Shop Collection)',
+                'provider_code'                   => 'store_pickup',
+                'shipping_rate_id'                => null,
+                'origin_zone_id'                  => $originZone->id,
+                'origin_zone_name'                => $originZone->name,
+                'destination_zone_id'             => $destinationZone->id,
+                'destination_zone_name'           => $destinationZone->name,
+                'actual_weight'                   => round($totalActualWeight, 2),
+                'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
+                'chargeable_weight'               => round($totalActualWeight, 2),
+                'rate_base_snapshot'              => 0.00,
+                'additional_weight_rate_snapshot' => 0.00,
+                'volumetric_divisor_snapshot'     => 3500,
+                'shipping_fee'                    => 0.00,
+                'estimated_days_min'              => 0,
+                'estimated_days_max'              => 1,
+                'delivery_estimate_display'       => 'Same Day / Next Day Pickup',
+                'shop_name'                       => $seller->shopName ?: ($seller->name ?: 'Artisan Workshop'),
+                'shop_latitude'                   => (float) ($seller->shopLatitude ?: 14.2952),
+                'shop_longitude'                  => (float) ($seller->shopLongitude ?: 121.4647),
+                'shop_address'                    => $formattedShopAddress,
+                'shop_phone'                      => $seller->mobileNumber ?: '',
+            ];
+        }
 
-            if ($provider->code === 'seller_direct') {
-                // Special Delivery is strictly restricted to Laguna province only
-                if (!$isDestLaguna || empty($destMuniKey)) {
-                    continue;
-                }
+        // 2. SPECIAL DELIVERY (Local Artisan Rider - strictly within Laguna seller-enabled coverage)
+        $specialDeliveryProvider = $providers->firstWhere('code', 'seller_direct')
+            ?: ShippingProvider::where('code', 'seller_direct')->where('is_active', true)->first();
 
-                // Check seller-configured municipality coverage
+        if ($specialDeliveryProvider && (!$specificProviderId || $specificProviderId === $specialDeliveryProvider->id)) {
+            if ($isDestLaguna && !empty($destMuniKey)) {
                 $muniRate = \App\Models\SellerSpecialDeliveryRate::where('seller_id', $seller->id)
                     ->where('municipality_key', $destMuniKey)
                     ->where('is_enabled', true)
                     ->first();
 
-                // If seller has not enabled Special Delivery for this municipality, skip
-                if (!$muniRate) {
-                    continue;
+                if ($muniRate) {
+                    $sellerProviderConfig = \Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'custom_fee')
+                        ? SellerShippingProvider::where('seller_id', $seller->id)->where('provider_id', $specialDeliveryProvider->id)->first()
+                        : null;
+
+                    $baseFee = ($sellerProviderConfig && $sellerProviderConfig->custom_fee !== null && $sellerProviderConfig->custom_fee >= 0)
+                        ? (float) $sellerProviderConfig->custom_fee
+                        : 50.00;
+
+                    $surcharge = (float) ($muniRate->surcharge ?? 0.00);
+                    $finalFee = round($baseFee + $surcharge, 2);
+                    $muniDisplayName = \App\Services\Shipping\LagunaMunicipalityCatalog::getName($destMuniKey);
+
+                    $quotes[] = [
+                        'provider_id'                     => $specialDeliveryProvider->id,
+                        'provider_name'                   => 'Special Delivery (Local Artisan Rider)',
+                        'provider_code'                   => 'seller_direct',
+                        'shipping_rate_id'                => null,
+                        'origin_zone_id'                  => $originZone->id,
+                        'origin_zone_name'                => $originZone->name,
+                        'destination_zone_id'             => $destinationZone->id,
+                        'destination_zone_name'           => $destinationZone->name,
+                        'actual_weight'                   => round($totalActualWeight, 2),
+                        'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
+                        'chargeable_weight'               => round($totalActualWeight, 2),
+                        'rate_base_snapshot'              => $baseFee,
+                        'additional_weight_rate_snapshot' => $surcharge,
+                        'volumetric_divisor_snapshot'     => 3500,
+                        'shipping_fee'                    => $finalFee,
+                        'estimated_days_min'              => 1,
+                        'estimated_days_max'              => 1,
+                        'delivery_estimate_display'       => '1 Day (Special Delivery - ' . $muniDisplayName . ')',
+                        'municipality_key'                => $destMuniKey,
+                        'municipality_name'               => $muniDisplayName,
+                        'base_fee'                        => $baseFee,
+                        'surcharge'                       => $surcharge,
+                    ];
                 }
-
-                $sellerProviderConfig = \Illuminate\Support\Facades\Schema::hasColumn('seller_shipping_providers', 'custom_fee')
-                    ? SellerShippingProvider::where('seller_id', $seller->id)->where('provider_id', $provider->id)->first()
-                    : null;
-
-                $baseFee = ($sellerProviderConfig && $sellerProviderConfig->custom_fee !== null && $sellerProviderConfig->custom_fee >= 0)
-                    ? (float) $sellerProviderConfig->custom_fee
-                    : 50.00;
-
-                $surcharge = (float) ($muniRate->surcharge ?? 0.00);
-                $finalFee = round($baseFee + $surcharge, 2);
-                $muniDisplayName = \App\Services\Shipping\LagunaMunicipalityCatalog::getName($destMuniKey);
-
-                $quotes[] = [
-                    'provider_id'                     => $provider->id,
-                    'provider_name'                   => 'Special Delivery (Local Artisan Rider)',
-                    'provider_code'                   => 'seller_direct',
-                    'shipping_rate_id'                => null,
-                    'origin_zone_id'                  => $originZone->id,
-                    'origin_zone_name'                => $originZone->name,
-                    'destination_zone_id'             => $destinationZone->id,
-                    'destination_zone_name'           => $destinationZone->name,
-                    'actual_weight'                   => round($totalActualWeight, 2),
-                    'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
-                    'chargeable_weight'               => round($totalActualWeight, 2),
-                    'rate_base_snapshot'              => $baseFee,
-                    'additional_weight_rate_snapshot' => $surcharge,
-                    'volumetric_divisor_snapshot'     => 3500,
-                    'shipping_fee'                    => $finalFee,
-                    'estimated_days_min'              => 1,
-                    'estimated_days_max'              => 1,
-                    'delivery_estimate_display'       => '1 Day (Special Delivery - ' . $muniDisplayName . ')',
-                    'municipality_key'                => $destMuniKey,
-                    'municipality_name'               => $muniDisplayName,
-                    'base_fee'                        => $baseFee,
-                    'surcharge'                       => $surcharge,
-                ];
-                continue;
             }
-
-            // Standard Rate Bracket Query
-            $rateQuery = ShippingRate::where('provider_id', $provider->id)
-                ->where('origin_zone_id', $originZone->id)
-                ->where('destination_zone_id', $destinationZone->id)
-                ->where('is_active', true);
-
-            // Fetch candidate rates for this provider and zone pair
-            $candidateRates = (clone $rateQuery)->orderBy('min_weight', 'asc')->get();
-
-            if ($candidateRates->isEmpty()) {
-                continue; // Route unserviceable for this provider
-            }
-
-            // Pick volumetric divisor from first rate row or provider default
-            $divisor = $candidateRates->first()->volumetric_divisor
-                ?: ($provider->default_volumetric_divisor ?: 3500);
-
-            if ($divisor <= 0) $divisor = 3500;
-
-            // Volumetric Weight (cm3 / divisor)
-            $volumetricWeight = round($totalPackedVolume / $divisor, 2);
-            $chargeableWeight = max($totalActualWeight, $volumetricWeight);
-
-            // Rate Bracket Lookup: min_weight <= chargeable_weight AND (max_weight >= chargeable_weight OR max_weight IS NULL)
-            $matchingRate = $candidateRates->first(function ($rate) use ($chargeableWeight) {
-                if ($chargeableWeight < $rate->min_weight) return false;
-                if ($rate->max_weight !== null && $chargeableWeight > $rate->max_weight) return false;
-                return true;
-            });
-
-            if (!$matchingRate) {
-                continue; // Parcel exceeds supported weight brackets (oversized)
-            }
-
-            // Fee calculation: Bracket pricing or Open-ended incremental pricing
-            $shippingFee = (float) $matchingRate->base_rate;
-            if ($matchingRate->max_weight === null && $matchingRate->additional_weight_rate > 0) {
-                $extraWeight = ceil(max(0, $chargeableWeight - $matchingRate->min_weight));
-                $shippingFee += ($extraWeight * (float) $matchingRate->additional_weight_rate);
-            }
-
-            $shippingFee = round($shippingFee, 2);
-
-            $quotes[] = [
-                'provider_id'                  => $provider->id,
-                'provider_name'                => $provider->name,
-                'provider_code'                => $provider->code,
-                'shipping_rate_id'             => $matchingRate->id,
-                'origin_zone_id'               => $originZone->id,
-                'origin_zone_name'             => $originZone->name,
-                'destination_zone_id'          => $destinationZone->id,
-                'destination_zone_name'        => $destinationZone->name,
-                'actual_weight'                => round($totalActualWeight, 2),
-                'volumetric_weight'            => $volumetricWeight,
-                'chargeable_weight'            => round($chargeableWeight, 2),
-                'rate_base_snapshot'           => (float) $matchingRate->base_rate,
-                'additional_weight_rate_snapshot' => (float) $matchingRate->additional_weight_rate,
-                'volumetric_divisor_snapshot'  => $divisor,
-                'shipping_fee'                 => $shippingFee,
-                'estimated_days_min'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_min),
-                'estimated_days_max'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_max),
-                'delivery_estimate_display'    => ((int) ($maxHandlingDays + $matchingRate->estimated_days_min)) . '–' . ((int) ($maxHandlingDays + $matchingRate->estimated_days_max)) . ' Days',
-            ];
         }
 
-        // Fallback: If local providers yielded no quotes (e.g. unselected municipality and pickup disabled), fall back to standard couriers
-        if (empty($quotes) && !$specificProviderId && $isLocal) {
-            $nonLocalCandidates = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
-            foreach ($nonLocalCandidates as $provider) {
+        // 3. STANDARD DELIVERY (Couriers: J&T, LBC, Flash, etc.)
+        // Standard delivery only shows for destinations OUTSIDE of Laguna (or when a specific courier ID is explicitly requested).
+        $allowStandardDelivery = !$isDestLaguna || !empty($specificProviderId);
+
+        if ($allowStandardDelivery) {
+            $courierProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
+            if ($courierProviders->isEmpty()) {
+                $courierProviders = ShippingProvider::where('is_active', true)
+                    ->whereNotIn('code', ['store_pickup', 'seller_direct'])
+                    ->get();
+            }
+
+            if ($specificProviderId) {
+                $courierCandidates = $courierProviders->where('id', $specificProviderId);
+            } else {
+                // Find seller's preferred provider, or pick the first candidate that services the route
+                $preferred = $this->getSellerPreferredProvider($seller);
+                if ($preferred && !in_array($preferred->code, ['store_pickup', 'seller_direct']) && $courierProviders->contains('id', $preferred->id)) {
+                    $courierCandidates = collect([$preferred]);
+                } else {
+                    $courierCandidates = $courierProviders;
+                }
+            }
+
+            foreach ($courierCandidates as $provider) {
                 $rateQuery = ShippingRate::where('provider_id', $provider->id)
                     ->where('origin_zone_id', $originZone->id)
                     ->where('destination_zone_id', $destinationZone->id)
                     ->where('is_active', true);
 
                 $candidateRates = (clone $rateQuery)->orderBy('min_weight', 'asc')->get();
-                if ($candidateRates->isEmpty()) continue;
+                if ($candidateRates->isEmpty()) {
+                    continue;
+                }
 
                 $divisor = $candidateRates->first()->volumetric_divisor ?: ($provider->default_volumetric_divisor ?: 3500);
                 if ($divisor <= 0) $divisor = 3500;
@@ -346,7 +280,9 @@ class ShippingCalculatorService
                     return true;
                 });
 
-                if (!$matchingRate) continue;
+                if (!$matchingRate) {
+                    continue;
+                }
 
                 $shippingFee = (float) $matchingRate->base_rate;
                 if ($matchingRate->max_weight === null && $matchingRate->additional_weight_rate > 0) {
@@ -354,9 +290,12 @@ class ShippingCalculatorService
                     $shippingFee += ($extraWeight * (float) $matchingRate->additional_weight_rate);
                 }
 
+                $shippingFee = round($shippingFee, 2);
+
                 $quotes[] = [
                     'provider_id'                  => $provider->id,
-                    'provider_name'                => $provider->name,
+                    'provider_name'                => 'Standard Delivery',
+                    'courier_name'                 => $provider->name,
                     'provider_code'                => $provider->code,
                     'shipping_rate_id'             => $matchingRate->id,
                     'origin_zone_id'               => $originZone->id,
@@ -369,11 +308,16 @@ class ShippingCalculatorService
                     'rate_base_snapshot'           => (float) $matchingRate->base_rate,
                     'additional_weight_rate_snapshot' => (float) $matchingRate->additional_weight_rate,
                     'volumetric_divisor_snapshot'  => $divisor,
-                    'shipping_fee'                 => round($shippingFee, 2),
+                    'shipping_fee'                 => $shippingFee,
                     'estimated_days_min'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_min),
                     'estimated_days_max'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_max),
                     'delivery_estimate_display'    => ((int) ($maxHandlingDays + $matchingRate->estimated_days_min)) . '–' . ((int) ($maxHandlingDays + $matchingRate->estimated_days_max)) . ' Days',
                 ];
+
+                if (!$specificProviderId) {
+                    // Customer receives a single Standard Delivery option (seller's chosen courier rate)
+                    break;
+                }
             }
         }
 

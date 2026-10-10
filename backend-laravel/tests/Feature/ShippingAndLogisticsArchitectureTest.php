@@ -194,7 +194,8 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $quotesHeavy = $this->calculator->calculateQuotes($seller, $buyerAddr, [
             ['id' => $heavyProduct->id, 'quantity' => 1],
         ]);
-        $this->assertEquals(3.00, $quotesHeavy[0]['chargeable_weight']);
+        $heavyStandard = collect($quotesHeavy)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertEquals(3.00, $heavyStandard['chargeable_weight']);
 
         // Volumetric weight dominates: 0.2 kg actual vs 50x40x20cm = 40000 / 3500 = 11.43 kg
         $bulkyProduct = $this->createTestProduct($seller, [
@@ -207,7 +208,8 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $quotesBulky = $this->calculator->calculateQuotes($seller, $buyerAddr, [
             ['id' => $bulkyProduct->id, 'quantity' => 1],
         ]);
-        $this->assertEquals(11.43, $quotesBulky[0]['chargeable_weight']);
+        $bulkyStandard = collect($quotesBulky)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertEquals(11.43, $bulkyStandard['chargeable_weight']);
     }
 
     public function test_consolidated_volume_multiplies_across_multiple_quantities_and_items()
@@ -304,11 +306,12 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
             'package_height_per_unit' => 10.00,
         ]);
 
+        $jnt = ShippingProvider::where('code', 'jnt')->firstOrFail();
         $this->expectException(\Exception::class);
 
         $this->calculator->calculateQuotes($seller, $buyerAddr, [
             ['id' => $oversizedProd->id, 'quantity' => 1],
-        ]);
+        ], $jnt->id);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -606,7 +609,9 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $response->assertStatus(200);
         $quotes = $response->json('quotes');
         $this->assertNotEmpty($quotes);
-        $this->assertGreaterThan(0.00, (float) $quotes[0]['shipping_fee']);
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
+        $this->assertGreaterThan(0.00, (float) $standardQuote['shipping_fee']);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -675,29 +680,24 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         $quotes = $quoteResponse->json('quotes');
         $quoteToken = $quoteResponse->json('shipping_quote_token');
 
-        // Verify quotes exist for providers
+        // Verify quotes exist for providers (Store Pickup and Standard Delivery)
         $this->assertNotEmpty($quotes);
-        $jntQuote = collect($quotes)->firstWhere('provider_code', 'jnt');
-        $flashQuote = collect($quotes)->firstWhere('provider_code', 'flash');
-        $lbcQuote = collect($quotes)->firstWhere('provider_code', 'lbc');
-
-        $this->assertNotNull($jntQuote);
-        $this->assertNotNull($flashQuote);
-        $this->assertNotNull($lbcQuote);
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
 
         // Verify estimated delivery includes handling days (2 days handling + provider transit days)
-        $this->assertGreaterThanOrEqual(3, $jntQuote['estimated_days_min']);
+        $this->assertGreaterThanOrEqual(3, $standardQuote['estimated_days_min']);
 
         $screenshot = UploadedFile::fake()->image('maya_receipt_screenshot.jpg', 600, 1200);
 
-        // 2. Select Flash Express and Checkout
+        // 2. Select Standard Delivery and Checkout
         $checkoutResponse = $this->actingAs($buyer)->post('/checkout', [
             'seller_id' => $seller->id,
             'address_id' => $buyerAddress->id,
             'paymentMethod' => 'Maya',
             'paymentReference' => '900' . sprintf('%05d%04d', mt_rand(10000, 99999), mt_rand(1000, 9999)),
             'paymentScreenshot' => $screenshot,
-            'shipping_provider_id' => $flashQuote['provider_id'],
+            'shipping_provider_id' => $standardQuote['provider_id'],
             'shipping_quote_token' => $quoteToken,
             'items' => [
                 [
@@ -716,16 +716,16 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         // 3. Verify Order and Immutable Snapshot
         $order = Order::where('customerId', $buyer->id)->latest('createdAt')->first();
         $this->assertNotNull($order);
-        $this->assertEquals((float) $flashQuote['shipping_fee'], (float) $order->shippingFee);
-        $this->assertEquals(850.00 + (float) $flashQuote['shipping_fee'], (float) $order->totalAmount);
+        $this->assertEquals((float) $standardQuote['shipping_fee'], (float) $order->shippingFee);
+        $this->assertEquals(850.00 + (float) $standardQuote['shipping_fee'], (float) $order->totalAmount);
 
         $shippingSnapshot = OrderShipping::where('order_id', $order->id)->first();
         $this->assertNotNull($shippingSnapshot);
-        $this->assertEquals('Flash Express', $shippingSnapshot->provider_name);
+        $this->assertEquals($standardQuote['provider_name'], $shippingSnapshot->provider_name);
         $this->assertEquals('South Luzon', $shippingSnapshot->origin_zone_name);
         $this->assertEquals('National Capital Region (NCR)', $shippingSnapshot->destination_zone_name);
         $this->assertEquals(1.00, (float) $shippingSnapshot->chargeable_weight);
-        $this->assertEquals((float) $flashQuote['shipping_fee'], (float) $shippingSnapshot->shipping_fee);
+        $this->assertEquals((float) $standardQuote['shipping_fee'], (float) $shippingSnapshot->shipping_fee);
 
         // 4. Verify Stock was decremented safely
         $this->assertEquals(14, $product->fresh()->stock);
@@ -905,7 +905,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
         $quotes = $quoteResponse->json('quotes');
         $token = $quoteResponse->json('shipping_quote_token');
-        $chosenQuote = $quotes[0];
+        $chosenQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup') ?: $quotes[0];
 
         $screenshot = UploadedFile::fake()->image('gcash_receipt.jpg', 600, 1200);
 
@@ -1071,7 +1071,7 @@ class ShippingAndLogisticsArchitectureTest extends TestCase
         ]);
         $quotesNonLocal = $nonLocalQuoteResponse->json('quotes');
         $providerCodesNonLocal = array_column($quotesNonLocal, 'provider_code');
-        $this->assertNotContains('store_pickup', $providerCodesNonLocal);
+        $this->assertContains('store_pickup', $providerCodesNonLocal);
         $this->assertNotContains('seller_direct', $providerCodesNonLocal);
     }
 

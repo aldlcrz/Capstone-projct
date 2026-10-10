@@ -114,10 +114,11 @@ class ShippingCalculatorTest extends TestCase
         ]);
 
         $this->assertNotEmpty($quotes);
-        $firstQuote = $quotes[0];
-        $this->assertEquals(0.20, $firstQuote['actual_weight']);
-        $this->assertEquals(1.71, $firstQuote['volumetric_weight']);
-        $this->assertEquals(1.71, $firstQuote['chargeable_weight']);
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
+        $this->assertEquals(0.20, $standardQuote['actual_weight']);
+        $this->assertEquals(1.71, $standardQuote['volumetric_weight']);
+        $this->assertEquals(1.71, $standardQuote['chargeable_weight']);
     }
 
     public function test_calculator_calculates_open_ended_bracket_incremental_charges()
@@ -150,9 +151,10 @@ class ShippingCalculatorTest extends TestCase
             'handling_days' => 3,
         ]);
 
+        $jntProvider = ShippingProvider::where('code', 'jnt')->first();
         $quotes = $this->calculator->calculateQuotes($seller, $buyerAddress, [
             ['id' => $product->id, 'quantity' => 1],
-        ]);
+        ], $jntProvider?->id);
 
         $this->assertNotEmpty($quotes);
         $jntQuote = collect($quotes)->firstWhere('provider_code', 'jnt');
@@ -211,7 +213,9 @@ class ShippingCalculatorTest extends TestCase
         ]);
 
         $this->assertNotEmpty($quotes);
-        $this->assertGreaterThan(0.00, (float) $quotes[0]['shipping_fee']);
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
+        $this->assertGreaterThan(0.00, (float) $standardQuote['shipping_fee']);
     }
 
     public function test_deterministic_weight_bracket_boundary_and_excess_kg_calculations()
@@ -436,12 +440,13 @@ class ShippingCalculatorTest extends TestCase
             ['id' => $prod2->id, 'quantity' => 1],
         ]);
 
-        $firstQuote = $quotes[0];
-        // J&T NCR-NCR rate has estimated_days_min = 1, estimated_days_max = 2 (or standard 2-4)
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
+        // Standard rate has estimated_days_min / estimated_days_max
         // Max handling days = MAX(1, 4) = 4
-        $matchingRate = ShippingRate::find($firstQuote['shipping_rate_id']);
-        $this->assertEquals(4 + $matchingRate->estimated_days_min, $firstQuote['estimated_days_min']);
-        $this->assertEquals(4 + $matchingRate->estimated_days_max, $firstQuote['estimated_days_max']);
+        $matchingRate = ShippingRate::find($standardQuote['shipping_rate_id']);
+        $this->assertEquals(4 + $matchingRate->estimated_days_min, $standardQuote['estimated_days_min']);
+        $this->assertEquals(4 + $matchingRate->estimated_days_max, $standardQuote['estimated_days_max']);
     }
 
     public function test_order_shipping_immutability_blocks_modifications_to_pricing_snapshot()
@@ -681,7 +686,7 @@ class ShippingCalculatorTest extends TestCase
         $this->assertEquals(25.00, (float) $directQuote['shipping_fee']);
     }
 
-    public function test_non_local_destination_suppresses_local_options_and_returns_standard_delivery()
+    public function test_outside_laguna_destination_suppresses_special_delivery_and_provides_pickup_and_standard()
     {
         $seller = User::create([
             'name' => 'Lumban Artisan',
@@ -705,7 +710,56 @@ class ShippingCalculatorTest extends TestCase
             'handling_days' => 1,
         ]);
 
-        // Destination in San Pedro, Laguna (far away from Lumban)
+        // Destination in Metro Manila (Outside Laguna)
+        $destination = [
+            'province' => 'Metro Manila',
+            'city' => 'Manila',
+            'barangay' => 'Ermita',
+            'postalCode' => '1000',
+        ];
+
+        $quotes = $this->calculator->calculateQuotes($seller, $destination, [
+            ['id' => $product->id, 'quantity' => 1],
+        ]);
+
+        $this->assertNotEmpty($quotes);
+        $providerCodes = array_column($quotes, 'provider_code');
+
+        // Store pickup is universally available; Special Delivery is not offered outside Laguna
+        $this->assertContains('store_pickup', $providerCodes);
+        $this->assertNotContains('seller_direct', $providerCodes);
+
+        // Standard courier quote is present with positive fee
+        $standardQuote = collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup');
+        $this->assertNotNull($standardQuote);
+        $this->assertGreaterThan(0.00, (float) $standardQuote['shipping_fee']);
+    }
+
+    public function test_uncovered_laguna_destination_suppresses_special_delivery_and_standard_delivery()
+    {
+        $seller = User::create([
+            'name' => 'Lumban Artisan Uncovered',
+            'email' => 'lumban_artisan_unc_' . Str::random(5) . '@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Laguna',
+            'shopCity' => 'Lumban',
+            'shopPostalCode' => '4014',
+        ]);
+
+        $product = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Barong Tagalog',
+            'price' => 2500,
+            'stock' => 10,
+            'package_weight_per_unit' => 0.50,
+            'package_length_per_unit' => 20.00,
+            'package_width_per_unit' => 15.00,
+            'package_height_per_unit' => 5.00,
+            'handling_days' => 1,
+        ]);
+
+        // Destination in San Pedro, Laguna (not enabled for special delivery by seller)
         $destination = [
             'province' => 'Laguna',
             'city' => 'San Pedro',
@@ -720,13 +774,10 @@ class ShippingCalculatorTest extends TestCase
         $this->assertNotEmpty($quotes);
         $providerCodes = array_column($quotes, 'provider_code');
 
-        // Must NOT include store_pickup or seller_direct
-        $this->assertNotContains('store_pickup', $providerCodes);
+        // Only Store Pickup is available
+        $this->assertContains('store_pickup', $providerCodes);
         $this->assertNotContains('seller_direct', $providerCodes);
-
-        // Must return standard delivery quote with valid positive fee
-        $firstQuote = $quotes[0];
-        $this->assertGreaterThan(0.00, (float) $firstQuote['shipping_fee']);
+        $this->assertNull(collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup'));
     }
 
     public function test_get_available_payment_methods_returns_cod_only_for_local_cluster()

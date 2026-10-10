@@ -234,22 +234,27 @@
 
                         {{-- Calculated Shipping Display --}}
                         <div class="space-y-2" x-show="shippingQuote && !quotesError">
-                            {{-- Multiple Local Options (Store Pickup vs Local Direct Delivery) --}}
-                            <template x-if="isLocalCluster && shippingQuotesList && shippingQuotesList.length > 1">
-                                <div class="space-y-1.5">
+                            {{-- Multiple Fulfillment Options (Store Pickup, Special Delivery, Standard Delivery) --}}
+                            <template x-if="shippingQuotesList && shippingQuotesList.length > 1">
+                                <div class="space-y-2">
                                     <template x-for="q in shippingQuotesList" :key="q.provider_id">
                                         <div @click="selectQuote(q)"
-                                             class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border cursor-pointer transition-all duration-150"
+                                             class="flex items-center justify-between py-3 px-3.5 sm:py-3.5 sm:px-4 rounded-xl border cursor-pointer transition-all duration-150"
                                              :class="shippingQuote?.provider_id === q.provider_id ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
-                                            <div class="flex items-center gap-2.5">
-                                                <input type="radio" :name="'local_shipping_option'" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#1E1915]">
+                                            <div class="flex items-center gap-3">
+                                                <input type="radio" name="shipping_fulfillment_option" :value="q.provider_id" :checked="shippingQuote?.provider_id === q.provider_id" class="w-4 h-4 accent-[#1E1915]">
                                                 <div>
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="q.provider_name"></span>
                                                         <template x-if="q.provider_code === 'store_pickup'">
                                                             <span class="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">FREE</span>
                                                         </template>
+                                                        <template x-if="q.provider_code === 'seller_direct'">
+                                                            <span class="text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">LOCAL RIDER</span>
+                                                        </template>
                                                     </div>
+                                                    <div class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5" 
+                                                         x-text="q.provider_code === 'store_pickup' ? 'Collect directly from artisan workshop in Lumban' : (q.delivery_estimate_display ? ('Estimated: ' + q.delivery_estimate_display) : '')"></div>
                                                 </div>
                                             </div>
                                             <div class="text-right">
@@ -261,8 +266,8 @@
                                 </div>
                             </template>
 
-                            {{-- Single Standard Delivery Option (Far away / NCR) --}}
-                            <template x-if="!isLocalCluster || !shippingQuotesList || shippingQuotesList.length <= 1">
+                            {{-- Single Fulfillment Option Fallback --}}
+                            <template x-if="shippingQuotesList && shippingQuotesList.length === 1">
                                 <div class="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-3.5 rounded-xl border border-[#ECE3D2] bg-[#FAF6EE]/50">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-xl bg-[#FAF6EE] border border-[#E2D9C8] text-[#996515] flex items-center justify-center shrink-0">
@@ -283,7 +288,7 @@
                                     </div>
                                     <div class="text-right">
                                         <div class="text-xs sm:text-sm font-black text-[#1E1915]" 
-                                             x-text="'₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                                             x-text="Number(shippingQuote?.shipping_fee) === 0 ? 'FREE' : ('₱' + Number(shippingQuote?.shipping_fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))"></div>
                                     </div>
                                 </div>
                             </template>
