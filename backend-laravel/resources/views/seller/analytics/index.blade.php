@@ -150,7 +150,12 @@
                     <div class="text-[10px] mt-0.5 font-sans" style="color: #766C60;">Last Year: ₱{{ number_format($salesAnalytics['prevYearSales'], 2) }}</div>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase font-sans {{ $salesAnalytics['yearGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                         {{ $salesAnalytics['yearGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['yearGrowthPct']) }}%
-                    </spa        {{-- Sales Trend Visualizer Line Graph --}}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Sales Trend Visualizer Line Graph --}}
         <div id="tour-analytics-sales-trend" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <div class="flex items-center justify-between">
                 <div>
@@ -259,9 +264,6 @@
                         @endforeach
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>              </div>
             </div>
         </div>
     </div>
