@@ -544,7 +544,7 @@ class StorePickupFulfillmentFlowTest extends TestCase
 
         $response->assertStatus(200);
         $order->refresh();
-        $this->assertEquals($apptDate, $order->appointment_date->format('Y-m-d'));
+        $this->assertEquals($apptDate, \Carbon\Carbon::parse($order->appointment_date)->format('Y-m-d'));
         $this->assertEquals('Morning (9:00 AM - 12:00 PM)', $order->appointment_time);
         $this->assertEquals('Please ask for Mang Juan upon arrival.', $order->appointment_notes);
 

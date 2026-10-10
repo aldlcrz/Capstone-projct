@@ -1634,7 +1634,7 @@ class OrderController extends Controller
     /**
      * Seller records an actual direct payment received for Store Pickup, Special Delivery, or COD.
      */
-    public function recordSellerDirectPayment(Request $request, $id, \App\Services\Orders\RecordSellerPaymentService $service)
+    public function recordSellerDirectPayment(Request $request, string $id, \App\Services\Orders\RecordSellerPaymentService $service)
     {
         $request->validate([
             'payment_method'   => 'required|string|max:50',

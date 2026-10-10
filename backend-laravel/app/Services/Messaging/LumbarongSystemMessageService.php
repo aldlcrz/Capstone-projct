@@ -82,11 +82,12 @@ class LumbarongSystemMessageService
 
         // Format masked destination
         $maskedDest = $refundTx->destination_account_masked;
-        if (empty($maskedDest) && !empty($refundTx->destination_account_encrypted)) {
+        $encryptedAccount = (string) ($refundTx->destination_account_encrypted ?? '');
+        if (empty($maskedDest) && !empty($encryptedAccount)) {
             try {
-                $raw = Crypt::decryptString($refundTx->destination_account_encrypted);
+                $raw = Crypt::decryptString($encryptedAccount);
             } catch (\Throwable $e) {
-                $raw = (string) $refundTx->destination_account_encrypted;
+                $raw = $encryptedAccount;
             }
             $clean = preg_replace('/\s+/', '', $raw);
             $len = strlen($clean);
