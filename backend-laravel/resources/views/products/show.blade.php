@@ -66,7 +66,7 @@
         });
     });
 
-    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants, saleEndsAt, variantCards) {
+    function productDetail(defaultStock, sizeStocks, galleryImages, styleVariants, saleEndsAt, variantCards, isPreorder, handlingDays) {
         var dataEl = document.getElementById('product-page-data');
         var dataset = dataEl ? dataEl.dataset : {};
         var isWishlistedInitial = dataset.isWishlisted === 'true';
@@ -83,8 +83,8 @@
         var initialStock = parseInt(defaultStock);
         if (isNaN(initialStock)) initialStock = 0;
 
-        // If size stocks are explicitly defined, calculate total available stock across all sizes
-        if (sizeKeys.length > 0) {
+        // If size stocks are explicitly defined and not preorder, calculate total available stock across all sizes
+        if (!isPreorder && sizeKeys.length > 0) {
             var totalAvailableInSizes = 0;
             sizeKeys.forEach(function(k) {
                 totalAvailableInSizes += Math.max(0, parseInt(sStocks[k]) || 0);
@@ -93,6 +93,8 @@
         }
 
         return {
+            isPreorder: Boolean(isPreorder),
+            handlingDays: parseInt(handlingDays) || 2,
             selectedSize: '',
             quantity: 1,
             defaultStock: initialStock,
@@ -212,7 +214,7 @@
                 document.body.style.overflow = '';
             },
             executeBuyNow() {
-                if (this.stock <= 0) {
+                if (!this.isPreorder && this.stock <= 0) {
                     if (window.Alpine && Alpine.store('toast')) {
                         Alpine.store('toast').trigger('This item is currently out of stock.', 'warning');
                     }
@@ -403,6 +405,10 @@
             },
             updateStock: function(size) {
                 this.selectedSize = size;
+                if (this.isPreorder) {
+                    this.stock = 0;
+                    return;
+                }
                 if (this.sizeStocks && this.sizeStocks[size] !== undefined) {
                     this.stock = parseInt(this.sizeStocks[size]) || 0;
                 } else {
@@ -489,7 +495,7 @@
         }
     }
 @endphp
-<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ $effectiveStock }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}', @js($variantCards))">
+<div class="max-w-6xl mx-auto py-4 lg:py-6 pb-24 lg:pb-6" x-data="productDetail({{ $product->isPreorder() ? 0 : $effectiveStock }}, @js($product->size_stocks ?? (object)[]), @js($galleryImages), @js($styleVariants), '{{ $product->sale_ends_at ? $product->sale_ends_at->toISOString() : '' }}', @js($variantCards), {{ $product->isPreorder() ? 'true' : 'false' }}, {{ (int)($product->handling_days ?? 2) }})">
     @if($isAdminUser)
     <!-- Admin Context Header Bar -->
     <div class="mb-5 px-4 py-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
@@ -521,10 +527,15 @@
                         Pending Review
                     </span>
                 @endif
-                @if($product->stock <= 0)
+                @if(!$product->isPreorder() && $product->stock <= 0)
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                           style="background-color: #450A0A; color: #FCA5A5; border: 1px solid #991B1B;">
                         Out of Stock
+                    </span>
+                @elseif($product->isPreorder())
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                          style="background-color: #581C87; color: #E9D5FF; border: 1px solid #7E22CE;">
+                        Preorder (Made to Order)
                     </span>
                 @endif
             </div>
@@ -861,7 +872,7 @@
                                 @php 
                                     $sizeName = is_array($size) ? ($size['size'] ?? $size['name'] ?? 'N/A') : $size;
                                     $hasSizeStock = true;
-                                    if (is_array($product->size_stocks) && isset($product->size_stocks[$sizeName]) && (int)$product->size_stocks[$sizeName] === 0) {
+                                    if (!$product->isPreorder() && is_array($product->size_stocks) && isset($product->size_stocks[$sizeName]) && (int)$product->size_stocks[$sizeName] === 0) {
                                         $hasSizeStock = false;
                                     }
                                 @endphp
@@ -880,10 +891,16 @@
 
                     @if($isAdminUser || $isProductOwner)
                         <div class="flex items-center gap-2.5 mb-6 text-xs text-gray-700">
-                            <span class="font-bold">Total Stock Inventory:</span>
-                            <span class="px-3 py-1 rounded-xl bg-stone-100 font-extrabold text-stone-900 border border-stone-200">
-                                {{ $effectiveStock > 0 ? $effectiveStock . ' pieces available' : 'Out of Stock' }}
-                            </span>
+                            <span class="font-bold">Inventory Mode:</span>
+                            @if($product->isPreorder())
+                                <span class="px-3 py-1 rounded-xl bg-purple-50 font-extrabold text-purple-700 border border-purple-200">
+                                    Preorder / Made to Order ({{ $product->handling_days ?? 2 }} days preparation)
+                                </span>
+                            @else
+                                <span class="px-3 py-1 rounded-xl bg-stone-100 font-extrabold text-stone-900 border border-stone-200">
+                                    {{ $effectiveStock > 0 ? $effectiveStock . ' pieces available' : 'Out of Stock' }}
+                                </span>
+                            @endif
                         </div>
                     @else
                     <!-- Quantity Stepper -->
@@ -901,20 +918,27 @@
                                 type="number" 
                                 x-model.number="quantity" 
                                 min="1" 
-                                :max="stock"
+                                :max="isPreorder ? 99 : stock"
                                 class="w-10 text-center bg-transparent border-0 outline-none text-xs font-bold text-gray-900"
                             >
                             <button 
-                                @click="if(quantity < stock) quantity++" 
+                                @click="if(isPreorder ? (quantity < 99) : (quantity < stock)) quantity++" 
                                 type="button" 
                                 class="w-9 h-full flex items-center justify-center text-gray-600 hover:text-black font-bold text-base hover:bg-gray-100 transition-colors"
                             >
                                 +
                             </button>
                         </div>
-                        <span class="text-xs font-semibold" :class="stock > 0 ? 'text-gray-400' : 'text-red-500 font-bold'">
-                            (<span x-text="stock > 0 ? stock + ' pieces available' : 'Out of Stock'"></span>)
-                        </span>
+                        <template x-if="isPreorder">
+                            <span class="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
+                                Preorder (Ships in {{ $product->handling_days ?? 2 }} days)
+                            </span>
+                        </template>
+                        <template x-if="!isPreorder">
+                            <span class="text-xs font-semibold" :class="stock > 0 ? 'text-gray-400' : 'text-red-500 font-bold'">
+                                (<span x-text="stock > 0 ? stock + ' pieces available' : 'Out of Stock'"></span>)
+                            </span>
+                        </template>
                     </div>
                     @endif
 
@@ -1030,8 +1054,8 @@
                     </form>
 
                     <div class="space-y-3">
-                        {{-- WHEN IN STOCK (stock > 0) --}}
-                        <div x-show="stock > 0" class="space-y-3">
+                        {{-- WHEN IN STOCK OR PREORDER --}}
+                        <div x-show="isPreorder || stock > 0" class="space-y-3">
                             {{-- Desktop: Keep inline buttons --}}
                             <div class="hidden lg:flex items-center gap-3">
                                 <button 
@@ -1050,13 +1074,13 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                     </svg>
-                                    <span x-text="!selectedSize ? 'Select Size' : 'Add to Cart'">Add to Cart</span>
+                                    <span x-text="!selectedSize ? 'Select Size' : (isPreorder ? 'Preorder (Add to Cart)' : 'Add to Cart')">Add to Cart</span>
                                 </button>
 
                                 <button 
                                     type="button" 
                                     @click="
-                                        if (selectedSize && stock > 0) {
+                                        if (selectedSize && (isPreorder || stock > 0)) {
                                             if (!window.isLoggedIn) {
                                                 const intent = {
                                                     action: 'buy_now',
@@ -1077,21 +1101,21 @@
                                     class="flex-1 h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-xs tracking-wide shadow-md transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span x-text="!selectedSize ? 'Select Size' : 'Buy Now'">Buy Now</span>
+                                    <span x-text="!selectedSize ? 'Select Size' : (isPreorder ? 'Preorder Now' : 'Buy Now')">Buy Now</span>
                                 </button>
                             </div>
 
                             {{-- Mobile: Buttons that trigger bottom sheet --}}
                             <div class="lg:hidden flex items-center gap-3">
                                 <button 
-                                    type="button"
+                                    type="button" 
                                     @click="openBuyNowSheet('add_to_cart')"
                                     class="flex-1 h-12 rounded-xl bg-black hover:bg-gray-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-md cursor-pointer"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                     </svg>
-                                    <span>Add to Cart</span>
+                                    <span x-text="isPreorder ? 'Preorder' : 'Add to Cart'">Add to Cart</span>
                                 </button>
 
                                 <button 
@@ -1100,13 +1124,13 @@
                                     class="flex-1 h-12 rounded-xl bg-[#C89B55] hover:bg-[#B88B45] text-white font-extrabold text-xs tracking-wide shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>Buy Now</span>
+                                    <span x-text="isPreorder ? 'Preorder Now' : 'Buy Now'">Buy Now</span>
                                 </button>
                             </div>
                         </div>
 
                         {{-- WHEN OUT OF STOCK (stock <= 0) - Wishlist & Restock Alert Banner --}}
-                        <div x-show="stock <= 0" class="space-y-3.5" x-cloak style="display: none;">
+                        <div x-show="!isPreorder && stock <= 0" class="space-y-3.5" x-cloak style="display: none;">
                             {{-- Luxury Out-of-Stock Status Banner --}}
                             <div class="p-4 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-2xs"
                                  style="background: linear-gradient(135deg, #FFF9F7 0%, #FEF2F2 100%); border: 1.5px solid #FECACA;">
@@ -2683,13 +2707,14 @@
                         @foreach($availableSizes as $sz)
                         @php
                             $szStock = (int)($product->size_stocks[$sz] ?? $product->stock ?? 0);
+                            $isSzDisabled = !$product->isPreorder() && ($szStock <= 0);
                         @endphp
                         <button 
                             type="button"
                             @click="updateStock('{{ $sz }}')"
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer {{ $szStock <= 0 ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer {{ $isSzDisabled ? 'opacity-40 line-through cursor-not-allowed bg-gray-50 text-gray-400' : '' }}"
                             :class="selectedSize === '{{ $sz }}' ? 'border-[#A67C2E] bg-amber-50/50 text-[#A67C2E] ring-1 ring-[#A67C2E]' : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'"
-                            {{ $szStock <= 0 ? 'disabled' : '' }}
+                            {{ $isSzDisabled ? 'disabled' : '' }}
                         >
                             {{ $sz }}
                         </button>
@@ -2702,12 +2727,17 @@
                 <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                     <div>
                         <div class="text-xs font-bold text-gray-800">Quantity</div>
-                        <div class="text-[10px]" :class="stock > 0 ? 'text-gray-400' : 'text-red-500 font-bold'" x-text="stock > 0 ? 'Stock: ' + stock + ' available' : 'Out of Stock'"></div>
+                        <template x-if="isPreorder">
+                            <div class="text-[10px] text-purple-700 font-bold">Made to Order</div>
+                        </template>
+                        <template x-if="!isPreorder">
+                            <div class="text-[10px]" :class="stock > 0 ? 'text-gray-400' : 'text-red-500 font-bold'" x-text="stock > 0 ? 'Stock: ' + stock + ' available' : 'Out of Stock'"></div>
+                        </template>
                     </div>
                     <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                         <button type="button" @click="if(quantity > 1) quantity--" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">-</button>
                         <span class="w-9 text-center text-xs font-black text-gray-900" x-text="quantity"></span>
-                        <button type="button" @click="if(quantity < stock) quantity++" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">+</button>
+                        <button type="button" @click="if(isPreorder ? (quantity < 99) : (quantity < stock)) quantity++" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold transition-colors cursor-pointer">+</button>
                     </div>
                 </div>
             </div>
@@ -2717,12 +2747,12 @@
                 <button 
                     type="button"
                     @click="executeBuyNow()"
-                    :disabled="!selectedSize || stock <= 0"
+                    :disabled="!selectedSize || (!isPreorder && stock <= 0)"
                     class="w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-105 transition-all text-center flex flex-col items-center justify-center leading-tight disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    :style="stock <= 0 ? 'background-color: #9CA3AF; box-shadow: none;' : (buyNowMode === 'add_to_cart' ? 'background-color: #1E1915; box-shadow: 0 2px 10px rgba(0,0,0,0.25);' : 'background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); box-shadow: 0 2px 10px rgba(166, 124, 46, 0.35);')"
+                    :style="(!isPreorder && stock <= 0) ? 'background-color: #9CA3AF; box-shadow: none;' : (buyNowMode === 'add_to_cart' ? 'background-color: #1E1915; box-shadow: 0 2px 10px rgba(0,0,0,0.25);' : 'background: linear-gradient(135deg, #C89B55 0%, #A67C2E 100%); box-shadow: 0 2px 10px rgba(166, 124, 46, 0.35);')"
                 >
-                    <span class="text-xs font-black" x-text="!selectedSize ? 'Select Size' : (stock <= 0 ? 'Out of Stock' : (buyNowMode === 'add_to_cart' ? 'Add to Cart' : 'Buy Now'))"></span>
-                    <span class="text-[10px] font-semibold opacity-95" x-show="stock > 0 && selectedSize && buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
+                    <span class="text-xs font-black" x-text="!selectedSize ? 'Select Size' : ((!isPreorder && stock <= 0) ? 'Out of Stock' : (buyNowMode === 'add_to_cart' ? (isPreorder ? 'Preorder (Add to Cart)' : 'Add to Cart') : (isPreorder ? 'Preorder Now' : 'Buy Now')))"></span>
+                    <span class="text-[10px] font-semibold opacity-95" x-show="(isPreorder || stock > 0) && selectedSize && buyNowMode !== 'add_to_cart'">₱0 Shipping Fee</span>
                 </button>
             </div>
         </div>
@@ -2796,8 +2826,8 @@
                 <span style="font-size: 10px; color: #374151; font-weight: 600; margin-top: 2px;">Chat</span>
             </button>
 
-            {{-- When In Stock: Dual CTA Buttons --}}
-            <div x-show="stock > 0" class="mobile-cta-group flex-1 flex items-center gap-2 ml-1 min-w-0" style="flex: 1 1 auto; display: flex; align-items: center; gap: 8px; margin-left: 4px; min-width: 0;">
+            {{-- When In Stock Or Preorder: Dual CTA Buttons --}}
+            <div x-show="isPreorder || stock > 0" class="mobile-cta-group flex-1 flex items-center gap-2 ml-1 min-w-0" style="flex: 1 1 auto; display: flex; align-items: center; gap: 8px; margin-left: 4px; min-width: 0;">
                 {{-- Add to Cart Button (Luxury Onyx) --}}
                 <button 
                     type="button" 
@@ -2807,7 +2837,7 @@
                     onmouseover="this.style.backgroundColor='#000000'"
                     onmouseout="this.style.backgroundColor='#1E1915'"
                 >
-                    <span>Add to Cart</span>
+                    <span x-text="isPreorder ? 'Preorder' : 'Add to Cart'">Add to Cart</span>
                 </button>
 
                 {{-- Buy Now Button (Dark Antique Gold Gradient) --}}
@@ -2819,13 +2849,13 @@
                     onmouseover="this.style.opacity='0.92'"
                     onmouseout="this.style.opacity='1'"
                 >
-                    <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;">Buy Now</span>
+                    <span style="font-size: 12px; font-weight: 900; letter-spacing: -0.01em;" x-text="isPreorder ? 'Preorder Now' : 'Buy Now'">Buy Now</span>
                     <span style="font-size: 9.5px; font-weight: 600; opacity: 0.95;">₱0 Shipping Fee</span>
                 </button>
             </div>
 
-            {{-- When Out of Stock: Full-Width Gold Wishlist Button (Matching Buy Now) --}}
-            <div x-show="stock <= 0" x-cloak class="mobile-cta-group flex-1 ml-1 min-w-0" style="display: none; flex: 1 1 auto; margin-left: 4px; min-width: 0;">
+            {{-- When Out of Stock (and NOT preorder): Full-Width Gold Wishlist Button (Matching Buy Now) --}}
+            <div x-show="!isPreorder && stock <= 0" x-cloak class="mobile-cta-group flex-1 ml-1 min-w-0" style="display: none; flex: 1 1 auto; margin-left: 4px; min-width: 0;">
                 <button 
                     type="button" 
                     @click="toggleWishlist()" 

@@ -39,8 +39,10 @@ function printSellerOrder(order) {
 
     const itemsHtml = (order.items || []).map(function (item) {
         const itemTitle = (item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product_name || item.product?.name || 'Archived Heritage Piece');
+        const isPreorder = item.inventory_mode === 'preorder' || item.is_preorder || item.product?.inventory_mode === 'preorder';
+        const modeBadge = isPreorder ? ' <span style="display:inline-block;padding:1px 5px;font-size:9px;font-weight:bold;background:#FEF3C7;color:#92400E;border-radius:4px;border:1px solid #FDE68A;margin-left:4px;">PREORDER</span>' : '';
         return '<tr>'
-            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + itemTitle + '</td>'
+            + '<td style="padding:8px;border-bottom:1px solid #eee;">' + itemTitle + modeBadge + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;">' + (item.size || '—') + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">' + item.quantity + '</td>'
             + '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">₱' + Number(item.price).toLocaleString() + '</td>'
@@ -2045,6 +2047,12 @@ function sellerOrdersManager() {
                                     <span x-text="Number(order.reviews[0].rating).toFixed(1) + ' Rated'"></span>
                                 </span>
                             </template>
+                            <template x-if="(order.items || []).some(i => i.inventory_mode === 'preorder' || i.is_preorder || i.product?.inventory_mode === 'preorder')">
+                                <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-500/15 text-amber-800 border border-amber-600/30">
+                                    <span>⏳</span>
+                                    <span>Preorder</span>
+                                </span>
+                            </template>
                         </div>
                         <p class="text-[10px] sm:text-[11px] truncate font-medium mt-0.5" style="color: #766C60;">
                             <span class="font-bold" style="color: #1E1915;" x-text="order.customer?.name || 'Customer'"></span>
@@ -2543,8 +2551,14 @@ function sellerOrdersManager() {
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <h4 class="text-xs font-bold text-black truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
-                                            <div class="flex flex-wrap gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                            <div class="flex flex-wrap items-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
                                                 <span x-show="item.size" x-text="'Size: ' + item.size"></span>
+                                                <template x-if="item.inventory_mode === 'preorder' || item.is_preorder || item.product?.inventory_mode === 'preorder'">
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-600/30 text-amber-800 text-[8px] font-black">
+                                                        <span>⏳</span>
+                                                        <span>Preorder</span>
+                                                    </span>
+                                                </template>
                                             </div>
                                         </div>
                                         <div class="text-right shrink-0">

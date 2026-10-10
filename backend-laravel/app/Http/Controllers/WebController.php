@@ -356,7 +356,10 @@ class WebController extends Controller
             $sameStoreProducts = Product::where('status', 'approved')
                 ->where('sellerId', $product->sellerId)
                 ->where('id', '!=', $product->id)
-                ->where('stock', '>', 0)
+                ->where(function ($q) {
+                    $q->where('stock', '>', 0)
+                      ->orWhere('inventory_mode', 'preorder');
+                })
                 ->select('products.*')
                 ->selectSub(function($q) {
                     $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
@@ -377,7 +380,10 @@ class WebController extends Controller
             $similarProducts = Product::where('status', 'approved')
                 ->where('CategoryId', $product->CategoryId)
                 ->where('id', '!=', $product->id)
-                ->where('stock', '>', 0)
+                ->where(function ($q) {
+                    $q->where('stock', '>', 0)
+                      ->orWhere('inventory_mode', 'preorder');
+                })
                 ->select('products.*')
                 ->selectSub(function($q) {
                     $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
@@ -484,7 +490,10 @@ class WebController extends Controller
     {
         $baseQuery = fn () => Product::where('status', 'approved')
             ->where('id', '!=', $product->id)
-            ->where('stock', '>', 0)
+            ->where(function ($q) {
+                $q->where('stock', '>', 0)
+                  ->orWhere('inventory_mode', 'preorder');
+            })
             ->select('products.*')
             ->selectSub(function($q) {
                 $q->selectRaw('COALESCE(SUM(order_items.quantity), 0)')
@@ -619,7 +628,10 @@ class WebController extends Controller
             ->unique();
 
         $baseQuery = fn () => Product::where('status', 'approved')
-            ->where('stock', '>', 0)
+            ->where(function ($q) {
+                $q->where('stock', '>', 0)
+                  ->orWhere('inventory_mode', 'preorder');
+            })
             ->whereNotIn('id', $orderedProductIds)
             ->withAvg('reviews as avgRating', 'rating')
             ->withCount('reviews as reviewCount');

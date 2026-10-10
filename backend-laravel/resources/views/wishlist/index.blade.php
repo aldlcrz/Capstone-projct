@@ -119,6 +119,14 @@
                                         Size: {{ $wishlist->size }}
                                     </div>
                                 @endif
+                                @if($product->isPreorder())
+                                    <div class="absolute top-2 right-2 z-10 pointer-events-none">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1E1915]/90 backdrop-blur-xs border border-[#C49520]/60 text-[#DFC97A] text-[9px] font-extrabold uppercase tracking-wider shadow-sm">
+                                            <svg class="w-2.5 h-2.5 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Preorder
+                                        </span>
+                                    </div>
+                                @endif
                             </a>
 
                             <!-- Category & Artisan -->

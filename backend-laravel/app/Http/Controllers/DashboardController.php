@@ -290,9 +290,12 @@ class DashboardController extends Controller
             return (int) ($p->stock ?? 0);
         };
 
-        $lowStockProducts = $products->filter(fn ($p) => $resolveStock($p) > 0 && $resolveStock($p) <= 5)->values();
-        $outOfStockProducts = $products->filter(fn ($p) => $resolveStock($p) <= 0)->values();
-        $needsRestockProducts = $products->filter(fn ($p) => $resolveStock($p) <= 5)->values();
+        $physicalProducts = $products->filter(fn ($p) => ($p->inventory_mode ?? 'available_stock') !== 'preorder');
+        $preorderProducts = $products->filter(fn ($p) => ($p->inventory_mode ?? 'available_stock') === 'preorder');
+
+        $lowStockProducts = $physicalProducts->filter(fn ($p) => $resolveStock($p) > 0 && $resolveStock($p) <= 5)->values();
+        $outOfStockProducts = $physicalProducts->filter(fn ($p) => $resolveStock($p) <= 0)->values();
+        $needsRestockProducts = $physicalProducts->filter(fn ($p) => $resolveStock($p) <= 5)->values();
 
         $newReviewsCount = DB::table('reviews')
             ->join('products', 'reviews.productId', '=', 'products.id')
@@ -306,10 +309,11 @@ class DashboardController extends Controller
 
         $inventoryHealth = [
             'total' => $products->count(),
+            'preorder' => $preorderProducts->count(),
             'lowStock' => $lowStockProducts->count(),
             'outOfStock' => $outOfStockProducts->count(),
             'needsRestock' => $needsRestockProducts->count(),
-            'healthy' => max(0, $products->count() - $needsRestockProducts->count()),
+            'healthy' => max(0, $physicalProducts->count() - $needsRestockProducts->count()),
         ];
 
         return [
@@ -479,10 +483,11 @@ class DashboardController extends Controller
             'products.stock',
             'products.price',
             'products.status',
+            'products.inventory_mode',
             DB::raw('SUM(order_items.quantity) as units_sold'),
             DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
         )
-        ->groupBy('products.id', 'products.name', 'products.stock', 'products.price', 'products.status')
+        ->groupBy('products.id', 'products.name', 'products.stock', 'products.price', 'products.status', 'products.inventory_mode')
         ->orderByDesc('units_sold')
         ->limit(5)
         ->get();
@@ -490,6 +495,7 @@ class DashboardController extends Controller
         return $top->map(function ($item) {
             $productModel = Product::find($item->id);
             $item->image = $productModel ? $productModel->getImageUrl() : asset('images/placeholder.jpg');
+            $item->is_preorder = ($item->inventory_mode ?? 'available_stock') === 'preorder';
             return $item;
         });
     }

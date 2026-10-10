@@ -403,8 +403,14 @@
                                 <img src="{{ $prod->image }}" class="w-full h-full object-cover">
                             </div>
                             <div class="min-w-0">
-                                <div class="text-xs font-bold truncate uppercase tracking-tight" style="color: #1E1915;">{{ $prod->name }}</div>
-                                <div class="text-[9px] font-medium font-sans" style="color: #766C60;">Available Stock: {{ $prod->stock }} pcs</div>
+                                @if(!empty($prod->is_preorder) || ($prod->inventory_mode ?? '') === 'preorder')
+                                    <div class="text-[9px] font-bold font-sans text-amber-700 flex items-center gap-1">
+                                        <span>⏳ Preorder</span>
+                                        <span class="text-stone-400 font-normal">&bull; Made to order</span>
+                                    </div>
+                                @else
+                                    <div class="text-[9px] font-medium font-sans" style="color: #766C60;">Available Stock: {{ $prod->stock }} pcs</div>
+                                @endif
                             </div>
                         </div>
                         <div class="text-right shrink-0">

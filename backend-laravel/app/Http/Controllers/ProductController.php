@@ -75,6 +75,10 @@ class ProductController extends Controller
             ? round((float)$data['price'] * (1 - ($data['discount_percentage'] / 100)), 2)
             : (float)$data['price'];
 
+        $data['inventory_mode'] = $data['inventory_mode'] ?? ($productModel?->inventory_mode ?? 'available_stock');
+        $data['is_preorder'] = ($data['inventory_mode'] === 'preorder');
+        $data['handling_days'] = (int) ($data['handling_days'] ?? ($productModel?->handling_days ?? 2));
+
         return $data;
     }
 

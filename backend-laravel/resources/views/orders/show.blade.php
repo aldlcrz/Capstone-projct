@@ -547,6 +547,12 @@
                                                 Size {{ $item->size }}
                                             </span>
                                         @endif
+                                        @if($item->isPreorder())
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-600/30 text-amber-800 text-[10px] font-black uppercase tracking-wider">
+                                                <svg class="w-2.5 h-2.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Preorder
+                                            </span>
+                                        @endif
                                         <span class="px-2 py-0.5 bg-[#FAF8F5] text-[#78716C] text-[11px] font-bold rounded-md border border-[#ECE3D2]">
                                             Qty {{ $item->quantity }}
                                         </span>

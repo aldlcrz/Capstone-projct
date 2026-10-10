@@ -52,6 +52,8 @@ class Product extends Model
         // Multi-provider Package Specs
         'package_weight_per_unit', 'package_length_per_unit',
         'package_width_per_unit', 'package_height_per_unit', 'handling_days',
+        // Inventory Mode (available_stock, preorder)
+        'inventory_mode',
     ];
 
     /**
@@ -475,5 +477,56 @@ class Product extends Model
         }
 
         return '/storage/' . $clean;
+    }
+
+    /**
+     * Check if product is in preorder inventory mode.
+     */
+    public function isPreorder(): bool
+    {
+        return ($this->inventory_mode ?? 'available_stock') === 'preorder';
+    }
+
+    /**
+     * Check if product is in available stock inventory mode.
+     */
+    public function isAvailableStock(): bool
+    {
+        return ($this->inventory_mode ?? 'available_stock') === 'available_stock';
+    }
+
+    /**
+     * Determine if product can be purchased.
+     */
+    public function isPurchasable(): bool
+    {
+        if ($this->status !== 'approved') {
+            return false;
+        }
+
+        if ($this->isPreorder()) {
+            return !empty($this->sizes);
+        }
+
+        return (int) $this->stock > 0;
+    }
+
+    /**
+     * Scope query to only purchasable approved products.
+     */
+    public function scopePurchasable($query)
+    {
+        return $query->where('status', 'approved')
+            ->where(function ($q) {
+                $q->where('inventory_mode', 'preorder')
+                    ->orWhere(function ($sub) {
+                        $sub->where('inventory_mode', '!=', 'preorder')
+                            ->where('stock', '>', 0);
+                    })
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('inventory_mode')
+                            ->where('stock', '>', 0);
+                    });
+            });
     }
 }

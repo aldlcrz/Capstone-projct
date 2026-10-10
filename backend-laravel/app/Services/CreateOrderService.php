@@ -345,23 +345,30 @@ class CreateOrderService
 
                 $qty = $req['quantity'];
                 $requestedSize = $req['size'] ? trim($req['size']) : null;
+                $isPreorder = $product->isPreorder();
 
-                // Validate and update size stocks if present
-                $sizeStocks = $product->size_stocks;
-                if (!empty($sizeStocks) && is_array($sizeStocks) && $requestedSize) {
-                    $availableSizeStock = $sizeStocks[$requestedSize] ?? null;
-                    if ($availableSizeStock !== null && (int)$availableSizeStock < $qty) {
-                        throw new DomainException("Insufficient stock for size '{$requestedSize}' of '{$product->name}'. Available: {$availableSizeStock}, requested: {$qty}.");
+                if ($isPreorder) {
+                    if ($requestedSize && !empty($product->sizes) && !in_array($requestedSize, $product->sizes)) {
+                        throw new DomainException("Selected size '{$requestedSize}' is not available for preorder of '{$product->name}'.");
                     }
-                    if ($availableSizeStock !== null) {
-                        $sizeStocks[$requestedSize] = max(0, (int)$availableSizeStock - $qty);
-                        $product->size_stocks = $sizeStocks;
+                } else {
+                    // Validate and update size stocks if present
+                    $sizeStocks = $product->size_stocks;
+                    if (!empty($sizeStocks) && is_array($sizeStocks) && $requestedSize) {
+                        $availableSizeStock = $sizeStocks[$requestedSize] ?? null;
+                        if ($availableSizeStock !== null && (int)$availableSizeStock < $qty) {
+                            throw new DomainException("Insufficient stock for size '{$requestedSize}' of '{$product->name}'. Available: {$availableSizeStock}, requested: {$qty}.");
+                        }
+                        if ($availableSizeStock !== null) {
+                            $sizeStocks[$requestedSize] = max(0, (int)$availableSizeStock - $qty);
+                            $product->size_stocks = $sizeStocks;
+                        }
                     }
-                }
 
-                // Validate total stock
-                if ($product->stock < $qty) {
-                    throw new DomainException("Insufficient stock for '{$product->name}'. Available: {$product->stock}, requested: {$qty}.");
+                    // Validate total stock
+                    if ($product->stock < $qty) {
+                        throw new DomainException("Insufficient stock for '{$product->name}'. Available: {$product->stock}, requested: {$qty}.");
+                    }
                 }
 
                 // Authoritative Price Calculation
@@ -373,14 +380,15 @@ class CreateOrderService
                 $productImg = VariationFormatter::getImageForVariation($variationLabel, $product) ?: $product->getImageUrl();
 
                 $preparedItems[] = [
-                    'product'       => $product,
-                    'productId'     => $product->id,
-                    'product_name'  => $product->name,
-                    'product_image' => $productImg,
-                    'quantity'      => $qty,
-                    'price'         => $itemPrice,
-                    'size'          => $requestedSize,
-                    'variation'     => $variationLabel,
+                    'product'        => $product,
+                    'productId'      => $product->id,
+                    'product_name'   => $product->name,
+                    'product_image'  => $productImg,
+                    'quantity'       => $qty,
+                    'price'          => $itemPrice,
+                    'size'           => $requestedSize,
+                    'variation'      => $variationLabel,
+                    'inventory_mode' => $isPreorder ? 'preorder' : 'available_stock',
                 ];
 
                 $sellerItemsForShipping[] = [
@@ -649,18 +657,21 @@ class CreateOrderService
             foreach ($preparedItems as $pItem) {
                 /** @var Product $prod */
                 $prod = $pItem['product'];
-                $prod->decrement('stock', $pItem['quantity']);
-                $prod->save();
+                if (($pItem['inventory_mode'] ?? 'available_stock') !== 'preorder') {
+                    $prod->decrement('stock', $pItem['quantity']);
+                    $prod->save();
+                }
 
                 OrderItem::create([
-                    'orderId'       => $order->id,
-                    'productId'     => $pItem['productId'],
-                    'product_name'  => $pItem['product_name'],
-                    'product_image' => $pItem['product_image'],
-                    'quantity'      => $pItem['quantity'],
-                    'price'         => $pItem['price'],
-                    'size'          => $pItem['size'],
-                    'variation'     => $pItem['variation'],
+                    'orderId'        => $order->id,
+                    'productId'      => $pItem['productId'],
+                    'product_name'   => $pItem['product_name'],
+                    'product_image'  => $pItem['product_image'],
+                    'quantity'       => $pItem['quantity'],
+                    'price'          => $pItem['price'],
+                    'size'           => $pItem['size'],
+                    'variation'      => $pItem['variation'],
+                    'inventory_mode' => $pItem['inventory_mode'] ?? 'available_stock',
                 ]);
             }
 

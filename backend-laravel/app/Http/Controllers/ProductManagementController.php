@@ -140,6 +140,7 @@ class ProductManagementController extends Controller
                 'category_ids.*'      => 'exists:categories,id',
                 'CategoryId'          => 'nullable|exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
+                'inventory_mode'      => 'nullable|string|in:available_stock,preorder',
                 'variant_image_0'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'images'              => 'nullable|array',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -212,26 +213,51 @@ class ProductManagementController extends Controller
                 return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
             }
 
+            $inventoryMode = $request->input('inventory_mode', 'available_stock') ?: 'available_stock';
+            if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
+                $inventoryMode = 'available_stock';
+            }
+
             $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
                 return strtolower(trim((string)$s)) !== 'custom';
             }));
-            $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-                return in_array($key, $selectedSizes);
-            }, ARRAY_FILTER_USE_KEY) : [];
 
-            $totalStock = array_sum(array_map('intval', $sizeStocks));
-            if ($totalStock <= 0) {
-                return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+            if ($inventoryMode === 'preorder') {
+                if (empty($selectedSizes)) {
+                    return redirect()->back()->withInput()->with('error', 'Please select at least one Heritage Size for preorder.');
+                }
+                $sizeStocks = [];
+                $totalStock = 0;
+            } else {
+                $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+                    return in_array($key, $selectedSizes);
+                }, ARRAY_FILTER_USE_KEY) : [];
+
+                $totalStock = array_sum(array_map('intval', $sizeStocks));
+                if ($totalStock <= 0) {
+                    return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+                }
             }
+        }
+
+        $inventoryMode = $request->input('inventory_mode', 'available_stock') ?: 'available_stock';
+        if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
+            $inventoryMode = 'available_stock';
         }
 
         $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
             return strtolower(trim((string)$s)) !== 'custom';
         }));
-        $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-            return in_array($key, $selectedSizes);
-        }, ARRAY_FILTER_USE_KEY) : [];
-        $totalStock = array_sum(array_map('intval', $sizeStocks));
+
+        if ($inventoryMode === 'preorder') {
+            $sizeStocks = [];
+            $totalStock = 0;
+        } else {
+            $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+                return in_array($key, $selectedSizes);
+            }, ARRAY_FILTER_USE_KEY) : [];
+            $totalStock = array_sum(array_map('intval', $sizeStocks));
+        }
 
         try {
             $product = new Product();
@@ -251,6 +277,7 @@ class ProductManagementController extends Controller
             $product->CategoryId = $request->CategoryId ?: ($request->input('category_ids.0') ?: \App\Models\Category::first()?->id);
             $product->categories = $request->input('category_ids', $product->CategoryId ? [$product->CategoryId] : []);
             $product->target_group = $request->target_group ?? 'Men';
+            $product->inventory_mode = $inventoryMode;
             $product->sizes = !empty($selectedSizes) ? $selectedSizes : ['M'];
             $product->size_stocks = $sizeStocks;
             $product->stock = $totalStock;
@@ -542,6 +569,7 @@ class ProductManagementController extends Controller
                 'category_ids'        => 'nullable|array',
                 'category_ids.*'      => 'exists:categories,id',
                 'target_group'        => 'nullable|string|in:Men,Women,Kids',
+                'inventory_mode'      => 'nullable|string|in:available_stock,preorder',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'sizes'               => 'nullable|array',
@@ -569,6 +597,7 @@ class ProductManagementController extends Controller
                 'category_ids'        => 'nullable|array',
                 'category_ids.*'      => 'exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
+                'inventory_mode'      => 'nullable|string|in:available_stock,preorder',
                 'images.*'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'size_guide_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
                 'sizes'               => 'required|array|min:1',
@@ -623,27 +652,51 @@ class ProductManagementController extends Controller
                 return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
             }
 
+            $inventoryMode = $request->input('inventory_mode', $product->inventory_mode ?? 'available_stock') ?: 'available_stock';
+            if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
+                $inventoryMode = 'available_stock';
+            }
+
             $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
                 return strtolower(trim((string)$s)) !== 'custom';
             }));
-            $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-                return in_array($key, $selectedSizes);
-            }, ARRAY_FILTER_USE_KEY) : [];
 
-            $totalStock = array_sum(array_map('intval', $sizeStocks));
-            if ($totalStock <= 0) {
-                return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+            if ($inventoryMode === 'preorder') {
+                if (empty($selectedSizes)) {
+                    return redirect()->back()->withInput()->with('error', 'Please select at least one Heritage Size for preorder.');
+                }
+                $sizeStocks = [];
+                $totalStock = 0;
+            } else {
+                $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+                    return in_array($key, $selectedSizes);
+                }, ARRAY_FILTER_USE_KEY) : [];
+
+                $totalStock = array_sum(array_map('intval', $sizeStocks));
+                if ($totalStock <= 0) {
+                    return redirect()->back()->withInput()->with('error', 'Please assign a stock quantity greater than 0 for at least one selected size.');
+                }
             }
+        }
+
+        $inventoryMode = $request->input('inventory_mode', $product->inventory_mode ?? 'available_stock') ?: 'available_stock';
+        if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
+            $inventoryMode = 'available_stock';
         }
 
         $selectedSizes = array_values(array_filter($request->sizes ?? [], function($s) {
             return strtolower(trim((string)$s)) !== 'custom';
         }));
-        $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
-            return in_array($key, $selectedSizes);
-        }, ARRAY_FILTER_USE_KEY) : [];
 
-        $totalStock = array_sum(array_map('intval', $sizeStocks));
+        if ($inventoryMode === 'preorder') {
+            $sizeStocks = [];
+            $totalStock = 0;
+        } else {
+            $sizeStocks = is_array($request->size_stocks) ? array_filter($request->size_stocks, function($key) use ($selectedSizes) {
+                return in_array($key, $selectedSizes);
+            }, ARRAY_FILTER_USE_KEY) : [];
+            $totalStock = array_sum(array_map('intval', $sizeStocks));
+        }
 
         $oldSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : [];
         $oldTotalStock = (int) $product->stock;
@@ -662,6 +715,7 @@ class ProductManagementController extends Controller
         $product->shippingDays = $request->shippingDays ?? $product->shippingDays ?? 3;
         $product->CategoryId   = $request->CategoryId ?: ($request->input('category_ids.0') ?: $product->CategoryId);
         $product->target_group = $request->target_group ?? $product->target_group ?? 'Men';
+        $product->inventory_mode = $inventoryMode;
         $product->sizes        = !empty($selectedSizes) ? $selectedSizes : ($product->sizes ?? ['M']);
         $product->size_stocks  = $sizeStocks;
         $product->stock        = $totalStock;
@@ -894,7 +948,7 @@ class ProductManagementController extends Controller
         }
 
         // Auto-add restocked wishlisted items to customer cart & send email notification if approved
-        if ($wasApproved && $product->status === 'approved') {
+        if ($wasApproved && $product->status === 'approved' && ($product->inventory_mode ?? 'available_stock') !== 'preorder') {
             try {
                 \App\Services\WishlistService::handleProductRestocked($product, $oldSizeStocks, $oldTotalStock);
             } catch (\Throwable $we) {

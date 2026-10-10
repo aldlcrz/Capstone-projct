@@ -142,43 +142,83 @@ class CartHelper
             $canonicalKey = self::getCanonicalKey($productId, $size, $variation, $product);
 
             // Compute available stock for size / product
-            $availableStock = (int) $product->stock;
-            if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
-                $availableStock = (int) $product->size_stocks[$size];
-            }
+            $isPreorder = $product->isPreorder();
+            if ($isPreorder) {
+                if ($product->status !== 'approved') {
+                    continue;
+                }
+                if ($size && !empty($product->sizes) && !in_array($size, $product->sizes)) {
+                    continue;
+                }
+                $itemQty = max(1, (int) ($item['quantity'] ?? 1));
 
-            if ($availableStock <= 0) {
-                continue;
-            }
+                if (isset($consolidated[$canonicalKey])) {
+                    $consolidated[$canonicalKey]['quantity'] = $consolidated[$canonicalKey]['quantity'] + $itemQty;
+                } else {
+                    $seller = $product->seller;
+                    $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
 
-            $itemQty = max(1, (int) ($item['quantity'] ?? 1));
-
-            if (isset($consolidated[$canonicalKey])) {
-                // Merge quantity of duplicate configuration
-                $combinedQty = $consolidated[$canonicalKey]['quantity'] + $itemQty;
-                $consolidated[$canonicalKey]['quantity'] = min($combinedQty, $availableStock);
+                    $consolidated[$canonicalKey] = [
+                        'key'                 => $canonicalKey,
+                        'id'                  => $product->id,
+                        'name'                => $product->name,
+                        'price'               => (float) $product->sale_price,
+                        'image'               => $image,
+                        'quantity'            => $itemQty,
+                        'size'                => $size,
+                        'variation'           => $variation,
+                        'sellerId'            => $product->sellerId,
+                        'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                        'original_price'      => (float) $product->price,
+                        'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                        'is_on_sale'          => $product->isSaleActive(),
+                        'category_name'       => $product->category->name ?? 'Traditional',
+                        'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                        'inventory_mode'      => 'preorder',
+                        'handling_days'       => (int) ($product->handling_days ?? 2),
+                    ];
+                }
             } else {
-                // Ensure dynamic fields are refreshed
-                $seller = $product->seller;
-                $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
+                $availableStock = (int) $product->stock;
+                if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
+                    $availableStock = (int) $product->size_stocks[$size];
+                }
 
-                $consolidated[$canonicalKey] = [
-                    'key'                 => $canonicalKey,
-                    'id'                  => $product->id,
-                    'name'                => $product->name,
-                    'price'               => (float) $product->sale_price,
-                    'image'               => $image,
-                    'quantity'            => min($itemQty, $availableStock),
-                    'size'                => $size,
-                    'variation'           => $variation,
-                    'sellerId'            => $product->sellerId,
-                    'shippingFee'         => (float) ($product->shippingFee ?? 0),
-                    'original_price'      => (float) $product->price,
-                    'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
-                    'is_on_sale'          => $product->isSaleActive(),
-                    'category_name'       => $product->category->name ?? 'Traditional',
-                    'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
-                ];
+                if ($availableStock <= 0) {
+                    continue;
+                }
+
+                $itemQty = max(1, (int) ($item['quantity'] ?? 1));
+
+                if (isset($consolidated[$canonicalKey])) {
+                    // Merge quantity of duplicate configuration
+                    $combinedQty = $consolidated[$canonicalKey]['quantity'] + $itemQty;
+                    $consolidated[$canonicalKey]['quantity'] = min($combinedQty, $availableStock);
+                } else {
+                    // Ensure dynamic fields are refreshed
+                    $seller = $product->seller;
+                    $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
+
+                    $consolidated[$canonicalKey] = [
+                        'key'                 => $canonicalKey,
+                        'id'                  => $product->id,
+                        'name'                => $product->name,
+                        'price'               => (float) $product->sale_price,
+                        'image'               => $image,
+                        'quantity'            => min($itemQty, $availableStock),
+                        'size'                => $size,
+                        'variation'           => $variation,
+                        'sellerId'            => $product->sellerId,
+                        'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                        'original_price'      => (float) $product->price,
+                        'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                        'is_on_sale'          => $product->isSaleActive(),
+                        'category_name'       => $product->category->name ?? 'Traditional',
+                        'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                        'inventory_mode'      => 'available_stock',
+                        'handling_days'       => (int) ($product->handling_days ?? 2),
+                    ];
+                }
             }
         }
 
@@ -207,42 +247,82 @@ class CartHelper
             $variation = self::normalizeVariation($item['variation'] ?? null, $product);
             $canonicalKey = self::getCanonicalKey($productId, $size, $variation, $product);
 
-            $availableStock = (int) $product->stock;
-            if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
-                $availableStock = (int) $product->size_stocks[$size];
-            }
+            $isPreorder = $product->isPreorder();
+            if ($isPreorder) {
+                if ($product->status !== 'approved') {
+                    continue;
+                }
+                if ($size && !empty($product->sizes) && !in_array($size, $product->sizes)) {
+                    continue;
+                }
+                $secondaryQty = max(1, (int) ($item['quantity'] ?? 1));
 
-            if ($availableStock <= 0) {
-                continue;
-            }
+                if (isset($merged[$canonicalKey])) {
+                    $merged[$canonicalKey]['quantity'] = $merged[$canonicalKey]['quantity'] + $secondaryQty;
+                } else {
+                    $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
+                    $seller = $product->seller;
 
-            $secondaryQty = max(1, (int) ($item['quantity'] ?? 1));
-
-            if (isset($merged[$canonicalKey])) {
-                // Sum quantities when merging, capped at available stock
-                $newQty = $merged[$canonicalKey]['quantity'] + $secondaryQty;
-                $merged[$canonicalKey]['quantity'] = min($newQty, $availableStock);
+                    $merged[$canonicalKey] = [
+                        'key'                 => $canonicalKey,
+                        'id'                  => $product->id,
+                        'name'                => $product->name,
+                        'price'               => (float) $product->sale_price,
+                        'image'               => $image,
+                        'quantity'            => $secondaryQty,
+                        'size'                => $size,
+                        'variation'           => $variation,
+                        'sellerId'            => $product->sellerId,
+                        'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                        'original_price'      => (float) $product->price,
+                        'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                        'is_on_sale'          => $product->isSaleActive(),
+                        'category_name'       => $product->category->name ?? 'Traditional',
+                        'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                        'inventory_mode'      => 'preorder',
+                        'handling_days'       => (int) ($product->handling_days ?? 2),
+                    ];
+                }
             } else {
-                $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
-                $seller = $product->seller;
+                $availableStock = (int) $product->stock;
+                if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
+                    $availableStock = (int) $product->size_stocks[$size];
+                }
 
-                $merged[$canonicalKey] = [
-                    'key'                 => $canonicalKey,
-                    'id'                  => $product->id,
-                    'name'                => $product->name,
-                    'price'               => (float) $product->sale_price,
-                    'image'               => $image,
-                    'quantity'            => min($secondaryQty, $availableStock),
-                    'size'                => $size,
-                    'variation'           => $variation,
-                    'sellerId'            => $product->sellerId,
-                    'shippingFee'         => (float) ($product->shippingFee ?? 0),
-                    'original_price'      => (float) $product->price,
-                    'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
-                    'is_on_sale'          => $product->isSaleActive(),
-                    'category_name'       => $product->category->name ?? 'Traditional',
-                    'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
-                ];
+                if ($availableStock <= 0) {
+                    continue;
+                }
+
+                $secondaryQty = max(1, (int) ($item['quantity'] ?? 1));
+
+                if (isset($merged[$canonicalKey])) {
+                    // Sum quantities when merging, capped at available stock
+                    $newQty = $merged[$canonicalKey]['quantity'] + $secondaryQty;
+                    $merged[$canonicalKey]['quantity'] = min($newQty, $availableStock);
+                } else {
+                    $image = VariationFormatter::getImageForVariation($variation, $product) ?: $product->getImageUrl();
+                    $seller = $product->seller;
+
+                    $merged[$canonicalKey] = [
+                        'key'                 => $canonicalKey,
+                        'id'                  => $product->id,
+                        'name'                => $product->name,
+                        'price'               => (float) $product->sale_price,
+                        'image'               => $image,
+                        'quantity'            => min($secondaryQty, $availableStock),
+                        'size'                => $size,
+                        'variation'           => $variation,
+                        'sellerId'            => $product->sellerId,
+                        'shippingFee'         => (float) ($product->shippingFee ?? 0),
+                        'original_price'      => (float) $product->price,
+                        'discount_percentage' => $product->isSaleActive() ? (float) $product->discount_percentage : 0,
+                        'is_on_sale'          => $product->isSaleActive(),
+                        'category_name'       => $product->category->name ?? 'Traditional',
+                        'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                        'inventory_mode'      => 'available_stock',
+                        'handling_days'       => (int) ($product->handling_days ?? 2),
+                    ];
+                }
             }
         }
 

@@ -232,6 +232,8 @@
                                                             \App\Models\Product::find($item['id'] ?? null)?->image
                                                         ) ?? $item['variation']) : '';
                                                     $displayTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : $item['name'];
+                                                    $isPreorderItem = ($item['inventory_mode'] ?? null) === 'preorder' || ($itemProduct && $itemProduct->isPreorder());
+                                                    $handlingDays = (int) ($item['handling_days'] ?? ($itemProduct?->handling_days ?? 7));
                                                 @endphp
                                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
                                                     <div class="min-w-0">
@@ -249,6 +251,15 @@
                                                                     Standard Size
                                                                 @endif
                                                             </span>
+                                                            @if($isPreorderItem)
+                                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-600/30 text-amber-800 font-bold tracking-wide uppercase text-[9px]">
+                                                                    <svg class="w-2.5 h-2.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                                    Preorder
+                                                                </span>
+                                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] text-amber-900/80 font-medium bg-amber-50 rounded border border-amber-200/60">
+                                                                    Made to order &bull; ~{{ $handlingDays }} {{ Str::plural('day', $handlingDays) }} prep
+                                                                </span>
+                                                            @endif
                                                         </div>
                                                     </div>
 

@@ -785,6 +785,15 @@
                             <span style="color:#DFC97A;font-family:ui-serif,Georgia,Cambria,'Times New Roman',serif;font-size:7.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;line-height:1;">{{ $product->target_group }}</span>
                         </div>
                     @endif
+
+                    @if($product->isPreorder())
+                        <div style="position:absolute;top:6px;right:6px;z-index:10;pointer-events:none;">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1E1915]/90 backdrop-blur-xs border border-[#C49520]/60 text-[#DFC97A] text-[9px] font-extrabold uppercase tracking-wider shadow-sm">
+                                <svg class="w-2.5 h-2.5 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Preorder
+                            </span>
+                        </div>
+                    @endif
                 </div>
                 <a href="/products/{{ $product->id }}" class="block">
                     <h3 class="font-extrabold text-sm text-gray-900 group-hover:text-[#C0422A] transition-colors leading-tight line-clamp-2 uppercase tracking-tight">{{ $product->name }}</h3>

@@ -26,6 +26,7 @@ class OrderItem extends Model
         'price',
         'size',
         'variation',
+        'inventory_mode',
     ];
 
     /**
@@ -49,7 +50,7 @@ class OrderItem extends Model
      */
     protected $table = 'order_items';
 
-    protected $appends = ['display_variation', 'image_url'];
+    protected $appends = ['display_variation', 'image_url', 'is_preorder'];
 
     /**
      * Use custom timestamp column names to match the DB schema.
@@ -136,5 +137,18 @@ class OrderItem extends Model
         }
         return VariationFormatter::getImageForVariation($this->variation, $this->product)
             ?: ($this->product ? $this->product->getImageUrl() : asset('uploads/products/default.jpg'));
+    }
+
+    /**
+     * Check if this historical order item was placed as a preorder.
+     */
+    public function isPreorder(): bool
+    {
+        return ($this->inventory_mode ?? 'available_stock') === 'preorder';
+    }
+
+    public function getIsPreorderAttribute(): bool
+    {
+        return $this->isPreorder();
     }
 }

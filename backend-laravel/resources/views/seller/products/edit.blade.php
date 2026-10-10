@@ -223,10 +223,10 @@
                     <div class="p-3.5 bg-[#FDF8EE] border border-[#E8DECB] rounded-xl flex flex-col justify-between h-24 sm:h-26">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-stone-500">Total Stock</label>
                         <input type="number" name="stock" id="total_stock" min="0"
-                            value="{{ old('stock', $product->stock) }}"
+                            value="{{ old('stock', $product->isPreorder() ? 0 : $product->stock) }}"
                             readonly tabindex="-1"
                             class="w-full bg-transparent font-sans text-lg font-bold text-gray-900 outline-none select-none cursor-not-allowed">
-                        <p class="text-[8px] text-stone-400 font-medium">Auto-calculated</p>
+                        <p class="text-[8px] text-stone-400 font-medium" x-text="inventoryMode === 'preorder' ? 'Preorder (Made to order)' : 'Auto-calculated'"></p>
                     </div>
 
                     {{-- Package Weight --}}
@@ -254,12 +254,69 @@
                 </div>
             </div>
 
-            {{-- 3. Heritage Sizing & Inventory Card --}}
-            <div id="sizing-section" class="rounded-2xl border p-4 sm:p-6 shadow-xs" style="background: #FFFCF7; border-color: #E8DECB;"  space-y-3">
+            {{-- 3. Inventory Mode Choice Cards --}}
+            <div class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-3" style="background: #FFFCF7; border-color: #E8DECB;">
+                <input type="hidden" name="inventory_mode" id="inventory_mode_input" :value="inventoryMode">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Heritage Sizing & Stock</h3>
-                    <span class="text-[10px] text-gray-400 font-medium">Assign stock per size</span>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest">Inventory & Production Mode</h3>
+                        <p class="text-[10px] text-gray-400 font-medium mt-0.5">Select how you fulfill orders for this heritage piece</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider"
+                          :class="inventoryMode === 'preorder' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'"
+                          x-text="inventoryMode === 'preorder' ? 'Preorder (Made to Order)' : 'Available Stock'"></span>
                 </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {{-- Available Stock Option --}}
+                    <div @click="setInventoryMode('available_stock')"
+                         :class="inventoryMode === 'available_stock' ? 'border-[#C49520] ring-2 ring-[#C49520]/20 bg-[#FDF8EE]' : 'border-[#E8DECB] bg-white opacity-80 hover:opacity-100'"
+                         style="border-width:1.5px; border-radius:14px; padding:14px; cursor:pointer; transition:all 0.2s;"
+                         class="flex items-start gap-3">
+                        <input type="radio" name="_inventory_mode_radio" value="available_stock" :checked="inventoryMode === 'available_stock'" class="mt-1 text-[#C49520] focus:ring-[#C49520] w-4 h-4 cursor-pointer" readonly>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span style="font-size:13.5px; font-weight:700; color:#1E1915;">Available Stock</span>
+                                <span style="font-size:9.5px; font-weight:700; background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; padding:1px 7px; border-radius:9999px;">Ready to Sell</span>
+                            </div>
+                            <p style="font-size:11.5px; color:#78716C; margin-top:3px; margin-bottom:0; line-height:1.4;">I have ready-to-sell inventory. Enter physical stock quantities for each available size.</p>
+                        </div>
+                    </div>
+
+                    {{-- Preorder Option --}}
+                    <div @click="setInventoryMode('preorder')"
+                         :class="inventoryMode === 'preorder' ? 'border-[#7C3AED] ring-2 ring-[#7C3AED]/20 bg-[#FAF5FF]' : 'border-[#E8DECB] bg-white opacity-80 hover:opacity-100'"
+                         style="border-width:1.5px; border-radius:14px; padding:14px; cursor:pointer; transition:all 0.2s;"
+                         class="flex items-start gap-3">
+                        <input type="radio" name="_inventory_mode_radio" value="preorder" :checked="inventoryMode === 'preorder'" class="mt-1 text-[#7C3AED] focus:ring-[#7C3AED] w-4 h-4 cursor-pointer" readonly>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span style="font-size:13.5px; font-weight:700; color:#1E1915;">Preorder</span>
+                                <span style="font-size:9.5px; font-weight:700; background:#EDE9FE; color:#6D28D9; border:1px solid #DDD6FE; padding:1px 7px; border-radius:9999px;">Made to Order</span>
+                            </div>
+                            <p style="font-size:11.5px; color:#78716C; margin-top:3px; margin-bottom:0; line-height:1.4;">Customers can order this product for future production. No stock counts needed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 4. Heritage Sizing & Inventory Card --}}
+            <div id="sizing-section" class="rounded-2xl border p-4 sm:p-6 shadow-xs space-y-3" style="background: #FFFCF7; border-color: #E8DECB;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-black uppercase tracking-widest" x-text="inventoryMode === 'preorder' ? 'Heritage Sizing Selection' : 'Heritage Sizing & Stock'"></h3>
+                        <p class="text-[10px] text-gray-400 font-medium" x-text="inventoryMode === 'preorder' ? 'Select all sizes made available for customer orders' : 'Assign stock per size'"></p>
+                    </div>
+                </div>
+
+                {{-- Preorder explanation banner --}}
+                <div x-show="inventoryMode === 'preorder'" style="background-color:#F5F3FF;border:1px solid #DDD6FE;border-radius:14px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;" class="transition-all">
+                    <svg class="w-4 h-4 text-[#7C3AED] mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                    <div style="font-size:12px;color:#5B21B6;line-height:1.4;">
+                        <span class="font-bold">Preorder Active:</span> Preorder products are prepared after the customer places an order. You do not need to enter stock quantities. Customers will select from your chosen sizes, and the listing will display your artisan preparation estimate.
+                    </div>
+                </div>
+
                 @php
                     $currentSizes = is_array($product->sizes) ? $product->sizes : (json_decode($product->sizes ?? '[]', true) ?? []);
                     $currentSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : (json_decode($product->size_stocks ?? '[]', true) ?? []);
@@ -278,11 +335,16 @@
                                     onchange="toggleSizeStock(this, '{{ $size }}')">
                                 <span>Size {{ $size }}</span>
                             </label>
-                            <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
-                                value="{{ old('size_stocks.'.$size, $sizeStock) }}" min="0" max="10000"
-                                {{ $hasSize ? '' : 'disabled' }}
-                                oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
-                                class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+                            <div x-show="inventoryMode === 'available_stock'">
+                                <input type="number" name="size_stocks[{{ $size }}]" id="stock_{{ $size }}" 
+                                    value="{{ old('size_stocks.'.$size, $sizeStock) }}" min="0" max="10000"
+                                    {{ $hasSize ? '' : 'disabled' }}
+                                    oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock();"
+                                    class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg outline-none text-xs font-bold text-center size-stock-input">
+                            </div>
+                            <div x-show="inventoryMode === 'preorder'" style="font-size:11px;font-weight:700;color:#7C3AED;padding:6px 0;text-align:center;">
+                                Made to Order
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -1259,6 +1321,7 @@
         'mayaNumber' => (string) ($product->maya_number ?: ($seller->mayaNumber ?? '')),
         'mayaQrUrl' => $product->getMayaQrUrl() ?: ($seller->mayaQrCode ? (str_starts_with($seller->mayaQrCode, 'http') ? $seller->mayaQrCode : asset($seller->mayaQrCode)) : null),
         'isMayaOn' => (bool) old('product_is_maya_available', $product->is_maya_available),
+        'inventoryMode' => (string) old('inventory_mode', $product->inventory_mode ?: 'available_stock'),
     ];
 @endphp
 
@@ -1339,6 +1402,36 @@ function editProductManager() {
         deleteModal: false,
         deleteProductId: null,
         deleteProductName: '',
+
+        inventoryMode: initData.inventoryMode || 'available_stock',
+
+        setInventoryMode(mode) {
+            this.inventoryMode = mode;
+            const hidden = document.getElementById('inventory_mode_input');
+            if (hidden) hidden.value = mode;
+            const sizingSection = document.getElementById('sizing-section');
+            if (sizingSection) sizingSection.classList.remove('border-red-500');
+
+            if (mode === 'preorder') {
+                const totalStockEl = document.getElementById('total_stock');
+                if (totalStockEl) totalStockEl.value = '0';
+                document.querySelectorAll('.size-stock-input').forEach(inp => {
+                    inp.setAttribute('disabled', 'true');
+                });
+            } else {
+                document.querySelectorAll('.size-checkbox').forEach(cb => {
+                    const size = cb.value;
+                    const stockInput = document.getElementById('stock_' + size);
+                    if (cb.checked && stockInput) {
+                        stockInput.removeAttribute('disabled');
+                        if (stockInput.value === '' || stockInput.value === '0') {
+                            stockInput.value = '5';
+                        }
+                    }
+                });
+                calculateTotalStock();
+            }
+        },
 
         targetGroup: initData.targetGroup || 'Men',
         selectedCategories: initialCategoryIds,
@@ -1858,31 +1951,41 @@ function previewQr(input, previewId, placeholderId) {
 
 function toggleSizeStock(checkbox, size) {
     const stockInput = document.getElementById('stock_' + size);
+    const isPreorder = (document.getElementById('inventory_mode_input')?.value === 'preorder');
     if (checkbox.checked) {
-        stockInput.removeAttribute('disabled');
-        if (stockInput.value === '' || stockInput.value === '0') {
-            stockInput.value = '5';
+        if (!isPreorder) {
+            stockInput?.removeAttribute('disabled');
+            if (stockInput && (stockInput.value === '' || stockInput.value === '0')) {
+                stockInput.value = '5';
+            }
         }
     } else {
-        stockInput.value = '0';
-        stockInput.setAttribute('disabled', 'true');
+        if (stockInput) {
+            stockInput.value = '0';
+            stockInput.setAttribute('disabled', 'true');
+        }
     }
     calculateTotalStock();
 }
 
 function calculateTotalStock() {
+    const isPreorder = (document.getElementById('inventory_mode_input')?.value === 'preorder');
+    const totalStockEl = document.getElementById('total_stock');
+    if (isPreorder) {
+        if (totalStockEl) totalStockEl.value = 0;
+        return;
+    }
     let total = 0;
     const inputs = document.querySelectorAll('.size-stock-input');
     const checkboxes = document.querySelectorAll('.size-checkbox');
 
     checkboxes.forEach((cb, idx) => {
         if (cb.checked) {
-            const val = parseInt(inputs[idx].value) || 0;
+            const val = parseInt(inputs[idx]?.value) || 0;
             total += val;
         }
     });
 
-    const totalStockEl = document.getElementById('total_stock');
     if (totalStockEl) totalStockEl.value = total;
 }
 
@@ -2025,13 +2128,14 @@ function validateProductForm(e, isEdit = true) {
     }
 
     // 3. Heritage Sizing & Stock
+    const isPreorderMode = (document.getElementById('inventory_mode_input')?.value === 'preorder');
     const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
     const sizingSection = document.getElementById('sizing-section');
     
     if (checkedSizes.length === 0) {
         errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).');
         if (sizingSection) sizingSection.classList.add('border-red-500');
-    } else {
+    } else if (!isPreorderMode) {
         let invalidStockCount = 0;
         checkedSizes.forEach(cb => {
             const sizeVal = cb.value;
@@ -2052,9 +2156,11 @@ function validateProductForm(e, isEdit = true) {
         }
     }
 
-    const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
-    if (totalStock <= 0) {
-        errors.push('Total product stock must be greater than 0.');
+    if (!isPreorderMode) {
+        const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
+        if (totalStock <= 0) {
+            errors.push('Total product stock must be greater than 0.');
+        }
     }
 
     // 4. Product Category & Target Group
@@ -2223,6 +2329,7 @@ function saveEditTemporaryFormData() {
                 package_width_per_unit: document.querySelector('input[name="package_width_per_unit"]')?.value || '',
                 package_height_per_unit: document.querySelector('input[name="package_height_per_unit"]')?.value || '',
                 handling_days: document.querySelector('input[name="handling_days"]')?.value || '',
+                inventory_mode: document.getElementById('inventory_mode_input')?.value || 'available_stock',
                 isOnSale: document.getElementById('discountToggle')?.checked || false,
                 discountPercentage: document.getElementById('discountPercentage')?.value || ''
             };
@@ -2237,6 +2344,16 @@ function restoreEditTemporaryFormData() {
         if (!raw) return;
         const data = JSON.parse(raw);
         if (!data) return;
+
+        if (data.inventory_mode) {
+            const alpineEl = document.querySelector('[x-data*="editProductManager"]');
+            if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0]?.setInventoryMode) {
+                alpineEl._x_dataStack[0].setInventoryMode(data.inventory_mode);
+            } else {
+                const hidden = document.getElementById('inventory_mode_input');
+                if (hidden) hidden.value = data.inventory_mode;
+            }
+        }
 
         if (data.name) {
             const el = document.querySelector('input[name="name"]');

@@ -659,10 +659,55 @@
 
             {{-- 1. Heritage Sizing & Inventory Matrix --}}
             <div id="tour-create-step2-sizing" style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:24px !important;padding:24px !important;box-shadow:0 4px 20px rgba(0,0,0,0.03) !important;" class="space-y-4">
+                {{-- Inventory Mode Choice Cards --}}
+                <div class="space-y-2 pb-3 border-b border-[#F2ECE1]">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Inventory Mode <span style="color:#DC2626;">*</span></h3>
+                            <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Choose whether you have physical stock on hand or produce items on order</p>
+                        </div>
+                    </div>
+                    <input type="hidden" name="inventory_mode" id="inventory_mode_input" :value="inventoryMode">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {{-- Available Stock Option --}}
+                        <div @click="setInventoryMode('available_stock')"
+                             :class="inventoryMode === 'available_stock' ? 'border-[#C49520] ring-2 ring-[#C49520]/20 bg-[#FDFBF7]' : 'border-[#E2D9C8] bg-[#FAF8F5] opacity-80 hover:opacity-100'"
+                             style="border-width:1.5px;border-radius:16px;padding:14px;cursor:pointer;transition:all 0.2s;"
+                             class="flex items-start gap-3">
+                            <input type="radio" name="_inventory_mode_radio" value="available_stock" :checked="inventoryMode === 'available_stock'" class="mt-1 text-[#C49520] focus:ring-[#C49520] w-4 h-4 cursor-pointer" readonly>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span style="font-size:13.5px;font-weight:700;color:#1E1915;">Available Stock</span>
+                                    <span style="font-size:9.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:1px 7px;border-radius:9999px;">Ready to Sell</span>
+                                </div>
+                                <p style="font-size:11.5px;color:#78716C;margin-top:3px;margin-bottom:0;line-height:1.4;">I have ready-to-sell inventory. Enter physical stock quantities for each available size.</p>
+                            </div>
+                        </div>
+
+                        {{-- Preorder Option --}}
+                        <div @click="setInventoryMode('preorder')"
+                             :class="inventoryMode === 'preorder' ? 'border-[#7C3AED] ring-2 ring-[#7C3AED]/20 bg-[#FAF5FF]' : 'border-[#E2D9C8] bg-[#FAF8F5] opacity-80 hover:opacity-100'"
+                             style="border-width:1.5px;border-radius:16px;padding:14px;cursor:pointer;transition:all 0.2s;"
+                             class="flex items-start gap-3">
+                            <input type="radio" name="_inventory_mode_radio" value="preorder" :checked="inventoryMode === 'preorder'" class="mt-1 text-[#7C3AED] focus:ring-[#7C3AED] w-4 h-4 cursor-pointer" readonly>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span style="font-size:13.5px;font-weight:700;color:#1E1915;">Preorder</span>
+                                    <span style="font-size:9.5px;font-weight:700;background:#EDE9FE;color:#6D28D9;border:1px solid #DDD6FE;padding:1px 7px;border-radius:9999px;">Made to Order</span>
+                                </div>
+                                <p style="font-size:11.5px;color:#78716C;margin-top:3px;margin-bottom:0;line-height:1.4;">Customers can order this product for future production. No stock counts needed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #F2ECE1;">
                     <div>
-                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">Heritage Sizing & Stock <span style="color:#DC2626;">*</span></h3>
-                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;">Assign available inventory quantities per size</p>
+                        <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:16px;font-weight:700;color:#1E1915;margin:0;">
+                            <span x-text="inventoryMode === 'preorder' ? 'Heritage Sizing Selection' : 'Heritage Sizing & Stock'"></span>
+                            <span style="color:#DC2626;">*</span>
+                        </h3>
+                        <p style="font-size:12px;color:#78716C;margin-top:2px;margin-bottom:0;" x-text="inventoryMode === 'preorder' ? 'Select all sizes customers can order for production' : 'Assign available inventory quantities per size'"></p>
                     </div>
                     <span class="rounded-full"
                           style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;"
@@ -671,6 +716,14 @@
                               : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
                         <span x-text="hasValidSizing ? '✓ Sizing configured' : 'At least 1 size required'"></span>
                     </span>
+                </div>
+
+                {{-- Preorder explanation banner --}}
+                <div x-show="inventoryMode === 'preorder'" style="background-color:#F5F3FF;border:1px solid #DDD6FE;border-radius:14px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;" class="transition-all">
+                    <svg class="w-4 h-4 text-[#7C3AED] mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                    <div style="font-size:12px;color:#5B21B6;line-height:1.4;">
+                        <span class="font-bold">Preorder Active:</span> Preorder products are prepared after the customer places an order. You do not need to enter stock quantities. Customers will order from your selected sizes, and the order will communicate your preparation estimate.
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
@@ -685,16 +738,21 @@
                                        onchange="toggleSizeStock(this, '{{ $size }}'); calculateFillRate();">
                                 <span>Size {{ $size }}</span>
                             </label>
-                            <input type="number" 
-                                   name="size_stocks[{{ $size }}]" 
-                                   id="stock_{{ $size }}" 
-                                   value="0" 
-                                   min="0" 
-                                   max="10000" 
-                                   disabled
-                                   class="size-stock-input"
-                                   oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock(); calculateFillRate();"
-                                   style="width:100%;padding:6px 8px;background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:10px;outline:none;font-size:13px;font-weight:700;text-align:center;color:#1E1915;">
+                            <div x-show="inventoryMode === 'available_stock'">
+                                <input type="number" 
+                                       name="size_stocks[{{ $size }}]" 
+                                       id="stock_{{ $size }}" 
+                                       value="0" 
+                                       min="0" 
+                                       max="10000" 
+                                       disabled
+                                       class="size-stock-input"
+                                       oninput="if(parseInt(this.value) > 10000) this.value = 10000; calculateTotalStock(); calculateFillRate();"
+                                       style="width:100%;padding:6px 8px;background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:10px;outline:none;font-size:13px;font-weight:700;text-align:center;color:#1E1915;">
+                            </div>
+                            <div x-show="inventoryMode === 'preorder'" style="font-size:11px;font-weight:700;color:#7C3AED;padding:6px 0;">
+                                Made to Order
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -736,8 +794,11 @@
                     </div>
 
                     {{-- Total Stock (Auto) --}}
-                    <div id="stock-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">Total Stock <span style="color:#DC2626;">*</span></label>
+                    <div id="stock-card" style="background-color:#FAF8F5;border:1px solid #E2D9C8;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;height:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02);" :style="inventoryMode === 'preorder' ? 'background:#F5F3FF;border-color:#DDD6FE;' : ''">
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;">
+                            <span x-text="inventoryMode === 'preorder' ? 'Inventory Status' : 'Total Stock'"></span>
+                            <span x-show="inventoryMode !== 'preorder'" style="color:#DC2626;">*</span>
+                        </label>
                         <input type="number" 
                                name="stock" 
                                id="total_stock" 
@@ -745,8 +806,12 @@
                                placeholder="0"
                                readonly 
                                tabindex="-1"
+                               x-show="inventoryMode !== 'preorder'"
                                style="width:100%;background:transparent;font-size:18px;font-weight:700;color:#1E1915;outline:none;border:none;cursor:not-allowed;">
-                        <p style="font-size:9px;color:#A8A096;margin:0;">Auto-summed from sizes</p>
+                        <div x-show="inventoryMode === 'preorder'" style="font-size:15px;font-weight:800;color:#6D28D9;padding-top:2px;">
+                            Preorder
+                        </div>
+                        <p style="font-size:9px;color:#A8A096;margin:0;" x-text="inventoryMode === 'preorder' ? 'Prepared upon customer order' : 'Auto-summed from sizes'"></p>
                     </div>
 
                     {{-- Package Weight --}}
@@ -1547,6 +1612,7 @@
         'package_width_per_unit'    => (string) old('package_width_per_unit', '20'),
         'package_height_per_unit'   => (string) old('package_height_per_unit', '5'),
         'handling_days'             => (string) old('handling_days', '2'),
+        'inventory_mode'            => (string) old('inventory_mode', 'available_stock'),
         'sellerId'                  => (string) (auth()->id() ?? 'guest'),
         'description'               => (string) old('description', ''),
         'csrfToken'                 => (string) csrf_token(),
@@ -1767,11 +1833,54 @@ function addProductManager() {
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
         description: initData.description || '',
+        inventoryMode: initData.inventory_mode || 'available_stock',
         fillRate: 15,
         isAiLoading: false,
         hasRestoredDraft: false,
         hasValidSizing: false,
         draftSaveTimer: null,
+
+        setInventoryMode(mode) {
+            this.inventoryMode = mode;
+            const modeInput = document.getElementById('inventory_mode_input');
+            if (modeInput) modeInput.value = mode;
+
+            const stockInputs = document.querySelectorAll('.size-stock-input');
+            const totalStockEl = document.getElementById('total_stock');
+
+            if (mode === 'preorder') {
+                stockInputs.forEach(inp => {
+                    inp.setAttribute('disabled', 'true');
+                    inp.value = '0';
+                });
+                if (totalStockEl) totalStockEl.value = '0';
+            } else {
+                document.querySelectorAll('.size-checkbox').forEach(cb => {
+                    const size = cb.value;
+                    const stockInput = document.getElementById('stock_' + size);
+                    if (cb.checked && stockInput) {
+                        stockInput.removeAttribute('disabled');
+                        if (stockInput.value === '0' || !stockInput.value) {
+                            stockInput.value = '5';
+                        }
+                    }
+                });
+                calculateTotalStock();
+            }
+            this.updateSizingValidity();
+            if (typeof calculateFillRate === 'function') calculateFillRate();
+            if (typeof this.saveDraftState === 'function') this.saveDraftState();
+        },
+
+        updateSizingValidity() {
+            const checkedCount = document.querySelectorAll('.size-checkbox:checked').length;
+            if (this.inventoryMode === 'preorder') {
+                this.hasValidSizing = (checkedCount > 0);
+            } else {
+                const total = parseInt(document.getElementById('total_stock')?.value || 0);
+                this.hasValidSizing = (checkedCount > 0 && total > 0);
+            }
+        },
 
         // Payment Methods Reactive State
         paymentState: {
@@ -2047,8 +2156,9 @@ function addProductManager() {
                     packageLength: document.querySelector('input[name="package_length_per_unit"]')?.value || '30',
                     packageWidth: document.querySelector('input[name="package_width_per_unit"]')?.value || '20',
                     packageHeight: document.querySelector('input[name="package_height_per_unit"]')?.value || '5',
+                    inventoryMode: this.inventoryMode || 'available_stock',
                     checkedSizes: checkedSizes,
-                    sizeStocks: sizeStocks,
+                    sizeStocks: this.inventoryMode === 'preorder' ? {} : sizeStocks,
                     isOnSale: document.getElementById('discountToggle')?.checked || false,
                     discountPercentage: document.getElementById('discountPercentage')?.value || '',
                     variants: this.variants.map((v, idx) => ({
@@ -2100,10 +2210,17 @@ function addProductManager() {
                     (draft.selectedCategories && draft.selectedCategories.length) ||
                     (draft.price && parseFloat(draft.price) > 0) ||
                     (draft.variants && draft.variants[0] && ((draft.variants[0].images && draft.variants[0].images.length > 0) || draft.variants[0].imagePreview)) ||
-                    (draft.description && draft.description.trim())
+                    (draft.description && draft.description.trim()) ||
+                    (draft.inventoryMode && draft.inventoryMode === 'preorder')
                 );
 
                 if (!hasContent) return;
+
+                if (draft.inventoryMode && ['available_stock', 'preorder'].includes(draft.inventoryMode)) {
+                    this.inventoryMode = draft.inventoryMode;
+                    const modeInput = document.getElementById('inventory_mode_input');
+                    if (modeInput) modeInput.value = draft.inventoryMode;
+                }
 
                 if (restoredName) this.productName = restoredName;
                 if (draft.targetGroup && ['Men', 'Women', 'Kids'].includes(draft.targetGroup)) {
@@ -2151,18 +2268,25 @@ function addProductManager() {
 
                 // Restore sizes
                 if (Array.isArray(draft.checkedSizes)) {
+                    const isPre = (this.inventoryMode === 'preorder');
                     draft.checkedSizes.forEach(size => {
                         const cb = document.getElementById('size_cb_' + size);
                         const stockEl = document.getElementById('stock_' + size);
                         if (cb) {
                             cb.checked = true;
                             if (stockEl) {
-                                stockEl.removeAttribute('disabled');
-                                stockEl.value = (draft.sizeStocks && draft.sizeStocks[size]) ? draft.sizeStocks[size] : '5';
+                                if (isPre) {
+                                    stockEl.setAttribute('disabled', 'true');
+                                    stockEl.value = '0';
+                                } else {
+                                    stockEl.removeAttribute('disabled');
+                                    stockEl.value = (draft.sizeStocks && draft.sizeStocks[size]) ? draft.sizeStocks[size] : '5';
+                                }
                             }
                         }
                     });
                     calculateTotalStock();
+                    this.updateSizingValidity();
                 }
 
                 // Restore payment toggles
@@ -2691,25 +2815,27 @@ function addProductManager() {
                     sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
                     sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                triggerAppModal('Size Selection Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL) and assign available stock to continue.', 'warning');
+                triggerAppModal('Size Selection Required', 'Please check at least one Heritage Size (e.g. S, M, L, XL, XXL) to continue.', 'warning');
                 return;
             }
 
-            const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
-            if (totalStock <= 0) {
-                const sizeSec = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
-                const stockCard = document.getElementById('stock-card');
-                if (sizeSec) sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                if (stockCard) stockCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
-                const firstStockInput = document.querySelector('.size-checkbox:checked')?.closest('div')?.querySelector('.size-stock-input');
-                if (firstStockInput) {
-                    firstStockInput.focus();
-                    firstStockInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else if (sizeSec) {
-                    sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (this.inventoryMode !== 'preorder') {
+                const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
+                if (totalStock <= 0) {
+                    const sizeSec = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
+                    const stockCard = document.getElementById('stock-card');
+                    if (sizeSec) sizeSec.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                    if (stockCard) stockCard.classList.add('border-red-500', 'ring-2', 'ring-red-400');
+                    const firstStockInput = document.querySelector('.size-checkbox:checked')?.closest('div')?.querySelector('.size-stock-input');
+                    if (firstStockInput) {
+                        firstStockInput.focus();
+                        firstStockInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (sizeSec) {
+                        sizeSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    triggerAppModal('Inventory Stock Required', 'Total stock must be greater than 0. Please enter available inventory quantities for your selected sizes.', 'warning');
+                    return;
                 }
-                triggerAppModal('Inventory Stock Required', 'Total stock must be greater than 0. Please enter available inventory quantities for your selected sizes.', 'warning');
-                return;
             }
 
             const priceVal = parseFloat(this.price);
@@ -2886,11 +3012,20 @@ function updateCharCount(el) {
 }
 
 function toggleSizeStock(checkbox, size) {
+    const alpineEl = document.querySelector('[x-data="addProductManager()"]');
+    const alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
+    const isPreorder = (alpineData && alpineData.inventoryMode === 'preorder') || (document.getElementById('inventory_mode_input')?.value === 'preorder');
+
     const stockInput = document.getElementById('stock_' + size);
     if (checkbox.checked) {
-        stockInput.removeAttribute('disabled');
-        if (stockInput.value === '' || stockInput.value === '0') {
-            stockInput.value = '5';
+        if (!isPreorder) {
+            stockInput.removeAttribute('disabled');
+            if (stockInput.value === '' || stockInput.value === '0') {
+                stockInput.value = '5';
+            }
+        } else {
+            stockInput.value = '0';
+            stockInput.setAttribute('disabled', 'true');
         }
         document.getElementById('tour-create-step2-sizing')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
         document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
@@ -2907,10 +3042,14 @@ function calculateTotalStock() {
     const checkboxes = document.querySelectorAll('.size-checkbox');
     let checkedCount = 0;
 
+    const alpineEl = document.querySelector('[x-data="addProductManager()"]');
+    const alpineData = alpineEl && window.Alpine ? Alpine.$data(alpineEl) : null;
+    const isPreorder = (alpineData && alpineData.inventoryMode === 'preorder') || (document.getElementById('inventory_mode_input')?.value === 'preorder');
+
     checkboxes.forEach((cb, idx) => {
         if (cb.checked) {
             checkedCount++;
-            if (inputs[idx]) {
+            if (!isPreorder && inputs[idx]) {
                 const val = parseInt(inputs[idx].value) || 0;
                 total += val;
             }
@@ -2918,21 +3057,15 @@ function calculateTotalStock() {
     });
 
     const totalStockEl = document.getElementById('total_stock');
-    if (totalStockEl) totalStockEl.value = total;
-    if (total > 0) {
+    if (totalStockEl) totalStockEl.value = isPreorder ? 0 : total;
+    if (total > 0 || isPreorder) {
         document.getElementById('stock-card')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
         document.getElementById('tour-create-step2-sizing')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
         document.getElementById('sizing-section')?.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
     }
 
-    const alpineEl = document.querySelector('[x-data="addProductManager()"]');
-    if (alpineEl && window.Alpine) {
-        try {
-            const alpineData = Alpine.$data(alpineEl);
-            if (alpineData) {
-                alpineData.hasValidSizing = (checkedCount > 0 && total > 0);
-            }
-        } catch(e) {}
+    if (alpineData) {
+        alpineData.hasValidSizing = isPreorder ? (checkedCount > 0) : (checkedCount > 0 && total > 0);
     }
 }
 
@@ -3198,13 +3331,14 @@ function validateProductForm(e, isEdit = false) {
     }
 
     // 3. Heritage Sizing & Stock
+    const isPreorderMode = (document.getElementById('inventory_mode_input')?.value === 'preorder');
     const checkedSizes = document.querySelectorAll('.size-checkbox:checked');
     const sizingSection = document.getElementById('tour-create-step2-sizing') || document.getElementById('sizing-section');
     
     if (checkedSizes.length === 0) {
         errors.push('Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).');
         if (sizingSection) sizingSection.classList.add('border-red-500');
-    } else {
+    } else if (!isPreorderMode) {
         let invalidStockCount = 0;
         checkedSizes.forEach(cb => {
             const sizeVal = cb.value;
@@ -3225,11 +3359,13 @@ function validateProductForm(e, isEdit = false) {
         }
     }
 
-    const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
-    if (totalStock <= 0) {
-        errors.push('Total product stock must be greater than 0.');
-        const stockCard = document.getElementById('stock-card');
-        if (stockCard) stockCard.classList.add('border-red-500');
+    if (!isPreorderMode) {
+        const totalStock = parseInt(document.getElementById('total_stock')?.value || 0);
+        if (totalStock <= 0) {
+            errors.push('Total product stock must be greater than 0.');
+            const stockCard = document.getElementById('stock-card');
+            if (stockCard) stockCard.classList.add('border-red-500');
+        }
     }
 
     // 4. Product Category & Target Group

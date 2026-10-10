@@ -70,7 +70,7 @@ class CartController extends Controller
                 ->with('info', 'Please log in or register to complete adding this item to your cart.');
         }
 
-        $productId = (string) $request->input('productId');
+        $productId = (string) ($request->input('productId') ?: $request->input('product_id'));
         $quantity = max(1, (int) $request->input('quantity', 1));
         $product = Product::with('seller')->findOrFail($productId);
 
@@ -116,19 +116,31 @@ class CartController extends Controller
 
         $size = CartHelper::normalizeSize($request->input('size'));
         $variation = CartHelper::normalizeVariation($request->input('variation'), $product);
+        $isPreorder = $product->isPreorder();
 
-        // Get available stock for selected size or overall product
-        $availableStock = (int) $product->stock;
-        if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
-            $availableStock = (int) $product->size_stocks[$size];
-        }
-
-        if ($availableStock <= 0) {
-            $errMsg = $size ? "Size {$size} is currently out of stock." : "This product is currently out of stock.";
-            if ($request->wantsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => $errMsg], 422);
+        if ($isPreorder) {
+            if ($size && !empty($product->sizes) && !in_array($size, $product->sizes)) {
+                $errMsg = "Selected size {$size} is not available for this preorder product.";
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $errMsg], 422);
+                }
+                return redirect()->back()->with('error', $errMsg);
             }
-            return redirect()->back()->with('error', $errMsg);
+            $availableStock = PHP_INT_MAX;
+        } else {
+            // Get available stock for selected size or overall product
+            $availableStock = (int) $product->stock;
+            if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {
+                $availableStock = (int) $product->size_stocks[$size];
+            }
+
+            if ($availableStock <= 0) {
+                $errMsg = $size ? "Size {$size} is currently out of stock." : "This product is currently out of stock.";
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $errMsg], 422);
+                }
+                return redirect()->back()->with('error', $errMsg);
+            }
         }
 
         // Consolidate current cart first to ensure existing items have canonical keys
@@ -144,12 +156,14 @@ class CartController extends Controller
             $newQuantity = $cart[$key]['quantity'] + $quantity;
             $updatedItem = $cart[$key];
             $updatedItem['key'] = $key;
-            $updatedItem['quantity'] = min($newQuantity, $availableStock);
+            $updatedItem['quantity'] = $isPreorder ? $newQuantity : min($newQuantity, $availableStock);
             $updatedItem['price'] = (float) $product->sale_price;
             $updatedItem['image'] = $image;
             $updatedItem['name'] = $product->name;
             $updatedItem['size'] = $size;
             $updatedItem['variation'] = $variation;
+            $updatedItem['inventory_mode'] = $isPreorder ? 'preorder' : 'available_stock';
+            $updatedItem['handling_days'] = (int) ($product->handling_days ?? 2);
 
             // Re-insert at top of cart preserving order
             unset($cart[$key]);
@@ -161,7 +175,7 @@ class CartController extends Controller
                 'name'                => $product->name,
                 'price'               => (float) $product->sale_price,
                 'image'               => $image,
-                'quantity'            => min($quantity, $availableStock),
+                'quantity'            => $isPreorder ? $quantity : min($quantity, $availableStock),
                 'size'                => $size,
                 'variation'           => $variation,
                 'sellerId'            => $product->sellerId,
@@ -171,6 +185,8 @@ class CartController extends Controller
                 'is_on_sale'          => $product->isSaleActive(),
                 'category_name'       => $product->category->name ?? 'Traditional',
                 'shop_name'           => $seller ? ($seller->shopName ?: $seller->name ?: 'Lumban Heritage Shop') : 'Lumban Heritage Shop',
+                'inventory_mode'      => $isPreorder ? 'preorder' : 'available_stock',
+                'handling_days'       => (int) ($product->handling_days ?? 2),
             ];
             $cart = [$key => $newItem] + $cart;
         }
@@ -207,7 +223,7 @@ class CartController extends Controller
                 // Validate stock limit
                 $productId = $cart[$key]['id'];
                 $product = Product::find($productId);
-                if ($product) {
+                if ($product && !$product->isPreorder()) {
                     $size = $cart[$key]['size'] ?? null;
                     $availableStock = (int) $product->stock;
                     if ($size && !empty($product->size_stocks) && isset($product->size_stocks[$size])) {

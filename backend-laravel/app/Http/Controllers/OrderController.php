@@ -897,7 +897,7 @@ class OrderController extends Controller
             // Restore inventory stock since rejection cancels the order
             if ($prevStatus !== 'Cancelled') {
                 foreach ($order->items as $item) {
-                    if ($item->product) {
+                    if (($item->inventory_mode ?? 'available_stock') !== 'preorder' && $item->product) {
                         $item->product->increment('stock', $item->quantity);
                         
                         // Restore size stock if available
@@ -1253,7 +1253,7 @@ class OrderController extends Controller
             // Restore inventory stock for each product & size exactly once
             if ($prevStatus !== 'Cancelled') {
                 foreach ($order->items as $item) {
-                    if ($item->product) {
+                    if (($item->inventory_mode ?? 'available_stock') !== 'preorder' && $item->product) {
                         $item->product->increment('stock', $item->quantity);
                         if (!empty($item->product->size_stocks) && !empty($item->size)) {
                             $sizeStocks = $item->product->size_stocks;
@@ -1385,7 +1385,7 @@ class OrderController extends Controller
             // Restore inventory stock exactly once if not already cancelled
             if ($prevStatus !== 'Cancelled') {
                 foreach ($order->items as $item) {
-                    if ($item->product) {
+                    if (($item->inventory_mode ?? 'available_stock') !== 'preorder' && $item->product) {
                         $item->product->increment('stock', $item->quantity);
                         if (!empty($item->product->size_stocks) && !empty($item->size)) {
                             $sizeStocks = $item->product->size_stocks;

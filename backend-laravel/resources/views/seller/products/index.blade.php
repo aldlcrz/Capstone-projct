@@ -297,7 +297,11 @@ document.addEventListener('alpine:init', () => {
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #475569;">{{ $product->stock }}</div>
+                                    @if($product->isPreorder())
+                                        <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
+                                    @else
+                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #475569;">{{ $product->stock }}</div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -426,7 +430,11 @@ document.addEventListener('alpine:init', () => {
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                    <div class="text-xs sm:text-sm font-black font-sans" style="color: #A16D19;">{{ $product->stock }}</div>
+                                    @if($product->isPreorder())
+                                        <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
+                                    @else
+                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #A16D19;">{{ $product->stock }}</div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -552,7 +560,11 @@ document.addEventListener('alpine:init', () => {
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                    <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                                    @if($product->isPreorder())
+                                        <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
+                                    @else
+                                        <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -672,7 +684,11 @@ document.addEventListener('alpine:init', () => {
                                     </div>
                                     <div class="text-right">
                                         <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Stock</div>
-                                        <div class="text-xs sm:text-sm font-black font-sans text-stone-800">{{ $product->stock }}</div>
+                                        @if($product->isPreorder())
+                                            <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
+                                        @else
+                                            <div class="text-xs sm:text-sm font-black font-sans text-stone-800">{{ $product->stock }}</div>
+                                        @endif
                                     </div>
                                 </div>
 
