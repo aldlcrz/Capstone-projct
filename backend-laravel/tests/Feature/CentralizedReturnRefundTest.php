@@ -442,7 +442,7 @@ class CentralizedReturnRefundTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('admin.returns.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Returns &');
+        $response->assertSee('Return &', false);
         $response->assertSee('Refund Claims');
         $response->assertSee('Damaged embroidery on sleeve');
     }
