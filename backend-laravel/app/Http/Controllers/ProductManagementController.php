@@ -187,31 +187,6 @@ class ProductManagementController extends Controller
             ]);
 
             $user = Auth::user();
-            $hasCompletePayment = false;
-
-            // GCash validation
-            if ($request->has('product_is_gcash_available')) {
-                $hasGcashNumber = !empty($request->gcashNumber) || !empty($user->gcashNumber);
-                $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($user->gcashQrCode);
-                if (!$hasGcashNumber || !$hasGcashQr) {
-                    return redirect()->back()->withInput()->with('error', 'GCash is enabled but incomplete. Both a GCash Mobile Number and a QR Code are required.');
-                }
-                $hasCompletePayment = true;
-            }
-
-            // Maya validation
-            if ($request->has('product_is_maya_available')) {
-                $hasMayaNumber = !empty($request->mayaNumber) || !empty($user->mayaNumber);
-                $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($user->mayaQrCode);
-                if (!$hasMayaNumber || !$hasMayaQr) {
-                    return redirect()->back()->withInput()->with('error', 'Maya is enabled but incomplete. Both a Maya Account Number and a QR Code are required.');
-                }
-                $hasCompletePayment = true;
-            }
-
-            if (!$hasCompletePayment) {
-                return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
-            }
 
             $inventoryMode = $request->input('inventory_mode', 'available_stock') ?: 'available_stock';
             if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
@@ -284,8 +259,8 @@ class ProductManagementController extends Controller
 
             $storedFiles = [];
 
-            // Per-product payment availability and overrides
-            $product->is_gcash_available = $request->has('product_is_gcash_available');
+            // Payment availability defaults (inherited from seller profile)
+            $product->is_gcash_available = $request->has('product_is_gcash_available') ? true : ($user->isGcashAvailable ?? true);
             $product->gcash_number       = $request->filled('gcashNumber') ? $request->gcashNumber : null;
             if ($request->hasFile('gcashQrCode')) {
                 $storedPath = $request->file('gcashQrCode')->store('payments/qrcodes', 'public');
@@ -295,7 +270,7 @@ class ProductManagementController extends Controller
                 $product->gcash_qr_code = null;
             }
 
-            $product->is_maya_available  = $request->has('product_is_maya_available');
+            $product->is_maya_available  = $request->has('product_is_maya_available') ? true : ($user->isMayaAvailable ?? false);
             $product->maya_number        = $request->filled('mayaNumber') ? $request->mayaNumber : null;
             if ($request->hasFile('mayaQrCode')) {
                 $storedPath = $request->file('mayaQrCode')->store('payments/qrcodes', 'public');
@@ -626,31 +601,6 @@ class ProductManagementController extends Controller
             ]);
 
             $user = Auth::user();
-            $hasCompletePayment = false;
-
-            // GCash validation
-            if ($request->has('product_is_gcash_available')) {
-                $hasGcashNumber = !empty($request->gcashNumber) || !empty($product->gcash_number) || !empty($user->gcashNumber);
-                $hasGcashQr = $request->hasFile('gcashQrCode') || !empty($product->gcash_qr_code) || !empty($user->gcashQrCode);
-                if (!$hasGcashNumber || !$hasGcashQr) {
-                    return redirect()->back()->withInput()->with('error', 'GCash is enabled but incomplete. Both a GCash Mobile Number and a QR Code are required.');
-                }
-                $hasCompletePayment = true;
-            }
-
-            // Maya validation
-            if ($request->has('product_is_maya_available')) {
-                $hasMayaNumber = !empty($request->mayaNumber) || !empty($product->maya_number) || !empty($user->mayaNumber);
-                $hasMayaQr = $request->hasFile('mayaQrCode') || !empty($product->maya_qr_code) || !empty($user->mayaQrCode);
-                if (!$hasMayaNumber || !$hasMayaQr) {
-                    return redirect()->back()->withInput()->with('error', 'Maya is enabled but incomplete. Both a Maya Account Number and a QR Code are required.');
-                }
-                $hasCompletePayment = true;
-            }
-
-            if (!$hasCompletePayment) {
-                return redirect()->back()->withInput()->with('error', 'Please enable at least one complete payment method with both a mobile number and a QR code.');
-            }
 
             $inventoryMode = $request->input('inventory_mode', $product->inventory_mode ?? 'available_stock') ?: 'available_stock';
             if (!in_array($inventoryMode, ['available_stock', 'preorder'], true)) {
@@ -722,8 +672,12 @@ class ProductManagementController extends Controller
 
         $storedFiles = [];
 
-        // Per-product payment availability and overrides
-        $product->is_gcash_available = $request->has('product_is_gcash_available');
+        // Per-product payment availability and overrides (preserve existing or inherit defaults if omitted from request)
+        if ($request->has('product_is_gcash_available')) {
+            $product->is_gcash_available = true;
+        } elseif ($product->is_gcash_available === null) {
+            $product->is_gcash_available = $user->isGcashAvailable ?? true;
+        }
         if ($request->filled('gcashNumber')) {
             $product->gcash_number = $request->gcashNumber;
         }
@@ -734,7 +688,11 @@ class ProductManagementController extends Controller
             $product->gcash_qr_code = $storedPath;
         }
 
-        $product->is_maya_available = $request->has('product_is_maya_available');
+        if ($request->has('product_is_maya_available')) {
+            $product->is_maya_available = true;
+        } elseif ($product->is_maya_available === null) {
+            $product->is_maya_available = $user->isMayaAvailable ?? false;
+        }
         if ($request->filled('mayaNumber')) {
             $product->maya_number = $request->mayaNumber;
         }
