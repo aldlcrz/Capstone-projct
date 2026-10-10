@@ -242,10 +242,12 @@
                         @endif
 
                         {{-- Payment Method Badge --}}
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] flex items-center gap-1">
-                            <span>💳</span>
-                            <span>{{ $order->formatted_payment_method }}</span>
-                        </span>
+                        @if(!($isStorePickup && in_array(strtolower($order->paymentMethod ?? ''), ['cod', 'cash', 'cash_on_delivery', 'cash on delivery'])))
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] flex items-center gap-1">
+                                <span>💳</span>
+                                <span>{{ $order->formatted_payment_method }}</span>
+                            </span>
+                        @endif
 
                         <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider {{ $statusPillClass }}">
                             {{ $customerStatusDisplay }}
@@ -389,35 +391,6 @@
                             class="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
                             Confirm received
                         </button>
-                    </div>
-                </div>
-            @elseif($isStorePickup && $statusLower === 'shipped')
-                <div class="px-4 sm:px-5 pb-4 pt-0">
-                    <div style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid #FDE68A; border-radius: 14px; padding: 10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-amber-100/90 border border-amber-300 text-amber-800 flex items-center justify-center shrink-0 text-sm">
-                                🏬
-                            </div>
-                            <div>
-                                <h3 class="text-xs sm:text-sm font-extrabold text-amber-950 m-0">Ready for Pickup &bull; Self-Pickup at Workshop</h3>
-                                <p class="text-[11px] text-amber-800/90 mt-0.5 m-0 font-medium">Your piece is packed and ready. Present Claim Code <strong class="font-mono text-amber-950">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong> at the workshop.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
-                               class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider transition-all shadow-2xs text-center">
-                                🗺️ Directions ↗
-                            </a>
-                            <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
-                               class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider transition-all shadow-2xs text-center">
-                                View Pickup Receipt
-                            </a>
-                            <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
-                               style="background-color:#1E1915;color:#FFFFFF;"
-                               class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs text-center">
-                                Download Pickup Receipt
-                            </a>
-                        </div>
                     </div>
                 </div>
             @elseif($isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
@@ -616,11 +589,17 @@
                         </div>
                         <div class="pt-1.5 border-t border-[#FAF4EB] flex flex-wrap items-center justify-between gap-1.5 text-xs">
                             <span class="text-[#78716C]">Claim: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
-                            <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
-                               style="background-color:#1E1915;color:#FFFFFF;"
-                               class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
-                                Receipt ↗
-                            </a>
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
+                                   class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] transition-all shadow-2xs">
+                                    View Receipt ↗
+                                </a>
+                                <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
+                                   style="background-color:#1E1915;color:#FFFFFF;"
+                                   class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
+                                    Download Pickup Receipt
+                                </a>
+                            </div>
                         </div>
                     @else
                         {{-- Standard/Special Delivery Address --}}
