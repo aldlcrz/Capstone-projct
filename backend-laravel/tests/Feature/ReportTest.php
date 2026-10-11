@@ -562,4 +562,123 @@ class ReportTest extends TestCase
         $response->assertSee($this->seller->id);
         $response->assertSee($this->product->id);
     }
+
+    /**
+     * Test seller can submit an official defense response to a report filed against their shop.
+     */
+    public function test_seller_can_submit_response_to_report(): void
+    {
+        $report = Report::create([
+            'reporterId' => $this->customer->id,
+            'reportedId' => $this->seller->id,
+            'type'       => 'CustomerReportingSeller',
+            'reason'     => 'Quality Concern',
+            'description'=> 'Embroidery on cuff appears loose.',
+            'status'     => 'Pending',
+        ]);
+
+        $response = $this->actingAs($this->seller)->postJson('/api/v1/reports/' . $report->id . '/response', [
+            'response' => 'We carefully inspected this batch before shipment. Counter-evidence photo provided.',
+            'evidence' => ['/uploads/reports/artisan_dispatch_proof.jpg'],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['status' => 'success']);
+
+        $report->refresh();
+        $this->assertEquals('Under Review', $report->status);
+        $this->assertEquals('We carefully inspected this batch before shipment. Counter-evidence photo provided.', $report->sellerResponse);
+        $this->assertNotNull($report->sellerRespondedAt);
+
+        // Verify timeline event was added
+        $timelineEvent = $report->timelineEvents()->where('event_type', 'seller_response')->first();
+        $this->assertNotNull($timelineEvent);
+        $this->assertEquals('Seller Response Submitted', $timelineEvent->title);
+    }
+
+    /**
+     * Test seller cannot submit a response to a report filed against another shop.
+     */
+    public function test_seller_cannot_respond_to_another_sellers_report(): void
+    {
+        $otherSeller = User::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Other Artisan',
+            'email' => 'other_seller@example.com',
+            'password' => Hash::make('Password123!'),
+            'role' => 'seller',
+            'shopName' => 'Other Shop',
+            'status' => 'active',
+            'isVerified' => true,
+        ]);
+
+        $report = Report::create([
+            'reporterId' => $this->customer->id,
+            'reportedId' => $otherSeller->id,
+            'type'       => 'CustomerReportingSeller',
+            'reason'     => 'Policy Violation',
+            'description'=> 'Concerning other shop transactions.',
+            'status'     => 'Pending',
+        ]);
+
+        $response = $this->actingAs($this->seller)->postJson('/api/v1/reports/' . $report->id . '/response', [
+            'response' => 'Attempting unauthorized response.',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test admin disciplinary action 'Suspend Account' updates seller status and increments session version.
+     */
+    public function test_admin_suspending_seller_updates_status_and_increments_session_version(): void
+    {
+        $initialSessionVer = $this->seller->sessionVersion ?? 1;
+
+        $report = Report::create([
+            'reporterId' => $this->customer->id,
+            'reportedId' => $this->seller->id,
+            'type'       => 'CustomerReportingSeller',
+            'reason'     => 'Counterfeit / Fake Item',
+            'description'=> 'Customer provided conclusive evidence of policy violation.',
+            'status'     => 'Under Review',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/admin/reports/' . $report->id . '/resolve', [
+            'status'              => 'Resolved',
+            'severity'            => 'CRITICAL',
+            'investigationResult' => 'Policy Violation Confirmed',
+            'action'              => 'Suspend Account',
+            'disciplinaryReason'  => 'Seller listed synthetic fabrics marketed as authentic handcrafted heritage pieces.',
+            'notes'               => 'Third verified complaint regarding fabric authenticity.',
+        ]);
+
+        $response->assertStatus(302);
+
+        $this->seller->refresh();
+        $this->assertEquals('suspended', $this->seller->status);
+        $this->assertEquals('Seller listed synthetic fabrics marketed as authentic handcrafted heritage pieces.', $this->seller->violationReason);
+        $this->assertGreaterThan($initialSessionVer, (int) $this->seller->sessionVersion);
+    }
+
+    /**
+     * Test admin export global report returns HTTP 200 with CSV headers.
+     */
+    public function test_admin_export_global_report_returns_csv(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/admin/export-global-report');
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('lumbarong_admin_report_', $response->headers->get('Content-Disposition') ?? '');
+    }
+
+    /**
+     * Test seller export report returns CSV stream.
+     */
+    public function test_seller_export_orders_report_returns_csv(): void
+    {
+        $response = $this->actingAs($this->seller)->get('/seller/export-report');
+        $response->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type') ?? '');
+    }
 }

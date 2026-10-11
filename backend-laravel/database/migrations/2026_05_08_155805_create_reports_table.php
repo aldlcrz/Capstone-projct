@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('reason');
             $table->text('description');
             $table->text('evidence')->nullable();
-            $table->enum('status', ['Pending', 'In Review', 'Resolved', 'Dismissed'])->default('Pending');
+            $table->string('status', 50)->default('Pending');
             $table->text('adminNotes')->nullable();
-            $table->enum('actionTaken', ['None', 'Warning', 'Restricted', 'Suspended'])->nullable();
+            $table->text('actionTaken')->nullable();
             $table->timestamp('createdAt')->useCurrent();
             $table->timestamp('updatedAt')->useCurrent()->useCurrentOnUpdate();
         });
