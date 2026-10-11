@@ -783,4 +783,110 @@ class ReportTest extends TestCase
         // Offending product has been automatically delisted (status changed to 'rejected')
         $this->assertEquals('rejected', $this->product->status);
     }
+
+    /**
+     * Scenario 1: Malicious XSS / Script Injection in report reason & description.
+     */
+    public function test_xss_payload_in_report_is_sanitized(): void
+    {
+        $response = $this->actingAs($this->customer)->postJson('/api/v1/reports', [
+            'reportedId'  => $this->seller->id,
+            'reason'      => '<script>alert("XSS")</script>Vandalism Reason',
+            'description' => '<iframe src="javascript:alert(1)"></iframe>Description text explaining concern properly.',
+        ]);
+
+        $response->assertStatus(201);
+        $report = Report::latest('createdAt')->first();
+        $this->assertNotNull($report);
+        $this->assertStringNotContainsString('<script>', $report->reason);
+        $this->assertStringNotContainsString('</script>', $report->reason);
+        $this->assertStringNotContainsString('<iframe>', $report->description);
+        $this->assertStringNotContainsString('</iframe>', $report->description);
+        $this->assertStringContainsString('Vandalism Reason', $report->reason);
+    }
+
+    /**
+     * Scenario 2: Frame-Up / Competitor Sabotage (Reporting Seller A using Product belonging to Seller B).
+     */
+    public function test_reporting_product_belonging_to_another_seller_is_rejected(): void
+    {
+        $otherSeller = User::create([
+            'id'         => (string) Str::uuid(),
+            'name'       => 'Competitor Guild',
+            'email'      => 'competitor@example.com',
+            'password'   => Hash::make('Password123!'),
+            'role'       => 'seller',
+            'shopName'   => 'Competitor Barong House',
+            'status'     => 'active',
+            'isVerified' => true,
+        ]);
+
+        // Attempt to report otherSeller while specifying this->product (which belongs to this->seller)
+        $response = $this->actingAs($this->customer)->postJson('/api/v1/reports', [
+            'reportedId'  => $otherSeller->id,
+            'reportType'  => 'product',
+            'productId'   => $this->product->id,
+            'reason'      => 'Defective Garment',
+            'description' => 'Attempting to frame a competitor with an unrelated product listing.',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['message' => 'The specified product does not belong to the reported seller.']);
+    }
+
+    /**
+     * Scenario 3: Frivolous / False Report Dismissal (Protecting innocent seller).
+     */
+    public function test_frivolous_false_report_dismissal_protects_seller(): void
+    {
+        $report = Report::create([
+            'reporterId'  => $this->customer->id,
+            'reportedId'  => $this->seller->id,
+            'reportType'  => 'product',
+            'productId'   => $this->product->id,
+            'type'        => 'CustomerReportingSeller',
+            'reason'      => 'Trolling / Frivolous Claim',
+            'description' => 'I do not like the color anymore even though it matches product photo.',
+            'status'      => 'Pending',
+        ]);
+
+        // Admin determines no violation occurred and dismisses the report
+        $response = $this->actingAs($this->admin)->post('/admin/reports/' . $report->id . '/resolve', [
+            'status'              => 'Dismissed',
+            'severity'            => 'LOW',
+            'investigationResult' => 'No Violation Found',
+            'action'              => 'None',
+            'notes'               => 'Buyer admitted item matches photos perfectly; concern dismissed.',
+        ]);
+
+        $response->assertStatus(302);
+
+        $report->refresh();
+        $this->assertEquals('Dismissed', $report->status);
+        $this->assertEquals('No Violation Found', $report->investigationResult);
+
+        // Seller remains completely untouched
+        $this->seller->refresh();
+        $this->assertEquals('active', $this->seller->status);
+        $this->assertNull($this->seller->violationReason);
+
+        // Product remains approved and active in marketplace
+        $this->product->refresh();
+        $this->assertEquals('approved', $this->product->status);
+
+        // Seller receives reassuring case-closed notification
+        $sellerNotif = Notification::where('userId', $this->seller->id)
+            ->where('title', 'like', '%Case Closed%')
+            ->first();
+        $this->assertNotNull($sellerNotif);
+        $this->assertStringContainsString('dismissed with no violation found', $sellerNotif->message);
+
+        // Reporter receives neutral notification without internal admin notes
+        $customerNotif = Notification::where('userId', $this->customer->id)
+            ->where('title', 'like', '%Report Reviewed%')
+            ->first();
+        $this->assertNotNull($customerNotif);
+        $this->assertStringContainsString('no policy violation could be confirmed', $customerNotif->message);
+        $this->assertStringNotContainsString('Buyer admitted item matches photos', $customerNotif->message);
+    }
 }

@@ -101,6 +101,11 @@ class ReportController extends Controller
                 return response()->json(['message' => 'The reported product could not be found.'], 404);
             }
 
+            // Guard against frame-up / trolling: Verify product actually belongs to the reported seller
+            if ($product->sellerId !== $reportedUser->id) {
+                return response()->json(['message' => 'The specified product does not belong to the reported seller.'], 422);
+            }
+
             // If referenceId was not explicitly passed, check if customer purchased this product from this seller
             if (!$referenceId) {
                 $customerOrder = Order::where('customerId', $userId)
@@ -223,8 +228,8 @@ class ReportController extends Controller
             'reportType'   => $reportType,
             'productId'    => $productId,
             'referenceId'  => $referenceId,
-            'reason'       => $validated['reason'],
-            'description'  => $validated['description'],
+            'reason'       => strip_tags(trim($validated['reason'])),
+            'description'  => strip_tags(trim($validated['description'])),
             'evidence'     => $evidenceStr,
             'severity'     => 'MEDIUM',
             'status'       => 'Pending',
@@ -345,7 +350,7 @@ class ReportController extends Controller
             $evidenceStr = !empty($evidenceRaw) ? (string) $evidenceRaw : null;
         }
 
-        $report->sellerResponse = $validated['response'];
+        $report->sellerResponse = strip_tags(trim($validated['response']));
         $report->sellerResponseEvidence = $evidenceStr;
         $report->sellerRespondedAt = now();
 
