@@ -1952,7 +1952,7 @@ class AdminController extends Controller
             'cod'                  => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim'])->count(),
         ];
 
-        $commissionRate = \App\Services\Financial\FinancialLedgerService::getCommissionRate();
+        $commissionRate = FinancialLedgerService::getCommissionRate();
 
         return view('admin.orders.index', compact('allOrders', 'counts', 'status', 'paymentMethod', 'search', 'commissionRate'));
     }
@@ -2117,7 +2117,7 @@ class AdminController extends Controller
             }
 
             return redirect()->back()->with('success', "Sukli refund of ₱" . number_format($amount, 2) . " processed successfully (Ref: {$ref}).");
-        } catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (ValidationException $ve) {
             throw $ve;
         } catch (\Throwable $e) {
             Log::error('Sukli refund error: ' . $e->getMessage());

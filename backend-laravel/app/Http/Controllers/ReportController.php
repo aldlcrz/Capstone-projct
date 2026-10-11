@@ -19,7 +19,7 @@ class ReportController extends Controller
     /**
      * Submit a new Account or Product Report.
      */
-    public function createReport(Request $request): JsonResponse
+    public function createReport(Request $request)
     {
         $userId = Auth::id() ?? $request->user()?->id;
         if (!$userId) {
