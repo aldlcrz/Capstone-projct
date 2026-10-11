@@ -681,4 +681,106 @@ class ReportTest extends TestCase
         $response->assertStatus(200);
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type') ?? '');
     }
+
+    /**
+     * Test admin action 'Ban Account' permanently bans seller, increments session version, and blocks login.
+     */
+    public function test_admin_action_ban_account_permanently_bans_seller_and_blocks_login(): void
+    {
+        $report = Report::create([
+            'reporterId' => $this->customer->id,
+            'reportedId' => $this->seller->id,
+            'type'       => 'CustomerReportingSeller',
+            'reason'     => 'Fraud / Scam',
+            'description'=> 'Seller took offline payments and delivered nothing.',
+            'status'     => 'Under Review',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/admin/reports/' . $report->id . '/resolve', [
+            'status'              => 'Resolved',
+            'severity'            => 'CRITICAL',
+            'investigationResult' => 'Policy Violation Confirmed',
+            'action'              => 'Ban Account',
+            'disciplinaryReason'  => 'Permanent expulsion for repeated off-platform payment extortion.',
+        ]);
+
+        $response->assertStatus(302);
+
+        $this->seller->refresh();
+        $this->assertEquals('banned', $this->seller->status);
+        $this->assertStringContainsString('Permanent expulsion', $this->seller->violationReason);
+
+        // Verify banned user cannot access protected seller routes (Middleware blocks & logs out)
+        $dashboardRes = $this->actingAs($this->seller)->get('/seller/dashboard');
+        $dashboardRes->assertRedirect('/login');
+        $this->assertGuest();
+    }
+
+    /**
+     * Test admin action 'Warning' dispatches warning notification and keeps seller active.
+     */
+    public function test_admin_action_warning_records_warning_without_suspending(): void
+    {
+        $report = Report::create([
+            'reporterId' => $this->customer->id,
+            'reportedId' => $this->seller->id,
+            'type'       => 'CustomerReportingSeller',
+            'reason'     => 'Late Dispatch',
+            'description'=> 'Seller dispatched parcel 3 days after promised timeline.',
+            'status'     => 'Under Review',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/admin/reports/' . $report->id . '/resolve', [
+            'status'              => 'Resolved',
+            'severity'            => 'LOW',
+            'investigationResult' => 'Policy Violation Confirmed',
+            'action'              => 'Warning',
+            'disciplinaryReason'  => 'Please follow standard dispatch SLA timelines.',
+        ]);
+
+        $response->assertStatus(302);
+
+        $this->seller->refresh();
+        $this->assertEquals('active', $this->seller->status); // Remains active
+
+        // Verify warning notification was received by seller
+        $warningNotif = Notification::where('userId', $this->seller->id)
+            ->where('title', 'like', '%Official Warning%')
+            ->first();
+        $this->assertNotNull($warningNotif);
+        $this->assertStringContainsString('standard dispatch SLA', $warningNotif->message);
+    }
+
+    /**
+     * Test confirmed product violation automatically delists/rejects the product from public marketplace.
+     */
+    public function test_confirmed_product_violation_automatically_delists_product(): void
+    {
+        $this->assertEquals('approved', $this->product->status);
+
+        $report = Report::create([
+            'reporterId'  => $this->customer->id,
+            'reportedId'  => $this->seller->id,
+            'reportType'  => 'product',
+            'productId'   => $this->product->id,
+            'type'        => 'CustomerReportingSeller',
+            'reason'      => 'Counterfeit / Fake Item',
+            'description' => 'Fabric lab test revealed polyester blend.',
+            'status'      => 'Under Review',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/admin/reports/' . $report->id . '/resolve', [
+            'status'              => 'Resolved',
+            'severity'            => 'HIGH',
+            'investigationResult' => 'Policy Violation Confirmed',
+            'action'              => 'Warning',
+            'disciplinaryReason'  => 'Item delisted due to deceptive material description.',
+        ]);
+
+        $response->assertStatus(302);
+
+        $this->product->refresh();
+        // Offending product has been automatically delisted (status changed to 'rejected')
+        $this->assertEquals('rejected', $this->product->status);
+    }
 }

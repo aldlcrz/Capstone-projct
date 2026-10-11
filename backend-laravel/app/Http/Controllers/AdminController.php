@@ -1751,6 +1751,12 @@ class AdminController extends Controller
             }
         }
 
+        // Automatic Product Delisting upon Confirmed Product Violation or Severe Account Action
+        if ($report->productId && $report->product && ($investigationResult === 'Policy Violation Confirmed' || in_array($action, ['Suspend Account', 'Ban Account']))) {
+            $report->product->status = 'rejected';
+            $report->product->save();
+        }
+
         // Add Case Timeline Event
         $timelineTitle = match($status) {
             'Resolved'     => 'Case Resolved',
