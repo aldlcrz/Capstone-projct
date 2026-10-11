@@ -512,7 +512,7 @@ class SuperAdminController extends Controller
             if ($totalSales <= 0) continue;
 
             CommissionRecord::updateOrCreate(
-                ['sellerId' => $sellerId, 'period' => $period],
+                ['sellerId' => $seller->id, 'period' => $period],
                 [
                     'totalSales'      => $totalSales,
                     'commissionRate'  => $summary['commission_rate'],
@@ -1474,7 +1474,7 @@ class SuperAdminController extends Controller
 
     private function getCommissionRate(): float
     {
-        return \App\Services\Financial\FinancialLedgerService::getCommissionRate();
+        return FinancialLedgerService::getCommissionRate();
     }
 
     private function sendNotification(string $userId, string $title, string $message, string $type = 'system', ?string $link = null, string $role = 'seller'): void

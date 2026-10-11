@@ -1,6 +1,9 @@
 @extends('layouts.admin')
 
 @section('content')
+@php
+    /** @var \Illuminate\Pagination\LengthAwarePaginator<\App\Models\User> $sellers */
+@endphp
 <div class="space-y-4" x-data="sellerManager()">
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
     <div id="tour-admin-sellers-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

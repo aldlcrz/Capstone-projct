@@ -335,7 +335,7 @@
             {{-- 1.5 APPOINTMENT BANNER (STORE PICKUP & SPECIAL DELIVERY) --}}
             @if($order->appointment_date && !$isCancelled)
                 <div class="px-4 sm:px-5 pb-3 pt-0">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs rounded-[14px] p-3 sm:px-4 border {{ $isStorePickup ? 'bg-gradient-to-r from-amber-100 via-amber-100 to-amber-200 border-amber-400' : 'bg-gradient-to-r from-blue-50 via-blue-50 to-blue-100 border-blue-300' }}">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs rounded-[14px] p-3 sm:px-4 border {{ $isStorePickup ? 'bg-linear-to-r from-amber-100 via-amber-100 to-amber-200 border-amber-400' : 'bg-linear-to-r from-blue-50 via-blue-50 to-blue-100 border-blue-300' }}">
                         <div class="flex items-start sm:items-center gap-3">
                             <div class="w-9 h-9 rounded-xl {{ $isStorePickup ? 'bg-amber-100 border border-amber-300 text-amber-900' : 'bg-blue-100 border border-blue-300 text-blue-900' }} flex items-center justify-center shrink-0 text-base">
                                 {{ $isStorePickup ? '🏬' : '🏍️' }}
