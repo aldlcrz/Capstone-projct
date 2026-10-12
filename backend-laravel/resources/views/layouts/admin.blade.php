@@ -147,11 +147,10 @@
                                         'badge' => $unpaidCommissionsCount
                                     ],
                                     [
-                                        'label' => 'Payment Verification',
+                                        'label' => 'Marketplace Orders',
                                         'path'  => 'superadmin/orders',
                                         'alt_path' => 'admin/orders',
-                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
-                                        'badge' => $pendingPaymentsCount
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'
                                     ],
                                     [
                                         'label' => 'Seller Payouts',
@@ -250,10 +249,9 @@
                                 ],
                                 'FINANCE & ORDERS' => [
                                     [
-                                        'label' => 'Payment Verification',
+                                        'label' => 'Marketplace Orders',
                                         'path'  => 'admin/orders',
-                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>',
-                                        'badge' => $pendingPaymentsCount
+                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'
                                     ],
                                     [
                                         'label' => 'Profit & Commissions',

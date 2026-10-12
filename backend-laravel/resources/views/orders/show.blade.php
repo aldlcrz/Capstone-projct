@@ -830,7 +830,7 @@
                                 @elseif($cSukliStatus === 'REFUND_PROCESSING')
                                     Your <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong> sukli refund is currently being processed.
                                 @else
-                                    Your payment has an excess amount of <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong>. When the Admin verifies your order, your sukli will be processed using the refund details you provided{{ $order->masked_refund_phone ? ' (' . $order->masked_refund_phone . ')' : '' }}.
+                                    Your payment has an excess amount of <strong>₱{{ number_format($cAuthoritativeSukli, 2) }}</strong>. Your artisan will settle your excess payment using the refund details you provided{{ $order->masked_refund_phone ? ' (' . $order->masked_refund_phone . ')' : '' }}.
                                 @endif
                             </p>
 

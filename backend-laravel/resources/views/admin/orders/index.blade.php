@@ -2,24 +2,11 @@
 
 @section('content')
 <div class="space-y-5" x-data="{
-    verifyModal: false,
-    rejectModal: false,
     receiptModal: false,
-    rejectReason: '',
-    rejectPreset: '',
-    isSubmitting: false,
-
-    openVerify(order) {
-        this.selectedOrder = order;
-        this.verifyModal = true;
-    },
-
-    openReject(order) {
-        this.selectedOrder = order;
-        this.rejectPreset = 'Receipt is blurred or unreadable';
-        this.rejectReason = 'Receipt is blurred or unreadable';
-        this.rejectModal = true;
-    },
+    selectedOrder: null,
+    receiptUrl: '',
+    receiptRef: '',
+    receiptAmount: 0,
 
     openReceipt(order, url) {
         this.selectedOrder = order;
@@ -27,11 +14,6 @@
         this.receiptRef = order.paymentReference || (order.latest_payment_transaction ? order.latest_payment_transaction.reference_number : 'N/A');
         this.receiptAmount = order.totalAmount;
         this.receiptModal = true;
-    },
-
-    setRejectPreset(text) {
-        this.rejectPreset = text;
-        this.rejectReason = text;
     },
 
     getOrderProductSummary(order) {
@@ -83,14 +65,14 @@
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                    Payment <span class="text-[#C0420A] font-light italic">Verification</span>
+                    Order <span class="text-[#C0420A] font-light italic">Management</span>
                 </h1>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-xs">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span>{{ $counts['pending_verification'] ?? 0 }} Pending Review</span>
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Direct-to-Seller · {{ $commissionRate ?? 5.0 }}% Commission Due</span>
                 </div>
             </div>
-            <p class="text-[11px] text-gray-500 font-medium">Verify incoming GCash & Maya customer payments, inspect receipts, and manage marketplace transactions.</p>
+            <p class="text-[11px] text-gray-500 font-medium">Track customer orders, direct-to-seller settlements, and marketplace commission governance.</p>
         </div>
 
         {{-- Right: Search & Filter Toolbar --}}
@@ -113,9 +95,9 @@
                     <select name="payment_method" onchange="this.form.submit()"
                             class="w-full sm:w-auto px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C0422A]/20 focus:border-[#C0422A] shadow-xs cursor-pointer">
                         <option value="all" {{ request('payment_method') === 'all' || !request('payment_method') ? 'selected' : '' }}>All Payment Methods</option>
-                        <option value="gcash" {{ request('payment_method') === 'gcash' ? 'selected' : '' }}>GCash Only</option>
-                        <option value="maya" {{ request('payment_method') === 'maya' ? 'selected' : '' }}>Maya Only</option>
-                        <option value="cod" {{ request('payment_method') === 'cod' ? 'selected' : '' }}>COD / Pay in Shop</option>
+                        <option value="gcash" {{ request('payment_method') === 'gcash' ? 'selected' : '' }}>Direct GCash</option>
+                        <option value="maya" {{ request('payment_method') === 'maya' ? 'selected' : '' }}>Direct Maya</option>
+                        <option value="cod" {{ request('payment_method') === 'cod' ? 'selected' : '' }}>COD / In-Store Cash</option>
                     </select>
                 </div>
 
@@ -131,12 +113,12 @@
 
     {{-- ═══ STATUS FILTER CARDS ═══ --}}
     @php
-        $currStatus = request('status', 'pending_verification');
-        $isPending  = $currStatus === 'pending_verification';
-        $isAll      = $currStatus === 'all';
-        $isVerified = $currStatus === 'verified';
-        $isRejected = $currStatus === 'rejected';
-        $isCod      = $currStatus === 'cod';
+        $currStatus  = request('status', 'all');
+        $isAll       = $currStatus === 'all';
+        $isPending   = $currStatus === 'pending';
+        $isDelivered = $currStatus === 'delivered';
+        $isEwallet   = $currStatus === 'direct_ewallet';
+        $isCod       = $currStatus === 'cod_cash';
     @endphp
 
     <div id="tour-admin-orders-stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -159,15 +141,15 @@
             @endif
         </a>
 
-        {{-- 2. Pending Verification --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'pending_verification', 'page' => 1]) }}"
+        {{-- 2. Pending / In Progress --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isPending ? 'bg-amber-50/70 border-amber-500 ring-2 ring-amber-500/20 shadow-sm -translate-y-0.5' : 'bg-white border-amber-200/60 hover:border-amber-400 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isPending ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700 group-hover:bg-amber-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending_verification'] ?? 0 }}</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['pending'] ?? 0 }}</div>
                     <div class="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-1">Pending</div>
                 </div>
             </div>
@@ -178,53 +160,53 @@
             @endif
         </a>
 
-        {{-- 3. Verified / Paid --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'verified', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isVerified ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+        {{-- 3. Delivered / Completed --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'delivered', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isDelivered ? 'bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isVerified ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isDelivered ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['verified'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mt-1">Verified</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['delivered'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mt-1">Delivered</div>
                 </div>
             </div>
-            @if($isVerified)
+            @if($isDelivered)
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
                     Active
                 </span>
             @endif
         </a>
 
-        {{-- 4. Rejected --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => 1]) }}"
-           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-rose-50/70 border-rose-600 ring-2 ring-rose-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-100 hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+        {{-- 4. Direct GCash / Maya --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'direct_ewallet', 'page' => 1]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isEwallet ? 'bg-blue-50/70 border-blue-600 ring-2 ring-blue-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRejected ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isEwallet ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
-                    <div class="text-[9px] font-bold uppercase tracking-wider text-rose-700 mt-1">Rejected</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['direct_ewallet'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-blue-700 mt-1">Direct E-Wallet</div>
                 </div>
             </div>
-            @if($isRejected)
-                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-xs">
+            @if($isEwallet)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs">
                     Active
                 </span>
             @endif
         </a>
 
-        {{-- 5. COD / In-Shop --}}
-        <a href="{{ request()->fullUrlWithQuery(['status' => 'cod', 'page' => 1]) }}"
+        {{-- 5. COD / Store Cash --}}
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'cod_cash', 'page' => 1]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isCod ? 'bg-slate-100 border-slate-700 ring-2 ring-slate-700/20 shadow-sm -translate-y-0.5' : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm hover:-translate-y-0.5' }}">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isCod ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['cod'] ?? 0 }}</div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['cod_cash'] ?? 0 }}</div>
                     <div class="text-[9px] font-bold uppercase tracking-wider text-slate-600 mt-1">COD / Store</div>
                 </div>
             </div>
@@ -236,7 +218,7 @@
         </a>
     </div>
 
-    {{-- ═══ ORDERS TABLE & VERIFICATION LIST ═══ --}}
+    {{-- ═══ ORDERS TABLE & LIST ═══ --}}
     <div class="space-y-3">
         {{-- Results count bar --}}
         <div class="flex items-center justify-between px-1">
@@ -247,9 +229,6 @@
                 @endif
                 @if(request('payment_method') && request('payment_method') !== 'all')
                     <span class="text-gray-400">· Method: <span class="uppercase font-bold text-gray-700">{{ request('payment_method') }}</span></span>
-                @endif
-                @if(request('search'))
-                    <span class="text-gray-400">· Query: "<span class="font-bold text-gray-700">{{ request('search') }}</span>"</span>
                 @endif
             </div>
         </div>
@@ -265,18 +244,15 @@
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Artisan / Seller</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Payment Details</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-center">Receipt Proof</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-right">Action / Commission</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400">Fulfillment & Payment</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 text-right">Platform Commission</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($allOrders as $order)
                             @php
                                 $pm = strtolower($order->paymentMethod ?? '');
-                                $isEwallet = in_array($pm, ['gcash', 'maya', 'paymaya']);
-                                $isPaid = in_array($order->paymentStatus, ['Paid', 'Verified']);
-                                $isRejectedStatus = in_array($order->paymentStatus, ['Payment Rejected', 'Rejected']);
-                                $isPendingReview = $isEwallet && !$isPaid && !$isRejectedStatus && $order->status !== 'Cancelled';
+                                $isEwalletOrder = in_array($pm, ['gcash', 'maya', 'paymaya']);
                                 
                                 $refNumber = $order->paymentReference ?: ($order->latestPaymentTransaction->reference_number ?? null);
                                 $receiptUrl = $order->payment_proof_url;
@@ -298,33 +274,28 @@
                                             $hasVariant = !empty($rawVariant) 
                                                 && strcasecmp($rawVariant, 'Original') !== 0 
                                                 && strcasecmp($rawVariant, 'None') !== 0 
-                                                && strcasecmp($rawVariant, 'N/A') !== 0
                                                 && strcasecmp($rawVariant, $productName) !== 0;
-
                                             $hasSize = !empty($rawSize) 
                                                 && strcasecmp($rawSize, 'Free Size') !== 0 
                                                 && strcasecmp($rawSize, 'N/A') !== 0 
                                                 && strcasecmp($rawSize, 'None') !== 0;
-
-                                            $isSameVariantAndSize = $hasVariant && $hasSize && (strcasecmp(trim($rawVariant), trim($rawSize)) === 0);
+                                            $isSameVariantAndSize = $hasVariant && $hasSize && strcasecmp(trim($rawVariant), trim($rawSize)) === 0;
                                         @endphp
 
-                                        {{-- Primary Product Name --}}
-                                        <div class="text-xs font-bold text-gray-900 leading-snug truncate" title="{{ $productName }}">
+                                        {{-- Product Title --}}
+                                        <div class="text-xs font-black text-gray-900 group-hover:text-[#C0422A] transition-colors line-clamp-1" title="{{ $productName }}">
                                             {{ $productName }}
                                         </div>
 
                                         {{-- Variant & Size Badges --}}
                                         @if($firstItem)
                                             <div class="flex items-center gap-1.5 flex-wrap">
-                                                {{-- Distinct Variant (e.g. Color / Style) --}}
                                                 @if($hasVariant && !$isSameVariantAndSize)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80">
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                                                         {{ $rawVariant }}
                                                     </span>
                                                 @endif
 
-                                                {{-- Size Badge --}}
                                                 @if($hasSize)
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                                                         Size: {{ $rawSize }}
@@ -382,6 +353,8 @@
                                                 <div class="text-[10px] text-gray-500 font-mono mt-0.5">
                                                     {{ $custPhone }}
                                                 </div>
+                                            @else
+                                                <div class="text-[9px] text-gray-400 italic">No phone</div>
                                             @endif
                                         </div>
                                     </div>
@@ -398,7 +371,7 @@
                                         </div>
                                         <div class="inline-flex items-center gap-1 text-[9px] font-semibold text-gray-500 mt-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                                            Order: <span class="capitalize">{{ $order->status }}</span>
+                                            <span>Shop Order</span>
                                         </div>
                                     </div>
                                 </td>
@@ -462,7 +435,7 @@
                                                 Inspect
                                             </button>
                                         </div>
-                                    @elseif($isEwallet)
+                                    @elseif($isEwalletOrder)
                                         <div class="inline-flex flex-col items-center justify-center text-gray-300 py-1">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             <span class="text-[9px] font-medium text-gray-400 mt-0.5">No receipt</span>
@@ -475,107 +448,75 @@
                                     @endif
                                 </td>
 
-                                {{-- 6. Verification Status Badge --}}
+                                {{-- 6. Fulfillment & Payment Status --}}
                                 <td class="px-4 py-3.5">
-                                    <div class="space-y-1">
-                                        @if($isPaid)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                Verified & Paid
+                                    <div class="space-y-1.5">
+                                        {{-- Order Fulfillment Status Badge --}}
+                                        @php
+                                            $ordStatus = strtolower($order->status ?? 'pending');
+                                            $badgeColor = match($ordStatus) {
+                                                'delivered', 'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                'shipped', 'in transit'  => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                'to ship', 'processing'  => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                                'cancelled', 'declined'  => 'bg-rose-50 text-rose-700 border-rose-200',
+                                                default                  => 'bg-amber-50 text-amber-800 border-amber-200',
+                                            };
+                                        @endphp
+                                        <div>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $badgeColor }}">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                                Order: {{ ucfirst($order->status ?? 'Pending') }}
                                             </span>
-                                        @elseif($isRejectedStatus)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                <svg class="w-3 h-3 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                Payment Rejected
-                                            </span>
-                                            @if($order->paymentRejectionReason)
-                                                <div class="text-[9px] text-rose-600 italic font-medium max-w-40 leading-tight">
-                                                    "{{ Str::limit($order->paymentRejectionReason, 35) }}"
-                                                </div>
+                                        </div>
+
+                                        {{-- Direct Payment Settlement Details --}}
+                                        <div>
+                                            @if($isEwalletOrder)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                                    ✓ Paid to Seller (Direct)
+                                                </span>
+                                            @elseif(str_contains(strtolower($order->paymentMethod ?? ''), 'pickup') || str_contains(strtolower($order->courierName ?? ''), 'pickup'))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                    Store Pickup (Pay at Shop)
+                                                </span>
+                                            @elseif(str_contains(strtolower($order->paymentMethod ?? ''), 'special') || str_contains(strtolower($order->courierName ?? ''), 'special'))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                    Special Delivery (Pay to Rider)
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                    COD (Pay on Delivery)
+                                                </span>
                                             @endif
-                                        @elseif($isPendingReview)
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-xs">
-                                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                                Needs Admin Verification
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                                {{ $order->formatted_payment_method ?? $order->paymentMethod ?? 'COD' }} (Seller Verifies)
-                                            </span>
-                                        @endif
+                                        </div>
                                     </div>
                                 </td>
 
-                                {{-- 7. Verification Actions / Commission --}}
+                                {{-- 7. Platform Commission --}}
                                 <td class="px-4 py-3.5 text-right">
-                                    @if($isEwallet)
-                                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                                            @if(!$isPaid)
-                                                @if(auth()->user()?->role === 'superadmin')
-                                                    {{-- Approve / Verify Button (GCash / Maya Only) --}}
-                                                    <button type="button" 
-                                                            @click="openVerify({{ json_encode($order) }})"
-                                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                        <span>Verify</span>
-                                                    </button>
-
-                                                    {{-- Reject Button (GCash / Maya Only) --}}
-                                                    <button type="button" 
-                                                            @click="openReject({{ json_encode($order) }})"
-                                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200/80 transition-all cursor-pointer">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                        <span>Reject</span>
-                                                    </button>
-                                                @else
-                                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
-                                                        Read-Only
-                                                    </span>
-                                                @endif
-                                            @else
-                                                {{-- Already Verified Options --}}
-                                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200/60">
-                                                    ✓ Confirmed
-                                                </span>
-
-                                                {{-- Sukli Status Badge when Verified & Overpaid --}}
-                                                @if($order->isOverpaid())
-                                                    @php $sStatus = $order->sukliRefundStatus(); @endphp
-                                                    @if($sStatus === 'REFUNDED')
-                                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60" title="Sukli already distributed">
-                                                            <span>✓ Sukli Sent</span>
-                                                        </span>
-                                                    @endif
-                                                @endif
-                                            @endif
+                                    <div class="text-right space-y-0.5">
+                                        <div class="font-mono text-sm font-black text-[#C0420A]">
+                                            ₱{{ number_format($orderCommission, 2) }}
                                         </div>
-                                    @else
-                                        {{-- COD / Store Pickup: Display Calculated Commission Per Order --}}
-                                        <div class="text-right space-y-0.5">
-                                            <div class="font-mono text-sm font-black text-[#C0420A]">
-                                                ₱{{ number_format($orderCommission, 2) }}
-                                            </div>
-                                            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                                <span class="w-1 h-1 rounded-full bg-amber-500"></span>
-                                                {{ $activeRate }}% Commission Due
-                                            </div>
-                                            <div class="text-[9px] text-gray-400 font-medium">
-                                                In-Store/COD Remittance
-                                            </div>
+                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <span class="w-1 h-1 rounded-full bg-amber-500"></span>
+                                            {{ $activeRate }}% Commission Due
                                         </div>
-                                    @endif
+                                        <div class="text-[9px] text-gray-400 font-medium">
+                                            Direct to Seller
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7">
-                                    <div class="py-12 text-center">
-                                        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-amber-200">
-                                            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <td colspan="7" class="px-6 py-12 text-center">
+                                    <div class="max-w-xs mx-auto space-y-3">
+                                        <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         </div>
-                                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider">No Orders Pending Verification</h3>
-                                        <p class="text-xs text-gray-400 mt-1 max-w-sm mx-auto">All GCash and Maya incoming customer payments have been processed, or no orders match your search criteria.</p>
+                                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider">No Orders Found</h3>
+                                        <p class="text-xs text-gray-400">No orders match your selected filters or search terms.</p>
                                         @if(request('status') || request('search') || request('payment_method'))
                                             <div class="mt-4">
                                                 <a href="{{ route('admin.orders') }}" class="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all">
@@ -601,155 +542,7 @@
     </div>
 
     {{-- ═════════════════════════════════════════════════════════════════ --}}
-    {{-- ═══ 1. VERIFY CONFIRMATION MODAL ═══ --}}
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    <div x-show="verifyModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-         @keydown.escape.window="verifyModal = false">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4"
-             @click.outside="verifyModal = false">
-            
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Approve & Verify Payment</h3>
-                    <p class="text-xs text-gray-400">Confirm that this customer's payment has been received</p>
-                </div>
-            </div>
-
-            <template x-if="selectedOrder">
-                <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-100 space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-gray-400 font-medium">Product & Variant:</span>
-                        <span class="font-bold text-gray-900 text-right truncate max-w-52.5" x-text="getOrderProductSummary(selectedOrder)"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400 font-medium">Order Number:</span>
-                        <span class="font-mono font-bold text-gray-700" x-text="'#LB-' + (selectedOrder.id ? selectedOrder.id.slice(-8).toUpperCase() : '')"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400 font-medium">Customer:</span>
-                        <span class="font-bold text-gray-800" x-text="selectedOrder.customer ? selectedOrder.customer.name : 'Customer'"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400 font-medium">Payment Method:</span>
-                        <span class="font-bold uppercase" :class="selectedOrder.paymentMethod.toLowerCase() === 'gcash' ? 'text-blue-600' : 'text-emerald-600'" x-text="selectedOrder.paymentMethod"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400 font-medium">Reference #:</span>
-                        <span class="font-mono font-bold text-gray-900" x-text="selectedOrder.paymentReference || 'N/A'"></span>
-                    </div>
-                    <div class="flex justify-between border-t border-gray-200/60 pt-2">
-                        <span class="text-gray-700 font-bold">Total Amount:</span>
-                        <span class="font-mono font-black text-gray-900 text-sm" x-text="'₱' + parseFloat(selectedOrder.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
-                    </div>
-                </div>
-            </template>
-
-            <div class="text-[11px] text-gray-500 leading-relaxed bg-emerald-50/60 border border-emerald-100 rounded-xl p-3">
-                <p class="font-semibold text-emerald-800">Upon verification:</p>
-                <ul class="list-disc list-inside mt-1 space-y-0.5 text-emerald-700">
-                    <li>Order payment status will update to <strong>Paid</strong></li>
-                    <li>Order workflow advances to <strong>To Ship</strong></li>
-                    <li>Customer and Seller will receive real-time notifications</li>
-                </ul>
-            </div>
-
-            <template x-if="selectedOrder">
-                <form :action="'/admin/orders/' + selectedOrder.id + '/verify-payment'" method="POST" @submit="isSubmitting = true">
-                    @csrf
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="verifyModal = false" :disabled="isSubmitting"
-                                class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="isSubmitting"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
-                            <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                            <span x-text="isSubmitting ? 'Verifying...' : 'Confirm & Verify Payment'"></span>
-                        </button>
-                    </div>
-                </form>
-            </template>
-        </div>
-    </div>
-
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    {{-- ═══ 2. REJECT PAYMENT MODAL ═══ --}}
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    <div x-show="rejectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-         @keydown.escape.window="rejectModal = false">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4"
-             @click.outside="rejectModal = false">
-            
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Reject Customer Payment Proof</h3>
-                    <p class="text-xs text-gray-400">Specify reason for rejecting this payment transaction</p>
-                </div>
-            </div>
-
-            {{-- Quick Presets --}}
-            <div class="space-y-1.5">
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500">Select Common Rejection Reason</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    <button type="button" @click="setRejectPreset('Receipt is blurred or unreadable')"
-                            :class="rejectPreset === 'Receipt is blurred or unreadable' ? 'bg-[#FFF5F2] border-[#C0422A] text-[#C0422A]' : 'bg-gray-50 border-gray-200 text-gray-700'"
-                            class="text-left text-xs p-2 rounded-lg border font-medium hover:border-[#C0422A] transition-all cursor-pointer">
-                        📷 Receipt is unreadable/blurred
-                    </button>
-                    <button type="button" @click="setRejectPreset('Reference number does not match receipt')"
-                            :class="rejectPreset === 'Reference number does not match receipt' ? 'bg-[#FFF5F2] border-[#C0422A] text-[#C0422A]' : 'bg-gray-50 border-gray-200 text-gray-700'"
-                            class="text-left text-xs p-2 rounded-lg border font-medium hover:border-[#C0422A] transition-all cursor-pointer">
-                        🔢 Reference # mismatch
-                    </button>
-                    <button type="button" @click="setRejectPreset('Payment amount sent is insufficient')"
-                            :class="rejectPreset === 'Payment amount sent is insufficient' ? 'bg-[#FFF5F2] border-[#C0422A] text-[#C0422A]' : 'bg-gray-50 border-gray-200 text-gray-700'"
-                            class="text-left text-xs p-2 rounded-lg border font-medium hover:border-[#C0422A] transition-all cursor-pointer">
-                        💰 Amount is incorrect
-                    </button>
-                    <button type="button" @click="setRejectPreset('Duplicate receipt / already used for another order')"
-                            :class="rejectPreset === 'Duplicate receipt / already used for another order' ? 'bg-[#FFF5F2] border-[#C0422A] text-[#C0422A]' : 'bg-gray-50 border-gray-200 text-gray-700'"
-                            class="text-left text-xs p-2 rounded-lg border font-medium hover:border-[#C0422A] transition-all cursor-pointer">
-                        ⚠️ Duplicate receipt
-                    </button>
-                </div>
-            </div>
-
-            <template x-if="selectedOrder">
-                <form :action="'/admin/orders/' + selectedOrder.id + '/reject-payment'" method="POST" @submit="isSubmitting = true" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                            Detailed Reason / Customer Feedback <span class="text-rose-500">*</span>
-                        </label>
-                        <textarea name="reason" rows="3" required x-model="rejectReason"
-                                  placeholder="Explain why the payment was rejected so the customer can upload a valid receipt..."
-                                  class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-1">
-                        <button type="button" @click="rejectModal = false" :disabled="isSubmitting"
-                                class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="isSubmitting || !rejectReason.trim()"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 transition-all cursor-pointer">
-                            <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                            <span x-text="isSubmitting ? 'Rejecting...' : 'Confirm Rejection'"></span>
-                        </button>
-                    </div>
-                </form>
-            </template>
-        </div>
-    </div>
-
-    {{-- ═════════════════════════════════════════════════════════════════ --}}
-    {{-- ═══ 3. HIGH-RESOLUTION RECEIPT LIGHTBOX MODAL ═══ --}}
+    {{-- ═══ HIGH-RESOLUTION RECEIPT LIGHTBOX MODAL ═══ --}}
     {{-- ═════════════════════════════════════════════════════════════════ --}}
     <div x-show="receiptModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
          @keydown.escape.window="receiptModal = false">
@@ -787,28 +580,17 @@
             </div>
 
             {{-- Metadata footer --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div>
                     <span class="text-gray-400 block text-[10px] font-bold uppercase">Reference #</span>
                     <span class="font-mono font-bold text-gray-900" x-text="receiptRef"></span>
                 </div>
                 <div>
-                    <span class="text-gray-400 block text-[10px] font-bold uppercase">Expected Amount</span>
+                    <span class="text-gray-400 block text-[10px] font-bold uppercase">Total Amount (Direct to Seller)</span>
                     <span class="font-mono font-black text-gray-900" x-text="'₱' + parseFloat(receiptAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
-                </div>
-                <div class="col-span-2 sm:col-span-1 flex items-center justify-end gap-2">
-                    <button type="button" @click="receiptModal = false; openVerify(selectedOrder)"
-                            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors">
-                        ✓ Verify
-                    </button>
-                    <button type="button" @click="receiptModal = false; openReject(selectedOrder)"
-                            class="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 font-bold rounded-lg text-xs transition-colors border border-rose-200">
-                        ✕ Reject
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
-

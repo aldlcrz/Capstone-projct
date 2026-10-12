@@ -1908,48 +1908,28 @@ class AdminController extends Controller
         }
 
         if ($status !== 'all') {
-            if ($status === 'pending_verification') {
-                $query->whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
-                      ->where(function($pq) {
-                          $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
-                             ->orWhereNull('paymentStatus');
-                      })
-                      ->whereNotIn('status', ['Cancelled']);
-            } elseif ($status === 'verified') {
-                $query->where(function($pq) {
-                    $pq->whereIn('paymentStatus', ['Paid', 'Verified'])
-                       ->orWhereHas('latestPaymentTransaction', function($tq) {
-                           $tq->where('status', 'VERIFIED');
-                       });
-                });
-            } elseif ($status === 'rejected') {
-                $query->where(function($pq) {
-                    $pq->whereIn('paymentStatus', ['Payment Rejected', 'Rejected'])
-                       ->orWhereHas('latestPaymentTransaction', function($tq) {
-                           $tq->where('status', 'REJECTED');
-                       });
-                });
-            } elseif ($status === 'cod') {
-                $query->whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim']);
+            if ($status === 'pending') {
+                $query->whereIn('status', ['Pending', 'Processing', 'To Ship']);
+            } elseif ($status === 'delivered') {
+                $query->whereIn('status', ['Delivered', 'Completed']);
+            } elseif ($status === 'cancelled') {
+                $query->whereIn('status', ['Cancelled', 'Declined', 'Returned']);
+            } elseif ($status === 'direct_ewallet') {
+                $query->whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya']);
+            } elseif ($status === 'cod_cash') {
+                $query->whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim', 'Store Pickup', 'Special Delivery']);
             }
         }
 
         $allOrders = $query->orderBy('createdAt', 'desc')->paginate(15)->withQueryString();
 
         $counts = [
-            'all'                  => Order::count(),
-            'pending_verification' => Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
-                                           ->where(function($pq) {
-                                               $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
-                                                  ->orWhereNull('paymentStatus');
-                                           })
-                                           ->whereNotIn('status', ['Cancelled'])
-                                           ->count(),
-            'verified'             => Order::whereIn('paymentStatus', ['Paid', 'Verified'])->count(),
-            'rejected'             => Order::whereIn('paymentStatus', ['Payment Rejected', 'Rejected'])->count(),
-            'gcash'                => Order::where('paymentMethod', 'GCash')->count(),
-            'maya'                 => Order::whereIn('paymentMethod', ['Maya', 'PayMaya'])->count(),
-            'cod'                  => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim'])->count(),
+            'all'            => Order::count(),
+            'pending'        => Order::whereIn('status', ['Pending', 'Processing', 'To Ship'])->count(),
+            'delivered'      => Order::whereIn('status', ['Delivered', 'Completed'])->count(),
+            'cancelled'      => Order::whereIn('status', ['Cancelled', 'Declined', 'Returned'])->count(),
+            'direct_ewallet' => Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])->count(),
+            'cod_cash'       => Order::whereIn('paymentMethod', ['COD', 'Cash on Delivery', 'Pay in Shop', 'Pay on Claim', 'Store Pickup', 'Special Delivery'])->count(),
         ];
 
         $commissionRate = FinancialLedgerService::getCommissionRate();

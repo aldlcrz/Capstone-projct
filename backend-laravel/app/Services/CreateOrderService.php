@@ -446,9 +446,9 @@ class CreateOrderService
             // Process Payment Validation / Reference Claiming & Accounting
             $paymentReference = null;
             $paymentProofPath = null;
-            $initialPaymentStatus = $isCod ? 'Unpaid' : ($isStorePickup ? 'Pending Payment (Store Pickup)' : ($isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Pending'));
-            $transactionStatus = 'UNVERIFIED';
-            $verificationTier = $isCod ? 'COD' : ($isStorePickup ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'REVIEW'));
+            $initialPaymentStatus = $isCod ? 'Pending Payment (COD)' : ($isStorePickup ? 'Pending Payment (Store Pickup)' : ($isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Paid (Direct to Seller)'));
+            $transactionStatus = 'COMPLETED';
+            $verificationTier = $isCod ? 'COD' : ($isStorePickup ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'DIRECT'));
             $validatedReceipts = [];
             $totalVerifiedPayments = 0.0;
             $overpaymentAmount = 0.00;
@@ -566,11 +566,11 @@ class CreateOrderService
 
                     $overpaymentAmount = $sukli;
                     $refundMobileNumber = $normMobile;
-                    $initialPaymentStatus = 'Pending Verification (Overpayment)';
+                    $initialPaymentStatus = 'Paid (Direct to Seller)';
                 } else {
                     $overpaymentAmount = 0.00;
                     $refundMobileNumber = null;
-                    $initialPaymentStatus = 'Pending Verification';
+                    $initialPaymentStatus = 'Paid (Direct to Seller)';
                 }
             }
 
@@ -699,9 +699,9 @@ class CreateOrderService
                         'reference_confidence' => $vRec['screening']['reference_confidence'] ?? null,
                         'confidence'           => $vRec['screening']['confidence'] ?? null,
                         'status'               => $transactionStatus,
-                        'verification_tier'    => $vRec['tier'],
+                        'verification_tier'    => 'DIRECT',
                         'receipt_path'         => $vRec['receipt_path'],
-                        'verified_at'          => null,
+                        'verified_at'          => now(),
                         'notes'                => $notes,
                     ]);
                 }
