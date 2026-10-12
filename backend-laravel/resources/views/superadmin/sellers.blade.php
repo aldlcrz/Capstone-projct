@@ -10,8 +10,6 @@
                 <span class="text-[9px] font-black uppercase tracking-[0.25em] text-[#C0422A]">Artisan Registry</span>
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Super Admin Center</span>
-                <span class="text-gray-300 text-xs">·</span>
-                <span class="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">View Only</span>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
@@ -31,7 +29,7 @@
                     <span>Seller Guide</span>
                 </button>
             </div>
-            <p class="text-[11px] text-gray-400 font-medium">Browse artisan applications, monitor shop profiles, view compliance credentials and inventory in view-only mode</p>
+            <p class="text-[11px] text-gray-400 font-medium">Review applications, monitor shops, and manage seller accounts with supreme governance controls</p>
         </div>
 
         {{-- Larger Search Bar --}}
@@ -63,7 +61,7 @@
         $isSuspended = $currentFilter === 'suspended';
         $isRejected  = $currentFilter === 'rejected';
     @endphp
-    <div id="tour-superadmin-sellers-filters" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div id="tour-superadmin-sellers-filters" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {{-- Total / All --}}
         <a href="{{ route('superadmin.sellers', ['filter' => 'all', 'search' => request('search')]) }}"
            class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isAll ? 'bg-white border-gray-900 ring-2 ring-gray-900/15 shadow-sm -translate-y-0.5' : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5' }}">
@@ -148,6 +146,23 @@
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-600 text-white shadow-xs">Active</span>
             @endif
         </a>
+
+        {{-- Rejected --}}
+        <a href="{{ route('superadmin.sellers', ['filter' => 'rejected', 'search' => request('search')]) }}"
+           class="group relative rounded-2xl px-3.5 py-3 flex items-center justify-between border transition-all duration-200 cursor-pointer {{ $isRejected ? 'bg-rose-50/50 border-rose-600 ring-2 ring-rose-600/20 shadow-sm -translate-y-0.5' : 'bg-white border-rose-100 hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5' }}">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $isRejected ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-500 group-hover:bg-rose-100' }}">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm sm:text-base font-black text-gray-900 leading-none">{{ $counts['rejected'] ?? 0 }}</div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-rose-600 mt-0.5">Rejected</div>
+                </div>
+            </div>
+            @if($isRejected)
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-xs">Active</span>
+            @endif
+        </a>
     </div>
 
     {{-- ═══ PENDING VERIFICATION ALERT STRIP ═══ --}}
@@ -203,9 +218,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-3 py-1.5 bg-gray-50 hover:bg-gray-200 text-gray-700 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        <span>View Credentials</span>
+                    <button type="button" @click="openReview({{ json_encode($pData) }})" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all cursor-pointer shadow-xs">
+                        Approve &amp; Verify
+                    </button>
+                    <button type="button" @click="openReject('{{ $pendingSeller->id }}', '{{ addslashes($pendingSeller->name) }}')" class="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all cursor-pointer">
+                        Reject
                     </button>
                 </div>
             </div>
@@ -241,7 +258,7 @@
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden md:table-cell">Inventory</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] hidden lg:table-cell">Joined</th>
                             <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[15%]">Status</th>
-                            <th id="tour-superadmin-sellers-actions" class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[14%] text-right">Details</th>
+                            <th id="tour-superadmin-sellers-actions" class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%] text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -370,14 +387,68 @@
                                     </span>
                                 </td>
 
-                                {{-- Actions / Inspect Credentials --}}
+                                {{-- Actions --}}
                                 <td class="px-5 py-4">
-                                    <div class="flex items-center justify-end">
-                                        {{-- Docs Button --}}
-                                        <button type="button" @click="openReview({{ json_encode($sData) }})"
-                                            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer flex items-center gap-1">
-                                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            <span>Credentials</span>
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if($normStatus === 'pending')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                                Verify
+                                            </button>
+                                            <button type="button" @click="openReject('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                                class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                                Reject
+                                            </button>
+                                        @elseif($normStatus === 'active')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <button type="button" @click="openSuspend('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                                class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all cursor-pointer" title="Suspend Account (Policy Violation)">
+                                                Suspend
+                                            </button>
+                                        @elseif($normStatus === 'frozen')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <form action="{{ route('superadmin.sellers.unfreeze', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" onclick="return confirm('Override freeze and restore this shop to active status?')"
+                                                    class="px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all cursor-pointer" title="Unfreeze Shop">
+                                                    Unfreeze
+                                                </button>
+                                            </form>
+                                        @elseif($normStatus === 'suspended')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <form action="{{ route('superadmin.sellers.unsuspend', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                                    Unsuspend
+                                                </button>
+                                            </form>
+                                        @elseif($normStatus === 'rejected')
+                                            <button type="button" @click="openReview({{ json_encode($sData) }})"
+                                                class="px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 transition-all cursor-pointer">
+                                                Docs
+                                            </button>
+                                            <form action="{{ route('superadmin.sellers.reopen', $seller->id) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all cursor-pointer" title="Reopen Application for Review">
+                                                    Reopen
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        <button type="button" @click="openDelete('{{ $seller->id }}', '{{ addslashes($seller->name) }}')"
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all cursor-pointer" title="Delete Seller">
+                                            Delete
                                         </button>
                                     </div>
                                 </td>
@@ -592,11 +663,50 @@
 
             </div>
 
-            {{-- Modal Footer --}}
-            <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end sticky bottom-0 z-20">
-                <button type="button" @click="reviewModal = false" class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer">
+            {{-- Modal Action Bar --}}
+            <div class="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+                <button type="button" @click="reviewModal = false" class="w-full sm:w-auto px-6 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all cursor-pointer">
                     Close
                 </button>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <template x-if="!selectedSeller.isVerified && selectedSeller.status !== 'blocked' && selectedSeller.status !== 'suspended' && selectedSeller.status !== 'rejected'">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button type="button" @click="reviewModal = false; openReject(selectedSeller.id, selectedSeller.name)" class="flex-1 sm:flex-initial px-5 py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                Reject Application
+                            </button>
+                            <form :action="'/superadmin/sellers/' + selectedSeller.id + '/verify'" method="POST" class="flex-1 sm:flex-initial">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="w-full px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Approve &amp; Verify Seller
+                                </button>
+                            </form>
+                        </div>
+                    </template>
+                    <template x-if="selectedSeller.isVerified && selectedSeller.status !== 'blocked' && selectedSeller.status !== 'suspended'">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <form :action="'/superadmin/sellers/' + selectedSeller.id + '/unverify'" method="POST" class="flex-1 sm:flex-initial">
+                                @csrf @method('PATCH')
+                                <button type="submit" onclick="return confirm('Revoke verification for this artisan?')" class="w-full px-5 py-2.5 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                    Revoke Verification
+                                </button>
+                            </form>
+                            <button type="button" @click="reviewModal = false; openSuspend(selectedSeller.id, selectedSeller.name)" class="flex-1 sm:flex-initial px-5 py-2.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                Suspend Account
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="selectedSeller.status === 'rejected'">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <form :action="'/superadmin/sellers/' + selectedSeller.id + '/reopen'" method="POST" class="flex-1 sm:flex-initial">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="w-full px-5 py-2.5 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                                    Re-open for Review
+                                </button>
+                            </form>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
@@ -895,11 +1005,231 @@
         </div>
     </div>
 
+    {{-- ═══ 4. REJECT APPLICATION CONFIRMATION MODAL ═══ --}}
+    <div x-show="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="rejectModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0 font-black text-lg">✕</div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900 leading-snug">Reject Seller Application</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
+                        Decline registration for applicant <strong x-text="rejectSellerName" class="text-gray-900 font-bold"></strong>.
+                    </p>
+                </div>
+            </div>
+
+            <form :action="'/superadmin/sellers/' + rejectSellerId + '/reject'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <input type="hidden" name="rejection_type" :value="rejectType">
+
+                {{-- Rejection Outcome Selector --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider block">1. Select Rejection Outcome *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button type="button" @click="rejectType = 'document_correction'; rejectReason = 'Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.'"
+                            :class="rejectType === 'document_correction' ? 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
+                            class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm">📄</span>
+                                <span class="text-xs font-bold text-gray-900">Correction Required</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-relaxed">Allows seller to fix documents &amp; re-upload on the portal.</p>
+                        </button>
+
+                        <button type="button" @click="rejectType = 'ineligible'; rejectReason = 'Your application cannot be approved because you do not meet LumBarong\'s Lumban residency requirement.'"
+                            :class="rejectType === 'ineligible' ? 'border-rose-500 bg-rose-50/80 text-rose-950 ring-2 ring-rose-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
+                            class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm">🚫</span>
+                                <span class="text-xs font-bold text-gray-900">Permanent Ineligible</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-relaxed">Non-Lumban resident or out-of-scope. No re-upload.</p>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Presets & Reason Box --}}
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider block">2. Quick Reason Presets</label>
+                        <span class="text-[10px] font-semibold text-gray-400" x-text="rejectType === 'document_correction' ? 'Document Presets' : 'Eligibility Presets'"></span>
+                    </div>
+
+                    {{-- Document Correction Presets --}}
+                    <div x-show="rejectType === 'document_correction'" class="flex flex-wrap gap-1.5">
+                        <button type="button" @click="rejectReason = 'Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Blurry / Unreadable
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your Barangay Residency Certificate has expired. Please obtain an updated certificate and upload it again.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Expired Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'One or more required verification documents are missing. Please upload the missing document(s) before resubmitting.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Missing Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'The submitted document does not meet the verification requirements. Please upload the correct document.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Incorrect Document
+                        </button>
+                        <button type="button" @click="rejectReason = 'The information on the submitted document does not match your seller application. Please review your information and submit the correct document.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-amber-100 hover:text-amber-900 text-gray-700 transition-colors">
+                            Document Mismatch
+                        </button>
+                    </div>
+
+                    {{-- Ineligible Presets --}}
+                    <div x-show="rejectType === 'ineligible'" class="flex flex-wrap gap-1.5">
+                        <button type="button" @click="rejectReason = 'Your application cannot be approved because you do not meet LumBarong\'s Lumban residency requirement.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Non-Lumban Resident
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your products do not fall within LumBarong\'s approved Lumban Barong, traditional embroidery, or heritage craft categories.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Outside Heritage Scope
+                        </button>
+                        <button type="button" @click="rejectReason = 'Your application does not meet LumBarong\'s eligibility requirements for registered local artisans or workshops.'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-rose-100 hover:text-rose-900 text-gray-700 transition-colors">
+                            Not Eligible Artisan
+                        </button>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1 block">3. Detailed Reason (Sent via Email &amp; Portal) *</label>
+                        <textarea name="reason" x-model="rejectReason" required rows="3" placeholder="Enter explanation for applicant..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-rose-500 transition-all font-medium leading-relaxed"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="rejectModal = false" class="flex-1 py-3 border border-gray-200 text-xs font-bold text-gray-600 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl cursor-pointer shadow-md transition-all flex items-center justify-center gap-1.5">
+                        <span>Confirm Rejection</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ═══ 5. SUSPEND CONFIRMATION MODAL ═══ --}}
+    <div x-show="suspendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0 font-black">⚠️</div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
+                        Restrict access and suspend listings for seller <strong x-text="suspendSellerName" class="text-black"></strong>.
+                    </p>
+                </div>
+            </div>
+            <form :action="'/superadmin/sellers/' + suspendSellerId + '/suspend'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="suspendReason = 'Policy violation / counterfeit or prohibited listings'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Policy Violation
+                        </button>
+                        <button type="button" @click="suspendReason = 'Multiple unresolved customer complaints or fraud reports'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Customer Complaints
+                        </button>
+                        <button type="button" @click="suspendReason = 'Non-payment of platform commissions past grace period'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Commission Default
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Suspension Reason (Shown to seller upon login) *</label>
+                    <textarea name="reason" x-model="suspendReason" required rows="3" placeholder="Provide the reason for account suspension..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="suspendModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 cursor-pointer shadow-sm">Confirm Suspension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ═══ 6. DELETE CONFIRMATION MODAL ═══ --}}
+    <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="deleteModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Delete Seller Account</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Permanently purge <strong x-text="deleteSellerName" class="text-black"></strong> and all associated artisan workshop records.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
+                ⚠️ <strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
+            </div>
+
+            <form :action="'/superadmin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
+                @csrf @method('DELETE')
+                
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Reason Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-2.5">
+                        <button type="button" @click="deleteReason = 'Severe violation of platform terms and fraudulent activity'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Policy Violation
+                        </button>
+                        <button type="button" @click="deleteReason = 'Requested by artisan / shop owner account deletion'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Artisan Request
+                        </button>
+                        <button type="button" @click="deleteReason = 'Inactive or abandoned registration account cleanup'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Abandoned Account
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Archive Audit Reason *</label>
+                    <textarea name="reason" x-model="deleteReason" required rows="3" placeholder="State reason for permanent purging..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs outline-none focus:border-red-500"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-3 border border-gray-200 text-xs font-bold text-gray-600 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl cursor-pointer shadow-md transition-all flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Confirm Permanent Delete</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>
 function superSellerManager() {
     return {
+        rejectModal: false,
+        rejectSellerId: null,
+        rejectSellerName: '',
+        rejectType: 'document_correction',
+        rejectReason: '',
+        suspendModal: false,
+        suspendSellerId: null,
+        suspendSellerName: '',
+        suspendReason: '',
+        deleteModal: false,
+        deleteSellerId: null,
+        deleteSellerName: '',
+        deleteReason: '',
         reviewModal: false,
         selectedSeller: {},
         previewModal: false,
@@ -913,6 +1243,27 @@ function superSellerManager() {
         shopProducts: [],
         productPreviewModal: false,
         selectedProductPreview: null,
+        openReject(id, name, defaultType = 'document_correction') {
+            this.rejectSellerId = id;
+            this.rejectSellerName = name;
+            this.rejectType = defaultType;
+            this.rejectReason = defaultType === 'ineligible'
+                ? "Your application cannot be approved because you do not meet LumBarong's Lumban residency requirement."
+                : "Your submitted document is blurry or unreadable. Please upload a clear, high-resolution photo or PDF.";
+            this.rejectModal = true;
+        },
+        openSuspend(id, name) {
+            this.suspendSellerId = id;
+            this.suspendSellerName = name;
+            this.suspendReason = 'Violation of platform seller policies';
+            this.suspendModal = true;
+        },
+        openDelete(id, name) {
+            this.deleteSellerId = id;
+            this.deleteSellerName = name;
+            this.deleteReason = '';
+            this.deleteModal = true;
+        },
         openReview(seller) {
             this.selectedSeller = seller;
             this.reviewModal = true;

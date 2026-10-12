@@ -426,6 +426,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::get('/sellers', [SuperAdminController::class, 'sellers'])->name('superadmin.sellers');
     Route::match(['post', 'patch'], '/sellers/{id}/verify', [SuperAdminController::class, 'verifySeller'])->name('superadmin.sellers.verify');
     Route::match(['post', 'patch'], '/sellers/{id}/reject', [SuperAdminController::class, 'rejectSeller'])->name('superadmin.sellers.reject');
+    Route::match(['post', 'patch'], '/sellers/{id}/reopen', [SuperAdminController::class, 'reopenSeller'])->name('superadmin.sellers.reopen');
     Route::match(['post', 'patch'], '/sellers/{id}/unverify', [SuperAdminController::class, 'unverifySeller'])->name('superadmin.sellers.unverify');
     Route::match(['post', 'patch'], '/sellers/{id}/freeze', [SuperAdminController::class, 'freezeShop'])->name('superadmin.sellers.freeze');
     Route::match(['post', 'patch'], '/sellers/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.sellers.unfreeze');

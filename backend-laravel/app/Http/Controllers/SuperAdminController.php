@@ -810,6 +810,28 @@ class SuperAdminController extends Controller
         return back()->with('success', "Artisan shop '{$seller->shopName}' has been restored to active status.");
     }
 
+    public function reopenSeller(string $id)
+    {
+        $seller = User::where('role', 'seller')->findOrFail($id);
+        $prevStatus = $seller->status;
+
+        $seller->isVerified       = false;
+        $seller->status           = 'pending';
+        $seller->rejection_reason = null;
+        $seller->rejection_type   = null;
+        $seller->save();
+
+        \App\Models\SellerStatusAudit::create([
+            'seller_id'       => $seller->id,
+            'admin_id'        => Auth::id(),
+            'previous_status' => $prevStatus,
+            'new_status'      => 'pending',
+            'reason'          => 'Application re-opened for evaluation by Super Admin',
+        ]);
+
+        return back()->with('success', "Artisan shop '{$seller->shopName}' registration re-opened for review.");
+    }
+
     public function deleteSeller(Request $request, string $id)
     {
         $seller = User::where('role', 'seller')->findOrFail($id);
