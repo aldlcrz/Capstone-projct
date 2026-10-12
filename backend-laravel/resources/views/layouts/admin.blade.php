@@ -807,6 +807,7 @@
     <x-confirmation-modal />
     <x-broadcast-notification />
     <x-modal-scroll-lock />
+    <x-scroll-position-restoration />
 
 
     @stack('scripts')

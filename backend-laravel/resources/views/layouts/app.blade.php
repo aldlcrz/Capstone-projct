@@ -731,6 +731,7 @@
 
     <x-confirmation-modal />
     <x-modal-scroll-lock />
+    <x-scroll-position-restoration />
     <x-order-process-demo />
     @stack('scripts')
 

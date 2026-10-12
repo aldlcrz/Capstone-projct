@@ -548,6 +548,7 @@
     <x-seller-report-modal />
     <x-confirmation-modal />
     <x-modal-scroll-lock />
+    <x-scroll-position-restoration />
 
     @if(request()->routeIs('seller.dashboard'))
     <x-spotlight-tour

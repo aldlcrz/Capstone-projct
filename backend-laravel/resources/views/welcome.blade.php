@@ -1216,8 +1216,17 @@
             updateCategoryHighlight(initialCat);
         } catch(e) {}
 
-        // Auto scroll if page loaded with category filter or hash
-        if (window.location.search.includes('category=') || window.location.search.includes('sort=') || window.location.search.includes('search=') || window.location.hash === '#catalogue-section') {
+        // Auto scroll if page loaded with category filter or hash (skip on page reload so scroll restoration is preserved)
+        const isReloadNav = (function() {
+            try {
+                if (window.performance && performance.getEntriesByType) {
+                    var entries = performance.getEntriesByType('navigation');
+                    if (entries && entries.length > 0) return entries[0].type === 'reload';
+                }
+                return window.performance && window.performance.navigation && window.performance.navigation.type === 1;
+            } catch(e) { return false; }
+        })();
+        if (!isReloadNav && (window.location.search.includes('category=') || window.location.search.includes('sort=') || window.location.search.includes('search=') || window.location.hash === '#catalogue-section')) {
             setTimeout(scrollToCatalogue, 150);
         }
 
