@@ -556,5 +556,57 @@ class StorePickupFulfillmentFlowTest extends TestCase
         $customerView->assertSee('Morning (9:00 AM - 12:00 PM)');
         $customerView->assertSee('Please ask for Mang Juan upon arrival.');
     }
+
+    public function test_seller_cannot_set_past_appointment_date(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'orderID' => 'LB-' . strtoupper(Str::random(8)),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'shippingAddress' => json_encode([
+                'fullName' => 'Juan dela Cruz',
+                'phone' => '09171234567',
+                'address' => 'Barangay 1',
+                'city' => 'Lumban',
+                'province' => 'Laguna',
+            ]),
+            'totalAmount' => 3500.00,
+            'shippingFee' => 0.00,
+            'paymentMethod' => 'Pay in Shop',
+            'paymentStatus' => 'Unpaid',
+            'status' => 'Pending',
+        ]);
+
+        $this->attachShipping($order, $this->storePickupProvider);
+        $this->actingAs($this->seller);
+
+        // Attempting to set past date (e.g. 2 days ago)
+        $pastDate = date('Y-m-d', strtotime('-2 days'));
+        $response = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'Shipped',
+            'appointment_date' => $pastDate,
+            'appointment_time' => 'Morning (9:00 AM - 12:00 PM)',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['appointment_date']);
+        $this->assertStringContainsString('cannot be in the past', $response->json('message'));
+
+        $order->refresh();
+        $this->assertNull($order->appointment_date);
+
+        // Setting today's date must succeed
+        $todayDate = date('Y-m-d');
+        $successResponse = $this->patchJson("/seller/api/orders/{$order->id}/status", [
+            'status' => 'Shipped',
+            'appointment_date' => $todayDate,
+            'appointment_time' => 'Afternoon (1:00 PM - 5:00 PM)',
+        ]);
+
+        $successResponse->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals($todayDate, \Carbon\Carbon::parse($order->appointment_date)->format('Y-m-d'));
+    }
 }
 

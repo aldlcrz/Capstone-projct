@@ -326,7 +326,27 @@ class OrderController extends Controller
         if ($request->has('appointment_date') || $request->has('appointmentDate')) {
             $rawDate = $request->input('appointment_date') ?? $request->input('appointmentDate');
             if (!empty($rawDate)) {
-                $order->appointment_date = date('Y-m-d', strtotime($rawDate));
+                try {
+                    $parsedDate = \Carbon\Carbon::parse($rawDate)->startOfDay();
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'message' => 'The provided appointment date format is invalid.',
+                        'errors'  => ['appointment_date' => ['The appointment date format is invalid.']]
+                    ], 422);
+                }
+
+                $today = now()->startOfDay();
+
+                // Disallow past dates: new or modified appointment dates must be today or in the future
+                $isSameAsExisting = $order->appointment_date && \Carbon\Carbon::parse($order->appointment_date)->startOfDay()->equalTo($parsedDate);
+                if (!$isSameAsExisting && $parsedDate->lt($today)) {
+                    return response()->json([
+                        'message' => 'The scheduled appointment or delivery date cannot be in the past. Please select today or a future date.',
+                        'errors'  => ['appointment_date' => ['The scheduled date cannot be in the past.']]
+                    ], 422);
+                }
+
+                $order->appointment_date = $parsedDate->format('Y-m-d');
             }
         }
         if ($request->has('appointment_time') || $request->has('appointmentTime')) {

@@ -513,15 +513,36 @@ function sellerOrdersManager() {
             }
         },
 
+        todayDateString() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+
         openVerifyPaymentModal(order) {
             this.verifyOrderTarget = order || this.detailsOrder;
             this.verifyingPayment = false;
+            const todayStr = this.todayDateString();
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const defaultDate = tomorrow.toISOString().split('T')[0];
-            this.appointmentDateInput = this.verifyOrderTarget?.appointment_date 
+            const tmYear = tomorrow.getFullYear();
+            const tmMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const tmDay = String(tomorrow.getDate()).padStart(2, '0');
+            const defaultDate = `${tmYear}-${tmMonth}-${tmDay}`;
+
+            const existingDate = this.verifyOrderTarget?.appointment_date 
                 ? String(this.verifyOrderTarget.appointment_date).split('T')[0] 
-                : defaultDate;
+                : '';
+
+            // Disallow past dates: if missing or earlier than today, default to tomorrow
+            if (!existingDate || existingDate < todayStr) {
+                this.appointmentDateInput = defaultDate;
+            } else {
+                this.appointmentDateInput = existingDate;
+            }
+
             this.appointmentTimeInput = this.verifyOrderTarget?.appointment_time || '';
             this.appointmentNotesInput = this.verifyOrderTarget?.appointment_notes || '';
             this.showVerifyModal = true;
@@ -532,9 +553,16 @@ function sellerOrdersManager() {
             const isPickup = this.isStorePickup(this.verifyOrderTarget);
             const isSpecial = this.isSpecialDelivery(this.verifyOrderTarget);
 
-            if ((isPickup || isSpecial) && !this.appointmentDateInput) {
-                this.showToast('Please select a scheduled appointment date for the customer.');
-                return;
+            if (isPickup || isSpecial) {
+                if (!this.appointmentDateInput) {
+                    this.showToast('Please select a scheduled appointment date for the customer.');
+                    return;
+                }
+                const todayStr = this.todayDateString();
+                if (this.appointmentDateInput < todayStr) {
+                    this.showToast('⚠️ The scheduled date cannot be in the past. Please select today or a future date.');
+                    return;
+                }
             }
 
             this.verifyingPayment = true;
@@ -561,6 +589,8 @@ function sellerOrdersManager() {
                     } else if (isSpecial) {
                         this.showToast('✓ Special delivery order accepted! Delivery scheduled for ' + this.formatAppointmentDate(this.appointmentDateInput));
                     }
+                } else {
+                    this.showToast(this.shippingError || 'Failed to update order appointment.');
                 }
             } finally {
                 this.verifyingPayment = false;
@@ -3267,7 +3297,8 @@ function sellerOrdersManager() {
                                     </label>
                                     <input type="date" 
                                            x-model="appointmentDateInput" 
-                                           :min="new Date().toISOString().split('T')[0]"
+                                           :min="todayDateString()"
+                                           min="{{ date('Y-m-d') }}"
                                            required
                                            class="w-full h-9 px-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all cursor-pointer">
                                 </div>
