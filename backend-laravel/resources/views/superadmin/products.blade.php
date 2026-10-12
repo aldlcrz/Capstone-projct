@@ -10,6 +10,18 @@
     rejectModal: false,
     rejectProduct: null,
     rejectReason: '',
+    premadeReasons: [
+        { label: '📷 Blurry / Low Quality Photo', text: 'Photo resolution is too low or images are blurry. Please upload clear, well-lit photos highlighting the fabric texture, embroidery, and full garment.' },
+        { label: '📏 Missing Sizing Specs', text: 'Missing accurate sizing measurements or size guide. Please include chest, length, and sleeve measurements to help buyers find the right fit.' },
+        { label: '📝 Incomplete Description', text: 'Product description is incomplete. Please specify key details including fabric type (e.g., Piña, Jusi, Cocoon, Organza), lining, and craftsmanship method.' },
+        { label: '🏷️ Incorrect Category', text: 'This item is assigned to an incorrect category. Please update it to the proper category so customers can discover it easily.' },
+        { label: '💰 Pricing or Stock Issue', text: 'The listing price or inventory quantity appears inaccurate or incomplete. Please review and provide valid pricing and stock details.' },
+        { label: '⚠️ Policy Violation', text: 'This listing does not adhere to LumBarong marketplace quality standards or artisan community policies.' },
+        { label: '📑 Duplicate Listing', text: 'This product appears to be an identical duplicate of an already active listing in your shop.' }
+    ],
+    applyPremadeReason(text) {
+        this.rejectReason = text;
+    },
     openInspect(product) {
         this.inspectProduct = product;
         this.inspectImages = this.getProductImages(product);
@@ -506,7 +518,7 @@
          style="display: none;"
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
          @keydown.escape.window="closeRejectModal()">
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4 border border-gray-100 text-left"
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-4 border border-gray-100 text-left"
              @click.away="closeRejectModal()">
             <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div class="flex items-center gap-2 text-rose-600 font-bold text-sm">
@@ -522,8 +534,41 @@
 
             <form :action="'/superadmin/products/' + (rejectProduct ? rejectProduct.id : '') + '/reject'" method="POST" class="space-y-4">
                 @csrf
+
+                <!-- Premade Reason Selector / Quick Pills -->
+                <div class="space-y-2 bg-stone-50/80 p-3 rounded-2xl border border-stone-200/70">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Quick Preset Reasons</label>
+                        <span class="text-[10px] text-gray-400 font-medium">Click a reason to apply</span>
+                    </div>
+
+                    <!-- Dropdown for rapid selection -->
+                    <select @change="if($event.target.value) { applyPremadeReason($event.target.value); $event.target.value = ''; }"
+                            class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-700 focus:bg-white focus:border-rose-500 outline-none transition-colors cursor-pointer shadow-2xs">
+                        <option value="">-- Or choose from reason template --</option>
+                        <template x-for="(r, idx) in premadeReasons" :key="'opt-' + idx">
+                            <option :value="r.text" x-text="r.label"></option>
+                        </template>
+                    </select>
+
+                    <!-- Clickable Chips -->
+                    <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                        <template x-for="(r, idx) in premadeReasons" :key="'chip-' + idx">
+                            <button type="button" 
+                                    @click="applyPremadeReason(r.text)"
+                                    :class="rejectReason === r.text ? 'bg-rose-100 text-rose-800 border-rose-300 ring-1 ring-rose-300 font-bold' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-gray-900 font-medium'"
+                                    class="px-2.5 py-1 text-[11px] rounded-lg border transition-all cursor-pointer text-left leading-tight active:scale-95 flex items-center gap-1 shadow-2xs">
+                                <span x-text="r.label"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Rejection Reason *</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Rejection Reason *</label>
+                        <button type="button" x-show="rejectReason" @click="rejectReason = ''" class="text-[10px] text-rose-600 hover:underline cursor-pointer font-bold">Clear</button>
+                    </div>
                     <textarea name="reason" rows="3" required placeholder="e.g. Photo resolution is too low, missing accurate sizing, policy violation..."
                               x-model="rejectReason"
                               class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-rose-500 outline-none transition-colors resize-none"></textarea>
