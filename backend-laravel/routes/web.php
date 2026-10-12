@@ -211,6 +211,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/chat/send', [ChatController::class, 'sendMessage']);
     Route::post('/api/chat/message', [ChatController::class, 'sendMessage']);
     Route::delete('/api/chat/conversation/{otherUserId}', [ChatController::class, 'destroy']);
+    Route::get('/api/chat/quick-replies', [ChatController::class, 'getQuickReplies']);
+    Route::post('/api/chat/quick-replies', [ChatController::class, 'saveQuickReplies']);
+    Route::post('/api/chat/quick-replies/reset', [ChatController::class, 'resetQuickReplies']);
 
     // Reviews
     Route::post('/api/reviews', [ReviewController::class, 'store']);
@@ -364,6 +367,9 @@ Route::middleware(['auth', 'seller'])->prefix('seller')->group(function () {
     Route::post('/commission', [DashboardController::class, 'submitCommissionPayment'])->name('seller.commission.submit');
     Route::patch('/api/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
     Route::get('/messages', [ChatController::class, 'sellerChatView'])->name('seller.messages');
+    Route::get('/messages/quick-replies', [ChatController::class, 'getQuickReplies'])->name('seller.messages.quick-replies');
+    Route::post('/messages/quick-replies', [ChatController::class, 'saveQuickReplies'])->name('seller.messages.quick-replies.save');
+    Route::post('/messages/quick-replies/reset', [ChatController::class, 'resetQuickReplies'])->name('seller.messages.quick-replies.reset');
     Route::get('/products', [ProductManagementController::class, 'index'])->name('seller.products.index');
     Route::get('/catalogue', [ProductManagementController::class, 'index'])->name('seller.products');
     Route::get('/products/create', [ProductManagementController::class, 'create'])->name('seller.products.create');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -196,5 +197,157 @@ class ChatController extends Controller
         $autoOpenUserId   = $request->query('userId');
         $autoOpenUserName = $request->query('name', 'Customer');
         return view('seller.chat.index', compact('autoOpenUserId', 'autoOpenUserName'));
+    }
+
+    /**
+     * Default pre-made quick reply templates for artisans responding to customers.
+     */
+    public static function defaultQuickReplies(): array
+    {
+        return [
+            [
+                'id'       => 'qr-order-1',
+                'title'    => 'Order Confirmation & Thanks',
+                'category' => 'Order Updates',
+                'text'     => "Mabuhay! Thank you for your order. We have received your order details and are carefully preparing your handcrafted Barong piece."
+            ],
+            [
+                'id'       => 'qr-order-2',
+                'title'    => 'Tailoring / Embroidery In Progress',
+                'category' => 'Order Updates',
+                'text'     => "Your piece is currently in the hands of our Lumban artisans for delicate embroidery and tailored craftsmanship. We will notify you once completed!"
+            ],
+            [
+                'id'       => 'qr-order-3',
+                'title'    => 'Quality Passed & Ready for Pickup',
+                'category' => 'Order Updates',
+                'text'     => "Great news! Your Barong has successfully passed quality inspection, is securely packaged, and is scheduled for courier dispatch."
+            ],
+            [
+                'id'       => 'qr-order-4',
+                'title'    => 'Handed Over to Courier',
+                'category' => 'Order Updates',
+                'text'     => "Your package has been picked up by the courier. You may track its live delivery status in your LumBarong Orders dashboard."
+            ],
+            [
+                'id'       => 'qr-inq-1',
+                'title'    => 'In Stock & Ready to Ship',
+                'category' => 'Customer Inquiries',
+                'text'     => "Mabuhay! Yes, this heritage piece is currently in stock and ready to ship. Please let us know if you need any sizing or styling guidance!"
+            ],
+            [
+                'id'       => 'qr-inq-2',
+                'title'    => 'Fabric & Material Details',
+                'category' => 'Customer Inquiries',
+                'text'     => "This piece is crafted from premium authentic fabric featuring traditional heritage Lumban embroidery. It is breathable and elegant for formal occasions."
+            ],
+            [
+                'id'       => 'qr-inq-3',
+                'title'    => 'Made-to-Order Lead Time',
+                'category' => 'Customer Inquiries',
+                'text'     => "Our custom made-to-order pieces typically require 5 to 7 working days to handcraft, embroider, and tailor before dispatch."
+            ],
+            [
+                'id'       => 'qr-inq-4',
+                'title'    => 'Care & Washing Guide',
+                'category' => 'Customer Inquiries',
+                'text'     => "We recommend gentle hand-washing in cool water with mild detergent or professional dry cleaning. Do not wring or twist. Iron while slightly damp."
+            ],
+            [
+                'id'       => 'qr-size-1',
+                'title'    => 'Size Guide & Measurement Request',
+                'category' => 'Sizing & Fitting',
+                'text'     => "To ensure your best fit, please refer to our Size Chart, or send us your measurements in cm: Chest, Shoulder width, Garment length, and Sleeve length."
+            ],
+            [
+                'id'       => 'qr-size-2',
+                'title'    => 'Custom Fit Available',
+                'category' => 'Sizing & Fitting',
+                'text'     => "Yes, we accommodate customized tailoring! Please reply with your desired shoulder width, chest circumference, and sleeve length."
+            ]
+        ];
+    }
+
+    /**
+     * Get seller pre-made quick reply templates.
+     */
+    public function getQuickReplies(Request $request)
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $setting = SystemSetting::where('key', "seller_quick_replies_{$userId}")->first();
+        $replies = $setting ? $setting->value : null;
+
+        if (!is_array($replies) || empty($replies)) {
+            $replies = static::defaultQuickReplies();
+        }
+
+        return response()->json($replies);
+    }
+
+    /**
+     * Save seller pre-made quick reply templates.
+     */
+    public function saveQuickReplies(Request $request)
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $replies = $request->input('replies');
+        if (!is_array($replies)) {
+            return response()->json(['message' => 'Invalid replies data'], 422);
+        }
+
+        $cleaned = [];
+        foreach ($replies as $idx => $item) {
+            $title = trim((string)($item['title'] ?? ''));
+            $text  = trim((string)($item['text'] ?? ($item['content'] ?? '')));
+            $cat   = trim((string)($item['category'] ?? 'General'));
+            if (!$title && !$text) continue;
+
+            $cleaned[] = [
+                'id'       => (string)($item['id'] ?? ('qr-' . ($idx + 1) . '-' . time())),
+                'title'    => $title ?: 'Template ' . ($idx + 1),
+                'category' => $cat ?: 'General',
+                'text'     => $text,
+            ];
+        }
+
+        SystemSetting::updateOrCreate(
+            ['key' => "seller_quick_replies_{$userId}"],
+            ['value' => $cleaned]
+        );
+
+        return response()->json([
+            'message' => 'Quick replies updated successfully',
+            'replies' => $cleaned
+        ]);
+    }
+
+    /**
+     * Reset seller pre-made quick replies to default artisan templates.
+     */
+    public function resetQuickReplies(Request $request)
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $defaults = static::defaultQuickReplies();
+        SystemSetting::updateOrCreate(
+            ['key' => "seller_quick_replies_{$userId}"],
+            ['value' => $defaults]
+        );
+
+        return response()->json([
+            'message' => 'Quick replies reset to defaults',
+            'replies' => $defaults
+        ]);
     }
 }

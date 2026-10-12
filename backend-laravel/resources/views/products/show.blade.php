@@ -2756,11 +2756,9 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-black text-gray-900">Size</span>
-                        @if($product->size_guide_image || !empty($product->size_guide_measurements))
-                            <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#A67C2E] hover:underline flex items-center gap-1 cursor-pointer">
-                                📏 Size Chart
-                            </button>
-                        @endif
+                        <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#A67C2E] hover:underline flex items-center gap-1 cursor-pointer">
+                            📏 Size Chart
+                        </button>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @foreach($availableSizes as $sz)
@@ -2937,6 +2935,10 @@
             modal.style.setProperty('display', 'flex', 'important');
             document.body.style.overflow = 'hidden';
         }
+        var root = document.querySelector('[x-data*="productDetail"]');
+        if (root && window.Alpine) {
+            try { Alpine.$data(root).showSizeGuide = true; } catch(e) {}
+        }
     }
 
     function closeSizeGuideModal() {
@@ -2944,6 +2946,10 @@
         if (modal) {
             modal.style.setProperty('display', 'none', 'important');
             document.body.style.overflow = '';
+        }
+        var root = document.querySelector('[x-data*="productDetail"]');
+        if (root && window.Alpine) {
+            try { Alpine.$data(root).showSizeGuide = false; } catch(e) {}
         }
     }
 
