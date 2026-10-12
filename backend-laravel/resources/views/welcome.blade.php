@@ -333,7 +333,7 @@
                 <div 
                     x-ref="catSlider"
                     @scroll.passive="checkScroll()"
-                    class="flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth no-scrollbar pb-1.5 items-start justify-start px-1"
+                    class="flex gap-3.5 sm:gap-6 overflow-x-auto scroll-smooth no-scrollbar pt-2 pb-3.5 items-start justify-start px-2 sm:px-3"
                     style="-webkit-overflow-scrolling: touch;">
                     @foreach($catItems as $index => $item)
                         @php
@@ -350,19 +350,22 @@
                                 ));
                             $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
                         @endphp
-                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-16 sm:w-20 cursor-pointer">
-                            <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
-                                <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-[72px] sm:w-[88px] cursor-pointer">
+                            <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
+                                <div class="w-full h-full rounded-full overflow-hidden">
+                                    <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                </div>
                                 <div class="category-active-badge {{ $isCurrentSelected ? '' : 'hidden' }}">
-                                    <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
-                                    <span class="absolute top-1 right-1 w-4 h-4 sm:w-4.5 sm:h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                    <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none rounded-full"></div>
+                                    <span class="absolute top-0 right-0 w-4 h-4 sm:w-4.5 sm:h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
                                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     </span>
                                 </div>
                             </div>
-                            <span class="category-name-label text-[11px] {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-medium text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2">{{ $item['name'] }}</span>
+                            <span class="category-name-label text-[11px] sm:text-xs {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-semibold text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2 px-0.5">{{ $item['name'] }}</span>
                         </a>
                     @endforeach
+                    <div class="shrink-0 w-3 sm:w-5"></div>
                 </div>
 
                 <!-- Right scroll button for desktop -->

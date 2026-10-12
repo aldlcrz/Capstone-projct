@@ -28,6 +28,11 @@ class VerificationCodeMail extends Mailable
         return $this->from($fromAddress, $fromName)
                     ->replyTo($fromAddress, $fromName)
                     ->subject($this->subject)
-                    ->view('emails.verification-code');
+                    ->view('emails.verification-code')
+                    ->text('emails.verification-code-text')
+                    ->withSymfonyMessage(function ($message) {
+                        $message->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'OOF, AutoReply');
+                        $message->getHeaders()->addTextHeader('Auto-Submitted', 'auto-generated');
+                    });
     }
 }

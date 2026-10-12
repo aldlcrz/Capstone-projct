@@ -220,8 +220,8 @@ class AiService
                 'reply' => "🔐 **Order Tracking & Support:**\n\nI can help you check your live order tracking and packaging proofs, but you'll need to **Sign In** first so I can securely access your order information.\n\nPlease [Sign In to LumBarong](/login) and check your [My Orders](/customer/orders) portal. If you need urgent assistance, our team is also available at **lumbarongsupport@gmail.com**.",
                 'products' => [],
                 'refinements' => [
-                    ['label' => '🛍️ Browse Best Sellers', 'prompt' => 'Show me the top best selling barongs'],
-                    ['label' => '🧵 Fabric Guide', 'prompt' => 'What is the difference between Piña and Jusi?']
+                    ['label' => 'Browse Best Sellers', 'prompt' => 'Show me the top best selling barongs'],
+                    ['label' => 'Fabric Guide', 'prompt' => 'What is the difference between Piña and Jusi?']
                 ]
             ];
         }
@@ -247,8 +247,8 @@ class AiService
                         'reply' => "📦 **Order Lookup:** I couldn't find order `#" . strtoupper($specificId) . "` under your account.\n\nPlease check the Order ID in your [My Orders](/customer/orders) page or make sure you're signed in with the account used for this purchase.",
                         'products' => [],
                         'refinements' => [
-                            ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
-                            ['label' => '⭐ Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                            ['label' => 'View All My Orders', 'prompt' => 'Where is my order?'],
+                            ['label' => 'Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
                         ]
                     ];
                 }
@@ -257,8 +257,8 @@ class AiService
                     'reply' => "📦 **Order Status:** I checked your account, but there are no active orders placed under this profile yet.\n\nReady to find your authentic Lumban Barong? Tell me about your occasion or budget and I'll match the best options!",
                     'products' => [],
                     'refinements' => [
-                        ['label' => '⭐ View Best Sellers', 'prompt' => 'Show me your best selling Barongs'],
-                        ['label' => '🤵 Wedding Recommendations', 'prompt' => 'Recommend a Barong for a wedding']
+                        ['label' => 'View Best Sellers', 'prompt' => 'Show me your best selling Barongs'],
+                        ['label' => 'Wedding Recommendations', 'prompt' => 'Recommend a Barong for a wedding']
                     ]
                 ];
             }
@@ -288,8 +288,8 @@ class AiService
                 'reply' => $reply,
                 'products' => [],
                 'refinements' => [
-                    ['label' => '🛍️ Browse New Arrivals', 'prompt' => 'Show me new Barong Tagalog collections'],
-                    ['label' => '🧼 Care Guide', 'prompt' => 'How to wash and care for my Barong?']
+                    ['label' => 'Browse New Arrivals', 'prompt' => 'Show me new Barong Tagalog collections'],
+                    ['label' => 'Care Guide', 'prompt' => 'How to wash and care for my Barong?']
                 ]
             ];
         } catch (\Throwable $e) {
@@ -299,8 +299,8 @@ class AiService
                     'reply' => "📦 **Order Lookup:** I couldn't find order `#" . strtoupper($specificId) . "` under your account.\n\nPlease check the Order ID in your [My Orders](/customer/orders) page or make sure you're signed in with the account used for this purchase.",
                     'products' => [],
                     'refinements' => [
-                        ['label' => '📦 View All My Orders', 'prompt' => 'Where is my order?'],
-                        ['label' => '⭐ Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                        ['label' => 'View All My Orders', 'prompt' => 'Where is my order?'],
+                        ['label' => 'Browse Best Sellers', 'prompt' => 'Show me your best selling Barongs']
                     ]
                 ];
             }
@@ -309,7 +309,7 @@ class AiService
                 'reply' => "📦 **Order Tracking:** You can view your complete order history, courier updates, and packing proofs anytime in your [My Orders](/customer/orders) page.",
                 'products' => [],
                 'refinements' => [
-                    ['label' => '⭐ View Best Sellers', 'prompt' => 'Show me your best selling Barongs']
+                    ['label' => 'View Best Sellers', 'prompt' => 'Show me your best selling Barongs']
                 ]
             ];
         }
@@ -489,9 +489,9 @@ STRICT DOMAIN LIMITS & SECURITY:
             'reply' => $aiText,
             'products' => [],
             'refinements' => [
-                ['label' => '🛍️ View Top Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
-                ['label' => '🤵 Wedding Barongs', 'prompt' => 'Recommend a Barong for a wedding'],
-                ['label' => '🎓 Graduation Options', 'prompt' => 'Recommend an affordable Barong for graduation under ₱3,500'],
+                ['label' => 'View Top Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
+                ['label' => 'Wedding Barongs', 'prompt' => 'Recommend a Barong for a wedding'],
+                ['label' => 'Graduation Options', 'prompt' => 'Recommend an affordable Barong for graduation under ₱3,500'],
             ],
             'session_context' => $sessionContext
         ];

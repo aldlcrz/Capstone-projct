@@ -918,7 +918,17 @@
                                 type="number" 
                                 x-model.number="quantity" 
                                 min="1" 
-                                :max="isPreorder ? 99 : stock"
+                                :max="isPreorder ? 99 : (stock > 0 ? stock : 1)"
+                                @input="
+                                    let maxVal = isPreorder ? 99 : (stock > 0 ? stock : 1);
+                                    if (quantity > maxVal) quantity = maxVal;
+                                    if (quantity < 1 && quantity !== '') quantity = 1;
+                                "
+                                @blur="
+                                    let maxVal = isPreorder ? 99 : (stock > 0 ? stock : 1);
+                                    if (!quantity || quantity < 1) quantity = 1;
+                                    if (quantity > maxVal) quantity = maxVal;
+                                "
                                 class="w-10 text-center bg-transparent border-0 outline-none text-xs font-bold text-gray-900"
                             >
                             <button 

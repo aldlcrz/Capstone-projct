@@ -43,9 +43,9 @@ class AiController extends Controller
                 'reply' => AiService::heuristicStylistReply(strtolower($msg)),
                 'products' => [],
                 'refinements' => [
-                    ['label' => '🛍️ View Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
-                    ['label' => '🤵 Wedding Barongs', 'prompt' => 'Recommend a Barong for a wedding'],
-                    ['label' => '🧵 Fabric Guide', 'prompt' => 'What is the difference between Piña and Jusi?']
+                    ['label' => 'View Best Sellers', 'prompt' => 'Show me your best selling Barong Tagalog'],
+                    ['label' => 'Wedding Barongs', 'prompt' => 'Recommend a Barong for a wedding'],
+                    ['label' => 'Fabric Guide', 'prompt' => 'What is the difference between Piña and Jusi?']
                 ],
                 'session_context' => is_array($sessionContext) ? $sessionContext : []
             ]);

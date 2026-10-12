@@ -20,12 +20,12 @@
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 py-8 sm:py-12 relative overflow-y-auto antialiased">
     <!-- Subtle warm blobs -->
-    <div class="absolute top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
-    <div class="absolute bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
+    <div class="fixed top-0 right-0 w-140 h-140 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl opacity-[0.04] pointer-events-none bg-[#C0422A]"></div>
+    <div class="fixed bottom-0 left-0 w-95 h-95 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl opacity-[0.12] pointer-events-none bg-[#D4B896]"></div>
 
-    <div class="verify-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10"
+    <div class="verify-card w-full max-w-md bg-white rounded-[2.5rem] border border-[#E5DDD5] p-6 sm:p-8 shadow-[0_20px_60px_rgba(60,40,20,0.08)] relative z-10 my-auto"
          x-data="{
              email: '{{ session('verify_email', $email ?? (auth()->user()->email ?? '')) }}',
              code: '',

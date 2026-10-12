@@ -95,17 +95,56 @@
                     </template>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 block">Select Reason for Report</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                <div class="space-y-2 relative" x-data="{ isDropdownOpen: false }" @click.away="isDropdownOpen = false">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500 block">Select Concern Reasons (Multiple Allowed)</label>
+                        <span class="text-[10px] font-bold text-[#C49520]" x-show="selectedReasons.length > 0" x-text="selectedReasons.length + ' selected'"></span>
+                    </div>
+
+                    <!-- Dropdown Trigger Button -->
+                    <button type="button" 
+                            @click="isDropdownOpen = !isDropdownOpen"
+                            class="w-full p-3.5 bg-white border border-gray-200 hover:border-[#C49520] rounded-xl text-left text-xs font-bold text-gray-800 flex items-center justify-between gap-2 shadow-2xs cursor-pointer transition-all">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-gray-400 font-normal" x-show="selectedReasons.length === 0">Click to choose one or more reasons...</span>
+                            <span class="text-gray-900 font-bold" x-show="selectedReasons.length > 0" x-text="selectedReasons.length + ' reason(s) selected'"></span>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="isDropdownOpen ? 'rotate-180 text-[#C49520]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown Options Menu -->
+                    <div x-show="isDropdownOpen" 
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-1"
+                         class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl border border-gray-200 shadow-xl z-50 p-2 max-h-60 overflow-y-auto space-y-1">
                         <template x-for="r in reasonsList()" :key="r">
-                            <button type="button" 
-                                    @click="selectedReason = r; errorMessage = ''"
-                                    :class="selectedReason === r ? 'bg-[#1E1915] text-white border-[#C49520]' : 'bg-white text-gray-800 border-gray-200 hover:border-[#C49520] hover:bg-amber-50/40'"
-                                    class="p-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-2xs cursor-pointer">
+                            <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl hover:bg-amber-50/50 cursor-pointer transition-colors text-xs select-none"
+                                   :class="selectedReasons.includes(r) ? 'bg-amber-50/80 font-bold text-gray-900' : 'text-gray-700'">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" 
+                                           :checked="selectedReasons.includes(r)"
+                                           @change="toggleReason(r)"
+                                           class="w-4 h-4 rounded text-[#C49520] focus:ring-[#C49520] border-gray-300">
+                                    <span x-text="r"></span>
+                                </div>
+                                <span x-show="selectedReasons.includes(r)" class="text-[#C49520] text-xs font-black">✓</span>
+                            </label>
+                        </template>
+                    </div>
+
+                    <!-- Selected Tags / Pills Preview -->
+                    <div x-show="selectedReasons.length > 0" class="flex flex-wrap gap-1.5 pt-1">
+                        <template x-for="r in selectedReasons" :key="r">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#1E1915] text-white shadow-2xs">
                                 <span x-text="r"></span>
-                                <span x-show="selectedReason === r" class="text-[#C49520] font-black">✓</span>
-                            </button>
+                                <button type="button" @click="toggleReason(r)" class="hover:text-red-400 font-black cursor-pointer leading-none">×</button>
+                            </span>
                         </template>
                     </div>
                 </div>
@@ -114,8 +153,12 @@
             <!-- ══ STEP 2: Provide Details ════════════════════════════════ -->
             <div x-show="currentStep === 2" class="space-y-4">
                 <div class="p-3.5 rounded-2xl border border-gray-200" style="background-color: #FAF7F2 !important;">
-                    <div class="text-[9px] font-black uppercase tracking-widest text-gray-400">Selected Reason</div>
-                    <div class="text-xs font-bold text-gray-900 mt-0.5" x-text="selectedReason"></div>
+                    <div class="text-[9px] font-black uppercase tracking-widest text-gray-400">Selected Reasons (<span x-text="selectedReasons.length"></span>)</div>
+                    <div class="flex flex-wrap gap-1.5 mt-1.5">
+                        <template x-for="r in selectedReasons" :key="r">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-gray-900 border border-gray-200" x-text="r"></span>
+                        </template>
+                    </div>
                 </div>
 
                 <div class="space-y-2">
@@ -188,8 +231,8 @@
                         </div>
                     </template>
                     <div class="border-t border-gray-200 pt-2">
-                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Reason</span>
-                        <span class="text-xs font-bold text-red-600" x-text="selectedReason"></span>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Selected Reason(s)</span>
+                        <span class="text-xs font-bold text-red-600" x-text="selectedReasons.length > 0 ? selectedReasons.join(', ') : selectedReason"></span>
                     </div>
                     <div class="border-t border-gray-200 pt-2">
                         <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Description</span>
@@ -307,12 +350,24 @@ function trustSafetyReportModal() {
             this.orderItemId = data.orderItemId || null;
             this.variant = data.variant || data.size || '';
             this.reportType = data.productId || data.reportType === 'product' ? 'product' : 'account';
+            this.selectedReasons = [];
             this.selectedReason = '';
             this.description = '';
             this.evidenceFiles = [];
             this.errorMessage = '';
             this.isUploading = false;
             this.isSubmitting = false;
+        },
+
+        toggleReason(r) {
+            const idx = this.selectedReasons.indexOf(r);
+            if (idx > -1) {
+                this.selectedReasons.splice(idx, 1);
+            } else {
+                this.selectedReasons.push(r);
+            }
+            this.selectedReason = this.selectedReasons.join(', ');
+            this.errorMessage = '';
         },
 
         stepTitle() {
@@ -342,10 +397,11 @@ function trustSafetyReportModal() {
             this.errorMessage = '';
 
             if (this.currentStep === 1) {
-                if (!this.selectedReason) {
-                    this.errorMessage = 'Please select a reason for your report to continue.';
+                if (!this.selectedReasons || this.selectedReasons.length === 0) {
+                    this.errorMessage = 'Please select at least one reason for your report to continue.';
                     return;
                 }
+                this.selectedReason = this.selectedReasons.join(', ');
                 this.currentStep = 2;
             } else if (this.currentStep === 2) {
                 if (this.description.trim().length < 10) {
@@ -444,7 +500,8 @@ function trustSafetyReportModal() {
                 referenceId: this.referenceId,
                 orderItemId: this.orderItemId,
                 variant: this.variant,
-                reason: this.selectedReason,
+                reason: this.selectedReasons.length > 0 ? this.selectedReasons.join(', ') : this.selectedReason,
+                reasons: this.selectedReasons,
                 description: this.description,
                 evidence: this.evidenceFiles
             };

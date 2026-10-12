@@ -95,18 +95,27 @@
                 <div class="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
 
                     <!-- Notifications -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
+                    @php
+                        $unreadNotifications = 0;
+                        if (Auth::check()) {
+                            try {
+                                $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count();
+                            } catch (\Throwable $e) {}
+                        }
+                    @endphp
+                    <div x-data="{ open: false, unreadCount: {{ (int) $unreadNotifications }} }" 
+                         @notification-count-updated.window="unreadCount = $event.detail"
+                         class="relative" @mouseenter="open = true" @mouseleave="open = false" @click.away="open = false">
                         <button type="button" @click="open = !open" class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-black transition-all">
                             <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
-                                @php
-                                    $unreadNotifications = 0;
-                                    try {
-                                        $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count();
-                                    } catch (\Throwable $e) {}
-                                @endphp
+                                <template x-if="unreadCount > 0">
+                                    <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;" x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
+                                </template>
                                 @if($unreadNotifications > 0)
-                                    <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
+                                    <span x-show="unreadCount <= 0" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;">
+                                        {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
+                                    </span>
                                 @endif
                             @endauth
                         </button>
@@ -574,7 +583,9 @@
                 .then(r => r.ok ? r.json() : [])
                 .then(data => {
                     if (Array.isArray(data)) {
-                        const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
+                        const allUnread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false));
+                        window.dispatchEvent(new CustomEvent('notification-count-updated', { detail: allUnread.length }));
+                        const unread = allUnread.filter(n => !this.dismissedIds.includes(n.id));
                         if (unread.length > 0) {
                             const latest = unread[0];
                             if (!this.popupNotif || this.popupNotif.id !== latest.id) {

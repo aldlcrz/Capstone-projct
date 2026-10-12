@@ -15,10 +15,10 @@
                 text: 'Mabuhay! I am your **Lumbarong Smart Assistant** from Lumban, Laguna. How may I assist you today? You can ask me for wedding recommendations, fabric comparisons (Piña vs. Jusi vs. Cocoon), or live tracking for your recent orders.',
                 products: [],
                 refinements: [
-                    { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
-                    { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
-                    { label: '🎓 Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
-                    { label: '📦 Track My Order', prompt: 'Where is my order?' }
+                    { label: 'Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                    { label: 'Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                    { label: 'Graduation under ₱3,500', prompt: 'Show graduation Barongs under ₱3,500' },
+                    { label: 'Track My Order', prompt: 'Where is my order?' }
                 ]
             }
         ];
@@ -227,9 +227,9 @@
                         text: 'Mabuhay! Hello and welcome to **LumBarong Assistant**. I am your heritage styling advisor and shopping concierge from Lumban, Laguna.\n\nHow may I help you today? You can ask me about:\n• **Best Sellers** & Top recommended Barongs\n• **Fabric Guide** (Piña vs. Jusi vs. Cocoon vs. Organza)\n• **Event Styling** (Weddings, Grooms, Ninongs, Graduations)\n• **Care & Maintenance** (How to wash, iron, and store)',
                         products: [],
                         refinements: [
-                            { label: '🤵 Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
-                            { label: '🧵 Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
-                            { label: '⭐ Best Sellers', prompt: 'Show me your best selling Barongs' }
+                            { label: 'Wedding Recommendations', prompt: 'Recommend a Barong for a wedding groom' },
+                            { label: 'Fabric Guide', prompt: 'What is the difference between Piña and Jusi?' },
+                            { label: 'Best Sellers', prompt: 'Show me your best selling Barongs' }
                         ]
                     });
                     this.saveAiChat();
@@ -711,7 +711,8 @@ body.chat-open {
                         @click="mainMode = 'ai'"
                         :class="mainMode === 'ai' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
                         class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span>✨ LumBarong Assistant</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>LumBarong Assistant</span>
                 </button>
                 <button type="button" 
                         x-show="isLoggedIn"
@@ -719,7 +720,8 @@ body.chat-open {
                         @click="mainMode = 'artisan'; loadConversations();"
                         :class="mainMode === 'artisan' ? 'bg-[#C0422A] text-white shadow-sm' : 'text-gray-300 hover:text-white'"
                         class="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span>💬 Artisans</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <span>Artisans</span>
                 </button>
             </div>
         </div>
@@ -730,17 +732,21 @@ body.chat-open {
         <div x-show="mainMode === 'ai'" class="flex-1 flex flex-col min-h-0 bg-[#FAF7F2] overflow-hidden">
             <!-- Quick Starter Prompt Chips -->
             <div class="px-3.5 py-2 bg-white border-b border-[#EBE3D9] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                <button @click="sendAiPrompt('Recommend a Barong for a wedding groom')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
-                    🤵 Wedding Groom
+                <button @click="sendAiPrompt('Recommend a Barong for a wedding groom')" class="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
+                    <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span>Wedding Groom</span>
                 </button>
-                <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
-                    🧵 Piña vs Jusi
+                <button @click="sendAiPrompt('What is the difference between Piña and Jusi?')" class="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
+                    <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    <span>Piña vs Jusi</span>
                 </button>
-                <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
-                    🎓 Graduation under ₱3.5k
+                <button @click="sendAiPrompt('Show graduation Barongs under ₱3,500')" class="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
+                    <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5"/></svg>
+                    <span>Graduation under ₱3.5k</span>
                 </button>
-                <button @click="sendAiPrompt('Where is my order?')" class="whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
-                    📦 Track Order
+                <button @click="sendAiPrompt('Where is my order?')" class="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 bg-[#F7F3EE] hover:bg-[#E5DDD5] text-[#3D2B1F] rounded-full text-[10px] font-bold border border-[#E5DDD5] transition-colors cursor-pointer shrink-0">
+                    <svg class="w-3.5 h-3.5 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span>Track Order</span>
                 </button>
             </div>
 

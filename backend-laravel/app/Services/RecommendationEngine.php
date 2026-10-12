@@ -428,24 +428,24 @@ class RecommendationEngine
         // 2. Fabric refinement (only suggest if not already filtered to that fabric)
         $currentFabric = $pref['fabric'] ?? '';
         if ($currentFabric !== 'piña') {
-            $chips[] = ['label' => '👑 Show Piña-Seda only', 'prompt' => 'Show me authentic Piña-Seda Barongs'];
+            $chips[] = ['label' => 'Show Piña-Seda only', 'prompt' => 'Show me authentic Piña-Seda Barongs'];
         } elseif ($currentFabric !== 'jusi') {
-            $chips[] = ['label' => '🧵 Compare with Jusi Silk', 'prompt' => 'Show me Jusi Silk Barong alternatives'];
+            $chips[] = ['label' => 'Compare with Jusi Silk', 'prompt' => 'Show me Jusi Silk Barong alternatives'];
         }
 
         // 3. Collar refinement (only if collar not already chosen)
         if (empty($pref['collar'])) {
-            $chips[] = ['label' => '👔 Modern Mandarin Collar', 'prompt' => 'Show Barongs with Mandarin / Chinese collar'];
+            $chips[] = ['label' => 'Modern Mandarin Collar', 'prompt' => 'Show Barongs with Mandarin / Chinese collar'];
         }
 
         // 4. Comparison refinement (only if multiple products exist)
         if (count($products) >= 2) {
-            $chips[] = ['label' => '⚖️ Compare Top 2 options', 'prompt' => 'Compare the top 2 recommended barongs'];
+            $chips[] = ['label' => 'Compare Top 2 options', 'prompt' => 'Compare the top 2 recommended barongs'];
         }
 
         // 5. Occasion refinement fallback
         if (empty($pref['occasion'])) {
-            $chips[] = ['label' => '🤵 Wedding Groom Collection', 'prompt' => 'Recommend a Barong for a wedding groom'];
+            $chips[] = ['label' => 'Wedding Groom Collection', 'prompt' => 'Recommend a Barong for a wedding groom'];
         }
 
         return array_slice($chips, 0, 4);
