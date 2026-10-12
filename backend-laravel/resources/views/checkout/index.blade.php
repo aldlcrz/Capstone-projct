@@ -630,8 +630,8 @@
                                                 <span class="font-black text-emerald-700" x-text="'₱' + Number(totalVerifiedPayments).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
                                             </div>
                                             
-                                            <!-- Exact Payment Banner -->
-                                            <div x-show="isExactPayment" class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
+                                            <!-- Payment Complete Banner (Exact or Overpaid) -->
+                                            <div x-show="isExactPayment || isOverpaid" class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
                                                 <span>Remaining Amount:</span>
                                                 <span>₱0.00 (Payment Complete)</span>
                                             </div>
@@ -647,48 +647,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <!-- Overpayment (Sukli) Banner & Refund Destination Input -->
-                                        <template x-if="isOverpaid">
-                                            <div class="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl space-y-3 shadow-xs">
-                                                <div class="flex items-center gap-2 text-amber-900 font-black text-xs uppercase tracking-wider">
-                                                    <span>⚠ Overpayment Detected</span>
-                                                </div>
-
-                                                <div class="grid grid-cols-3 gap-2 text-center py-2.5 px-2 bg-white/90 rounded-xl border border-amber-200">
-                                                    <div>
-                                                        <div class="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Order Total</div>
-                                                        <div class="text-xs sm:text-sm font-black text-gray-900 mt-0.5" x-text="'₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Payment Received</div>
-                                                        <div class="text-xs sm:text-sm font-black text-emerald-700 mt-0.5" x-text="'₱' + Number(totalVerifiedPayments).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="text-[9px] uppercase tracking-wider text-amber-700 font-bold">Sukli to be returned</div>
-                                                        <div class="text-xs sm:text-sm font-black text-amber-900 mt-0.5" x-text="'₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
-                                                    </div>
-                                                </div>
-
-                                                <p class="text-xs text-amber-950 font-medium leading-relaxed"
-                                                   x-text="'Your payment is ₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' more than your order total. When the Admin verifies this order, your ₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' sukli will be sent back to you. Please provide your mobile number for the refund.'">
-                                                </p>
-
-                                                <div class="space-y-1.5 pt-1">
-                                                    <label class="text-[10px] font-extrabold uppercase tracking-widest text-amber-950 block">
-                                                        Refund / Sukli Mobile Number <span class="text-red-500">*</span>
-                                                    </label>
-                                                    <input type="tel" 
-                                                           name="refund_mobile_number" 
-                                                           x-model="refundMobileNumber" 
-                                                           @input="validateRefundMobile()" 
-                                                           maxlength="11" 
-                                                           placeholder="09XXXXXXXXX" 
-                                                           class="w-full bg-white border border-amber-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-3.5 py-2.5 text-xs font-bold text-gray-900 placeholder-gray-400 shadow-2xs">
-                                                    <div x-show="refundMobileError" x-cloak x-text="refundMobileError" class="text-[10px] font-bold text-red-600 px-1"></div>
-                                                </div>
-                                            </div>
-                                        </template>
                                     </div>
                                 </template>
 
@@ -1511,7 +1469,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
 
         // Online Multi-Receipt & Overpayment Accounting State
         receipts: [],
-        refundMobileNumber: '',
+        refundMobileNumber: '{{ addslashes(auth()->user()->mobileNumber ?? auth()->user()->phone ?? '') }}',
         refundMobileError: '',
 
         get totalVerifiedPayments() {
@@ -1963,12 +1921,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             }
             if (this.isPartialPayment) {
                 return false;
-            }
-            if (this.isOverpaid) {
-                const num = (this.refundMobileNumber || '').trim().replace(/\D/g, '');
-                if (!/^09\d{9}$/.test(num)) {
-                    return false;
-                }
             }
             return true;
         },
@@ -2969,9 +2921,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.screenshotError = `Please upload another ${this.paymentMethod} receipt for the remaining balance.`;
                     return;
                 }
-                if (this.isOverpaid && !this.validateRefundMobile()) {
-                    return;
-                }
             }
             this.screenshotError = '';
             this.showConfirmModal = true;
@@ -2992,10 +2941,6 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 if (this.isPartialPayment) {
                     this.showConfirmModal = false;
                     this.screenshotError = `Please upload another ${this.paymentMethod} receipt for the remaining balance.`;
-                    return;
-                }
-                if (this.isOverpaid && !this.validateRefundMobile()) {
-                    this.showConfirmModal = false;
                     return;
                 }
 

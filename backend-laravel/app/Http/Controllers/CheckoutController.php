@@ -492,7 +492,7 @@ class CheckoutController extends Controller
                 'paymentProof'        => $receiptList[0]['paymentProof'] ?? null,
                 'screening'           => $receiptList[0]['screening'] ?? null,
                 'receipts'            => $receiptList,
-                'refund_mobile_number'=> $request->input('refund_mobile_number') ?: $request->input('refundMobileNumber'),
+                'refund_mobile_number'=> $request->input('refund_mobile_number') ?: $request->input('refundMobileNumber') ?: (Auth::user()->mobileNumber ?? Auth::user()->phone ?? null),
                 'quoteToken'          => $request->input('shipping_quote_token'),
                 'selectedProviderId'  => $request->input('shipping_provider_id') ?: $request->input('selected_provider_id'),
                 'idempotencyKey'      => $request->input('idempotency_key') ?: $request->header('X-Idempotency-Key'),
