@@ -633,44 +633,7 @@ class SuperAdminController extends Controller
 
     public function payouts(Request $request)
     {
-        $status = $request->input('status');
-        $search = $request->input('search');
-
-        $query = SellerPayout::with(['seller', 'order', 'processor'])->orderByDesc('created_at');
-
-        if ($status) {
-            $query->where('status', strtoupper($status));
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('order_id', 'like', "%{$search}%")
-                  ->orWhere('transaction_reference', 'like', "%{$search}%")
-                  ->orWhere('payout_destination_account', 'like', "%{$search}%")
-                  ->orWhereHas('seller', function ($sq) use ($search) {
-                      $sq->where('name', 'like', "%{$search}%")
-                         ->orWhere('shopName', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        $payouts = $query->paginate(15)->withQueryString();
-
-        $allPayouts = SellerPayout::all();
-        $kpis = [
-            'total_settlements' => (float) $allPayouts->sum('net_settlement_amount'),
-            'available_amount'  => (float) $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->sum('net_settlement_amount'),
-            'available_count'   => $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->count(),
-            'pending_amount'    => (float) $allPayouts->where('status', 'PENDING_ELIGIBILITY')->sum('net_settlement_amount'),
-            'pending_count'     => $allPayouts->where('status', 'PENDING_ELIGIBILITY')->count(),
-            'paid_amount'       => (float) $allPayouts->where('status', 'PAID')->sum('net_settlement_amount'),
-            'paid_count'        => $allPayouts->where('status', 'PAID')->count(),
-            'on_hold_amount'    => (float) $allPayouts->where('status', 'ON_HOLD')->sum('net_settlement_amount'),
-            'on_hold_count'     => $allPayouts->where('status', 'ON_HOLD')->count(),
-        ];
-
-        return view('superadmin.payouts', compact('payouts', 'kpis'));
+        return redirect()->route('superadmin.commissions')->with('info', 'Customer payments are settled directly with sellers. View commission remittances here.');
     }
 
     public function processPayout(Request $request, string $id)

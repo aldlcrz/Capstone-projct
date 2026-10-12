@@ -253,9 +253,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::match(['post', 'patch'], '/sellers/{id}/unsuspend', [AdminController::class, 'unsuspendSeller'])->name('admin.sellers.unsuspend');
     Route::get('/sellers/{id}/unsuspend', function() { return redirect()->route('admin.sellers'); });
     Route::delete('/sellers/{id}', [AdminController::class, 'deleteSeller'])->name('admin.sellers.delete');
-    // Orders & Payment Verification
+    // Orders & Direct Settlements
     Route::get('/orders', [AdminController::class, 'orders'])->name('admin.orders');
-    Route::get('/payments', [AdminController::class, 'orders'])->name('admin.payments');
+    Route::get('/payments', function() { return redirect()->route('admin.orders'); })->name('admin.payments');
     Route::post('/orders/{id}/verify-payment', [AdminController::class, 'verifyPayment'])->name('admin.orders.verify-payment');
     Route::post('/orders/{id}/reject-payment', [AdminController::class, 'rejectPayment'])->name('admin.orders.reject-payment');
     Route::post('/orders/{id}/refund-sukli', [AdminController::class, 'processSukliRefund'])->name('admin.orders.refund-sukli');
@@ -421,7 +421,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/users/{id}/reject', [SuperAdminController::class, 'rejectSeller'])->name('superadmin.users.reject');
     Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('superadmin.audit-logs');
     Route::get('/orders', [AdminController::class, 'orders'])->name('superadmin.orders');
-    Route::get('/payments', [AdminController::class, 'orders'])->name('superadmin.payments');
+    Route::get('/payments', function() { return redirect()->route('superadmin.orders'); })->name('superadmin.payments');
     Route::post('/orders/{id}/verify-payment', [AdminController::class, 'verifyPayment'])->name('superadmin.orders.verify-payment');
     Route::post('/orders/{id}/reject-payment', [AdminController::class, 'rejectPayment'])->name('superadmin.orders.reject-payment');
     Route::post('/orders/{id}/refund-sukli', [AdminController::class, 'processSukliRefund'])->name('superadmin.orders.refund-sukli');

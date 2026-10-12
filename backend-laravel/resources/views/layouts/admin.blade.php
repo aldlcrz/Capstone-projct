@@ -111,20 +111,12 @@
                         $unpaidCommissionsCount = 0;
                         $pendingProductsCount   = 0;
                         $pendingBannersCount    = 0;
-                        $pendingPaymentsCount   = 0;
                         $pendingReturnsCount    = 0;
                         $pendingReportsCount    = 0;
                         try {
                             $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
                             $pendingProductsCount   = \App\Models\Product::where('status', 'pending')->count();
                             $pendingBannersCount    = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
-                            $pendingPaymentsCount   = \App\Models\Order::whereIn('paymentMethod', ['GCash', 'Maya', 'PayMaya'])
-                                ->where(function($pq) {
-                                    $pq->whereNotIn('paymentStatus', ['Paid', 'Verified'])
-                                       ->orWhereNull('paymentStatus');
-                                 })
-                                ->whereNotIn('status', ['Cancelled'])
-                                ->count();
                             $pendingReturnsCount    = \App\Models\ReturnRequest::where(function($rq) {
                                 $rq->whereIn('return_status', ['pending', 'requested', 'in_review', 'disputed', 'escalated'])
                                    ->orWhereIn('status', ['pending', 'requested', 'in_review', 'disputed', 'escalated']);
@@ -151,11 +143,6 @@
                                         'path'  => 'superadmin/orders',
                                         'alt_path' => 'admin/orders',
                                         'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'
-                                    ],
-                                    [
-                                        'label' => 'Seller Payouts',
-                                        'path'  => 'superadmin/payouts',
-                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'
                                     ],
                                     [
                                         'label' => 'Returns & Refunds',

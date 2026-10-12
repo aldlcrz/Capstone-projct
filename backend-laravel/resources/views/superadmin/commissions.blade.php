@@ -13,7 +13,7 @@
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mt-0.5">
                 Commission &amp; <span class="text-[#C0420A] font-light italic">Shop Sales</span>
             </h1>
-            <p class="text-[11px] text-gray-400 font-medium">Track platform gross merchandise value, commission balances, and seller payouts</p>
+            <p class="text-[11px] text-gray-400 font-medium">Track platform gross merchandise value, commission balances, and seller remittances</p>
         </div>
 
         <form method="GET" action="{{ route('superadmin.commissions') }}" class="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-xs">
@@ -173,7 +173,7 @@
                         <th class="px-6 py-3.5">Period Sales</th>
                         <th class="px-6 py-3.5">Platform Fee ({{ $rate }}%)</th>
                         <th class="px-6 py-3.5">Status</th>
-                        <th class="px-6 py-3.5">Payment Verification</th>
+                        <th class="px-6 py-3.5">Remittance Proof</th>
                         <th class="px-6 py-3.5 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -377,7 +377,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">Confirm Mark Commission as Paid</h3>
-                        <p class="text-xs text-gray-400">Review seller payment verification proof before proceeding</p>
+                        <p class="text-xs text-gray-400">Review seller commission remittance proof before proceeding</p>
                     </div>
                 </div>
 

@@ -762,7 +762,7 @@
                                             </div>
                                             <span>Cancellation Policy</span>
                                         </div>
-                                        <p class="text-xs text-stone-700 leading-relaxed font-medium" x-text="shopSeller?.cancellation_policy || 'Cancellation requests must be submitted prior to order processing and payment verification. Once payment is confirmed and artisan crafting begins, cancellations may not be accepted.'"></p>
+                                        <p class="text-xs text-stone-700 leading-relaxed font-medium" x-text="shopSeller?.cancellation_policy || 'Cancellation requests must be submitted prior to order processing and seller confirmation. Once confirmed and artisan crafting begins, cancellations may not be accepted.'"></p>
                                     </div>
 
                                     <div class="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-2">

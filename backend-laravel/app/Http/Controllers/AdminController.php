@@ -1938,278 +1938,36 @@ class AdminController extends Controller
     }
 
     /**
-     * Verify incoming customer payment (GCash / Maya)
+     * Obsolete: Customer payments are settled directly with sellers.
      */
     public function verifyPayment(Request $request, string $id)
     {
-        if (Auth::user()?->role !== 'superadmin') {
-            abort(403, 'Financial mutations are restricted. Administrators have read-only access to payment verification.');
+        $msg = 'Direct-to-seller marketplace: Customer payments are received directly by the artisan. Payment verification has been disabled.';
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $msg], 400);
         }
-
-        $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
-
-        if (!in_array(strtolower($order->paymentMethod), ['gcash', 'maya', 'paymaya'])) {
-            $msg = 'Cash on Delivery and Pay in Shop orders are collected and verified directly by the seller upon claim or delivery.';
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => $msg], 422);
-            }
-            return redirect()->back()->with('error', $msg);
-        }
-
-        DB::beginTransaction();
-        try {
-            $previousStatus = $order->status;
-            $order->paymentStatus = 'Paid';
-            $order->paymentRejectionReason = null;
-            $order->status = 'Pending';
-            $order->save();
-
-            // Update or create PaymentTransaction
-            $transaction = $order->latestPaymentTransaction;
-            if ($transaction) {
-                $transaction->status = 'VERIFIED';
-                $transaction->verified_at = now();
-                $transaction->notes = 'Approved and verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').';
-                $transaction->save();
-            } else {
-                PaymentTransaction::create([
-                    'order_id' => $order->id,
-                    'customer_id' => $order->customerId,
-                    'seller_id' => $order->sellerId,
-                    'reference_number' => $order->paymentReference ?: 'MANUAL-ADMIN-' . strtoupper(Str::random(6)),
-                    'wallet_type' => strtolower($order->paymentMethod) === 'maya' ? 'maya' : 'gcash',
-                    'expected_amount' => $order->totalAmount,
-                    'detected_amount' => $order->totalAmount,
-                    'status' => 'VERIFIED',
-                    'receipt_path' => $order->paymentProof,
-                    'verified_at' => now(),
-                    'notes' => 'Manually verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').',
-                ]);
-            }
-
-            // Log history
-            OrderStatusHistory::create([
-                'orderId' => $order->id,
-                'previousStatus' => $previousStatus,
-                'newStatus' => $order->status,
-                'updatedBy' => Auth::id(),
-                'userRole' => Auth::user()->role ?? 'admin',
-                'notes' => 'Payment approved and verified by Administrator (' . (Auth::user()->name ?? 'Admin') . ').',
-            ]);
-
-            // Notify Customer (with sukli notification if overpaid)
-            if ($order->isOverpaid()) {
-                Notification::send(
-                    $order->customerId,
-                    'Payment Verified (Sukli Queued)',
-                    "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been verified. Your ₱" . number_format($order->sukliAmount(), 2) . " sukli is awaiting refund processing to the mobile number you provided.",
-                    'order',
-                    "/orders/{$order->id}",
-                    'customer'
-                );
-            } else {
-                Notification::send(
-                    $order->customerId,
-                    'Payment Verified',
-                    "Your payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been confirmed and verified. The artisan has been notified to fulfill your order.",
-                    'order',
-                    "/orders/{$order->id}",
-                    'customer'
-                );
-            }
-
-            // Notify Seller
-            Notification::send(
-                $order->sellerId,
-                'Payment Verified by Admin',
-                "Payment for Order #LB-" . strtoupper(substr($order->id, -8)) . " has been verified by platform administration. You can now prepare and ship this order.",
-                'order',
-                "/seller/orders?order_id={$order->id}",
-                'seller'
-            );
-
-            // Reconcile seller settlement for online payment
-            try {
-                app(FinancialLedgerService::class)->reconcileSellerSettlementForOrder($order);
-            } catch (\Throwable $fe) {
-                Log::warning('Settlement reconciliation notice on verifyPayment: ' . $fe->getMessage());
-            }
-
-            DB::commit();
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Payment for order #' . substr($order->id, -8) . ' verified successfully.',
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Payment for Order #LB-' . strtoupper(substr($order->id, -8)) . ' has been approved and verified.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Admin payment verification error: ' . $e->getMessage());
-            
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to verify payment: ' . $e->getMessage()], 500);
-            }
-            return redirect()->back()->with('error', 'Failed to verify payment: ' . $e->getMessage());
-        }
+        $targetRoute = (Auth::user()?->role === 'superadmin') ? 'superadmin.orders' : 'admin.orders';
+        return redirect()->route($targetRoute)->with('info', $msg);
     }
 
-    /**
-     * Process and record a Sukli / Overpayment Refund transfer
-     */
-    public function processSukliRefund(Request $request, string $id, ProcessSukliRefundService $sukliService)
+    public function processSukliRefund(Request $request, string $id)
     {
-        $request->validate([
-            'refund_amount'        => 'required|numeric|min:0.01',
-            'transfer_reference'   => 'required|string|min:4|max:100',
-            'transfer_proof'       => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
-            'destination_account'  => 'nullable|string|max:100',
-            'destination_name'     => 'nullable|string|max:150',
-            'refund_mobile_number' => 'nullable|string|max:100',
-            'refund_account_name'  => 'nullable|string|max:150',
-            'notes'                => 'nullable|string|max:1000',
-        ]);
-
-        $admin = Auth::user();
-        $amount = (float) $request->input('refund_amount');
-        $ref = $request->input('transfer_reference');
-        $proof = $request->file('transfer_proof');
-        $destAcc = $request->input('destination_account') ?: $request->input('refund_mobile_number');
-        $destName = $request->input('destination_name') ?: $request->input('refund_account_name');
-        $notes = $request->input('notes');
-
-        try {
-            $refundTx = $sukliService->processSukliRefund(
-                $id,
-                $admin,
-                $amount,
-                $ref,
-                $proof,
-                $destAcc,
-                $destName,
-                $notes
-            );
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Sukli refund recorded and disbursed successfully.',
-                    'refundTransaction' => $refundTx,
-                ]);
-            }
-
-            return redirect()->back()->with('success', "Sukli refund of ₱" . number_format($amount, 2) . " processed successfully (Ref: {$ref}).");
-        } catch (ValidationException $ve) {
-            throw $ve;
-        } catch (\Throwable $e) {
-            Log::error('Sukli refund error: ' . $e->getMessage());
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to process sukli refund: ' . $e->getMessage()], 500);
-            }
-            return redirect()->back()->with('error', 'Failed to process sukli refund: ' . $e->getMessage());
+        $msg = 'Direct-to-seller marketplace: Excess payments are settled directly between buyer and artisan.';
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $msg], 400);
         }
+        $targetRoute = (Auth::user()?->role === 'superadmin') ? 'superadmin.orders' : 'admin.orders';
+        return redirect()->route($targetRoute)->with('info', $msg);
     }
 
-    /**
-     * Reject incoming customer payment
-     */
     public function rejectPayment(Request $request, string $id)
     {
-        if (Auth::user()?->role !== 'superadmin') {
-            abort(403, 'Financial mutations are restricted. Administrators have read-only access to payment rejection.');
+        $msg = 'Direct-to-seller marketplace: Customer payments are settled directly with sellers. Payment rejection has been disabled.';
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $msg], 400);
         }
-
-        $request->validate([
-            'reason' => 'required|string|min:3|max:500',
-        ]);
-
-        $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
-
-        if (!in_array(strtolower($order->paymentMethod), ['gcash', 'maya', 'paymaya'])) {
-            $msg = 'Cash on Delivery and Pay in Shop orders are collected and verified directly by the seller upon claim or delivery.';
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => $msg], 422);
-            }
-            return redirect()->back()->with('error', $msg);
-        }
-
-        $reason = trim($request->input('reason'));
-
-        DB::beginTransaction();
-        try {
-            $previousStatus = $order->status;
-            $order->paymentStatus = 'Payment Rejected';
-            $order->paymentRejectionReason = $reason;
-            $order->status = 'Cancelled';
-            $order->save();
-
-            $transaction = $order->latestPaymentTransaction;
-            if ($transaction) {
-                $transaction->status = 'REJECTED';
-                $transaction->notes = 'Rejected by Admin: ' . $reason;
-                $transaction->save();
-            } else {
-                PaymentTransaction::create([
-                    'order_id' => $order->id,
-                    'customer_id' => $order->customerId,
-                    'seller_id' => $order->sellerId,
-                    'reference_number' => $order->paymentReference ?: 'NONE',
-                    'wallet_type' => strtolower($order->paymentMethod) === 'maya' ? 'maya' : 'gcash',
-                    'expected_amount' => $order->totalAmount,
-                    'detected_amount' => 0,
-                    'status' => 'REJECTED',
-                    'receipt_path' => $order->paymentProof,
-                    'notes' => 'Rejected by Admin: ' . $reason,
-                ]);
-            }
-
-            OrderStatusHistory::create([
-                'orderId' => $order->id,
-                'previousStatus' => $previousStatus,
-                'newStatus' => $order->status,
-                'updatedBy' => Auth::id(),
-                'userRole' => Auth::user()->role ?? 'admin',
-                'notes' => 'Payment rejected by Administrator: ' . $reason,
-            ]);
-
-            // Notify Customer so they can re-upload or correct payment
-            Notification::send(
-                $order->customerId,
-                '⚠️ Payment Verification Rejected',
-                "Your payment proof for Order #LB-" . strtoupper(substr($order->id, -8)) . " was rejected by Admin. Reason: {$reason}. Please upload a valid receipt or correct reference number.",
-                'order',
-                "/orders/{$order->id}",
-                'customer'
-            );
-
-            // Send Official LumBarong Inbox Message
-            \App\Services\Messaging\LumbarongSystemMessageService::sendOrderCancelledMessage(
-                $order,
-                "Payment verification rejected by Administrator: {$reason}",
-                'LumBarong Administration'
-            );
-
-            DB::commit();
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Payment for order #' . substr($order->id, -8) . ' has been rejected.',
-                ]);
-            }
-
-            return redirect()->back()->with('error', 'Payment for Order #LB-' . strtoupper(substr($order->id, -8)) . ' has been marked as rejected.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Admin payment rejection error: ' . $e->getMessage());
-
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to reject payment: ' . $e->getMessage()], 500);
-            }
-            return redirect()->back()->with('error', 'Failed to reject payment: ' . $e->getMessage());
-        }
+        $targetRoute = (Auth::user()?->role === 'superadmin') ? 'superadmin.orders' : 'admin.orders';
+        return redirect()->route($targetRoute)->with('info', $msg);
     }
 
     // ─── Commission & Settlement Management (Admin Parity) ──────────────────────
@@ -2326,45 +2084,7 @@ class AdminController extends Controller
 
     public function payouts(Request $request)
     {
-        $status = $request->input('status');
-        $search = trim($request->input('search', ''));
-
-        $query = SellerPayout::with(['seller', 'order', 'processor'])->orderByDesc('created_at');
-
-        if (!empty($status)) {
-            $query->where('status', $status);
-        }
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('transfer_reference', 'like', "%{$search}%")
-                  ->orWhere('payout_destination_account', 'like', "%{$search}%")
-                  ->orWhereHas('seller', function ($sq) use ($search) {
-                      $sq->where('name', 'like', "%{$search}%")
-                        ->orWhere('shopName', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('order', function ($oq) use ($search) {
-                      $oq->where('id', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        $payouts = $query->paginate(20)->withQueryString();
-
-        $allPayouts = SellerPayout::all();
-        $kpis = [
-            'available_amount' => (float) $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->sum('net_settlement_amount'),
-            'available_count'  => $allPayouts->where('status', 'AVAILABLE_FOR_PAYOUT')->count(),
-            'pending_amount'   => (float) $allPayouts->where('status', 'PENDING_ELIGIBILITY')->sum('net_settlement_amount'),
-            'pending_count'    => $allPayouts->where('status', 'PENDING_ELIGIBILITY')->count(),
-            'paid_amount'      => (float) $allPayouts->where('status', 'PAID')->sum('net_settlement_amount'),
-            'paid_count'       => $allPayouts->where('status', 'PAID')->count(),
-            'on_hold_amount'   => (float) $allPayouts->where('status', 'ON_HOLD')->sum('net_settlement_amount'),
-            'on_hold_count'    => $allPayouts->where('status', 'ON_HOLD')->count(),
-        ];
-
-        return view('admin.payouts.index', compact('payouts', 'kpis'));
+        return redirect()->route('admin.commissions')->with('info', 'Customer payments are settled directly with sellers. View commission remittances here.');
     }
 
     public function processPayout(Request $request, string $id)
