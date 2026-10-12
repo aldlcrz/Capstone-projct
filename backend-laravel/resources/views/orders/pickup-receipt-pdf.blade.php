@@ -179,23 +179,41 @@
         }
         .sig-row {
             width: 100%;
-            margin-top: 6px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-top: 8px;
         }
         .sig-col {
             width: 50%;
-            vertical-align: bottom;
-            padding-right: 6px;
+            vertical-align: top;
+            padding-right: 8px;
+        }
+        .sig-col:last-child {
+            padding-right: 0;
+            padding-left: 8px;
+        }
+        .sig-value {
+            font-size: 9.5px;
+            font-weight: bold;
+            color: #1E1915;
+            height: 15px;
+            line-height: 15px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .sig-line {
-            border-bottom: 1px solid #C4B5A5;
-            height: 18px;
-            margin-bottom: 3px;
+            border-bottom: 1px solid #BFAFA0;
+            margin-bottom: 4px;
         }
         .sig-label {
             font-size: 8px;
             color: #78716C;
             text-transform: uppercase;
             font-weight: bold;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
         }
 
         /* Totals Box */
@@ -345,10 +363,12 @@
                     <table class="sig-row">
                         <tr>
                             <td class="sig-col">
+                                <div class="sig-value">{{ $order->customer?->name ?? 'Customer Claimant' }}</div>
                                 <div class="sig-line"></div>
-                                <div class="sig-label">Customer / Claimant Signature</div>
+                                <div class="sig-label">Customer / Claimant</div>
                             </td>
                             <td class="sig-col">
+                                <div class="sig-value">{{ $order->seller?->shopName ?: ($order->seller?->name ?: 'Artisan Workshop') }}</div>
                                 <div class="sig-line"></div>
                                 <div class="sig-label">Artisan Workshop Release</div>
                             </td>

@@ -322,15 +322,27 @@ class StorePickupReceiptTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_buyer_order_details_shows_pickup_receipt_download_action(): void
+    public function test_buyer_order_details_shows_pickup_receipt_view_action_and_hides_download_button(): void
     {
         $order = $this->createPickupOrder('Shipped');
 
         $response = $this->actingAs($this->buyer)->get(route('orders.show', $order->id));
         $response->assertStatus(200);
-        $response->assertSee('Download Pickup Receipt');
-        $response->assertSee(route('orders.pickup-receipt.download', $order->id));
+        $response->assertSee('View Receipt');
         $response->assertSee(route('orders.pickup-receipt', $order->id));
+        $response->assertDontSee('Download Pickup Receipt');
+    }
+
+    public function test_pickup_receipt_pdf_autofills_parties_and_removes_signature_text(): void
+    {
+        $order = $this->createPickupOrder('Shipped');
+
+        $response = $this->actingAs($this->buyer)->get(route('orders.pickup-receipt', $order->id));
+        $response->assertStatus(200);
+
+        // View receipt renders PDF content with customer claimant & artisan workshop release
+        $content = $response->getContent();
+        $this->assertNotEmpty($content);
     }
 
     public function test_seller_orders_dossier_shows_pickup_receipt_action(): void

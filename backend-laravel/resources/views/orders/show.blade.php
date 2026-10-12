@@ -681,13 +681,8 @@
                             <span class="text-[#78716C]">Claim: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
                             <div class="flex items-center gap-1.5">
                                 <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
-                                   class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] transition-all shadow-2xs">
+                                   class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] transition-all shadow-2xs">
                                     View Receipt ↗
-                                </a>
-                                <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
-                                   style="background-color:#1E1915;color:#FFFFFF;"
-                                   class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
-                                    Download Pickup Receipt
                                 </a>
                             </div>
                         </div>
