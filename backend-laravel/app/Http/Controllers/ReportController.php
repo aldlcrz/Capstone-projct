@@ -74,6 +74,11 @@ class ReportController extends Controller
                 return response()->json(['message' => 'Unauthorized. You can only report products from orders you have purchased.'], 403);
             }
 
+            // Verify order has reached authoritative customer-received/completed state
+            if (!$order->isReceivedByCustomer()) {
+                return response()->json(['message' => 'You can only report a product after you have received the order and confirmed delivery.'], 422);
+            }
+
             // Verify seller relationship
             if ($order->sellerId && $order->sellerId !== $reportedUser->id) {
                 return response()->json(['message' => 'The specified seller does not match the seller of this order.'], 422);
@@ -117,6 +122,9 @@ class ReportController extends Controller
                     ->first();
 
                 if ($customerOrder) {
+                    if (!$customerOrder->isReceivedByCustomer()) {
+                        return response()->json(['message' => 'You can only report a product after you have received the order and confirmed delivery.'], 422);
+                    }
                     $referenceId = $customerOrder->id;
                     $order = $customerOrder;
                 }

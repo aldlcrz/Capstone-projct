@@ -193,6 +193,9 @@
                         'paymentStatus' => $order->resolved_payment_status,
                         'paymentReference' => $order->paymentReference ?? null,
                         'packingProof' => $order->packing_proof_url,
+                        'isSpecialDelivery' => $order->isSpecialDelivery(),
+                        'isStorePickup' => $order->isStorePickup(),
+                        'isReceived' => $order->isReceivedByCustomer(),
                         'courierName' => $order->courierName ?? null,
                         'trackingNumber' => $order->trackingNumber ?? null,
                         'trackingLink' => $order->trackingLink ?? null,
@@ -623,9 +626,9 @@
                             </div>
                         </div>
 
-                        {{-- Packing Photo notice when seller has not yet uploaded (only when To Ship / Processing) --}}
+                        {{-- Packing Photo notice when seller has not yet uploaded (only when standard courier To Ship / Processing) --}}
                         <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3"
-                             x-show="selectedOrder && !selectedOrder.packingProof && ['processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase())">
+                             x-show="selectedOrder && !selectedOrder.packingProof && !selectedOrder.isSpecialDelivery && !selectedOrder.isStorePickup && ['processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase())">
                             <div class="flex items-center gap-2.5">
                                 <span class="text-base">📦</span>
                                 <div>

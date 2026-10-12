@@ -702,6 +702,17 @@ class Order extends Model
     }
 
     /**
+     * Check if this order has reached the authoritative customer-received or completed state.
+     * Orders in pending, preparing, awaiting pickup, in transit, out for delivery, or awaiting
+     * customer confirmation (e.g. Delivered but unconfirmed) are NOT yet received by customer.
+     */
+    public function isReceivedByCustomer(): bool
+    {
+        $status = strtolower(trim((string) ($this->status ?? '')));
+        return in_array($status, ['completed', 'received by buyer', 'received_by_buyer'], true);
+    }
+
+    /**
      * Check if this order is eligible for refund or return request.
      */
     public function isEligibleForReturnOrRefund(): bool
@@ -849,9 +860,9 @@ class Order extends Model
 
         if ($this->isSpecialDelivery()) {
             if ($method === 'SPECIAL DELIVERY' || $method === 'SELLER DIRECT' || $method === '') {
-                return 'Special Delivery (Pay to Rider)';
+                return 'Pay to artisan rider';
             }
-            if ($method === 'CASH' || $method === 'COD') return 'Cash on Delivery (Artisan Rider)';
+            if ($method === 'CASH' || $method === 'COD') return 'Pay to artisan rider';
             if (str_contains($method, 'GCASH')) return 'Direct GCash (To Artisan/Rider)';
             if (str_contains($method, 'MAYA')) return 'Direct Maya (To Artisan/Rider)';
             return $this->paymentMethod;

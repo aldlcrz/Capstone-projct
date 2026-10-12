@@ -85,8 +85,8 @@
                 $statusLower === 'completed' => 'Completed',
                 $statusLower === 'delivered' => ($isStorePickup ? 'Picked Up / Claimed' : 'Delivered'),
                 $isStorePickup && $statusLower === 'shipped' => 'Ready for Pickup',
-                $isSpecialDelivery && $statusLower === 'shipped' => 'Special Delivery Processing',
-                $isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'Out for Special Delivery',
+                $isSpecialDelivery && $statusLower === 'shipped' => 'Preparing for rider',
+                $isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'Local artisan rider',
                 in_array($statusLower, ['in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery'], true) => 'To Receive',
                 in_array($statusLower, ['to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped'], true) => 'To Ship',
                 in_array($statusLower, ['cancellation pending', 'cancellation requested'], true) => 'Cancellation Pending',
@@ -97,6 +97,8 @@
                 'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
                 'Delivered', 'Picked Up / Claimed' => 'bg-teal-50 text-teal-700 border border-teal-200',
                 'Ready for Pickup' => 'bg-amber-50 text-amber-800 border border-amber-200',
+                'Local artisan rider' => 'bg-blue-50 text-blue-700 border border-blue-200',
+                'Preparing for rider' => 'bg-sky-50 text-sky-700 border border-sky-200',
                 'Out for Special Delivery' => 'bg-blue-50 text-blue-700 border border-blue-200',
                 'Special Delivery Processing' => 'bg-sky-50 text-sky-700 border border-sky-200',
                 'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
@@ -342,7 +344,7 @@
                             </div>
                             <div>
                                 <div class="text-[10px] font-black uppercase tracking-wider {{ $isStorePickup ? 'text-amber-900' : 'text-blue-900' }}">
-                                    {{ $isStorePickup ? '📅 In-Shop Store Visit Appointment' : '📅 Special Delivery Scheduled Date' }}
+                                    {{ $isStorePickup ? '📅 In-Shop Store Visit Appointment' : '📅 Scheduled Delivery Date' }}
                                 </div>
                                 <div class="text-xs sm:text-sm font-extrabold {{ $isStorePickup ? 'text-amber-950' : 'text-blue-950' }} mt-0.5">
                                     {{ \Carbon\Carbon::parse($order->appointment_date)->format('l, F j, Y') }}
@@ -382,9 +384,9 @@
                             </div>
                             <div>
                                 <h3 class="text-xs sm:text-sm font-extrabold text-emerald-950 m-0">
-                                    {{ $isStorePickup ? 'Order picked up at workshop' : ($isSpecialDelivery ? 'Special delivery completed' : 'Parcel delivered') }}
+                                    {{ $isStorePickup ? 'Order picked up at workshop' : ($isSpecialDelivery ? 'Delivery completed' : 'Parcel delivered') }}
                                 </h3>
-                                <p class="text-[11px] text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your heritage piece and confirm receipt.</p>
+                                <p class="text-[11px] text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your order and confirm receipt.</p>
                             </div>
                         </div>
                         <button @click="confirmModal = true"
@@ -395,22 +397,16 @@
                 </div>
             @elseif($isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
                 <div class="px-4 sm:px-5 pb-4 pt-0">
-                    <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1px solid #BFDBFE; border-radius: 14px; padding: 10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1px solid #BFDBFE; border-radius: 14px; padding: 10px 16px;" class="flex items-center justify-between gap-3 shadow-2xs">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-blue-100/90 border border-blue-300 text-blue-800 flex items-center justify-center shrink-0 text-sm">
                                 🏍️
                             </div>
                             <div>
-                                <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Special Delivery Fulfillment Progress &bull; Out for Special Delivery</h3>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Local artisan rider &bull; Out for delivery</h3>
                                 <p class="text-[11px] text-blue-800/90 mt-0.5 m-0 font-medium">Your heritage piece is in transit via dedicated Local Artisan Rider.</p>
                             </div>
                         </div>
-                        <button type="button"
-                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}' } }))"
-                                style="background-color:#1E1915;color:#FFFFFF;"
-                                class="px-3.5 py-1.5 rounded-full hover:bg-[#C0422A] text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
-                            💬 Message Artisan
-                        </button>
                     </div>
                 </div>
             @elseif($statusLower === 'completed')
@@ -534,11 +530,13 @@
                                                 ✓ {{ $existingReview->rating }}/5 Stars
                                             </span>
                                         @endif
-                                        <button type="button"
-                                                @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { sellerId: '{{ $order->sellerId }}', productId: '{{ $item->productId }}' } }))"
-                                                class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
-                                            <span>🚩 Report Product</span>
-                                        </button>
+                                        @if($order->isReceivedByCustomer())
+                                            <button type="button"
+                                                    @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', productId: '{{ $item->productId }}', productName: '{{ addslashes($item->product->name ?? 'Product') }}', orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: '{{ addslashes($item->size ?? $item->variation ?? '') }}', reportType: 'product' } }))"
+                                                    class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
+                                                <span>🚩 Report Product</span>
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -562,47 +560,11 @@
             <div style="border-top:1px solid #FAF4EB;"></div>
 
             {{-- 4. UPPER SECTION: Delivery Address (Left) & Artisan Inspection Proof (Right) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#FAF4EB]">
-                
-                {{-- Left Column: Delivery Address --}}
-                <div class="p-4 sm:p-5 space-y-2.5">
-                    @if($isStorePickup)
-                        {{-- Workshop Pickup Address --}}
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                <span>📍</span>
-                                <span>Workshop Pickup</span>
-                            </span>
-                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
-                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] hover:border-[#D4AF37] transition-all shadow-2xs">
-                                <span>🗺️</span>
-                                <span>Directions</span>
-                                <span>↗</span>
-                            </a>
-                        </div>
-                        <div>
-                            <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] font-serif m-0">{{ $sellerShopName }}</h4>
-                            <p class="text-xs text-[#78716C] leading-snug mt-0.5 m-0 font-medium">{{ $sellerWorkshopAddress }}</p>
-                        </div>
-                        <div class="rounded-xl overflow-hidden border border-[#E2D9C8] bg-white relative">
-                            <div id="order-workshop-leaflet-map" class="w-full h-28 relative z-0"></div>
-                        </div>
-                        <div class="pt-1.5 border-t border-[#FAF4EB] flex flex-wrap items-center justify-between gap-1.5 text-xs">
-                            <span class="text-[#78716C]">Claim: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
-                            <div class="flex items-center gap-1.5">
-                                <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
-                                   class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] transition-all shadow-2xs">
-                                    View Receipt ↗
-                                </a>
-                                <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
-                                   style="background-color:#1E1915;color:#FFFFFF;"
-                                   class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
-                                    Download Pickup Receipt
-                                </a>
-                            </div>
-                        </div>
-                    @else
-                        {{-- Standard/Special Delivery Address --}}
+            @if(!$isSpecialDelivery && !$isStorePickup)
+                <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#FAF4EB]">
+                    
+                    {{-- Left Column: Delivery Address --}}
+                    <div class="p-4 sm:p-5 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
                                 <span>📍</span>
@@ -650,56 +612,113 @@
                                 @endif
                             </div>
                         @endif
-                    @endif
-                </div>
+                    </div>
 
-                {{-- Right Column: Artisan Inspection Proof --}}
-                <div class="p-4 sm:p-5 space-y-2.5 bg-[#FDFBF7]/30 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                <span>📸</span>
-                                <span>Artisan inspection proof</span>
-                            </span>
+                    {{-- Right Column: Artisan Inspection Proof --}}
+                    <div class="p-4 sm:p-5 space-y-2.5 bg-[#FDFBF7]/30 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
+                                    <span>📸</span>
+                                    <span>Artisan inspection proof</span>
+                                </span>
+                                @if($order->packingProof)
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 shadow-2xs">
+                                        ✓ Verified
+                                    </span>
+                                @endif
+                            </div>
+
                             @if($order->packingProof)
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 shadow-2xs">
-                                    ✓ Verified
+                                <div class="relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-[#FAF8F5] cursor-pointer group flex items-center justify-center"
+                                     style="height: 78px; width: 100%;"
+                                     @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
+                                    <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing inspection proof">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="px-2.5 py-0.5 bg-black/80 text-white rounded-md text-[11px] font-bold backdrop-blur-xs flex items-center gap-1">
+                                            🔍 Zoom
+                                        </span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center gap-2 text-xs text-[#78716C]">
+                                    <span class="text-sm">⏳</span>
+                                    <div class="text-[11px] leading-tight">
+                                        <strong class="text-[#1E1915] block">Photo pending</strong>
+                                        <span>Artisan will upload quality inspection photo before dispatch.</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
+            @else
+                {{-- Single Full-Width Column: Special Delivery or Store Pickup (No Artisan Inspection Proof section) --}}
+                <div class="p-4 sm:p-5 space-y-2.5">
+                    @if($isStorePickup)
+                        {{-- Workshop Pickup Address --}}
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
+                                <span>📍</span>
+                                <span>Workshop Pickup</span>
+                            </span>
+                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] hover:border-[#D4AF37] transition-all shadow-2xs">
+                                <span>🗺️</span>
+                                <span>Directions</span>
+                                <span>↗</span>
+                            </a>
+                        </div>
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] font-serif m-0">{{ $sellerShopName }}</h4>
+                            <p class="text-xs text-[#78716C] leading-snug mt-0.5 m-0 font-medium">{{ $sellerWorkshopAddress }}</p>
+                        </div>
+                        <div class="rounded-xl overflow-hidden border border-[#E2D9C8] bg-white relative">
+                            <div id="order-workshop-leaflet-map" class="w-full h-28 relative z-0"></div>
+                        </div>
+                        <div class="pt-1.5 border-t border-[#FAF4EB] flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                            <span class="text-[#78716C]">Claim: <strong class="text-[#1E1915] font-mono">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</strong></span>
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('orders.pickup-receipt', $order->id) }}" target="_blank"
+                                   class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] transition-all shadow-2xs">
+                                    View Receipt ↗
+                                </a>
+                                <a href="{{ route('orders.pickup-receipt.download', $order->id) }}" target="_blank"
+                                   style="background-color:#1E1915;color:#FFFFFF;"
+                                   class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-[#C0422A] transition-all shadow-xs">
+                                    Download Pickup Receipt
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Special Delivery Address --}}
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
+                                <span>📍</span>
+                                <span>Delivery address</span>
+                            </span>
+                            @if(!empty($addr['phone']))
+                                <span class="text-[11px] font-mono text-[#1E1915] font-bold flex items-center gap-1 px-2 py-0.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-full">
+                                    <span>📞</span>
+                                    <span>{{ $addr['phone'] }}</span>
                                 </span>
                             @endif
                         </div>
-
-                        @if($order->packingProof)
-                            <div class="relative rounded-xl overflow-hidden border border-[#ECE3D2] bg-[#FAF8F5] cursor-pointer group flex items-center justify-center"
-                                 style="height: 78px; width: 100%;"
-                                 @click="packingModalUrl = '{{ $order->packing_proof_url }}'; packingModal = true;">
-                                <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing inspection proof">
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span class="px-2.5 py-0.5 bg-black/80 text-white rounded-md text-[11px] font-bold backdrop-blur-xs flex items-center gap-1">
-                                        🔍 Zoom
-                                    </span>
-                                </div>
-                            </div>
-                        @else
-                            <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center gap-2 text-xs text-[#78716C]">
-                                <span class="text-sm">⏳</span>
-                                <div class="text-[11px] leading-tight">
-                                    <strong class="text-[#1E1915] block">Photo pending</strong>
-                                    <span>Artisan will upload quality inspection photo before dispatch.</span>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Dispatch pill for Special Delivery --}}
-                    @if($isSpecialDelivery)
-                        <div class="p-2 bg-blue-50/90 rounded-lg border border-blue-100 text-xs text-blue-900 leading-none font-bold flex items-center gap-2 shadow-2xs">
-                            <span class="text-xs">🏍️</span>
-                            <span class="text-[11px]">Dispatched via local artisan rider</span>
+                        <div class="space-y-0.5">
+                            <h4 class="text-xs sm:text-sm font-extrabold text-[#1E1915] m-0">{{ $recipient }}</h4>
+                            @if($streetLine)
+                                <p class="text-xs text-[#57534E] leading-snug m-0 font-medium">{{ $streetLine }}</p>
+                            @endif
+                            @if($locality || !empty($addr['postalCode']))
+                                <p class="text-xs text-[#78716C] leading-snug m-0 font-medium">
+                                    {{ $locality }}@if(!empty($addr['postalCode'])) · <span class="font-bold text-[#1E1915]">{{ $addr['postalCode'] }}</span>@endif
+                                </p>
+                            @endif
                         </div>
                     @endif
                 </div>
-
-            </div>
+            @endif
 
             {{-- Divider --}}
             <div style="border-top:1px solid #FAF4EB;"></div>

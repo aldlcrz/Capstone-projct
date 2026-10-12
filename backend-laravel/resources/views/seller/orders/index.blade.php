@@ -2734,7 +2734,7 @@ function sellerOrdersManager() {
                             <button type="button"
                                 @click="confirmShipmentWithProof()"
                                 :disabled="packingUploading || statusUpdating"
-                                :style="(packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #059669; color: #ffffff;' : (packingPhotoFile ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;')"
+                                :style="(isStorePickup(detailsOrder) || isSpecialDelivery(detailsOrder) || packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #059669; color: #ffffff;' : (packingPhotoFile ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #000000; color: #ffffff;')"
                                 class="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 hover:opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
                                 <template x-if="packingUploading || statusUpdating">
                                     <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
@@ -2742,7 +2742,7 @@ function sellerOrdersManager() {
                                 <template x-if="!packingUploading && !statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </template>
-                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : ((packingUploadSuccess || detailsOrder.packingProof) ? (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery ➔' : 'Confirm Shipment (Mark Shipped) ➔')) : (packingPhotoFile ? (isStorePickup(detailsOrder) ? 'Upload & Mark Ready for Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Upload & Process Special Delivery ➔' : 'Upload & Confirm Shipment ➔')) : (isStorePickup(detailsOrder) ? 'Upload Proof & Mark Ready ➔' : (isSpecialDelivery(detailsOrder) ? 'Upload Proof & Process ➔' : 'Upload Proof & Confirm Shipment ➔')))))"></span>
+                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery ➔' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))))"></span>
                             </button>
                         </div>
                     </template>

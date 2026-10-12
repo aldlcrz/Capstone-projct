@@ -134,6 +134,7 @@ class OrderCancellationsWorkflowTest extends TestCase
             'status'               => 'cancelled',
             'cancellationReason'   => 'Customer request before shipping',
             'cancelledBy'          => 'customer',
+            'fund_holder'          => 'platform',
             'refund_mobile_number' => Crypt::encryptString('09171234567'),
             'shippingAddress'      => '123 Rizal St, Lumban, Laguna',
         ]);

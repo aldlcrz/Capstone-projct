@@ -353,7 +353,7 @@ class ReportTest extends TestCase
             'customerId' => $this->customer->id,
             'sellerId' => $this->seller->id,
             'totalAmount' => 3800.00,
-            'status' => 'delivered',
+            'status' => 'Completed',
             'paymentMethod' => 'GCash',
             'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
         ]);
@@ -413,7 +413,7 @@ class ReportTest extends TestCase
             'customerId' => $this->otherCustomer->id,
             'sellerId' => $this->seller->id,
             'totalAmount' => 3800.00,
-            'status' => 'delivered',
+            'status' => 'Completed',
             'paymentMethod' => 'GCash',
             'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
         ]);
@@ -451,7 +451,7 @@ class ReportTest extends TestCase
             'customerId' => $this->customer->id,
             'sellerId' => $this->seller->id,
             'totalAmount' => 3800.00,
-            'status' => 'delivered',
+            'status' => 'Completed',
             'paymentMethod' => 'GCash',
             'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
         ]);
@@ -502,7 +502,7 @@ class ReportTest extends TestCase
             'customerId' => $this->customer->id,
             'sellerId' => $this->seller->id,
             'totalAmount' => 3800.00,
-            'status' => 'delivered',
+            'status' => 'Completed',
             'paymentMethod' => 'GCash',
             'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
         ]);
@@ -531,7 +531,7 @@ class ReportTest extends TestCase
     }
 
     /**
-     * Test order details page renders the Report Product button.
+     * Test order details page renders the Report Product button only for completed/received orders.
      */
     public function test_order_show_page_renders_report_product_button(): void
     {
@@ -540,7 +540,7 @@ class ReportTest extends TestCase
             'customerId' => $this->customer->id,
             'sellerId' => $this->seller->id,
             'totalAmount' => 3800.00,
-            'status' => 'delivered',
+            'status' => 'Completed',
             'paymentMethod' => 'GCash',
             'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
         ]);
@@ -561,6 +561,195 @@ class ReportTest extends TestCase
         $response->assertSee('open-report');
         $response->assertSee($this->seller->id);
         $response->assertSee($this->product->id);
+    }
+
+    /**
+     * Test pending orders do NOT display Report Product in UI.
+     */
+    public function test_pending_orders_do_not_display_report_product(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'totalAmount' => 3800.00,
+            'status' => 'Pending',
+            'paymentMethod' => 'GCash',
+            'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
+        ]);
+
+        OrderItem::create([
+            'id' => (string) Str::uuid(),
+            'orderId' => $order->id,
+            'productId' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity' => 1,
+            'price' => 3800.00,
+        ]);
+
+        $response = $this->actingAs($this->customer)->get('/orders/' . $order->id);
+        $response->assertStatus(200);
+        $response->assertDontSee('Report Product');
+    }
+
+    /**
+     * Test preparing and dispatched orders do NOT display Report Product in UI.
+     */
+    public function test_preparing_and_dispatched_orders_do_not_display_report_product(): void
+    {
+        $statuses = ['Processing', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'];
+
+        foreach ($statuses as $status) {
+            $order = Order::create([
+                'id' => (string) Str::uuid(),
+                'customerId' => $this->customer->id,
+                'sellerId' => $this->seller->id,
+                'totalAmount' => 3800.00,
+                'status' => $status,
+                'paymentMethod' => 'GCash',
+                'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
+            ]);
+
+            OrderItem::create([
+                'id' => (string) Str::uuid(),
+                'orderId' => $order->id,
+                'productId' => $this->product->id,
+                'product_name' => $this->product->name,
+                'quantity' => 1,
+                'price' => 3800.00,
+            ]);
+
+            $response = $this->actingAs($this->customer)->get('/orders/' . $order->id);
+            $response->assertStatus(200);
+            $response->assertDontSee('Report Product');
+        }
+    }
+
+    /**
+     * Test an unreceived Special Delivery order cannot be reported via direct API.
+     */
+    public function test_unreceived_special_delivery_order_cannot_be_reported(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'totalAmount' => 3800.00,
+            'status' => 'In Transit',
+            'courierName' => 'Special Delivery (Local Artisan Rider)',
+            'paymentMethod' => 'Special Delivery',
+            'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
+        ]);
+
+        $orderItem = OrderItem::create([
+            'id' => (string) Str::uuid(),
+            'orderId' => $order->id,
+            'productId' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity' => 1,
+            'price' => 3800.00,
+        ]);
+
+        $response = $this->actingAs($this->customer)->postJson('/api/v1/reports', [
+            'reportedId' => $this->seller->id,
+            'reportType' => 'product',
+            'productId' => $this->product->id,
+            'referenceId' => $order->id,
+            'orderItemId' => $orderItem->id,
+            'reason' => 'Did not arrive',
+            'description' => 'Attempting to report unreceived special delivery item.',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'message' => 'You can only report a product after you have received the order and confirmed delivery.',
+        ]);
+        $this->assertEquals(0, Report::count());
+    }
+
+    /**
+     * Test an uncollected Store Pickup order cannot be reported via direct API.
+     */
+    public function test_uncollected_store_pickup_order_cannot_be_reported(): void
+    {
+        $order = Order::create([
+            'id' => (string) Str::uuid(),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'totalAmount' => 3800.00,
+            'status' => 'Shipped', // Ready for Pickup
+            'courierName' => 'Store Pickup',
+            'paymentMethod' => 'Store Pickup',
+            'shippingAddress' => ['street' => 'Workshop Pickup', 'city' => 'Lumban', 'province' => 'Laguna'],
+        ]);
+
+        $orderItem = OrderItem::create([
+            'id' => (string) Str::uuid(),
+            'orderId' => $order->id,
+            'productId' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity' => 1,
+            'price' => 3800.00,
+        ]);
+
+        $response = $this->actingAs($this->customer)->postJson('/api/v1/reports', [
+            'reportedId' => $this->seller->id,
+            'reportType' => 'product',
+            'productId' => $this->product->id,
+            'referenceId' => $order->id,
+            'orderItemId' => $orderItem->id,
+            'reason' => 'Item defect',
+            'description' => 'Attempting to report uncollected in-store pickup item.',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'message' => 'You can only report a product after you have received the order and confirmed delivery.',
+        ]);
+        $this->assertEquals(0, Report::count());
+    }
+
+    /**
+     * Test direct API requests cannot bypass the received-order requirement even when omitting referenceId.
+     */
+    public function test_direct_api_cannot_bypass_received_order_requirement_when_omitting_reference_id(): void
+    {
+        // Customer has an active in-transit order for this product
+        Order::create([
+            'id' => (string) Str::uuid(),
+            'customerId' => $this->customer->id,
+            'sellerId' => $this->seller->id,
+            'totalAmount' => 3800.00,
+            'status' => 'In Transit',
+            'courierName' => 'J&T Express',
+            'paymentMethod' => 'COD',
+            'shippingAddress' => ['street' => '123 Lumban St', 'city' => 'Lumban', 'province' => 'Laguna'],
+        ]);
+
+        OrderItem::create([
+            'id' => (string) Str::uuid(),
+            'orderId' => Order::latest()->first()->id,
+            'productId' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity' => 1,
+            'price' => 3800.00,
+        ]);
+
+        // Malicious user attempts to report product directly without passing referenceId
+        $response = $this->actingAs($this->customer)->postJson('/api/v1/reports', [
+            'reportedId' => $this->seller->id,
+            'reportType' => 'product',
+            'productId' => $this->product->id,
+            // referenceId omitted!
+            'reason' => 'Counterfeit product',
+            'description' => 'Attempting to bypass referenceId order validation check.',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'message' => 'You can only report a product after you have received the order and confirmed delivery.',
+        ]);
+        $this->assertEquals(0, Report::count());
     }
 
     /**
