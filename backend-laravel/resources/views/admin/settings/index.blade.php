@@ -80,7 +80,7 @@
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="hidden" name="{{ $key }}" value="0">
                         <input type="checkbox" name="{{ $key }}" value="1" class="sr-only peer" {{ ($settings[$key] ?? '1') == '1' ? 'checked' : '' }}>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-(--rust)/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-(--rust)"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-(--rust)/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-(--rust)"></div>
                     </label>
                 </div>
                 @endforeach

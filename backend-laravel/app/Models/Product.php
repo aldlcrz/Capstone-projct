@@ -293,7 +293,7 @@ class Product extends Model
     /**
      * Get the resolved URL for a product image.
      */
-    public function getImageUrl($image = null)
+    public function getImageUrl($image = null): string
     {
         $img = $image;
 
