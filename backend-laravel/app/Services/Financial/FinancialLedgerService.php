@@ -261,99 +261,11 @@ class FinancialLedgerService
 
     /**
      * Synchronize and reconcile the SellerPayout record for an online order.
+     * Decommissioned: All marketplace payments are settled direct-to-seller; platform does not hold seller payouts.
      */
     public static function reconcileSellerSettlementForOrder(Order $order): ?SellerPayout
     {
-        // Direct-to-seller orders never create a platform-held seller payout obligation
-        if ($order->isSellerHeldPayment()) {
-            return null;
-        }
-
-        if (!static::isOnlinePaymentMethod($order->paymentMethod)) {
-            return null;
-        }
-
-        $orderStatus = strtolower(trim((string) $order->status));
-        if (in_array($orderStatus, ['cancelled', 'cancellation pending', 'cancellation requested'], true)) {
-            $existing = SellerPayout::where('order_id', $order->id)->first();
-            if ($existing) {
-                if ($existing->status !== 'PAID') {
-                    $existing->update(['status' => 'ON_HOLD', 'hold_reason' => 'Order cancelled']);
-                }
-                return $existing;
-            }
-            return SellerPayout::create([
-                'id'                    => (string) Str::uuid(),
-                'order_id'              => $order->id,
-                'seller_id'             => $order->sellerId,
-                'gross_sales'           => (float) $order->totalAmount,
-                'shipping_amount'       => 0.00,
-                'discount_amount'       => 0.00,
-                'commission_deducted'   => 0.00,
-                'net_settlement_amount' => (float) $order->totalAmount,
-                'status'                => 'ON_HOLD',
-                'hold_reason'           => 'Order cancelled',
-            ]);
-        }
-
-        $breakdown = static::calculateSellerSettlementBreakdown($order);
-
-        // Fetch seller payout credentials
-        $seller = User::find($breakdown['seller_id']);
-        $payoutMethod = strtoupper(trim((string) $order->paymentMethod)) === 'MAYA' ? 'Maya' : 'GCash';
-        $destinationAccount = $payoutMethod === 'Maya'
-            ? ($seller?->mayaNumber ?: $seller?->phone)
-            : ($seller?->gcashNumber ?: $seller?->phone);
-        $destinationName = $seller?->shopName ?: ($seller?->name ?: 'Seller');
-
-        $existing = SellerPayout::where('order_id', $order->id)
-            ->where('seller_id', $breakdown['seller_id'])
-            ->first();
-
-        if ($existing) {
-            // Do not alter already PAID payouts
-            if ($existing->status === 'PAID') {
-                return $existing;
-            }
-
-            $newStatus = $breakdown['status'];
-            if ($existing->status === 'PAYOUT_PROCESSING' && $newStatus === 'AVAILABLE_FOR_PAYOUT') {
-                $newStatus = 'PAYOUT_PROCESSING';
-            }
-
-            $existing->update([
-                'gross_sales'               => $breakdown['gross_sales'],
-                'shipping_amount'           => $breakdown['shipping_amount'],
-                'discount_amount'           => $breakdown['discount_amount'],
-                'commission_deducted'       => $breakdown['commission_deducted'],
-                'commission_rate'           => $breakdown['commission_rate'],
-                'net_settlement_amount'     => $breakdown['net_settlement_amount'],
-                'status'                    => $newStatus,
-                'payout_method'             => $existing->payout_method ?: $payoutMethod,
-                'payout_destination_account'=> $existing->payout_destination_account ?: $destinationAccount,
-                'payout_destination_name'   => $existing->payout_destination_name ?: $destinationName,
-                'hold_reason'               => $breakdown['has_active_dispute'] ? 'Active return or refund dispute in review' : null,
-            ]);
-
-            return $existing;
-        }
-
-        return SellerPayout::create([
-            'id'                        => (string) Str::uuid(),
-            'order_id'                  => $order->id,
-            'seller_id'                 => $breakdown['seller_id'],
-            'gross_sales'               => $breakdown['gross_sales'],
-            'shipping_amount'           => $breakdown['shipping_amount'],
-            'discount_amount'           => $breakdown['discount_amount'],
-            'commission_deducted'       => $breakdown['commission_deducted'],
-            'commission_rate'           => $breakdown['commission_rate'],
-            'net_settlement_amount'     => $breakdown['net_settlement_amount'],
-            'status'                    => $breakdown['status'],
-            'payout_method'             => $payoutMethod,
-            'payout_destination_account'=> $destinationAccount,
-            'payout_destination_name'   => $destinationName,
-            'hold_reason'               => $breakdown['has_active_dispute'] ? 'Active return or refund dispute in review' : null,
-        ]);
+        return null;
     }
 
     /**

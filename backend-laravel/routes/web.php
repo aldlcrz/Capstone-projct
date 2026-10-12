@@ -260,13 +260,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/orders/{id}/reject-payment', [AdminController::class, 'rejectPayment'])->name('admin.orders.reject-payment');
     Route::post('/orders/{id}/refund-sukli', [AdminController::class, 'processSukliRefund'])->name('admin.orders.refund-sukli');
 
-    // Commission Management & Seller Payouts
+    // Commission Management & Remittances
     Route::get('/commissions', [AdminController::class, 'commissions'])->name('admin.commissions');
     Route::patch('/commissions/{sellerId}/mark-paid', [AdminController::class, 'markPaid'])->name('admin.commissions.mark-paid');
-    Route::get('/payouts', [AdminController::class, 'payouts'])->name('admin.payouts');
-    Route::post('/payouts/{id}/process', [AdminController::class, 'processPayout'])->name('admin.payouts.process');
-    Route::patch('/payouts/{id}/release', [AdminController::class, 'releasePayout'])->name('admin.payouts.release');
-    Route::patch('/payouts/{id}/hold', [AdminController::class, 'holdPayout'])->name('admin.payouts.hold');
+    Route::redirect('/payouts', '/admin/commissions')->name('admin.payouts');
 
     // Products
     Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
@@ -409,10 +406,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::patch('/shops/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
     Route::patch('/shops/{id}/toggle-status', [SuperAdminController::class, 'toggleShopStatus'])->name('superadmin.shops.toggle-status');
     Route::delete('/shops/{id}', [SuperAdminController::class, 'deleteShop'])->name('superadmin.shops.destroy');
-    Route::get('/payouts', [SuperAdminController::class, 'payouts'])->name('superadmin.payouts');
-    Route::post('/payouts/{id}/process', [SuperAdminController::class, 'processPayout'])->name('superadmin.payouts.process');
-    Route::patch('/payouts/{id}/release', [SuperAdminController::class, 'releasePayout'])->name('superadmin.payouts.release');
-    Route::patch('/payouts/{id}/hold', [SuperAdminController::class, 'holdPayout'])->name('superadmin.payouts.hold');
+    Route::redirect('/payouts', '/superadmin/commissions')->name('superadmin.payouts');
     Route::get('/users', [SuperAdminController::class, 'users'])->name('superadmin.users');
     Route::patch('/users/{id}/role', [SuperAdminController::class, 'changeRole'])->name('superadmin.users.role');
     Route::patch('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleStatus'])->name('superadmin.users.status');

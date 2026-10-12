@@ -629,87 +629,11 @@ class SuperAdminController extends Controller
         }
     }
 
-    // ─── Seller Payouts & Settlements ────────────────────────────────────────
+    // ─── Seller Payouts (Decommissioned - Direct-to-Seller Marketplace) ───────
 
     public function payouts(Request $request)
     {
-        return redirect()->route('superadmin.commissions')->with('info', 'Customer payments are settled directly with sellers. View commission remittances here.');
-    }
-
-    public function processPayout(Request $request, string $id)
-    {
-        $request->validate([
-            'transfer_reference' => 'required|string|max:100',
-            'transfer_proof'     => 'nullable|image|max:3072',
-            'admin_notes'        => 'nullable|string|max:500',
-        ]);
-
-        $payout = SellerPayout::findOrFail($id);
-        $admin = Auth::user();
-
-        try {
-            FinancialLedgerService::processManualSellerPayout(
-                $payout,
-                [
-                    'transaction_reference' => $request->transfer_reference,
-                    'transfer_proof' => $request->file('transfer_proof'),
-                    'admin_notes' => $request->admin_notes,
-                ],
-                $admin
-            );
-
-            return redirect()->back()->with('success', 'Seller payout transfer recorded successfully as PAID.');
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors($e->errors())->withInput();
-        } catch (\Throwable $e) {
-            Log::error('SuperAdmin process payout error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to process payout: ' . $e->getMessage());
-        }
-    }
-
-    public function holdPayout(Request $request, string $id)
-    {
-        $reason = $request->input('hold_reason') ?: $request->input('reason');
-        if (empty($reason)) {
-            return redirect()->back()->withErrors(['hold_reason' => 'A hold reason is required.'])->withInput();
-        }
-        $payout = SellerPayout::findOrFail($id);
-
-        if ($payout->status === 'PAID') {
-            return redirect()->back()->with('error', 'Cannot place a hold on an already PAID settlement.');
-        }
-
-        $payout->update([
-            'status'      => 'ON_HOLD',
-            'hold_reason' => $reason,
-        ]);
-
-        return redirect()->back()->with('success', 'Settlement payout has been placed on hold.');
-    }
-
-    public function releasePayout(Request $request, string $id)
-    {
-        $payout = SellerPayout::findOrFail($id);
-        $order = $payout->order;
-
-        if ($payout->status === 'PAID') {
-            return redirect()->back()->with('info', 'This settlement is already paid.');
-        }
-
-        if ($order) {
-            $breakdown = FinancialLedgerService::calculateSellerSettlementBreakdown($order, $payout->seller_id);
-            $payout->update([
-                'status'      => $breakdown['status'],
-                'hold_reason' => null,
-            ]);
-        } else {
-            $payout->update([
-                'status'      => 'AVAILABLE_FOR_PAYOUT',
-                'hold_reason' => null,
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Hold released. Settlement status restored.');
+        return redirect()->route('superadmin.commissions')->with('info', 'Platform operates on direct-to-seller settlements. Centralized payouts have been decommissioned.');
     }
 
     // ─── Artisan Sellers & Shops Management ───────────────────────────────────
