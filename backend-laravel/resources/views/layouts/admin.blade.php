@@ -111,16 +111,11 @@
                         $unpaidCommissionsCount = 0;
                         $pendingProductsCount   = 0;
                         $pendingBannersCount    = 0;
-                        $pendingReturnsCount    = 0;
                         $pendingReportsCount    = 0;
                         try {
                             $unpaidCommissionsCount = \App\Models\CommissionRecord::where('status', 'unpaid')->count();
                             $pendingProductsCount   = \App\Models\Product::where('status', 'pending')->count();
                             $pendingBannersCount    = \App\Models\Banner::whereNotNull('userId')->where('status', 'pending')->count();
-                            $pendingReturnsCount    = \App\Models\ReturnRequest::where(function($rq) {
-                                $rq->whereIn('return_status', ['pending', 'requested', 'in_review', 'disputed', 'escalated'])
-                                   ->orWhereIn('status', ['pending', 'requested', 'in_review', 'disputed', 'escalated']);
-                            })->count();
                             $pendingReportsCount    = \App\Models\Report::where('status', 'Pending')->count();
                         } catch (\Throwable $e) {}
 
@@ -143,12 +138,6 @@
                                         'path'  => 'superadmin/orders',
                                         'alt_path' => 'admin/orders',
                                         'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'
-                                    ],
-                                    [
-                                        'label' => 'Returns & Refunds',
-                                        'path'  => 'admin/returns',
-                                        'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a4 4 0 004 4h8m0 0l-3-3m3 3l-3 3"></path>',
-                                        'badge' => $pendingReturnsCount
                                     ],
                                     [
                                         'label' => 'Payment Gateways',

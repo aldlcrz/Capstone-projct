@@ -29,6 +29,10 @@ class ReturnManagementController extends Controller
      */
     public function index(Request $request)
     {
+        if (Auth::user()?->role === 'superadmin' && $request->is('admin/returns*')) {
+            return redirect()->route('superadmin.dashboard')->with('info', 'Returns and refunds are handled directly between buyers and sellers.');
+        }
+
         $tab = $request->query('tab', 'claims');
         if (!in_array($tab, ['claims', 'sukli', 'cancellations'], true)) {
             $tab = 'claims';
