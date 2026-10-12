@@ -106,11 +106,15 @@ class SuperAdminController extends Controller
                 ->whereMonth('createdAt', Carbon::now()->month)
                 ->sum('totalAmount');
 
-            $totalCommissionAllTime    = round($totalSalesAllTime * ($rate / 100), 2);
-            $totalCommissionThisMonth  = round($totalSalesThisMonth * ($rate / 100), 2);
-
+            // Platform commission KPIs based on authoritative commission records
             $totalCollected = (float) CommissionRecord::where('status', 'paid')->sum('commissionAmount');
             $totalOutstanding = (float) CommissionRecord::where('status', 'unpaid')->sum('commissionAmount');
+            $totalCommissionAllTime = $totalCollected + $totalOutstanding;
+
+            $thisMonthRecords = CommissionRecord::where('period', $currentPeriod)->get();
+            $thisMonthCollected = (float) $thisMonthRecords->where('status', 'paid')->sum('commissionAmount');
+            $thisMonthOutstanding = (float) $thisMonthRecords->where('status', 'unpaid')->sum('commissionAmount');
+            $totalCommissionThisMonth = $thisMonthCollected + $thisMonthOutstanding;
 
             $customerCount   = User::where(function($q) {
                 $q->whereIn('role', ['customer', 'buyer', 'user'])
@@ -414,6 +418,52 @@ class SuperAdminController extends Controller
         return redirect()->back()->with('success', "Commission marked as paid for {$seller->name}.");
     }
 
+    public function markUnpaid(Request $request, string $sellerId)
+    {
+        $request->validate([
+            'period' => 'required|string',
+            'notes'  => 'nullable|string|max:500',
+            'reason' => 'nullable|string|max:500',
+        ]);
+        $seller = User::findOrFail($sellerId);
+        $ledger = app(FinancialLedgerService::class);
+        $rate = $ledger->getCommissionRate();
+        $notes = $request->notes ?: $request->reason;
+
+        $summary = $ledger->getSellerFinancialSummary($seller, $request->period);
+        $existing = CommissionRecord::where('sellerId', $sellerId)->where('period', $request->period)->first();
+        $totalSales = ($existing && (float)$existing->totalSales > 0) ? (float)$existing->totalSales : ($summary['cash_product_sales'] ?? $summary['periodCashProductSales'] ?? 0.0);
+        $commissionRate = ($existing && (float)$existing->commissionRate > 0) ? (float)$existing->commissionRate : $rate;
+        $commissionAmount = ($existing && (float)$existing->commissionAmount > 0) ? (float)$existing->commissionAmount : ($summary['commission_due'] ?? $summary['commissionDueThisPeriod'] ?? 0.0);
+
+        CommissionRecord::updateOrCreate(
+            ['sellerId' => $sellerId, 'period' => $request->period],
+            [
+                'totalSales'       => $totalSales,
+                'commissionRate'   => $commissionRate,
+                'commissionAmount' => $commissionAmount,
+                'status'           => 'unpaid',
+                'paidAt'           => null,
+                'notes'            => $notes ?: ($existing ? $existing->notes : null),
+            ]
+        );
+
+        Log::info("Commission status changed to unpaid for seller {$sellerId}, period {$request->period} by SuperAdmin " . Auth::id(), [
+            'notes' => $notes,
+        ]);
+
+        $this->sendNotification(
+            $seller->id,
+            '⚠️ Commission Status Updated',
+            "Your commission record for {$request->period} has been set to Unpaid by platform governance." . ($notes ? " Notes: {$notes}" : ""),
+            'commission',
+            '/seller/commission',
+            'seller'
+        );
+
+        return redirect()->back()->with('success', "Commission marked as Unpaid for {$seller->name}.");
+    }
+
     public function freezeShop(Request $request, string $id)
     {
         $request->validate(['reason' => 'nullable|string|max:500', 'period' => 'nullable|string']);
@@ -656,7 +706,10 @@ class SuperAdminController extends Controller
 
     public function holdPayout(Request $request, string $id)
     {
-        $request->validate(['hold_reason' => 'required|string|max:500']);
+        $reason = $request->input('hold_reason') ?: $request->input('reason');
+        if (empty($reason)) {
+            return redirect()->back()->withErrors(['hold_reason' => 'A hold reason is required.'])->withInput();
+        }
         $payout = SellerPayout::findOrFail($id);
 
         if ($payout->status === 'PAID') {
@@ -665,7 +718,7 @@ class SuperAdminController extends Controller
 
         $payout->update([
             'status'      => 'ON_HOLD',
-            'hold_reason' => $request->hold_reason,
+            'hold_reason' => $reason,
         ]);
 
         return redirect()->back()->with('success', 'Settlement payout has been placed on hold.');

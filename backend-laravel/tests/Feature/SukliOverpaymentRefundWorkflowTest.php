@@ -458,8 +458,9 @@ class SukliOverpaymentRefundWorkflowTest extends TestCase
         // Stage 1: Before verification
         $this->assertEquals('PENDING_VERIFICATION', $order->sukliRefundStatus());
 
-        // Stage 2: Admin verifies payment
-        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $order->id));
+        // Stage 2: Super Admin verifies payment (Admin is read-only 403)
+        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $order->id))->assertStatus(403);
+        $this->actingAs($this->superAdmin)->post(route('admin.orders.verify-payment', $order->id))->assertRedirect();
         $order->refresh();
         $this->assertEquals('OVERPAYMENT_PENDING_REFUND', $order->sukliRefundStatus());
 

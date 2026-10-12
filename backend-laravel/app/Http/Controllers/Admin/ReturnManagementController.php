@@ -271,6 +271,10 @@ class ReturnManagementController extends Controller
      */
     public function recordTransfer(Request $request, ReturnRequest $returnRequest)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
+        }
+
         $request->validate([
             'refund_amount'       => 'required|numeric|min:0.01',
             'transfer_reference'  => 'required|string|min:4|max:100',
@@ -363,8 +367,8 @@ class ReturnManagementController extends Controller
         ]);
 
         $admin = Auth::user();
-        if (!$admin || !in_array($admin->role, ['admin', 'superadmin'], true)) {
-            abort(403, 'Unauthorized access.');
+        if (!$admin || $admin->role !== 'superadmin') {
+            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
         }
 
         try {
@@ -413,8 +417,8 @@ class ReturnManagementController extends Controller
         ]);
 
         $admin = Auth::user();
-        if (!$admin || !in_array($admin->role, ['admin', 'superadmin'], true)) {
-            abort(403, 'Unauthorized access.');
+        if (!$admin || $admin->role !== 'superadmin') {
+            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
         }
 
         try {

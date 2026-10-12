@@ -626,7 +626,7 @@
                                                 </button>
                                             @endif
 
-                                            @if(!$isRefundedCase && ($isApprovedCase || $isDisputedCase))
+                                            @if(!$isRefundedCase && ($isApprovedCase || $isDisputedCase) && auth()->user()?->role === 'superadmin')
                                                 <button type="button" 
                                                         @click="openTransfer({{ json_encode($ret) }})"
                                                         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
@@ -850,7 +850,7 @@
                                             </button>
 
                                             {{-- Disburse Sukli Refund --}}
-                                            @if($isPaymentVerified && $remainingSukli > 0)
+                                            @if($isPaymentVerified && $remainingSukli > 0 && auth()->user()?->role === 'superadmin')
                                                 <button type="button" 
                                                         @click="openSukliRefund({{ json_encode($jsOrderData) }})"
                                                         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-xs hover:shadow transition-all cursor-pointer">
@@ -1069,7 +1069,7 @@
                                                 <span>View</span>
                                             </button>
 
-                                            @if($remainingRefund > 0)
+                                            @if($remainingRefund > 0 && auth()->user()?->role === 'superadmin')
                                                 <button type="button" 
                                                         @click="openCancelRefund({{ json_encode($jsCancelData) }})"
                                                         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs hover:shadow transition-all cursor-pointer">

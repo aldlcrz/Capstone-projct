@@ -26,6 +26,7 @@ class Order extends Model
         'overpayment_amount',
         'refund_mobile_number',
         'status',
+        'fund_holder',
         'paymentMethod',
         'paymentReference',
         'paymentProof',
@@ -556,6 +557,11 @@ class Order extends Model
      */
     public function isPlatformHeldPayment(): bool
     {
+        // Explicit custody snapshot takes top precedence
+        if (!empty($this->fund_holder)) {
+            return strtolower(trim((string) $this->fund_holder)) === 'platform';
+        }
+
         // Store Pickup and Special Delivery are direct-to-seller payment arrangements, NOT platform-held
         if ($this->isStorePickup() || $this->isSpecialDelivery()) {
             return false;

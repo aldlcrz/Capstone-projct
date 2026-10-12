@@ -264,6 +264,11 @@ class FinancialLedgerService
      */
     public static function reconcileSellerSettlementForOrder(Order $order): ?SellerPayout
     {
+        // Direct-to-seller orders never create a platform-held seller payout obligation
+        if ($order->isSellerHeldPayment()) {
+            return null;
+        }
+
         if (!static::isOnlinePaymentMethod($order->paymentMethod)) {
             return null;
         }
@@ -377,9 +382,9 @@ class FinancialLedgerService
             }
         }
 
-        if (!$admin || !in_array($admin->role, ['admin', 'superadmin'], true)) {
+        if (!$admin || $admin->role !== 'superadmin') {
             throw ValidationException::withMessages([
-                'admin' => ['Unauthorized. Only Platform Administrators can record seller payouts.'],
+                'admin' => ['Unauthorized. Financial payout mutations are restricted to Super Administrator. Admin has read-only access.'],
             ]);
         }
 

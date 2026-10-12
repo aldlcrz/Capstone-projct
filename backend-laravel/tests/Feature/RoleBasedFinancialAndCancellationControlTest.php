@@ -130,6 +130,7 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
     {
         $order = $this->createOrder([
             'paymentMethod' => 'GCash',
+            'fund_holder'   => 'platform',
             'paymentStatus' => 'Paid',
             'status'        => 'Pending',
         ]);
@@ -193,6 +194,7 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
     {
         $order = $this->createOrder([
             'paymentMethod' => 'Maya',
+            'fund_holder'   => 'platform',
             'paymentStatus' => 'Paid',
             'status'        => 'Pending',
         ]);
@@ -497,6 +499,7 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
     {
         $order = $this->createOrder([
             'paymentMethod' => 'GCash',
+            'fund_holder'   => 'platform',
             'paymentStatus' => 'Paid',
             'status'        => 'Delivered',
         ]);
@@ -733,6 +736,7 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
     {
         $order = $this->createOrder([
             'paymentMethod' => 'GCash',
+            'fund_holder'   => 'platform',
             'paymentStatus' => 'Paid',
             'status'        => 'Cancelled',
         ]);
@@ -769,6 +773,7 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
         $order = $this->createOrder([
             'totalAmount'   => 2000.00,
             'paymentMethod' => 'GCash',
+            'fund_holder'   => 'platform',
             'paymentStatus' => 'Paid',
             'status'        => 'Cancelled',
         ]);
@@ -833,12 +838,19 @@ class RoleBasedFinancialAndCancellationControlTest extends TestCase
             'status'           => 'UNVERIFIED',
         ]);
 
-        // Admin verifies incoming payment
+        // Admin is forbidden from mutating payment verification state (403 read-only)
         $response = $this->actingAs($this->admin)->post("/admin/orders/{$order->id}/verify-payment", [
             'detected_amount'  => 1500.00,
             'reference_number' => '1004455667788',
         ]);
-        $response->assertRedirect();
+        $response->assertStatus(403);
+
+        // Super Admin can verify incoming payment when authorized
+        $saResponse = $this->actingAs($this->superAdmin)->post("/admin/orders/{$order->id}/verify-payment", [
+            'detected_amount'  => 1500.00,
+            'reference_number' => '1004455667788',
+        ]);
+        $saResponse->assertRedirect();
 
         $order->refresh();
         $this->assertEquals('Paid', $order->paymentStatus);

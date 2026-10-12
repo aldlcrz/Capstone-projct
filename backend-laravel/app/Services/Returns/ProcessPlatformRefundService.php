@@ -27,9 +27,9 @@ class ProcessPlatformRefundService
         ?string $destinationName = null,
         ?string $adminNotes = null
     ): RefundTransaction {
-        if (!in_array($admin->role, ['admin', 'superadmin'], true)) {
+        if ($admin->role !== 'superadmin') {
             throw ValidationException::withMessages([
-                'admin' => ['Unauthorized. Only Platform Administrators can disburse refunds.'],
+                'admin' => ['Unauthorized. Platform financial refund disbursements are restricted to Super Administrator. Admin has read-only access.'],
             ]);
         }
 

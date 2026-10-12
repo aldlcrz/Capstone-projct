@@ -16,6 +16,7 @@ class AdminPaymentVerificationTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+    protected User $superAdmin;
     protected User $customer;
     protected User $seller;
     protected Product $product;
@@ -28,6 +29,12 @@ class AdminPaymentVerificationTest extends TestCase
             'role' => 'admin',
             'status' => 'active',
             'email' => 'admin@lumbarong.test',
+        ]);
+
+        $this->superAdmin = User::factory()->create([
+            'role' => 'superadmin',
+            'status' => 'active',
+            'email' => 'superadmin@lumbarong.test',
         ]);
 
         $this->customer = User::factory()->create([
@@ -156,7 +163,12 @@ class AdminPaymentVerificationTest extends TestCase
             'receipt_path' => 'payment-proofs/receipt.jpg',
         ]);
 
-        $response = $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $order->id));
+        // Regular admin is forbidden (403 read-only for finance)
+        $adminRes = $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $order->id));
+        $adminRes->assertStatus(403);
+
+        // Super Admin approves and verifies incoming payment
+        $response = $this->actingAs($this->superAdmin)->post(route('admin.orders.verify-payment', $order->id));
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -197,8 +209,9 @@ class AdminPaymentVerificationTest extends TestCase
         $sellerRes->assertStatus(200);
         $sellerRes->assertDontSee($unverifiedOrder->id);
 
-        // 2. Admin verifies the GCash order
-        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $unverifiedOrder->id));
+        // 2. Admin is forbidden (403), Super Admin verifies the GCash order
+        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $unverifiedOrder->id))->assertStatus(403);
+        $this->actingAs($this->superAdmin)->post(route('admin.orders.verify-payment', $unverifiedOrder->id));
         $unverifiedOrder->refresh();
 
         $this->assertEquals('Paid', $unverifiedOrder->paymentStatus);
@@ -221,8 +234,12 @@ class AdminPaymentVerificationTest extends TestCase
             'status' => 'Pending',
         ]);
 
-        // 2. Admin rejects payment
+        // 2. Admin is forbidden (403), Super Admin rejects payment
         $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $rejectedOrder->id), [
+            'reason' => 'Invalid receipt uploaded',
+        ])->assertStatus(403);
+
+        $this->actingAs($this->superAdmin)->post(route('admin.orders.reject-payment', $rejectedOrder->id), [
             'reason' => 'Invalid receipt uploaded',
         ]);
         $rejectedOrder->refresh();
@@ -260,7 +277,14 @@ class AdminPaymentVerificationTest extends TestCase
 
         $rejectionReason = 'The uploaded receipt is completely blurred and the reference number is invalid.';
 
-        $response = $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $order->id), [
+        // Regular admin is forbidden (403 read-only)
+        $adminRes = $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $order->id), [
+            'reason' => $rejectionReason,
+        ]);
+        $adminRes->assertStatus(403);
+
+        // Super Admin rejects payment
+        $response = $this->actingAs($this->superAdmin)->post(route('admin.orders.reject-payment', $order->id), [
             'reason' => $rejectionReason,
         ]);
 
@@ -304,11 +328,14 @@ class AdminPaymentVerificationTest extends TestCase
         $response->assertSee('Commission Due');
         $response->assertSee('Direct to seller');
 
-        // Verify endpoint rejects COD verification with informative error
-        $verifyRes = $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $codOrder->id));
+        // Admin is forbidden (403 read-only)
+        $this->actingAs($this->admin)->post(route('admin.orders.verify-payment', $codOrder->id))->assertStatus(403);
+
+        // Super Admin receives informative session error that direct-to-seller orders cannot be verified by platform
+        $verifyRes = $this->actingAs($this->superAdmin)->post(route('admin.orders.verify-payment', $codOrder->id));
         $verifyRes->assertSessionHas('error');
 
-        $rejectRes = $this->actingAs($this->admin)->post(route('admin.orders.reject-payment', $storePickupOrder->id), [
+        $rejectRes = $this->actingAs($this->superAdmin)->post(route('admin.orders.reject-payment', $storePickupOrder->id), [
             'reason' => 'Some reason',
         ]);
         $rejectRes->assertSessionHas('error');

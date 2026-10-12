@@ -39,9 +39,20 @@
             <h2 class="text-xs font-bold uppercase tracking-widest text-(--muted) pb-3 border-b border-(--border)">Commerce</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                    <label class="block text-xs font-bold text-(--charcoal) mb-1.5 uppercase tracking-wider">Commission Rate (%)</label>
-                    <input type="number" name="commission_rate" value="{{ $settings['commission_rate'] ?? 10 }}" min="0" max="100" step="0.1"
-                        class="w-full px-4 py-2.5 rounded-xl border border-(--border) text-sm focus:outline-none focus:ring-2 focus:ring-(--rust)/20 focus:border-(--rust) bg-(--cream)">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-(--charcoal) uppercase tracking-wider">Commission Rate (%)</label>
+                        @if(auth()->user()?->role !== 'superadmin')
+                            <span class="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 uppercase">Super Admin Only</span>
+                        @endif
+                    </div>
+                    @if(auth()->user()?->role === 'superadmin')
+                        <input type="number" name="commission_rate" value="{{ $settings['commission_rate'] ?? 10 }}" min="0" max="100" step="0.1"
+                            class="w-full px-4 py-2.5 rounded-xl border border-(--border) text-sm focus:outline-none focus:ring-2 focus:ring-(--rust)/20 focus:border-(--rust) bg-(--cream)">
+                    @else
+                        <input type="number" value="{{ $settings['commission_rate'] ?? 10 }}" disabled readonly
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-100 text-gray-500 cursor-not-allowed">
+                        <p class="text-[10px] text-gray-400 mt-1">Configured exclusively by Super Administrator.</p>
+                    @endif
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-(--charcoal) mb-1.5 uppercase tracking-wider">Min. Withdrawal (₱)</label>

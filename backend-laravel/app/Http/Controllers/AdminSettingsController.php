@@ -50,8 +50,8 @@ class AdminSettingsController extends Controller
 
         if (array_key_exists('commission_rate', $data)) {
             $user = Auth::user();
-            if (!$user || !in_array($user->role, ['admin', 'superadmin'], true)) {
-                abort(403, 'Unauthorized to modify platform commission rate.');
+            if (!$user || $user->role !== 'superadmin') {
+                abort(403, 'Unauthorized. Only Super Administrators can configure the platform commission rate.');
             }
 
             $request->validate([

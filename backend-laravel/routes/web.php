@@ -404,6 +404,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::post('/payment-settings', [SuperAdminController::class, 'updatePaymentSettings'])->name('superadmin.payment-settings.update');
     Route::post('/commission-rate', [SuperAdminController::class, 'updateCommissionRate'])->name('superadmin.commission-rate');
     Route::patch('/commissions/{sellerId}/mark-paid', [SuperAdminController::class, 'markPaid'])->name('superadmin.commissions.mark-paid');
+    Route::patch('/commissions/{sellerId}/mark-unpaid', [SuperAdminController::class, 'markUnpaid'])->name('superadmin.commissions.mark-unpaid');
     Route::patch('/shops/{id}/freeze',   [SuperAdminController::class, 'freezeShop'])->name('superadmin.shops.freeze');
     Route::patch('/shops/{id}/unfreeze', [SuperAdminController::class, 'unfreezeShop'])->name('superadmin.shops.unfreeze');
     Route::patch('/shops/{id}/toggle-status', [SuperAdminController::class, 'toggleShopStatus'])->name('superadmin.shops.toggle-status');

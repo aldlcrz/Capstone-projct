@@ -285,8 +285,18 @@ class CommissionPayoutAndFinancialIntegrityTest extends TestCase
 
         $proofFile = UploadedFile::fake()->image('payout_receipt.png');
 
-        // Admin processes payout
-        $response = $this->actingAs($this->admin)->post(route('admin.payouts.process', $payout->id), [
+        // Admin attempt is rejected (403 read-only for finance)
+        $adminRes = $this->actingAs($this->admin)->post(route('admin.payouts.process', $payout->id), [
+            'payout_method' => 'GCash',
+            'payout_destination' => '09171234567',
+            'transfer_reference' => 'MANUAL-GCASH-123456',
+            'notes' => 'Disbursed via GCash merchant portal.',
+            'transfer_proof' => $proofFile,
+        ]);
+        $adminRes->assertStatus(403);
+
+        // Super Admin processes payout
+        $response = $this->actingAs($this->superadmin)->post(route('superadmin.payouts.process', $payout->id), [
             'payout_method' => 'GCash',
             'payout_destination' => '09171234567',
             'transfer_reference' => 'MANUAL-GCASH-123456',
@@ -300,7 +310,7 @@ class CommissionPayoutAndFinancialIntegrityTest extends TestCase
         $payout->refresh();
         $this->assertEquals(SellerPayout::STATUS_PAID, $payout->status);
         $this->assertEquals('MANUAL-GCASH-123456', $payout->transaction_reference);
-        $this->assertEquals($this->admin->id, $payout->processed_by);
+        $this->assertEquals($this->superadmin->id, $payout->processed_by);
         $this->assertNotNull($payout->paid_at);
         $this->assertNotNull($payout->transfer_proof_path);
     }
@@ -332,7 +342,7 @@ class CommissionPayoutAndFinancialIntegrityTest extends TestCase
             'payout_method' => 'GCash',
             'payout_destination' => '09171234567',
             'transaction_reference' => 'REF-UNIQUE-001',
-        ], $this->admin);
+        ], $this->superadmin);
 
         $this->assertEquals(SellerPayout::STATUS_PAID, $payout->fresh()->status);
 
@@ -368,8 +378,14 @@ class CommissionPayoutAndFinancialIntegrityTest extends TestCase
 
         $payout = FinancialLedgerService::reconcileSellerSettlementForOrder($order);
 
-        // Hold payout
-        $responseHold = $this->actingAs($this->admin)->patch(route('admin.payouts.hold', $payout->id), [
+        // Admin attempt to hold is rejected (403 read-only)
+        $adminHold = $this->actingAs($this->admin)->patch(route('admin.payouts.hold', $payout->id), [
+            'reason' => 'Customer dispute pending investigation.',
+        ]);
+        $adminHold->assertStatus(403);
+
+        // Super Admin holds payout
+        $responseHold = $this->actingAs($this->superadmin)->patch(route('superadmin.payouts.hold', $payout->id), [
             'reason' => 'Customer dispute pending investigation.',
         ]);
         $responseHold->assertRedirect();

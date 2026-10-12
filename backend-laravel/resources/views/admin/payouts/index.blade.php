@@ -201,7 +201,7 @@
 
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                @if($isReady)
+                                @if($isReady && auth()->user()?->role === 'superadmin')
                                     <button type="button"
                                             @click="openDisburseModal('{{ $payout->id }}', '{{ addslashes($shopName) }}', '{{ number_format($payout->net_settlement_amount, 2) }}', '{{ $payout->payout_method ?: 'GCash' }}', '{{ $destAcc }}', '{{ $order ? strtoupper(substr($order->id, -8)) : '' }}')"
                                             class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
@@ -212,7 +212,7 @@
                                             class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
                                         🔒 Hold
                                     </button>
-                                @elseif($isHold)
+                                @elseif($isHold && auth()->user()?->role === 'superadmin')
                                     <form action="{{ route(str_starts_with(Route::currentRouteName(), 'superadmin') ? 'superadmin.payouts.release' : 'admin.payouts.release', $payout->id) }}" method="POST" class="inline">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
@@ -225,6 +225,8 @@
                                             class="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
                                         🔍 View Proof
                                     </button>
+                                @else
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Read Only</span>
                                 @endif
                             </div>
                         </td>

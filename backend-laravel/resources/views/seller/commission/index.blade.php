@@ -102,52 +102,41 @@
                 </div>
             </div>
 
-            {{-- Submit Payment Proof Form --}}
+            {{-- Commission Status & Governance Card (Strictly Read-Only) --}}
             <div id="tour-commission-form" class="rounded-2xl p-5 sm:p-8 shadow-xs space-y-4 bg-[#FFFCF7] border border-[#E8DECB]">
                 <h3 class="text-xs font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-2">
-                    <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Submit Remittance Proof
+                    <svg class="w-4 h-4 text-[#C49520]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Commission Status &amp; Governance
                 </h3>
 
                 @if($currentRecord && $currentRecord->status === 'paid')
                     <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
                         <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto">✓</div>
-                        <div class="text-sm font-bold text-emerald-900">Commission Settled for {{ $period }}</div>
-                        <div class="text-xs text-emerald-700 font-sans">Thank you! Your payment of ₱{{ number_format($currentRecord->commissionAmount, 2) }} was verified on {{ $currentRecord->paidAt ? $currentRecord->paidAt->format('M d, Y') : 'N/A' }}.</div>
+                        <div class="text-sm font-bold text-emerald-900">Commission Settled for {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
+                        <div class="text-xs text-emerald-700 font-sans">
+                            Your platform commission of ₱{{ number_format($currentRecord->commissionAmount, 2) }} was verified as Paid by Super Administrator on {{ $currentRecord->paidAt ? $currentRecord->paidAt->format('M d, Y h:i A') : 'N/A' }}.
+                        </div>
                     </div>
                 @else
-                    <form action="{{ route('seller.commission.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                        @csrf
-                        <input type="hidden" name="period" value="{{ $period }}">
-
-                        <div>
-                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest block mb-1">Payment Method *</label>
-                            <select name="paymentMethod" required class="w-full h-11 px-4 rounded-xl text-xs font-bold outline-none font-sans bg-[#FDF8EE] border border-[#E8DECB] text-[#1E1915]">
-                                <option value="GCash">GCash</option>
-                                <option value="Maya">Maya</option>
-                            </select>
+                    <div class="p-6 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">⏳</span>
+                            <div>
+                                <div class="text-sm font-bold text-amber-900">Payment Due: ₱{{ number_format($commissionDue, 2) }}</div>
+                                <div class="text-xs text-amber-700 font-sans">Billing Period: {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }} (Rate: {{ $rate }}%)</div>
+                            </div>
                         </div>
-
-                        <div>
-                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest block mb-1">Reference / Transaction Number *</label>
-                            <input type="text" name="referenceNumber" required placeholder="e.g. 10029384812" class="w-full h-11 px-4 rounded-xl text-xs font-semibold outline-none font-sans bg-[#FDF8EE] border border-[#E8DECB] text-[#1E1915]">
+                        <div class="text-xs text-gray-600 border-t border-amber-200/60 pt-3 space-y-1.5 leading-relaxed font-sans">
+                            <p><strong>Remittance Instructions:</strong> Please remit your platform fee to one of the LumBarong official remittance accounts displayed to the left.</p>
+                            <p><strong>Direct Governance:</strong> Remittance records and Paid/Unpaid status are verified and updated exclusively by the platform Super Administrator. Proof submissions directly through this page are discontinued to ensure financial auditing integrity.</p>
                         </div>
-
-                        <div>
-                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest block mb-1">Proof of Payment Screenshot *</label>
-                            <input type="file" name="paymentProof" required accept="image/*" class="w-full text-xs text-[#766C60] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FDF8EE] file:text-[#1E1915] hover:file:bg-[#F3EAD8] cursor-pointer">
-                        </div>
-
-                        <div>
-                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest block mb-1">Notes (Optional)</label>
-                            <textarea name="notes" rows="2" placeholder="Additional details..." class="w-full p-3 rounded-xl text-xs outline-none resize-none bg-[#FDF8EE] border border-[#E8DECB] text-[#1E1915]"></textarea>
-                        </div>
-
-                        <button type="submit" class="w-full h-12 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-xs cursor-pointer bg-[#1E1915] hover:bg-[#C49520]">
-                            Submit Remittance Proof
-                        </button>
-                    </form>
+                    </div>
                 @endif
+
+                <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 text-[11px] text-gray-500 space-y-1">
+                    <div class="font-bold uppercase tracking-wider text-gray-700">Audit Policy:</div>
+                    <p>Commission calculations are based on eligible completed seller-received revenue. Cancelled, refunded, or unfulfilled transactions are excluded.</p>
+                </div>
             </div>
         </div>
 

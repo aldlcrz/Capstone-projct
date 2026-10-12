@@ -1149,40 +1149,7 @@ class DashboardController extends Controller
 
     public function submitCommissionPayment(Request $request)
     {
-        $request->validate([
-            'period'           => 'required|string',
-            'paymentMethod'    => 'required|string|in:GCash,Maya,Bank Transfer',
-            'referenceNumber'  => 'required|string|max:100',
-            'paymentProof'     => 'required|image|max:3072',
-            'notes'            => 'nullable|string|max:500',
-        ]);
-
-        $seller = $request->user();
-        $financialSummary = \App\Services\Financial\FinancialLedgerService::getSellerFinancialSummary($seller, $request->period);
-        $rate = $financialSummary['commission_rate'];
-        $totalSales = $financialSummary['cash_product_sales'];
-        $commissionAmount = $financialSummary['commission_due'];
-
-        $proofPath = '';
-        if ($request->hasFile('paymentProof')) {
-            $proofPath = $request->file('paymentProof')->store('commission_proofs', 'public');
-        }
-
-        \App\Models\CommissionRecord::updateOrCreate(
-            ['sellerId' => $seller->id, 'period' => $request->period],
-            [
-                'totalSales'       => $totalSales,
-                'commissionRate'   => $rate,
-                'commissionAmount' => $commissionAmount,
-                'status'           => 'verification_pending',
-                'paymentMethod'    => $request->paymentMethod,
-                'referenceNumber'  => $request->referenceNumber,
-                'paymentProof'     => $proofPath,
-                'notes'            => $request->notes,
-            ]
-        );
-
-        return redirect()->back()->with('success', 'Commission payment proof submitted! Awaiting verification.');
+        abort(403, 'Commission payment proof submission by sellers is deprecated. Commission records are audited and updated directly by the Super Administrator.');
     }
 
     public function sellerCustomers(Request $request)

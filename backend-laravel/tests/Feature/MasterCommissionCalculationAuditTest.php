@@ -321,8 +321,9 @@ class MasterCommissionCalculationAuditTest extends TestCase
     {
         SystemSetting::updateOrCreate(['key' => 'commission_rate'], ['value' => '10.00']);
 
-        // 1. Online platform-held payment: 0% platform commission
+        // 1. Online legacy platform-held payment: 0% platform commission
         $onlineOrder = $this->createOrderWithItem(5000.00, 1, 'GCash', 'completed', 'paid');
+        $onlineOrder->update(['fund_holder' => 'platform']);
         $this->assertEquals(0.00, FinancialLedgerService::calculateCommissionableSales($onlineOrder));
 
         // 2. Unpaid COD order: 0 commissionable sales
@@ -423,12 +424,17 @@ class MasterCommissionCalculationAuditTest extends TestCase
             'rate' => 'invalid_string',
         ])->assertSessionHasErrors(['rate']);
 
-        // 6. Admin Settings update validation
+        // 6. Regular admin cannot alter commission_rate via /admin/settings (403 read-only)
         $this->actingAs($this->admin)->post('/admin/settings', [
+            'commission_rate' => 10,
+        ])->assertStatus(403);
+
+        // 7. Super admin settings validation
+        $this->actingAs($this->superadmin)->post('/admin/settings', [
             'commission_rate' => -10,
         ])->assertSessionHasErrors(['commission_rate']);
 
-        $this->actingAs($this->admin)->post('/admin/settings', [
+        $this->actingAs($this->superadmin)->post('/admin/settings', [
             'commission_rate' => 150,
         ])->assertSessionHasErrors(['commission_rate']);
     }

@@ -75,6 +75,7 @@ class CentralizedReturnRefundTest extends TestCase
             'totalAmount'     => $amount,
             'status'          => 'Delivered',
             'paymentMethod'   => 'GCash',
+            'fund_holder'     => 'platform',
             'paymentStatus'   => 'Paid',
             'shippingAddress' => '123 Lumban Heritage St, Laguna',
         ]);
@@ -226,7 +227,18 @@ class CentralizedReturnRefundTest extends TestCase
 
         $transferProof = UploadedFile::fake()->image('gcash_receipt.png');
 
-        $response = $this->actingAs($this->admin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
+        // Admin attempt is rejected (403 read-only for finance)
+        $adminRes = $this->actingAs($this->admin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
+            'refund_amount'       => 2500.00,
+            'transfer_reference'  => 'GCASH-REF-99887766',
+            'transfer_proof'      => $transferProof,
+            'destination_account' => '09171234567',
+            'destination_name'    => 'Juan Dela Cruz',
+        ]);
+        $adminRes->assertStatus(403);
+
+        // Super Admin records centralized refund transfer
+        $response = $this->actingAs($this->superAdmin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
             'refund_amount'       => 2500.00,
             'transfer_reference'  => 'GCASH-REF-99887766',
             'transfer_proof'      => $transferProof,
@@ -241,7 +253,7 @@ class CentralizedReturnRefundTest extends TestCase
         $this->assertEquals('resolved', $returnRequest->return_status);
         $this->assertEquals('transferred', $returnRequest->refund_status);
         $this->assertEquals(2500.00, (float) $returnRequest->approved_amount);
-        $this->assertEquals($this->admin->id, $returnRequest->resolved_by);
+        $this->assertEquals($this->superAdmin->id, $returnRequest->resolved_by);
 
         // Verify RefundTransaction creation & linkage
         $refundTx = RefundTransaction::where('transfer_reference', 'GCASH-REF-99887766')->first();
@@ -274,7 +286,7 @@ class CentralizedReturnRefundTest extends TestCase
         ]);
 
         // Attempt to refund ₱2,500 on a ₱2,000 order
-        $response = $this->actingAs($this->admin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
+        $response = $this->actingAs($this->superAdmin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
             'refund_amount'       => 2500.00,
             'transfer_reference'  => 'OVER-REFUND-111',
             'destination_account' => '09170000000',
@@ -320,7 +332,7 @@ class CentralizedReturnRefundTest extends TestCase
             'requested_amount'       => 1000.00,
         ]);
 
-        $response = $this->actingAs($this->admin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
+        $response = $this->actingAs($this->superAdmin)->postJson("/admin/returns/{$returnRequest->id}/record-transfer", [
             'refund_amount'       => 1000.00,
             'transfer_reference'  => 'DUPLICATE-REF-1234',
             'destination_account' => '09170000000',

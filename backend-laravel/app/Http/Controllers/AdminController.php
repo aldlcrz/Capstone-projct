@@ -1962,6 +1962,10 @@ class AdminController extends Controller
      */
     public function verifyPayment(Request $request, string $id)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to payment verification.');
+        }
+
         $order = Order::with(['latestPaymentTransaction', 'customer', 'seller'])->findOrFail($id);
 
         if (!in_array(strtolower($order->paymentMethod), ['gcash', 'maya', 'paymaya'])) {
@@ -2133,6 +2137,10 @@ class AdminController extends Controller
      */
     public function rejectPayment(Request $request, string $id)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to payment rejection.');
+        }
+
         $request->validate([
             'reason' => 'required|string|min:3|max:500',
         ]);
@@ -2284,6 +2292,10 @@ class AdminController extends Controller
 
     public function markPaid(Request $request, string $sellerId)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to commission status.');
+        }
+
         $request->validate(['period' => 'required', 'notes' => 'nullable|string|max:500']);
         $seller = User::findOrFail($sellerId);
         $ledger = app(FinancialLedgerService::class);
@@ -2377,6 +2389,10 @@ class AdminController extends Controller
 
     public function processPayout(Request $request, string $id)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to seller payouts.');
+        }
+
         $ref = $request->input('transfer_reference') ?: $request->input('transaction_reference');
         if (empty($ref)) {
             return redirect()->back()->withErrors(['transfer_reference' => 'The transfer reference field is required.'])->withInput();
@@ -2409,6 +2425,10 @@ class AdminController extends Controller
 
     public function holdPayout(Request $request, string $id)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to seller payouts.');
+        }
+
         $reason = $request->input('hold_reason') ?: $request->input('reason');
         if (empty($reason)) {
             return redirect()->back()->withErrors(['hold_reason' => 'A hold reason is required.'])->withInput();
@@ -2429,6 +2449,10 @@ class AdminController extends Controller
 
     public function releasePayout(Request $request, string $id)
     {
+        if (Auth::user()?->role !== 'superadmin') {
+            abort(403, 'Financial mutations are restricted. Administrators have read-only access to seller payouts.');
+        }
+
         $payout = SellerPayout::findOrFail($id);
         $order = $payout->order;
 

@@ -493,7 +493,7 @@ class StorePickupAndSpecialDeliveryFinancialWorkflowTest extends TestCase
             ],
         ]);
 
-        $order->update(['paymentStatus' => 'Paid', 'status' => 'Cancelled']);
+        $order->update(['fund_holder' => 'platform', 'paymentStatus' => 'Paid', 'status' => 'Cancelled']);
 
         $this->assertTrue($order->isPlatformHeldPayment());
         $this->assertFalse($order->isSellerHeldPayment());
@@ -759,6 +759,7 @@ class StorePickupAndSpecialDeliveryFinancialWorkflowTest extends TestCase
             'status'                  => 'Cancelled',
             'cancellationReason'      => 'Customer cancelled prior to processing',
             'paymentMethod'           => 'GCash',
+            'fund_holder'             => 'platform',
             'paymentStatus'           => 'Paid',
             'shippingAddress'         => ['city' => 'Lumban'],
         ]);

@@ -22,6 +22,8 @@ class PaymentTransaction extends Model
         'order_id',
         'customer_id',
         'seller_id',
+        'recipient_id',
+        'fund_holder',
         'reference_number',
         'active_reference',
         'wallet_type',
