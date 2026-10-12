@@ -129,7 +129,7 @@ class WebController extends Controller
         }
 
         try {
-            $categories = Category::withCount('products')->get();
+            $categories = Category::withCount('products')->orderBy('name', 'asc')->get();
         } catch (\Throwable $e) {
             $categories = collect();
         }

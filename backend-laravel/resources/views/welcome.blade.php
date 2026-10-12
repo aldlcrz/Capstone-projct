@@ -181,51 +181,41 @@
                     return '/uploads/categories/pina_formal.png';
                 };
 
-                $allCatItems = [
-                    ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'group' => 'Men', 'img' => '/uploads/categories/wedding_groom.png'],
-                    ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'group' => 'Men', 'img' => '/uploads/categories/pina_formal.png'],
-                    ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'group' => 'Men', 'img' => '/uploads/categories/jusi_classic.png'],
-                    ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'group' => 'Men', 'img' => '/uploads/categories/polo_casual.png'],
-                    ['name' => 'Camisa de Chino Undershirt', 'cat' => 'Camisa de Chino', 'group' => 'Men', 'img' => '/uploads/categories/camisa_undershirt.png'],
-                    ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'group' => 'Women', 'img' => '/uploads/categories/women_filipiniana.png'],
-                    ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'group' => 'Women', 'img' => '/uploads/categories/women_terno.png'],
-                    ['name' => 'Lady Barong Blouse', 'cat' => 'Lady Barong', 'group' => 'Women', 'img' => '/uploads/categories/women_lady_barong.png'],
-                    ['name' => 'Boys\' Barong Tagalog', 'cat' => 'Boys\' Barong', 'group' => 'Kids', 'img' => '/uploads/categories/kids_boys.png'],
-                    ['name' => 'Girls\' Filipiniana Dress', 'cat' => 'Girls\' Filipiniana', 'group' => 'Kids', 'img' => '/uploads/categories/kids_girls.png'],
-                    ['name' => 'Cufflinks & Heritage Accessories', 'cat' => 'Accessories', 'group' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
-                ];
+                $allCatItems = [];
 
                 if (isset($categories) && $categories->isNotEmpty()) {
                     foreach ($categories as $dbCat) {
                         $dbName = trim($dbCat->name ?? '');
                         if (empty($dbName)) continue;
 
-                        $exists = false;
-                        foreach ($allCatItems as $item) {
-                            if (strtolower($item['name']) === strtolower($dbName) || strtolower($item['cat']) === strtolower($dbName)) {
-                                $exists = true;
-                                break;
-                            }
+                        $targetGroupStr = '';
+                        if (is_array($dbCat->target_group) && count($dbCat->target_group) > 0) {
+                            $targetGroupStr = implode(', ', $dbCat->target_group);
+                        } elseif (is_string($dbCat->target_group) && !empty($dbCat->target_group)) {
+                            $targetGroupStr = $dbCat->target_group;
                         }
 
-                        $pCount = $dbCat->products_count ?? (method_exists($dbCat, 'products') ? $dbCat->products()->count() : 0);
-
-                        if (!$exists && $pCount > 0) {
-                            $targetGroupStr = 'Other';
-                            if (is_array($dbCat->target_group) && count($dbCat->target_group) > 0) {
-                                $targetGroupStr = implode(', ', $dbCat->target_group);
-                            } elseif (is_string($dbCat->target_group) && !empty($dbCat->target_group)) {
-                                $targetGroupStr = $dbCat->target_group;
-                            }
-
-                            $allCatItems[] = [
-                                'name' => $dbCat->name,
-                                'cat' => $dbCat->name,
-                                'group' => $targetGroupStr,
-                                'img' => $dbCat->getImageUrl()
-                            ];
-                        }
+                        $allCatItems[] = [
+                            'name'  => $dbCat->name,
+                            'cat'   => $dbCat->name,
+                            'group' => $targetGroupStr,
+                            'img'   => $dbCat->getImageUrl(),
+                        ];
                     }
+                } else {
+                    $allCatItems = [
+                        ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'group' => 'Men', 'img' => '/uploads/categories/wedding_groom.png'],
+                        ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'group' => 'Men', 'img' => '/uploads/categories/pina_formal.png'],
+                        ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'group' => 'Men', 'img' => '/uploads/categories/jusi_classic.png'],
+                        ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'group' => 'Men', 'img' => '/uploads/categories/polo_casual.png'],
+                        ['name' => 'Camisa de Chino', 'cat' => 'Camisa de Chino', 'group' => 'Men', 'img' => '/uploads/categories/camisa_undershirt.png'],
+                        ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'group' => 'Women', 'img' => '/uploads/categories/women_filipiniana.png'],
+                        ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'group' => 'Women', 'img' => '/uploads/categories/women_terno.png'],
+                        ['name' => 'Lady Barong', 'cat' => 'Lady Barong', 'group' => 'Women', 'img' => '/uploads/categories/women_lady_barong.png'],
+                        ['name' => 'Boys\' Barong', 'cat' => 'Boys\' Barong', 'group' => 'Kids', 'img' => '/uploads/categories/kids_boys.png'],
+                        ['name' => 'Girls\' Filipiniana', 'cat' => 'Girls\' Filipiniana', 'group' => 'Kids', 'img' => '/uploads/categories/kids_girls.png'],
+                        ['name' => 'Accessories', 'cat' => 'Accessories', 'group' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
+                    ];
                 }
 
                 $catItems = array_merge([
