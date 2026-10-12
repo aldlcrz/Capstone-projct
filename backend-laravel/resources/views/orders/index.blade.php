@@ -116,7 +116,7 @@
             {{-- Star Divider --}}
             <div style="position:relative;margin:18px 0 0 0;display:flex;align-items:center;justify-content:center;">
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;" class="inline-flex items-center"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
             </div>
         </div>
 
@@ -428,22 +428,22 @@
                                         @endphp
                                         @if($retStatus === 'approved')
                                             <span onclick="event.stopPropagation();" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                ✓ Return Approved
+                                                <x-lucide name="check-circle" class="w-3 h-3 text-blue-600 shrink-0" /> Return Approved
                                             </span>
                                         @elseif($retStatus === 'rejected')
                                             <span onclick="event.stopPropagation();" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                ✕ Return Rejected
+                                                <x-lucide name="x-circle" class="w-3 h-3 text-red-600 shrink-0" /> Return Rejected
                                             </span>
                                         @else
                                             <span onclick="event.stopPropagation();" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                ⏳ Return Pending
+                                                <x-lucide name="clock" class="w-3 h-3 text-amber-600 shrink-0" /> Return Pending
                                             </span>
                                         @endif
 
                                     {{-- 2. Else If Reviews exist: show Reviewed badge only, hide Return button --}}
                                     @elseif($hasReviews)
                                         <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                            ★ {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
+                                            <x-lucide name="star" class="w-3 h-3 text-emerald-600 fill-emerald-600 shrink-0" /> {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
                                         </span>
 
                                     {{-- 3. Else (Neither submitted yet): show both options so customer can choose --}}
@@ -454,7 +454,7 @@
                                                     @click.stop="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderId = '{{ $order->id }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}'"
                                                     style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
                                                     class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                                <span>⭐ Rate Now</span>
+                                                <span class="flex items-center gap-1.5"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Rate Now</span>
                                             </button>
                                         @endif
 
@@ -471,7 +471,7 @@
                                             onclick="event.stopPropagation();"
                                             @click.stop="cancelOrderId = '{{ $order->id }}'; cancelModal = true;"
                                             class="px-3.5 py-1.5 rounded-full bg-white hover:bg-red-50 text-red-600 border border-red-200 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1 cursor-pointer">
-                                        <span>✕ Cancel</span>
+                                        <span class="flex items-center gap-1"><x-lucide name="x" class="w-3 h-3" /> Cancel</span>
                                     </button>
                                     <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
                                         <span>View Details</span>
@@ -479,7 +479,7 @@
                                     </span>
                                 @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
                                     <span style="background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                        ⏳ Cancellation Pending
+                                        <x-lucide name="clock" class="w-3 h-3 text-orange-600 shrink-0" /> Cancellation Pending
                                     </span>
                                     <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
                                         <span>View Details</span>
@@ -487,7 +487,7 @@
                                     </span>
                                 @elseif($statusLower === 'cancelled')
                                     <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                        ✕ Cancelled
+                                        <x-lucide name="x-circle" class="w-3 h-3 text-red-600 shrink-0" /> Cancelled
                                     </span>
                                 @else
                                     <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
@@ -566,7 +566,7 @@
                         {{-- Cancellation Pending Notice Card --}}
                         <div class="bg-orange-50 border border-orange-200 rounded-2xl p-4 space-y-1.5" x-show="selectedOrder && ['cancellation pending', 'cancellation requested'].includes((selectedOrder.status || '').toLowerCase())">
                             <div class="flex items-center gap-2 text-orange-900 font-black text-xs uppercase tracking-wider">
-                                <span>⏳ Cancellation Request Pending</span>
+                                <span class="flex items-center gap-1.5"><x-lucide name="clock" class="w-3.5 h-3.5 text-orange-800" /> Cancellation Request Pending</span>
                             </div>
                             <p class="text-xs text-orange-800">
                                 You have requested to cancel this order. It is currently awaiting review and approval by the artisan.
@@ -590,7 +590,7 @@
                                     <div class="flex flex-col items-center gap-1.5 z-10">
                                         <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all"
                                              :class="idx <= getStepIndex(selectedOrder.status) ? 'bg-[#C0420A] border-[#C0420A] text-white shadow-md' : 'bg-white border-gray-200 text-gray-400'">
-                                            <span x-text="idx < getStepIndex(selectedOrder.status) ? '✓' : (idx + 1)"></span>
+                                            <span x-text="idx < getStepIndex(selectedOrder.status) ? 'Done' : (idx + 1)"></span>
                                         </div>
                                         <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-center"
                                               :class="idx <= getStepIndex(selectedOrder.status) ? 'text-[#C0420A]' : 'text-gray-400'"
@@ -604,7 +604,7 @@
                         <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-4 space-y-3" x-show="selectedOrder && selectedOrder.packingProof">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2.5">
-                                    <span class="text-base">📦</span>
+                                    <x-lucide name="package" class="w-5 h-5 text-emerald-800 shrink-0" />
                                     <div>
                                         <div class="font-black text-emerald-950 uppercase tracking-wider text-[10px]">Seller Packing Proof</div>
                                         <p class="text-[10px] text-emerald-700 font-medium mt-0.5">Photo uploaded by seller before handing order to courier</p>
@@ -621,7 +621,7 @@
                                  class="w-full max-h-48 rounded-xl overflow-hidden bg-white border border-emerald-200 cursor-pointer group relative flex items-center justify-center">
                                 <img :src="selectedOrder.packingProof" class="w-full max-h-48 object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing Proof Preview" x-on:error="$event.target.style.display='none'">
                                 <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                    <span class="px-3 py-1 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-xs group-hover:scale-110 transition-transform">🔍 Click to Enlarge</span>
+                                    <span class="px-3 py-1 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-xs group-hover:scale-110 transition-transform flex items-center gap-1"><x-lucide name="search" class="w-3 h-3" /> Click to Enlarge</span>
                                 </div>
                             </div>
                         </div>
@@ -630,7 +630,7 @@
                         <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3"
                              x-show="selectedOrder && !selectedOrder.packingProof && !selectedOrder.isSpecialDelivery && !selectedOrder.isStorePickup && ['processing', 'to ship', 'ready to ship', 'to_ship', 'ready_to_ship'].includes((selectedOrder.status || '').toLowerCase())">
                             <div class="flex items-center gap-2.5">
-                                <span class="text-base">📦</span>
+                                <x-lucide name="package" class="w-5 h-5 text-emerald-800 shrink-0" />
                                 <div>
                                     <div class="font-bold text-amber-950 text-[10px] uppercase tracking-wider">Packaging Status</div>
                                     <p class="text-[10px] text-amber-800 font-medium mt-0.5">The artisan is currently preparing and packing your order. Verified photo will be displayed here once packed.</p>
@@ -646,7 +646,7 @@
                              x-show="selectedOrder && ['in transit', 'out for delivery', 'delivered', 'completed'].includes((selectedOrder.status || '').toLowerCase().replace(/_/g, ' ')) && selectedOrder.trackingNumber">
                             <div class="flex items-center justify-between border-b border-white/10 pb-2">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-base">🚚</span>
+                                    <x-lucide name="truck" class="w-4 h-4 text-amber-400 shrink-0" />
                                     <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Courier Shipping Details</span>
                                 </div>
                                 <span class="px-2 py-0.5 bg-white/10 rounded-full text-[8px] font-black uppercase tracking-widest text-amber-400" x-text="selectedOrder.status"></span>
@@ -718,7 +718,7 @@
                                             <span x-text="' ' + selectedOrder.postalCode"></span>
                                         </template>
                                     </p>
-                                    <div class="text-[#C0420A] font-bold mt-1 text-[11px]" x-show="selectedOrder.phone" x-text="'📞 ' + selectedOrder.phone"></div>
+                                    <div class="text-[#C0420A] font-bold mt-1 text-[11px] flex items-center gap-1" x-show="selectedOrder.phone"><x-lucide name="phone" class="w-3 h-3 shrink-0" /> <span x-text="selectedOrder.phone"></span></div>
                                 </div>
                             </div>
                         </div>
@@ -736,7 +736,7 @@
                                 </div>
                                 <div>
                                     <div class="text-xs font-black text-black" x-text="selectedOrder.seller ? selectedOrder.seller.name : ''"></div>
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="selectedOrder.seller && selectedOrder.seller.isVerified ? 'Verified Artisan ✓' : 'Artisan Seller'"></div>
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1"><span x-text="selectedOrder.seller && selectedOrder.seller.isVerified ? 'Verified Artisan' : 'Artisan Seller'"></span><template x-if="selectedOrder.seller && selectedOrder.seller.isVerified"><x-lucide name="check-circle" class="w-3 h-3 text-emerald-600 inline shrink-0" /></template></div>
                                 </div>
                             </div>
                             <template x-if="selectedOrder.seller">
@@ -773,7 +773,7 @@
         <div @click.away="packingModal = false" class="relative max-w-lg w-full bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col items-center">
             <div class="w-full flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">📦</span>
+                    <x-lucide name="package" class="w-6 h-6 text-gray-400" />
                     <h3 class="font-serif text-lg font-bold text-black">Seller Packing Proof</h3>
                 </div>
                 <button type="button" @click="packingModal = false"
@@ -801,8 +801,8 @@
     <div x-show="confirmModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="confirmModal = false" class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-6">
             <div class="text-center space-y-2">
-                <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto text-2xl text-emerald-600 shadow-sm">
-                    ✓
+                <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto text-emerald-600 shadow-sm">
+                    <x-lucide name="check-circle" class="w-8 h-8 text-emerald-600" />
                 </div>
                 <h3 class="font-serif text-lg sm:text-xl font-bold text-black">Confirm Order Received?</h3>
                 <p class="text-xs text-gray-500 leading-relaxed">Please only confirm once you have physically received and inspected all items in your package.</p>
@@ -924,7 +924,7 @@
                                 @mouseenter="hover = {{ $i }}"
                                 @mouseleave="hover = 0"
                                 class="text-3xl transition-transform active:scale-125 focus:outline-none cursor-pointer">
-                                <span :class="(hover || rating) >= {{ $i }} ? 'text-amber-400' : 'text-gray-200'">★</span>
+                                <svg class="w-6 h-6 inline" :class="(hover || rating) >= {{ $i }} ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             </button>
                         @endfor
                         <span class="text-xs font-bold text-gray-500 ml-2" x-text="rating > 0 ? rating + ' / 5 Stars' : 'Select Rating'"></span>
@@ -943,7 +943,7 @@
                 <div class="space-y-1.5 pt-1 border-t border-gray-100">
                     <div class="flex items-center justify-between">
                         <label class="text-[10px] font-black uppercase tracking-widest text-gray-700 flex items-center gap-1">
-                            <span>📷 Upload Photos</span>
+                            <span class="flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5 inline" /> Upload Photos</span>
                             <span class="text-gray-400 font-normal" x-text="'(' + photoPreviews.length + '/3)'"></span>
                         </label>
                         <span class="text-[9px] font-bold text-gray-400">Max 3 images • 10MB</span>
@@ -956,9 +956,7 @@
                         <template x-for="(photo, index) in photoPreviews" :key="index">
                             <div class="relative w-14 h-14 rounded-xl border border-gray-200 overflow-hidden group bg-gray-50 shrink-0 shadow-2xs">
                                 <img :src="photo.url" @click="openLightbox('image', photo.url)" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" title="Click to preview">
-                                <button type="button" @click.stop="removePhoto(index)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[9px] font-bold shadow-xs cursor-pointer">
-                                    ✕
-                                </button>
+                                <button type="button" @click.stop="removePhoto(index)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[9px] font-bold shadow-xs cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                             </div>
                         </template>
 
@@ -979,7 +977,7 @@
                 <div class="space-y-1.5 pt-1 border-t border-gray-100">
                     <div class="flex items-center justify-between">
                         <label class="text-[10px] font-black uppercase tracking-widest text-gray-700 flex items-center gap-1">
-                            <span>🎥 Upload Video</span>
+                            <span class="flex items-center gap-1"><x-lucide name="video" class="w-3.5 h-3.5 inline" /> Upload Video</span>
                             <span class="text-gray-400 font-normal">(1 video)</span>
                         </label>
                         <span class="text-[9px] font-bold text-gray-400">Max 50MB (MP4, MOV, WEBM)</span>
@@ -997,16 +995,16 @@
                     <template x-if="videoPreview">
                         <div class="p-2.5 bg-gray-900 rounded-2xl flex items-center justify-between gap-2 text-white">
                             <div class="flex items-center gap-2 min-w-0 cursor-pointer" @click="openLightbox('video', videoPreview)">
-                                <div class="w-8 h-8 rounded-lg bg-black/60 border border-white/20 flex items-center justify-center shrink-0 text-[10px]">
-                                    ▶
+                                <div class="w-8 h-8 rounded-lg bg-black/60 border border-white/20 flex items-center justify-center shrink-0 text-white">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[11px] font-bold truncate text-white" x-text="videoName || 'Attached Video'"></p>
-                                    <span class="text-[9px] text-orange-400 font-semibold">🔍 Preview Video</span>
+                                    <span class="text-[9px] text-orange-400 font-semibold flex items-center gap-1"><x-lucide name="search" class="w-3 h-3" /> Preview Video</span>
                                 </div>
                             </div>
                             <button type="button" @click="removeVideo()" class="px-2.5 py-1 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-[10px] font-bold transition-colors cursor-pointer shrink-0">
-                                ✕ Remove
+                                <span class="flex items-center gap-1"><x-lucide name="x" class="w-3 h-3" /> Remove</span>
                             </button>
                         </div>
                     </template>
@@ -1038,9 +1036,7 @@
         <div @click.away="closeLightbox()" class="relative max-w-4xl w-full flex flex-col items-center justify-center">
             <button type="button" 
                     @click="closeLightbox()" 
-                    class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20">
-                ✕
-            </button>
+                    class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 
             <div class="w-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black/60 p-1 sm:p-2 border border-white/10">
                 <template x-if="lightboxType === 'image'">
@@ -1057,8 +1053,8 @@
     <div x-show="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="cancelModal = false" class="bg-white border border-gray-150 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-gray-900">
             <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <x-lucide name="x-circle" class="w-5 h-5 text-red-600" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Request Order Cancellation</h3>

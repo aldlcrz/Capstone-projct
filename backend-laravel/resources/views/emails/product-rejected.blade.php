@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="greeting">Mabuhay, {{ $sellerName }}!</div>
-<span class="badge badge-warning">⚠️ Product Listing Update</span>
+<span class="badge badge-warning">Product Listing Update</span>
 <p>Your product listing <strong>{{ $productName }}</strong> was not approved for publication.</p>
 
 <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 8px; margin: 18px 0;">

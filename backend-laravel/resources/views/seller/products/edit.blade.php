@@ -106,7 +106,7 @@
 <div class="max-w-350 mx-auto pb-36 sm:pb-28 lg:pb-12 px-2.5 sm:px-6" x-data="editProductManager()">
     <div class="mb-3 sm:mb-10 pb-4 border-b" style="border-color: #E8DECB;">
         <div class="flex items-center gap-2 mb-1">
-            <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Catalogue</span>
+            <span class="text-[9px] font-extrabold uppercase tracking-[0.25em] inline-flex items-center gap-1" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Shop Catalogue</span>
             <span style="color: #E8DECB;">•</span>
             <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Edit Listing</span>
         </div>
@@ -367,7 +367,7 @@
                                     class="target-pill" 
                                     :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
                                 <span>{{ $group }}</span>
-                                <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
+                                <span class="target-checkmark inline-flex items-center" x-show="targetGroup === '{{ $group }}'"><x-lucide name="check" class="w-3 h-3" /></span>
                             </button>
                         @endforeach
                         <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
@@ -403,7 +403,7 @@
                                     class="cat-pill"
                                     :class="selectedCategories.includes(String(cat.id)) ? 'cat-pill-selected' : ''">
                                 <span x-text="cat.name" style="line-height:1.3;"></span>
-                                <span class="cat-checkmark" x-show="selectedCategories.includes(String(cat.id))">✓</span>
+                                <span class="cat-checkmark inline-flex items-center" x-show="selectedCategories.includes(String(cat.id))"><x-lucide name="check" class="w-3 h-3" /></span>
                             </button>
                         </template>
 
@@ -418,7 +418,7 @@
                     <div x-show="selectedCategories.length > 0"
                          class="p-3 rounded-xl bg-[#FDF8EE] border border-[#EEDBBA] flex items-center justify-between gap-2 flex-wrap">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-[#C49520] font-black text-xs">✓</span>
+                            <x-lucide name="check" class="w-3.5 h-3.5 text-[#C49520]" />
                             <span class="text-[10px] text-[#7A5505] font-bold uppercase tracking-wider">Active Category:</span>
                             <template x-for="catId in selectedCategories" :key="catId">
                                 <span class="text-xs bg-[#221F1C] text-[#FCFAF6] rounded-full px-3 py-1 font-semibold inline-flex items-center gap-1.5 shadow-2xs">
@@ -427,7 +427,7 @@
                                 </span>
                             </template>
                         </div>
-                        <span class="text-[10px] text-[#A07218] font-bold">Lumban Verified ✦</span>
+                        <span class="text-[10px] text-[#A07218] font-bold inline-flex items-center gap-1">Lumban Verified <x-lucide name="sparkles" class="w-3 h-3 text-[#A07218]" /></span>
                     </div>
                 </div>
 
@@ -529,7 +529,7 @@
                                             @click="removed = true"
                                             title="Remove photo"
                                             class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 hover:bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-md transition-all z-10 cursor-pointer">
-                                        ✕
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     </button>
                                 </div>
                             </div>
@@ -582,7 +582,7 @@
                                         x-show="index > 0"
                                         @click="removeVariantRow(index)" 
                                         class="text-xs text-red-500 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer">
-                                    ✕ Remove
+                                    <x-lucide name="trash-2" class="w-3.5 h-3.5" /> Remove
                                 </button>
                             </div>
 
@@ -647,16 +647,16 @@
                 <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
                     <span class="text-[10px] font-extrabold uppercase tracking-widest text-stone-500">Listing Status</span>
                     @if($product->status === 'approved')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-800 border border-green-200">
-                            ✓ Approved
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-800 border border-green-200">
+                            <x-lucide name="check-circle" class="w-3 h-3" /> Approved
                         </span>
                     @elseif($product->status === 'pending')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
-                            ⏳ Pending Review
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+                            <x-lucide name="clock" class="w-3 h-3" /> Pending Review
                         </span>
                     @elseif($product->status === 'draft')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-300">
-                            📝 Draft
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-300">
+                            <x-lucide name="file-text" class="w-3 h-3" /> Draft
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200">
@@ -976,7 +976,7 @@ function editProductManager() {
         },
 
         targetGroup: initData.targetGroup || 'Men',
-        selectedCategories: initialCategoryIds,
+        selectedCategories: initialCategoryIds.slice(0, 1),
         categoriesList: parsedCats,
 
         variants: Array.isArray(initData.variations) && initData.variations.length > 0 
@@ -1080,9 +1080,9 @@ function editProductManager() {
             const strId = String(cat.id);
             const idx = this.selectedCategories.indexOf(strId);
             if (idx === -1) {
-                this.selectedCategories = [strId]; // Single category selection mode for clean mapping
+                this.selectedCategories = [strId]; // Allow selecting only one category per product
             } else {
-                this.selectedCategories.splice(idx, 1);
+                this.selectedCategories = [];
             }
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
@@ -1400,7 +1400,7 @@ function renderEditImagePreviews() {
                     <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-full text-[9px] font-black text-white shadow-sm border border-white/10">
                         ${idx + 1}
                     </div>
-                    <button type="button" onclick="removeNewEditImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10 cursor-pointer" title="Remove photo">✕</button>
+                    <button type="button" onclick="removeNewEditImageAt(${idx})" class="absolute top-2 right-2 w-7 h-7 bg-red-600/95 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-lg hover:scale-110 active:scale-95 transition-all z-10 cursor-pointer" title="Remove photo"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 `;
                 grid.appendChild(card);
             };
@@ -1742,14 +1742,14 @@ function validateProductForm(e, isEdit = true) {
         banner.id = 'js-error-banner';
         banner.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4.5 flex items-start gap-3.5 transition-all';
         banner.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100 font-bold">✕</div>
+            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
             <div class="grow pt-0.5">
                 <h4 class="text-xs font-black text-black uppercase tracking-wider">Please fix the following form errors</h4>
                 <ul class="text-xs text-red-600 font-semibold mt-1 leading-relaxed space-y-1 list-disc list-inside">
                     ${errors.map(err => `<li>${err}</li>`).join('')}
                 </ul>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-gray-500 shrink-0 font-bold">✕</button>
+            <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-gray-500 shrink-0 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         document.body.appendChild(banner);
 

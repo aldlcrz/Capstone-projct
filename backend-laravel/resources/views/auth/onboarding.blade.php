@@ -183,7 +183,7 @@
 
         {{-- Trust & Privacy Footer --}}
         <p class="text-center text-[10px] text-gray-400 mt-3 leading-relaxed">
-            🔒 Your personal information is encrypted & never shared with third parties.
+            <x-lucide name="lock" class="w-3.5 h-3.5 text-gray-500 inline mr-1" />Your personal information is encrypted & never shared with third parties.
         </p>
     </div>
 

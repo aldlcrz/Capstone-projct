@@ -375,7 +375,7 @@
 
             <template x-if="deletingCategory.products_count > 0">
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] text-amber-800 leading-relaxed font-medium">
-                    ⚠️ <strong>Notice:</strong> This category currently contains <strong x-text="deletingCategory.products_count"></strong> product(s).
+                    <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 inline mr-1" /><strong>Notice:</strong> This category currently contains <strong x-text="deletingCategory.products_count"></strong> product(s).
                 </div>
             </template>
 

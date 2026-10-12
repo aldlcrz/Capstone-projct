@@ -90,7 +90,7 @@
 
             @if(($filters['preset'] ?? 'all_time') !== 'all_time' || !empty($filters['start_date']) || !empty($filters['end_date']))
                 <a href="{{ route('admin.dashboard') }}" class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">
-                    Reset Filter ✕
+                    Reset Filter <x-lucide name="x" class="w-3.5 h-3.5 inline" />
                 </a>
             @endif
         </div>

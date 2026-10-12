@@ -43,6 +43,12 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
+    </script>
     <script>
         (function() {
             var origFetch = window.fetch;
@@ -101,7 +107,7 @@
                         <div>
                             <span class="font-serif text-lg font-bold text-[#1F2937] tracking-tight">LUMBARONG</span>
                             <div class="flex items-center gap-1.5 px-0.5 text-[#C0420A] font-bold tracking-widest text-[9px] uppercase">
-                                <span>👑 SUPER ADMIN</span>
+                                <span class="flex items-center gap-1 text-amber-500"><x-lucide name="crown" class="w-3.5 h-3.5 inline shrink-0" /> SUPER ADMIN</span>
                             </div>
                         </div>
                     </a>
@@ -258,7 +264,7 @@
                 <div class="mt-6 pt-6 border-t border-gray-200 shrink-0 space-y-3">
                     <div class="flex items-center gap-3 px-2">
                         <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs border border-amber-500/20">
-                            👑
+                            <x-lucide name="crown" class="w-5 h-5 text-amber-400" />
                         </div>
                         <div class="overflow-hidden">
                             <div class="text-sm font-bold text-[#1F2937] truncate">{{ Auth::user()->name }}</div>
@@ -323,14 +329,14 @@
                             <div class="text-right hidden sm:block">
                                 <div class="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
                                     {{ Auth::user()->name }}
-                                    <span class="text-xs">👑</span>
+                                    <span class="inline-flex items-center text-amber-500"><x-lucide name="crown" class="w-3.5 h-3.5 inline" /></span>
                                 </div>
                                 <div class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">
                                     Super Administrator
                                 </div>
                             </div>
                             <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black text-amber-400 flex items-center justify-center font-bold shadow-md overflow-hidden shrink-0 border-2 border-white">
-                                👑
+                                <x-lucide name="crown" class="w-4 h-4 text-amber-400" />
                             </div>
                             <svg class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200" :class="{ 'rotate-180': superProfileOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -351,7 +357,7 @@
                             
                             <div class="px-4 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-xl bg-black text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                    👑
+                                    <x-lucide name="crown" class="w-4 h-4 text-amber-400" />
                                 </div>
                                 <div class="min-w-0">
                                     <div class="text-xs font-bold text-gray-900 truncate">{{ Auth::user()->name }}</div>
@@ -511,9 +517,9 @@
                 <div x-data="{ mobileMoreOpen: false }" class="relative">
                     <button @click="mobileMoreOpen = !mobileMoreOpen" class="flex flex-col items-center gap-0.5 px-2.5 py-1 text-gray-500 hover:text-gray-700 cursor-pointer">
                         <div class="w-6 h-6 rounded-full bg-black text-amber-400 flex items-center justify-center text-[10px] font-bold overflow-hidden border border-white">
-                            👑
+                            <x-lucide name="crown" class="w-3.5 h-3.5 text-amber-400" />
                         </div>
-                        <span class="text-[9px] font-semibold">More ▾</span>
+                        <span class="text-[9px] font-semibold flex items-center gap-0.5"><span>More</span><x-lucide name="chevron-down" class="w-2.5 h-2.5 inline" /></span>
                     </button>
 
                     <!-- Popup Sheet -->
@@ -647,7 +653,7 @@
         class="fixed top-20 right-4 sm:top-20 sm:right-8 z-9999 max-w-sm w-[calc(100%-2rem)] rounded-2xl shadow-2xl p-4 bg-white/95 backdrop-blur-md border border-gray-200">
         <div class="flex items-start gap-3">
             <div class="w-9 h-9 rounded-xl bg-black text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0 shadow-xs">
-                👑
+                <x-lucide name="crown" class="w-4 h-4 text-amber-400" />
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-1">

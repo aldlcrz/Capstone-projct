@@ -11,13 +11,13 @@
     rejectProduct: null,
     rejectReason: '',
     premadeReasons: [
-        { label: '📷 Blurry / Low Quality Photo', text: 'Photo resolution is too low or images are blurry. Please upload clear, well-lit photos highlighting the fabric texture, embroidery, and full garment.' },
-        { label: '📏 Missing Sizing Specs', text: 'Missing accurate sizing measurements or size guide. Please include chest, length, and sleeve measurements to help buyers find the right fit.' },
-        { label: '📝 Incomplete Description', text: 'Product description is incomplete. Please specify key details including fabric type (e.g., Piña, Jusi, Cocoon, Organza), lining, and craftsmanship method.' },
-        { label: '🏷️ Incorrect Category', text: 'This item is assigned to an incorrect category. Please update it to the proper category so customers can discover it easily.' },
-        { label: '💰 Pricing or Stock Issue', text: 'The listing price or inventory quantity appears inaccurate or incomplete. Please review and provide valid pricing and stock details.' },
-        { label: '⚠️ Policy Violation', text: 'This listing does not adhere to LumBarong marketplace quality standards or artisan community policies.' },
-        { label: '📑 Duplicate Listing', text: 'This product appears to be an identical duplicate of an already active listing in your shop.' }
+        { label: 'Blurry / Low Quality Photo', text: 'Photo resolution is too low or images are blurry. Please upload clear, well-lit photos highlighting the fabric texture, embroidery, and full garment.' },
+        { label: 'Missing Sizing Specs', text: 'Missing accurate sizing measurements or size guide. Please include chest, length, and sleeve measurements to help buyers find the right fit.' },
+        { label: 'Incomplete Description', text: 'Product description is incomplete. Please specify key details including fabric type (e.g., Piña, Jusi, Cocoon, Organza), lining, and craftsmanship method.' },
+        { label: 'Incorrect Category', text: 'This item is assigned to an incorrect category. Please update it to the proper category so customers can discover it easily.' },
+        { label: 'Pricing or Stock Issue', text: 'The listing price or inventory quantity appears inaccurate or incomplete. Please review and provide valid pricing and stock details.' },
+        { label: 'Policy Violation', text: 'This listing does not adhere to LumBarong marketplace quality standards or artisan community policies.' },
+        { label: 'Duplicate Listing', text: 'This product appears to be an identical duplicate of an already active listing in your shop.' }
     ],
     applyPremadeReason(text) {
         this.rejectReason = text;
@@ -351,7 +351,7 @@
                     </template>
                     <button type="button" @click="closeInspect()" 
                             class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer">
-                        ✕
+                        <x-lucide name="x" class="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -525,7 +525,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     <span>Reject Product Listing</span>
                 </div>
-                <button type="button" @click="closeRejectModal()" class="text-gray-400 hover:text-black text-sm font-bold cursor-pointer">✕</button>
+                <button type="button" @click="closeRejectModal()" class="text-gray-400 hover:text-black cursor-pointer"><x-lucide name="x" class="w-4 h-4" /></button>
             </div>
 
             <p class="text-xs text-gray-600 leading-relaxed">

@@ -528,7 +528,7 @@ document.addEventListener('alpine:init', () => {
                         class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#C0422A]/10 text-[#C0422A] text-[11px] font-bold hover:bg-[#C0422A]/20 transition-all shrink-0 cursor-pointer"
                         title="Choose from all pre-made responses"
                     >
-                        <span>⚡</span>
+                        <x-lucide name="sparkles" class="w-3.5 h-3.5 text-amber-500 inline" />
                         <span>Quick Replies</span>
                         <svg class="w-3 h-3 transition-transform" :class="showQuickReplyPicker ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
@@ -566,7 +566,7 @@ document.addEventListener('alpine:init', () => {
                     <div class="flex items-center justify-between pb-1.5 border-b border-gray-100">
                         <span class="text-[10px] font-black uppercase tracking-wider text-gray-400">Choose a Pre-made Response</span>
                         <button type="button" @click="openQuickRepliesSettings()" class="text-[10px] font-bold text-[#C0422A] hover:underline cursor-pointer">
-                            ⚙️ Manage All Templates
+                            <x-lucide name="pencil" class="w-3.5 h-3.5 inline mr-1" /> Manage All Templates
                         </button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -683,7 +683,7 @@ document.addEventListener('alpine:init', () => {
                         class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:text-black text-xs font-semibold hover:border-gray-300 transition-all cursor-pointer"
                         title="Reset to recommended defaults"
                     >
-                        🔄 Defaults
+                        <x-lucide name="rotate-ccw" class="w-3.5 h-3.5 inline mr-1" /> Defaults
                     </button>
                     <button
                         type="button"
@@ -802,9 +802,9 @@ document.addEventListener('alpine:init', () => {
                         x-model="quickReplyForm.category"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-black/30 focus:bg-white transition-all cursor-pointer"
                     >
-                        <option value="Order Updates">📦 Order Updates & Fulfillment</option>
-                        <option value="Customer Inquiries">💬 Customer Inquiries & Stock</option>
-                        <option value="Sizing & Fitting">📐 Sizing & Measurements</option>
+                        <option value="Order Updates">Order Updates & Fulfillment</option>
+                        <option value="Customer Inquiries">Customer Inquiries & Stock</option>
+                        <option value="Sizing & Fitting">Sizing & Measurements</option>
                         <option value="General">Heritage Shop General</option>
                     </select>
                 </div>
@@ -857,7 +857,7 @@ document.addEventListener('alpine:init', () => {
         x-transition:leave-end="opacity-0 translate-y-2"
         class="absolute bottom-5 right-5 bg-black text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 z-50 pointer-events-none"
     >
-        <span>✓</span>
+        <x-lucide name="check" class="w-4 h-4 text-emerald-400" />
         <span x-text="quickReplyToast"></span>
     </div>
 

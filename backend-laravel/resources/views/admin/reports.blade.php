@@ -255,7 +255,7 @@
         </div>
 
         <p class="text-[11px] text-gray-400 italic">
-            ⚖️ <strong>Safety Principle:</strong> Risk scores are decision-support indicators. Administrators always make final enforcement determinations following evidence review.
+            <x-lucide name="scale" class="w-4 h-4 inline mr-1 text-amber-700" /> <strong>Safety Principle:</strong> Risk scores are decision-support indicators. Administrators always make final enforcement determinations following evidence review.
         </p>
     </div>
     @endif
@@ -280,7 +280,7 @@
                         @php
                             $rType = $report->reportType ?? (!empty($report->productId) ? 'product' : 'account');
                             $typeIcon = $rType === 'product' ? 'bg-sky-50 text-sky-600' : 'bg-amber-50 text-amber-600';
-                            $typeEmoji = $rType === 'product' ? '📦' : '👤';
+                            $typeIconName = $rType === 'product' ? 'package' : 'user';
 
                             $sevBadge = match(strtoupper($report->severity ?? 'MEDIUM')) {
                                 'CRITICAL' => 'bg-red-50 text-red-700 border-red-200/80',
@@ -303,7 +303,7 @@
                                 <div class="flex items-center gap-2.5">
                                     <div class="w-8 h-8 rounded-xl {{ $typeIcon }} border border-gray-100 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
                                          style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
-                                        <span>{{ $typeEmoji }}</span>
+                                        <x-lucide :name="$typeIconName" class="w-4 h-4" />
                                     </div>
                                     <div class="min-w-0">
                                         <div class="text-xs font-black font-mono text-gray-900 truncate leading-tight">{{ $report->getReportCode() }}</div>
@@ -353,7 +353,7 @@
                                 <div class="text-[10px] text-gray-400 truncate leading-tight mt-0.5 italic">"{{ $report->description }}"</div>
                                 @if($report->sellerResponse)
                                     <span class="inline-flex items-center gap-1 text-[8px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 mt-1">
-                                        ✓ Responded
+                                        <x-lucide name="check" class="w-2.5 h-2.5" /> Responded
                                     </span>
                                 @endif
                             </td>
@@ -440,7 +440,7 @@
             <div class="flex items-center justify-between pb-4 border-b border-gray-200 shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-[#1E1915] text-[#C49520] flex items-center justify-center font-bold text-lg shadow-xs">
-                        ⚖️
+                        <x-lucide name="scale" class="w-5 h-5 text-[#C49520]" />
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
@@ -553,10 +553,10 @@
                         <div class="space-y-1">
                             <label class="text-[9px] font-black uppercase tracking-widest text-gray-500">Case Status</label>
                             <select name="status" x-model="modStatus" required class="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-900 outline-none">
-                                <option value="Pending">⏳ Pending</option>
-                                <option value="Under Review">🔍 Under Review</option>
-                                <option value="Resolved">✓ Resolved</option>
-                                <option value="Dismissed">— Dismissed</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Resolved">Resolved</option>
+                                <option value="Dismissed">Dismissed</option>
                             </select>
                         </div>
 
@@ -564,10 +564,10 @@
                         <div class="space-y-1">
                             <label class="text-[9px] font-black uppercase tracking-widest text-gray-500">Assigned Severity</label>
                             <select name="severity" x-model="modSeverity" class="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-900 outline-none">
-                                <option value="LOW">🟢 Low (Minor concern)</option>
-                                <option value="MEDIUM">🟡 Medium (Potential policy violation)</option>
-                                <option value="HIGH">🟠 High (Serious concern requiring investigation)</option>
-                                <option value="CRITICAL">🔴 Critical (Severe abuse / fraud / illegal)</option>
+                                <option value="LOW">Low (Minor concern)</option>
+                                <option value="MEDIUM">Medium (Potential policy violation)</option>
+                                <option value="HIGH">High (Serious concern requiring investigation)</option>
+                                <option value="CRITICAL">Critical (Severe abuse / fraud / illegal)</option>
                             </select>
                         </div>
 

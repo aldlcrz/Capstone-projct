@@ -99,7 +99,7 @@
             {{-- Star Divider --}}
             <div style="position:relative;margin:16px 0 0 0;display:flex;align-items:center;justify-content:center;">
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
             </div>
         </div>
 
@@ -395,7 +395,7 @@
                         <span x-show="shipping === 0" class="font-bold text-emerald-700">Free</span>
                     </div>
                     <div x-show="selectedShopCount > 1" class="pt-1.5 border-t border-[#ECE3D2] text-[10px] text-amber-700 font-medium">
-                        ⚠️ Items from multiple shops selected. Please use "Checkout Shop" to checkout one shop at a time.
+                        <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 inline mr-1" />Items from multiple shops selected. Please use "Checkout Shop" to checkout one shop at a time.
                     </div>
                 </div>
 

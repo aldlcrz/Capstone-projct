@@ -325,24 +325,30 @@ class OrderController extends Controller
         // Handle appointment scheduling for Store Pickup and Special Delivery
         if ($request->has('appointment_date') || $request->has('appointmentDate')) {
             $rawDate = $request->input('appointment_date') ?? $request->input('appointmentDate');
-            if (!empty($rawDate)) {
+            if ($rawDate === null || trim((string)$rawDate) === '') {
+                if ($isStorePickup || $isSpecialDelivery) {
+                    return response()->json([
+                        'message' => 'Please select a scheduled appointment date for the customer. Past dates are not allowed.',
+                        'errors'  => ['appointment_date' => ['Please select a scheduled appointment date for the customer.']]
+                    ], 422);
+                }
+            } else {
                 try {
                     $parsedDate = \Carbon\Carbon::parse($rawDate)->startOfDay();
                 } catch (\Exception $e) {
                     return response()->json([
-                        'message' => 'The provided appointment date format is invalid.',
-                        'errors'  => ['appointment_date' => ['The appointment date format is invalid.']]
+                        'message' => 'The provided appointment date format is invalid. Please select a valid date.',
+                        'errors'  => ['appointment_date' => ['The appointment date format is invalid. Please select a valid date.']]
                     ], 422);
                 }
 
                 $today = now()->startOfDay();
 
-                // Disallow past dates: new or modified appointment dates must be today or in the future
-                $isSameAsExisting = $order->appointment_date && \Carbon\Carbon::parse($order->appointment_date)->startOfDay()->equalTo($parsedDate);
-                if (!$isSameAsExisting && $parsedDate->lt($today)) {
+                // Disallow past dates: sellers cannot select past dates. Only current or future dates are allowed.
+                if ($parsedDate->lt($today)) {
                     return response()->json([
                         'message' => 'The scheduled appointment or delivery date cannot be in the past. Please select today or a future date.',
-                        'errors'  => ['appointment_date' => ['The scheduled date cannot be in the past.']]
+                        'errors'  => ['appointment_date' => ['The scheduled date cannot be in the past. Please select today or a future date.']]
                     ], 422);
                 }
 
@@ -659,6 +665,30 @@ class OrderController extends Controller
             $riderNotes ?: null,
         ]);
         $combinedNotes = implode(' · ', $noteParts);
+
+        if ($request->has('appointment_date') || $request->has('appointmentDate')) {
+            $rawDate = $request->input('appointment_date') ?? $request->input('appointmentDate');
+            if ($rawDate !== null && trim((string)$rawDate) !== '') {
+                try {
+                    $parsedDate = \Carbon\Carbon::parse($rawDate)->startOfDay();
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'message' => 'The provided appointment date format is invalid. Please select a valid date.',
+                        'errors'  => ['appointment_date' => ['The appointment date format is invalid. Please select a valid date.']]
+                    ], 422);
+                }
+
+                $today = now()->startOfDay();
+                if ($parsedDate->lt($today)) {
+                    return response()->json([
+                        'message' => 'The scheduled appointment or delivery date cannot be in the past. Please select today or a future date.',
+                        'errors'  => ['appointment_date' => ['The scheduled date cannot be in the past. Please select today or a future date.']]
+                    ], 422);
+                }
+
+                $order->appointment_date = $parsedDate->format('Y-m-d');
+            }
+        }
 
         $previousStatus = $order->status;
         $order->status = 'In Transit';

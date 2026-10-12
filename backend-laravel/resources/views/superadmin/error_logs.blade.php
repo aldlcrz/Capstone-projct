@@ -34,21 +34,21 @@
         <button type="button" @click="filterLevel = 'ERROR'"
             :class="filterLevel === 'ERROR' ? 'bg-[#3D2B1F] text-white shadow-sm' : 'bg-white border border-[#E5DDD5] text-gray-600 hover:border-gray-400'"
             class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer">
-            <span class="text-red-500 font-black">●</span>
+            <span class="w-2 h-2 rounded-full bg-red-500 inline-block shrink-0"></span>
             <span>Errors &amp; Exceptions</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="filterLevel === 'ERROR' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 font-black'">{{ $errorCount }}</span>
         </button>
         <button type="button" @click="filterLevel = 'WARNING'"
             :class="filterLevel === 'WARNING' ? 'bg-[#3D2B1F] text-white shadow-sm' : 'bg-white border border-[#E5DDD5] text-gray-600 hover:border-gray-400'"
             class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer">
-            <span class="text-amber-500 font-black">●</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500 inline-block shrink-0"></span>
             <span>Warnings</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="filterLevel === 'WARNING' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 font-black'">{{ $warningCount }}</span>
         </button>
         <button type="button" @click="filterLevel = 'INFO'"
             :class="filterLevel === 'INFO' ? 'bg-[#3D2B1F] text-white shadow-sm' : 'bg-white border border-[#E5DDD5] text-gray-600 hover:border-gray-400'"
             class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer">
-            <span class="text-blue-500 font-black">●</span>
+            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block shrink-0"></span>
             <span>Info &amp; Debug</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="filterLevel === 'INFO' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 font-black'">{{ $infoCount }}</span>
         </button>

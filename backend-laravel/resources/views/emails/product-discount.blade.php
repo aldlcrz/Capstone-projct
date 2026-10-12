@@ -1,7 +1,7 @@
 @extends('emails.layout')
 
 @section('content')
-<div class="greeting">Mabuhay, {{ $customerName ?? ($userName ?? 'Valued Customer') }}! 🏷️</div>
+<div class="greeting">Mabuhay, {{ $customerName ?? ($userName ?? 'Valued Customer') }}!</div>
 <span class="badge badge-success">Special Price Drop</span>
 <p>A handcrafted item from your favorites is now available at a special discount!</p>
 

@@ -110,7 +110,7 @@
                         @click="closeDemo()"
                         class="text-gray-300 hover:text-white text-sm font-bold w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/15 transition-colors"
                         title="Close Demo">
-                    ✕
+                    <x-lucide name="x" class="w-4 h-4" />
                 </button>
             </div>
 
@@ -126,7 +126,7 @@
                             <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors"
                                   :style="currentStep === index ? 'background-color: #C49520; color: #FFFFFF;' : (currentStep > index ? 'background-color: #1E1915; color: #FFFFFF;' : 'background-color: #E8DECB; color: #766C60;')">
                                 <span x-show="currentStep <= index" x-text="index + 1"></span>
-                                <span x-show="currentStep > index">✓</span>
+                                <span x-show="currentStep > index"><x-lucide name="check" class="w-3.5 h-3.5" /></span>
                             </span>
                             <div class="min-w-0">
                                 <div class="text-[9px] uppercase tracking-wider font-extrabold" style="color: #A89887;" x-text="'Step ' + (index + 1)"></div>
@@ -268,7 +268,7 @@
                                     class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
                                     :style="selectedShipping === 'courier' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-base">🚚</span>
+                                    <x-lucide name="truck" class="w-4 h-4 text-[#C49520]" />
                                     <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">Standard / Special</span>
                                 </div>
                                 <div class="mt-1">
@@ -281,7 +281,7 @@
                                     class="p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between"
                                     :style="selectedShipping === 'pickup' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-base">🏬</span>
+                                    <x-lucide name="store" class="w-4 h-4 text-[#C49520]" />
                                     <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded">FREE • ₱0</span>
                                 </div>
                                 <div class="mt-1">
@@ -344,7 +344,7 @@
                             <div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;">
-                                        📍 Delivery Destination (Special Delivery)
+                                        <x-lucide name="map-pin" class="w-4 h-4 inline mr-1 text-[#C49520]" />Delivery Destination (Special Delivery)
                                     </span>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider" style="color: #C49520;">Verified Address</span>
                                 </div>
@@ -358,7 +358,7 @@
                             <div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-bold flex items-center gap-1.5 text-emerald-800">
-                                        🏬 In-Shop Collection & Map Pin
+                                        <x-lucide name="store" class="w-4 h-4 inline mr-1 text-[#C49520]" />In-Shop Collection & Map Pin
                                     </span>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Store Pickup</span>
                                 </div>
@@ -378,7 +378,7 @@
                                     @click="selectedPayment = 'GCash'"
                                     class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'GCash' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">📱</span>
+                                <x-lucide name="phone" class="w-5 h-5 text-[#C49520]" />
                                 <span class="text-xs font-extrabold" style="color: #1E1915;">GCash (13-Digit)</span>
                                 <span class="text-[9px] truncate max-w-full" style="color: #766C60;" x-text="currentProduct.seller_gcash || '09123456789'"></span>
                             </button>
@@ -386,7 +386,7 @@
                                     @click="selectedPayment = 'Maya'"
                                     class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer"
                                     :style="selectedPayment === 'Maya' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">💳</span>
+                                <x-lucide name="credit-card" class="w-5 h-5 text-[#C49520]" />
                                 <span class="text-xs font-extrabold" style="color: #1E1915;">Maya (12-Digit)</span>
                                 <span class="text-[9px] truncate max-w-full" style="color: #766C60;" x-text="currentProduct.seller_maya || '09987654321'"></span>
                             </button>
@@ -394,7 +394,7 @@
                                     @click="selectedPayment = 'Pay on Store Claim'"
                                     class="p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer col-span-2 sm:col-span-1"
                                     :style="selectedPayment === 'Pay on Store Claim' ? 'background-color: #FFF9ED; border: 2px solid #C49520;' : 'background-color: #FFFFFF; border: 1px solid #E8DECB;'">
-                                <span class="text-xl">🏪</span>
+                                <x-lucide name="store" class="w-5 h-5 text-[#C49520]" />
                                 <span class="text-xs font-extrabold" style="color: #1E1915;">Pay on Claim</span>
                                 <span class="text-[9px]" style="color: #766C60;">Cash/QR upon visit</span>
                             </button>
@@ -416,7 +416,7 @@
                             </div>
                         </template>
                         <div class="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
-                            <span>🧾</span>
+                            <x-lucide name="file-text" class="w-4 h-4 text-[#C49520]" />
                             <span x-text="selectedPayment === 'Pay on Store Claim' ? 'Payment settled in-person upon pickup & inspection' : 'Payment Screenshot Proof Attached (Simulation)'"></span>
                         </div>
                     </div>
@@ -428,7 +428,7 @@
                         <button type="button"
                                 @click="goToStep(3); startTrackingSimulation();"
                                 class="px-6 py-2.5 rounded-full bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
-                            <span>Simulate Place Order ✓</span>
+                            <span class="inline-flex items-center gap-1.5"><span>Simulate Place Order</span><x-lucide name="check" class="w-4 h-4" /></span>
                         </button>
                     </div>
                 </div>
@@ -501,7 +501,7 @@
 
                     {{-- Manual Progression Controls --}}
                     <div class="p-4 rounded-2xl border space-y-2" style="background-color: #FFF9ED; border-color: #E8DECB;">
-                        <div class="text-xs font-bold" style="color: #1E1915;">⚡ Test Order Milestones:</div>
+                        <div class="text-xs font-bold flex items-center gap-1.5" style="color: #1E1915;"><x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#C49520]" /><span>Test Order Milestones:</span></div>
                         <div class="flex flex-wrap gap-2">
                             <button type="button"
                                     @click="orderStatusStage = 1"
@@ -540,7 +540,7 @@
                                 onmouseover="this.style.backgroundColor='#C49520';"
                                 onmouseout="this.style.backgroundColor='#1E1915';"
                                 class="px-6 py-2.5 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer">
-                            I'm Ready to Shop Real Barongs ✨
+                            <span class="inline-flex items-center gap-1.5"><span>I'm Ready to Shop Real Barongs</span><x-lucide name="sparkles" class="w-4 h-4" /></span>
                         </button>
                     </div>
                 </div>

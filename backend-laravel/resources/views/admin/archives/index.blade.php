@@ -280,12 +280,12 @@
                     @forelse($archives as $record)
                         @php
                             $typeConfig = [
-                                'product'  => ['dot' => 'bg-purple-500',  'badge' => 'bg-purple-50 text-purple-700 border-purple-200/60',  'icon' => 'bg-purple-50 text-purple-600',  'emoji' => '📦'],
-                                'category' => ['dot' => 'bg-blue-500',    'badge' => 'bg-blue-50 text-blue-700 border-blue-200/60',        'icon' => 'bg-blue-50 text-blue-600',      'emoji' => '🏷️'],
-                                'customer' => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60','icon' => 'bg-emerald-50 text-emerald-600', 'emoji' => '🧑'],
-                                'seller'   => ['dot' => 'bg-amber-500',   'badge' => 'bg-amber-50 text-amber-700 border-amber-200/60',     'icon' => 'bg-amber-50 text-amber-600',    'emoji' => '🏪'],
+                                'product'  => ['dot' => 'bg-purple-500',  'badge' => 'bg-purple-50 text-purple-700 border-purple-200/60',  'icon' => 'bg-purple-50 text-purple-600',  'lucide' => 'package'],
+                                'category' => ['dot' => 'bg-blue-500',    'badge' => 'bg-blue-50 text-blue-700 border-blue-200/60',        'icon' => 'bg-blue-50 text-blue-600',      'lucide' => 'tag'],
+                                'customer' => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60','icon' => 'bg-emerald-50 text-emerald-600', 'lucide' => 'user'],
+                                'seller'   => ['dot' => 'bg-amber-500',   'badge' => 'bg-amber-50 text-amber-700 border-amber-200/60',     'icon' => 'bg-amber-50 text-amber-600',    'lucide' => 'store'],
                             ];
-                            $tc = $typeConfig[$record->item_type] ?? ['dot' => 'bg-gray-400', 'badge' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'bg-gray-50 text-gray-600', 'emoji' => '📄'];
+                            $tc = $typeConfig[$record->item_type] ?? ['dot' => 'bg-gray-400', 'badge' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'bg-gray-50 text-gray-600', 'lucide' => 'file-text'];
                             $daysOld = (int) floor(abs($record->created_at->diffInDays(now())));
                             $daysLeft = max(0, 30 - $daysOld);
                             $expiryClass = $daysLeft <= 7 ? 'bg-red-50 text-red-700 border-red-200/80 font-black' : 'bg-gray-50 text-gray-600 border-gray-200/80 font-bold';
@@ -305,7 +305,7 @@
                                                 }
                                             @endphp
                                             <img src="{{ $imgUrl }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
+                                            <span class="hidden w-full h-full items-center justify-center text-xs"><x-lucide :name="$tc['lucide']" class="w-3.5 h-3.5" /></span>
                                         @elseif($record->item_type === 'category' && !empty($record->metadata['image']))
                                             @php
                                                 $catImg = $record->metadata['image'];
@@ -314,7 +314,7 @@
                                                 }
                                             @endphp
                                             <img src="{{ $catImg }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
+                                            <span class="hidden w-full h-full items-center justify-center text-xs"><x-lucide :name="$tc['lucide']" class="w-3.5 h-3.5" /></span>
                                         @elseif(($record->item_type === 'customer' || $record->item_type === 'seller') && !empty($record->metadata['profilePhoto']))
                                             @php
                                                 $profImg = $record->metadata['profilePhoto'];
@@ -323,9 +323,9 @@
                                                 }
                                             @endphp
                                             <img src="{{ $profImg }}" class="w-full h-full object-cover" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="hidden w-full h-full items-center justify-center text-xs">{{ $tc['emoji'] }}</span>
+                                            <span class="hidden w-full h-full items-center justify-center text-xs"><x-lucide :name="$tc['lucide']" class="w-3.5 h-3.5" /></span>
                                         @else
-                                            <span class="text-xs">{{ $tc['emoji'] }}</span>
+                                            <x-lucide :name="$tc['lucide']" class="w-3.5 h-3.5" />
                                         @endif
                                     </div>
                                     <div class="min-w-0">
@@ -366,7 +366,7 @@
                             {{-- Retention Expiry --}}
                             <td class="px-4 py-2 hidden sm:table-cell">
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border {{ $expiryClass }}">
-                                    <span>⏱</span>
+                                    <x-lucide name="clock" class="w-3.5 h-3.5 text-gray-500 inline" />
                                     <span>{{ $daysLeft }}d left</span>
                                 </span>
                             </td>
@@ -445,10 +445,7 @@
                     </template>
                 </div>
 
-                <button type="button" @click="snapshotModal = false" 
-                        class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0">
-                    ✕
-                </button>
+                <button type="button" @click="snapshotModal = false" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0"><x-lucide name="x" class="w-4 h-4" /></button>
             </div>
 
             {{-- Modal Body (Scrollable) --}}
@@ -662,7 +659,7 @@
                             @click="showRawMetadata = !showRawMetadata"
                             class="flex items-center justify-between w-full p-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 transition-colors text-xs font-bold text-stone-700 cursor-pointer">
                         <span class="flex items-center gap-1.5">
-                            <span>🔍 Complete Raw Snapshot Attributes</span>
+                            <span class="inline-flex items-center gap-1.5"><x-lucide name="search" class="w-4 h-4 text-gray-500" /><span>Complete Raw Snapshot Attributes</span></span>
                             <span class="text-[10px] font-normal text-stone-500" x-text="'(' + getMetadataEntries(inspectRecord?.metadata).length + ' fields)'"></span>
                         </span>
                         <svg class="w-4 h-4 transition-transform text-stone-500" :class="{ 'rotate-180': showRawMetadata }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -762,8 +759,9 @@
                 </div>
             </div>
 
-            <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Warning:</strong> This permanently deletes this snapshot from the archive database. It cannot be recovered after this.
+            <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium flex items-center gap-1.5">
+                <x-lucide name="alert-triangle" class="w-3.5 h-3.5 text-red-600 shrink-0" />
+                <span><strong>Warning:</strong> This permanently deletes this snapshot from the archive database. It cannot be recovered after this.</span>
             </div>
 
             <form :action="'/admin/archives/' + purgeId" method="POST" class="flex gap-3 pt-2">

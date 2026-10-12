@@ -154,7 +154,7 @@
                                                     }))"
                                                     class="px-2.5 py-1 bg-gray-50 hover:bg-red-50 text-[9px] font-bold uppercase tracking-wider text-gray-600 hover:text-red-700 rounded-lg border border-gray-200 hover:border-red-200 transition-all cursor-pointer shadow-2xs"
                                                     title="Report issue with this item">
-                                                    🚩 Report
+                                                    <span class="inline-flex items-center gap-1"><x-lucide name="flag" class="w-3.5 h-3.5" /> Report</span>
                                                 </button>
                                             </template>
                                         </div>

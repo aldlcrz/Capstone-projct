@@ -81,7 +81,7 @@
         {{-- Flash Alerts --}}
         @if(session('success'))
             <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-start gap-3 shadow-xs">
-                <span class="text-base leading-none">✓</span>
+                <x-lucide name="check-circle" class="w-4 h-4 text-emerald-600 inline" />
                 <div>
                     <p class="font-bold">{{ session('success') }}</p>
                     <p class="text-[11px] text-emerald-700 mt-0.5">Your files have been locked in the administrative review queue.</p>
@@ -91,7 +91,7 @@
 
         @if(session('error'))
             <div class="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs font-semibold flex items-start gap-3 shadow-xs">
-                <span class="text-base leading-none">⚠️</span>
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 inline" />
                 <p>{{ session('error') }}</p>
             </div>
         @endif
@@ -238,7 +238,7 @@
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold self-start sm:self-auto">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            ✓ Files Attached &amp; Locked
+                            <span class="inline-flex items-center gap-1"><x-lucide name="lock" class="w-3.5 h-3.5 text-emerald-600" /> Files Attached &amp; Locked</span>
                         </span>
                     </div>
 

@@ -332,7 +332,7 @@
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $seller->name }}</span>
                                                 @if($seller->isVerified)
-                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded uppercase leading-none">✓</span>
+                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded uppercase leading-none inline-flex items-center"><x-lucide name="check" class="w-2.5 h-2.5" /></span>
                                                 @endif
                                             </div>
                                             <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">
@@ -774,7 +774,7 @@
                                         <h2 class="font-serif text-base font-bold text-white leading-tight flex items-center gap-1.5 flex-wrap">
                                             <span x-text="shopSeller?.shopName || 'Artisan Workshop'"></span>
                                             <template x-if="shopSeller?.isVerified">
-                                                <span class="inline-flex items-center text-emerald-400 text-xs font-bold" title="Verified Store">✓</span>
+                                                <span class="inline-flex items-center text-emerald-400 text-xs font-bold" title="Verified Store"><x-lucide name="check-circle" class="w-3.5 h-3.5" /></span>
                                             </template>
                                         </h2>
                                         <div class="text-white/60 text-[10px] mt-0.5" x-text="'Owner: ' + (shopSeller?.name || '—')"></div>
@@ -904,7 +904,7 @@
                                         <div>
                                             <h4 class="text-xs font-bold text-gray-900 group-hover:text-[#C0422A] line-clamp-2 transition-colors leading-tight" x-text="product.name"></h4>
                                             <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-gray-500">
-                                                <span class="text-amber-500">★</span>
+                                                <x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 inline fill-current" />
                                                 <span x-text="Number(product.rating || 0).toFixed(1)"></span>
                                                 <span class="text-gray-300">•</span>
                                                 <span class="text-stone-400 font-normal" x-text="'Sold ' + (product.soldCount || 0)"></span>
@@ -951,7 +951,7 @@
             {{-- Modal Header --}}
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-wider rounded">👑 Super Admin Inspection</span>
+                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-wider rounded inline-flex items-center gap-1"><x-lucide name="crown" class="w-3 h-3 text-amber-800" /> Super Admin Inspection</span>
                     <span class="text-xs text-gray-500 font-bold">Product ID: <span x-text="selectedProductPreview?.id"></span></span>
                 </div>
                 <button type="button" @click="productPreviewModal = false" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center cursor-pointer">
@@ -981,7 +981,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-500 font-medium">Rating:</span>
-                            <span class="font-bold text-gray-800" x-text="Number(selectedProductPreview?.rating || 0).toFixed(1) + ' ★ (' + (selectedProductPreview?.reviewCount || 0) + ' reviews)'"></span>
+                            <span class="font-bold text-gray-800" x-text="Number(selectedProductPreview?.rating || 0).toFixed(1) + ' (' + (selectedProductPreview?.reviewCount || 0) + ' reviews)'"></span>
                         </div>
                     </div>
 
@@ -992,7 +992,7 @@
 
                     {{-- Super Admin Read-Only Notice --}}
                     <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-snug">
-                        <strong>🛡️ Governance Inspection:</strong> Super Admin audit view for catalog verification, pricing review, and artisan compliance.
+                        <strong><x-lucide name="shield" class="w-3.5 h-3.5 inline mr-1 text-gray-700" />Governance Inspection:</strong> Super Admin audit view for catalog verification, pricing review, and artisan compliance.
                     </div>
                 </div>
             </div>
@@ -1010,7 +1010,7 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="rejectModal = false"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
             <div class="flex items-start gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0 font-black text-lg">✕</div>
+                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0 font-black text-lg"><x-lucide name="x-circle" class="w-6 h-6" /></div>
                 <div class="flex-1">
                     <h3 class="text-lg font-bold text-gray-900 leading-snug">Reject Seller Application</h3>
                     <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -1031,7 +1031,7 @@
                             :class="rejectType === 'document_correction' ? 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
                             class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm">📄</span>
+                                <x-lucide name="file-text" class="w-4 h-4 text-gray-500 inline" />
                                 <span class="text-xs font-bold text-gray-900">Correction Required</span>
                             </div>
                             <p class="text-[10px] text-gray-500 leading-relaxed">Allows seller to fix documents &amp; re-upload on the portal.</p>
@@ -1041,7 +1041,7 @@
                             :class="rejectType === 'ineligible' ? 'border-rose-500 bg-rose-50/80 text-rose-950 ring-2 ring-rose-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
                             class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm">🚫</span>
+                                <x-lucide name="ban" class="w-4 h-4 text-red-500 inline" />
                                 <span class="text-xs font-bold text-gray-900">Permanent Ineligible</span>
                             </div>
                             <p class="text-[10px] text-gray-500 leading-relaxed">Non-Lumban resident or out-of-scope. No re-upload.</p>
@@ -1117,7 +1117,7 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
             <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0 font-black">⚠️</div>
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0 font-black"><x-lucide name="alert-triangle" class="w-5 h-5 text-red-600" /></div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
                     <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -1174,7 +1174,7 @@
             </div>
 
             <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1" /> <strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
             </div>
 
             <form :action="'/superadmin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
@@ -1346,11 +1346,11 @@ function superSellerManager() {
     tourId="admin-sellers-guide"
     :autoStart="false"
     :steps="[
-        ['selector' => '#tour-superadmin-sellers-header',  'title' => '🏛️ Seller & Artisan Governance',  'description' => 'Review and inspect artisan accounts, oversee shop compliance, and view merchant credentials.'],
-        ['selector' => '#tour-superadmin-sellers-search',  'title' => '🔍 Artisan Search',              'description' => 'Find specific sellers by artisan name, registered email, or dedicated shop workshop name.'],
-        ['selector' => '#tour-superadmin-sellers-filters', 'title' => '🏷️ Compliance Status Filters',   'description' => 'Quickly toggle between Approved sellers, Pending verifications, Frozen accounts, and Suspended shops.'],
-        ['selector' => '#tour-superadmin-sellers-table',   'title' => '📋 Artisan Seller Directory',    'description' => 'Comprehensive directory showing shop details, active inventory count, registration dates, and verification badges.'],
-        ['selector' => '#tour-superadmin-sellers-actions', 'title' => '⚖️ Credentials & Document Audit', 'description' => 'Inspect legal documents (BIR, Barangay permits, proof of residency) in high-resolution preview.']
+        ['selector' => '#tour-superadmin-sellers-header',  'title' => 'Seller & Artisan Governance',  'description' => 'Review and inspect artisan accounts, oversee shop compliance, and view merchant credentials.'],
+        ['selector' => '#tour-superadmin-sellers-search',  'title' => 'Artisan Search',              'description' => 'Find specific sellers by artisan name, registered email, or dedicated shop workshop name.'],
+        ['selector' => '#tour-superadmin-sellers-filters', 'title' => 'Compliance Status Filters',   'description' => 'Quickly toggle between Approved sellers, Pending verifications, Frozen accounts, and Suspended shops.'],
+        ['selector' => '#tour-superadmin-sellers-table',   'title' => 'Artisan Seller Directory',    'description' => 'Comprehensive directory showing shop details, active inventory count, registration dates, and verification badges.'],
+        ['selector' => '#tour-superadmin-sellers-actions', 'title' => 'Credentials & Document Audit', 'description' => 'Inspect legal documents (BIR, Barangay permits, proof of residency) in high-resolution preview.']
     ]"
 />
 

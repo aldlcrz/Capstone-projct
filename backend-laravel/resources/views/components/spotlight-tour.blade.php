@@ -326,12 +326,7 @@
                                           :class="idx === currentStepIndex ? 'w-4 bg-[#C49520]' : (idx < currentStepIndex ? 'w-1.5 bg-[#1E1915]' : 'w-1.5 bg-gray-200')"></span>
                                 </template>
                             </div>
-                            <button type="button" 
-                                    @click="dismissTour()"
-                                    class="text-gray-400 hover:text-gray-700 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors ml-1"
-                                    title="Close Tour">
-                                ✕
-                            </button>
+                            <button type="button" @click="dismissTour()" class="text-gray-400 hover:text-gray-700 w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors ml-1" title="Close Tour"><x-lucide name="x" class="w-3.5 h-3.5" /></button>
                         </div>
                     </div>
 
@@ -367,7 +362,7 @@
                                     onmouseover="this.style.backgroundColor='#C49520';"
                                     onmouseout="this.style.backgroundColor='#1E1915';"
                                     class="px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-white text-[11px] sm:text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                <span x-text="currentStepIndex === steps.length - 1 ? 'Got It ✓' : 'I Understand →'"></span>
+                                <span x-text="currentStepIndex === steps.length - 1 ? 'Got It' : 'I Understand →'"></span>
                             </button>
                         </div>
                     </div>

@@ -1,37 +1,64 @@
 <script>
 /**
- * LumBarong Intelligent Scroll Position Preservation & Restoration Engine
- * Preserves exact scroll context across page reloads (F5, Ctrl+R, browser reload)
+ * LumBarong Intelligent State & Scroll Position Preservation & Restoration Engine
+ * Preserves exact location, scroll context, active tabs, and wizard progress across page reloads (F5, Ctrl+R, browser reload)
  * for both document window and nested dashboard scroll containers (<main>).
+ * Does not reset or redirect user to the beginning of the page on refresh.
  */
 (function() {
     'use strict';
 
-    if (typeof window === 'undefined' || !window.sessionStorage) return;
+    if (typeof window === 'undefined') return;
 
     var STORAGE_PREFIX = 'lumbarong_scroll_pos:';
     var FORM_SUBMIT_KEY = 'lumbarong_form_submitting';
     var MAX_STABILIZE_MS = 2500;
     var PRUNE_MAX_AGE_MS = 7200000; // 2 hours
 
+    // Memory fallback if sessionStorage is restricted in incognito/webview
+    var memoryStore = {};
+    function safeSessionGet(key) {
+        try {
+            if (window.sessionStorage) return window.sessionStorage.getItem(key);
+        } catch(e) {}
+        return memoryStore[key] || null;
+    }
+    function safeSessionSet(key, val) {
+        try {
+            if (window.sessionStorage) {
+                window.sessionStorage.setItem(key, val);
+                return;
+            }
+        } catch(e) {}
+        memoryStore[key] = val;
+    }
+    function safeSessionRemove(key) {
+        try {
+            if (window.sessionStorage) window.sessionStorage.removeItem(key);
+        } catch(e) {}
+        delete memoryStore[key];
+    }
+
     // Clean up stale entries on boot
     try {
         var now = Date.now();
         var keysToRemove = [];
-        for (var i = 0; i < sessionStorage.length; i++) {
-            var k = sessionStorage.key(i);
-            if (k && k.indexOf(STORAGE_PREFIX) === 0) {
-                try {
-                    var val = JSON.parse(sessionStorage.getItem(k));
-                    if (!val || !val.timestamp || (now - val.timestamp > PRUNE_MAX_AGE_MS)) {
+        if (window.sessionStorage) {
+            for (var i = 0; i < sessionStorage.length; i++) {
+                var k = sessionStorage.key(i);
+                if (k && k.indexOf(STORAGE_PREFIX) === 0) {
+                    try {
+                        var val = JSON.parse(sessionStorage.getItem(k));
+                        if (!val || !val.timestamp || (now - val.timestamp > PRUNE_MAX_AGE_MS)) {
+                            keysToRemove.push(k);
+                        }
+                    } catch(e) {
                         keysToRemove.push(k);
                     }
-                } catch(e) {
-                    keysToRemove.push(k);
                 }
             }
+            keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
         }
-        keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
     } catch(e) {}
 
     function getStorageKey(url) {
@@ -69,13 +96,13 @@
     // Check if coming back from same-page form submission
     var isSamePageFormSubmit = false;
     try {
-        var pendingForm = sessionStorage.getItem(FORM_SUBMIT_KEY);
+        var pendingForm = safeSessionGet(FORM_SUBMIT_KEY);
         if (pendingForm) {
             var parsedForm = JSON.parse(pendingForm);
             if (parsedForm && parsedForm.url === (window.location.pathname + window.location.search) && (Date.now() - parsedForm.time < 20000)) {
                 isSamePageFormSubmit = true;
             }
-            sessionStorage.removeItem(FORM_SUBMIT_KEY);
+            safeSessionRemove(FORM_SUBMIT_KEY);
         }
     } catch(e) {}
 
@@ -89,7 +116,7 @@
         try {
             var form = e.target;
             if (form && (!form.action || form.action === window.location.href || form.action.indexOf(window.location.pathname) !== -1)) {
-                sessionStorage.setItem(FORM_SUBMIT_KEY, JSON.stringify({
+                safeSessionSet(FORM_SUBMIT_KEY, JSON.stringify({
                     url: window.location.pathname + window.location.search,
                     time: Date.now()
                 }));
@@ -98,7 +125,7 @@
     }, { capture: true, passive: true });
 
     // When clicking a link to a DIFFERENT page, clear any cached position for that target
-    // so fresh page navigation always begins at the top.
+    // so fresh page navigation always begins cleanly at the top.
     document.addEventListener('click', function(e) {
         var anchor = e.target.closest('a[href]');
         if (!anchor) return;
@@ -110,7 +137,7 @@
             var currentPathQuery = window.location.pathname + window.location.search;
             var targetPathQuery = targetUrl.pathname + targetUrl.search;
             if (targetUrl.origin === window.location.origin && targetPathQuery !== currentPathQuery) {
-                sessionStorage.removeItem(getStorageKey(targetPathQuery));
+                safeSessionRemove(getStorageKey(targetPathQuery));
             }
         } catch(e) {}
     }, { capture: true, passive: true });
@@ -132,7 +159,116 @@
         }, { passive: true, capture: true });
     });
 
-    // Save current scroll position
+    // =========================================================================
+    // ACTIVE TAB & PROGRESS DISCOVERY & STATE MANAGEMENT
+    // =========================================================================
+    function isTabKey(k) {
+        if (!k || typeof k !== 'string') return false;
+        var lower = k.toLowerCase();
+        if (['activetab', 'statusfilter', 'shopactivetab', 'viewtab', 'activesgtab', 
+             'activepaymenttab', 'currenttab', 'tab', 'rectab', 'sizetab', 
+             'activemobiletab'].indexOf(lower) !== -1) return true;
+        return /(?:activetab$|[a-z0-9_]*tab$)/i.test(k) && !/table/i.test(k);
+    }
+
+    function isStepKey(k) {
+        if (!k || typeof k !== 'string') return false;
+        var lower = k.toLowerCase();
+        if (['step', 'currentstep', 'emailstep', 'wizardstep'].indexOf(lower) !== -1) return true;
+        return /(?:^step$|[a-z0-9_]*step$|^progress$)/i.test(k);
+    }
+
+    function getAlpineComponents() {
+        var els = document.querySelectorAll('[x-data]');
+        var list = [];
+        els.forEach(function(el, idx) {
+            var data = null;
+            if (window.Alpine && typeof window.Alpine.$data === 'function') {
+                try { data = window.Alpine.$data(el); } catch(e) {}
+            }
+            if (!data && el._x_dataStack && el._x_dataStack.length > 0) {
+                data = el._x_dataStack[0];
+            }
+            if (data && typeof data === 'object') {
+                list.push({ el: el, data: data, id: el.id || ('comp_' + idx) });
+            }
+        });
+        return list;
+    }
+
+    function collectAlpineState() {
+        var state = { tabs: {}, progress: {} };
+        try {
+            var components = getAlpineComponents();
+            components.forEach(function(comp) {
+                var data = comp.data;
+                var prefix = comp.id + ':';
+                for (var key in data) {
+                    if (typeof data[key] === 'function') continue;
+                    var val = data[key];
+                    if (val === undefined || val === null) continue;
+
+                    if (isTabKey(key) && (typeof val === 'string' || typeof val === 'number')) {
+                        state.tabs[key] = val;
+                        state.tabs[prefix + key] = val;
+                    } else if (isStepKey(key) && (typeof val === 'number' || typeof val === 'string')) {
+                        state.progress[key] = val;
+                        state.progress[prefix + key] = val;
+                    }
+                }
+            });
+        } catch(e) {}
+        return state;
+    }
+
+    function restoreAlpineState(saved) {
+        if (!saved || (!saved.tabs && !saved.progress)) return false;
+        var didRestore = false;
+        try {
+            var components = getAlpineComponents();
+            components.forEach(function(comp) {
+                var data = comp.data;
+                var prefix = comp.id + ':';
+
+                // Restore tabs
+                if (saved.tabs) {
+                    for (var key in data) {
+                        if (isTabKey(key)) {
+                            var targetVal = (saved.tabs[prefix + key] !== undefined)
+                                ? saved.tabs[prefix + key]
+                                : saved.tabs[key];
+                            if (targetVal !== undefined && data[key] !== targetVal) {
+                                try {
+                                    data[key] = targetVal;
+                                    didRestore = true;
+                                } catch(e) {}
+                            }
+                        }
+                    }
+                }
+
+                // Restore progress / steps
+                if (saved.progress) {
+                    for (var key in data) {
+                        if (isStepKey(key)) {
+                            var targetVal = (saved.progress[prefix + key] !== undefined)
+                                ? saved.progress[prefix + key]
+                                : saved.progress[key];
+                            if (targetVal !== undefined && data[key] !== targetVal) {
+                                try {
+                                    data[key] = targetVal;
+                                    didRestore = true;
+                                } catch(e) {}
+                            }
+                        }
+                    }
+                }
+            });
+        } catch(e) {}
+        return didRestore;
+    }
+
+    // Save current scroll position, active tabs, and progress
     function saveScrollPosition() {
         if (isRestoring) return;
         
@@ -153,15 +289,20 @@
                 if (document.hidden) return;
             }
 
+            var alpineState = collectAlpineState();
+
             var data = {
                 windowY: winY,
                 windowX: winX,
                 mainY: mainY,
                 mainX: mainX,
+                tabs: alpineState.tabs,
+                progress: alpineState.progress,
+                hash: window.location.hash || '',
                 timestamp: Date.now()
             };
 
-            sessionStorage.setItem(getStorageKey(), JSON.stringify(data));
+            safeSessionSet(getStorageKey(), JSON.stringify(data));
         } catch(e) {}
     }
 
@@ -184,9 +325,20 @@
         }
     }
 
+    // Also monitor tab & button clicks to immediately record state changes
+    document.addEventListener('click', function(e) {
+        var el = e.target.closest('button, a, [role="tab"], [class*="tab"]');
+        if (el) {
+            setTimeout(saveScrollPosition, 60);
+        }
+    }, { capture: true, passive: true });
+
     // Save immediately before page unloads
     window.addEventListener('beforeunload', saveScrollPosition);
     window.addEventListener('pagehide', saveScrollPosition);
+    window.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') saveScrollPosition();
+    });
 
     // RESTORATION LOGIC
     var shouldRestore = (isReload || isBackForward || isSamePageFormSubmit);
@@ -197,15 +349,12 @@
     }
 
     if (shouldRestore) {
-        var rawSaved = null;
-        try {
-            rawSaved = sessionStorage.getItem(getStorageKey());
-        } catch(e) {}
+        var rawSaved = safeSessionGet(getStorageKey());
 
         if (rawSaved) {
             try {
                 var saved = JSON.parse(rawSaved);
-                if (saved && (saved.windowY > 0 || saved.mainY > 0 || saved.windowX > 0 || saved.mainX > 0)) {
+                if (saved) {
                     isRestoring = true;
 
                     // Disable automatic browser window restoration so it does not conflict with our controller
@@ -214,6 +363,16 @@
                             history.scrollRestoration = 'manual';
                         } catch(e) {}
                     }
+
+                    // 1. Restore URL hash if present
+                    if (saved.hash && !window.location.hash) {
+                        try {
+                            history.replaceState(null, '', window.location.pathname + window.location.search + saved.hash);
+                        } catch(e) {}
+                    }
+
+                    // 2. Early restoration of tabs & progress
+                    restoreAlpineState(saved);
 
                     var targetWinY = saved.windowY || 0;
                     var targetWinX = saved.windowX || 0;
@@ -227,6 +386,9 @@
 
                     function applyScroll() {
                         if (userInteracted) return;
+
+                        // Ensure tabs and steps are aligned with saved state
+                        restoreAlpineState(saved);
 
                         // Check if form validation errors were surfaced and scrolled
                         var hasValidationErrors = document.querySelector('.is-invalid, [aria-invalid="true"], .border-red-500, .ring-red-400');
@@ -320,9 +482,31 @@
                     // Start requestAnimationFrame stabilization monitor
                     requestAnimationFrame(checkStability);
 
+                    // Hook into Alpine initialization phases to ensure tabs & progress are injected early
+                    document.addEventListener('alpine:init', function() {
+                        if (window.Alpine && typeof window.Alpine.interceptInit === 'function') {
+                            try {
+                                window.Alpine.interceptInit(function(component, next) {
+                                    if (saved && (saved.tabs || saved.progress)) {
+                                        for (var k in component) {
+                                            if (isTabKey(k) && saved.tabs && saved.tabs[k] !== undefined) {
+                                                component[k] = saved.tabs[k];
+                                            }
+                                            if (isStepKey(k) && saved.progress && saved.progress[k] !== undefined) {
+                                                component[k] = saved.progress[k];
+                                            }
+                                        }
+                                    }
+                                    if (typeof next === 'function') next();
+                                });
+                            } catch(e) {}
+                        }
+                    });
+
                     // Re-apply when Alpine finishes initialization
                     document.addEventListener('alpine:initialized', function() {
                         if (isRestoring && !userInteracted) {
+                            restoreAlpineState(saved);
                             applyScroll();
                         }
                     }, { once: true });
@@ -330,6 +514,7 @@
                     // Re-apply on window load (after images and stylesheets finish loading)
                     window.addEventListener('load', function() {
                         if (isRestoring && !userInteracted) {
+                            restoreAlpineState(saved);
                             applyScroll();
                         }
                     }, { once: true });

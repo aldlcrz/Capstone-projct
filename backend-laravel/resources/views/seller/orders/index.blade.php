@@ -173,6 +173,8 @@ function sellerOrdersManager() {
         appointmentDateInput: '',
         appointmentTimeInput: '',
         appointmentNotesInput: '',
+        appointmentDateError: '',
+        verifyPaymentError: '',
         showRejectModal: false,
         rejectOrderTarget: null,
         showCancelOrderModal: false,
@@ -240,12 +242,12 @@ function sellerOrdersManager() {
 
         paymentBadge(order) {
             const ps = String(order?.paymentStatus || '').toLowerCase();
-            if (ps.includes('rejected')) return { text: '✕ Payment Rejected', class: 'bg-red-50 text-red-700 border-red-200' };
-            if (ps === 'paid' || ps === 'verified') return { text: '✓ Verified / Paid', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-            if (ps.includes('pickup')) return { text: '⏳ Pay at Store', class: 'bg-sky-50 text-sky-800 border-sky-300' };
-            if (ps.includes('special')) return { text: '⏳ Direct Settlement', class: 'bg-purple-50 text-purple-800 border-purple-300' };
-            if (ps.includes('cod')) return { text: '⏳ Pay on Delivery', class: 'bg-amber-50 text-amber-800 border-amber-300' };
-            if (ps.includes('submitted') || (order?.paymentProof && !ps.includes('verified') && !ps.includes('paid'))) return { text: '⏳ Verify Payment', class: 'bg-amber-50 text-amber-800 border-amber-300' };
+            if (ps.includes('rejected')) return { text: 'Payment Rejected', class: 'bg-red-50 text-red-700 border-red-200' };
+            if (ps === 'paid' || ps === 'verified') return { text: 'Verified / Paid', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            if (ps.includes('pickup')) return { text: 'Pay at Store', class: 'bg-sky-50 text-sky-800 border-sky-300' };
+            if (ps.includes('special')) return { text: 'Direct Settlement', class: 'bg-purple-50 text-purple-800 border-purple-300' };
+            if (ps.includes('cod')) return { text: 'Pay on Delivery', class: 'bg-amber-50 text-amber-800 border-amber-300' };
+            if (ps.includes('submitted') || (order?.paymentProof && !ps.includes('verified') && !ps.includes('paid'))) return { text: 'Verify Payment', class: 'bg-amber-50 text-amber-800 border-amber-300' };
             return { text: 'Pending Payment', class: 'bg-gray-50 text-gray-600 border-gray-200' };
         },
 
@@ -444,7 +446,7 @@ function sellerOrdersManager() {
                         }
                     }
                     this.claimCodeSuccess = true;
-                    this.showToast('✓ Claim code verified! Order marked as Claimed.');
+                    this.showToast('Claim code verified! Order marked as Claimed.');
                     this.claimCodeInput = '';
                 } else {
                     this.claimCodeError = data.message || 'Invalid claim code.';
@@ -487,7 +489,7 @@ function sellerOrdersManager() {
                             this.detailsOrder = updatedOrder;
                         }
                     }
-                    this.showToast('✓ Local rider dispatched! Order is Out for Special Delivery.');
+                    this.showToast('Local rider dispatched! Order is Out for Special Delivery.');
                 } else {
                     this.dispatchRiderError = data.message || 'Failed to dispatch rider.';
                 }
@@ -521,9 +523,36 @@ function sellerOrdersManager() {
             return `${year}-${month}-${day}`;
         },
 
+        validateAppointmentDate() {
+            if (!this.verifyOrderTarget) return true;
+            const isPickup = this.isStorePickup(this.verifyOrderTarget);
+            const isSpecial = this.isSpecialDelivery(this.verifyOrderTarget);
+            if (!isPickup && !isSpecial) {
+                this.appointmentDateError = '';
+                return true;
+            }
+
+            const rawVal = (this.appointmentDateInput || '').trim();
+            if (!rawVal) {
+                this.appointmentDateError = 'Please select a scheduled appointment date for the customer.';
+                return false;
+            }
+
+            const todayStr = this.todayDateString();
+            if (rawVal < todayStr) {
+                this.appointmentDateError = 'The scheduled appointment date cannot be in the past. Please select today or a future date.';
+                return false;
+            }
+
+            this.appointmentDateError = '';
+            return true;
+        },
+
         openVerifyPaymentModal(order) {
             this.verifyOrderTarget = order || this.detailsOrder;
             this.verifyingPayment = false;
+            this.appointmentDateError = '';
+            this.verifyPaymentError = '';
             const todayStr = this.todayDateString();
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -545,6 +574,7 @@ function sellerOrdersManager() {
 
             this.appointmentTimeInput = this.verifyOrderTarget?.appointment_time || '';
             this.appointmentNotesInput = this.verifyOrderTarget?.appointment_notes || '';
+            this.validateAppointmentDate();
             this.showVerifyModal = true;
         },
 
@@ -554,18 +584,14 @@ function sellerOrdersManager() {
             const isSpecial = this.isSpecialDelivery(this.verifyOrderTarget);
 
             if (isPickup || isSpecial) {
-                if (!this.appointmentDateInput) {
-                    this.showToast('Please select a scheduled appointment date for the customer.');
-                    return;
-                }
-                const todayStr = this.todayDateString();
-                if (this.appointmentDateInput < todayStr) {
-                    this.showToast('⚠️ The scheduled date cannot be in the past. Please select today or a future date.');
+                if (!this.validateAppointmentDate()) {
+                    this.showToast('' + this.appointmentDateError);
                     return;
                 }
             }
 
             this.verifyingPayment = true;
+            this.verifyPaymentError = '';
             try {
                 let targetStatus = 'To Ship';
                 if (isPickup) {
@@ -584,13 +610,20 @@ function sellerOrdersManager() {
                 const success = await this.updateStatus(this.verifyOrderTarget, targetStatus, extraPayload);
                 if (success) {
                     this.showVerifyModal = false;
+                    this.appointmentDateError = '';
+                    this.verifyPaymentError = '';
                     if (isPickup) {
-                        this.showToast('✓ Store pickup order accepted! Customer appointment set for ' + this.formatAppointmentDate(this.appointmentDateInput));
+                        this.showToast('Store pickup order accepted! Customer appointment set for ' + this.formatAppointmentDate(this.appointmentDateInput));
                     } else if (isSpecial) {
-                        this.showToast('✓ Special delivery order accepted! Delivery scheduled for ' + this.formatAppointmentDate(this.appointmentDateInput));
+                        this.showToast('Special delivery order accepted! Delivery scheduled for ' + this.formatAppointmentDate(this.appointmentDateInput));
                     }
                 } else {
-                    this.showToast(this.shippingError || 'Failed to update order appointment.');
+                    const serverMsg = this.shippingError || 'Failed to update order appointment.';
+                    this.verifyPaymentError = serverMsg;
+                    if (serverMsg.toLowerCase().includes('date') || serverMsg.toLowerCase().includes('past') || serverMsg.toLowerCase().includes('appointment')) {
+                        this.appointmentDateError = serverMsg;
+                    }
+                    this.showToast('' + serverMsg);
                 }
             } finally {
                 this.verifyingPayment = false;
@@ -690,7 +723,7 @@ function sellerOrdersManager() {
                             this.detailsOrder = data.order || data;
                         }
                     }
-                    this.showToast('✓ Order cancelled successfully. Stock restored.');
+                    this.showToast('Order cancelled successfully. Stock restored.');
                     this.showCancelOrderModal = false;
                     this.detailsModal = false;
                 } else {
@@ -735,7 +768,7 @@ function sellerOrdersManager() {
                             this.detailsOrder = data.order || data;
                         }
                     }
-                    this.showToast('✓ Cancellation approved. Order cancelled and stock restored.');
+                    this.showToast('Cancellation approved. Order cancelled and stock restored.');
                     this.showApproveCancellationModal = false;
                     this.detailsModal = false;
                 } else {
@@ -788,7 +821,7 @@ function sellerOrdersManager() {
                             this.detailsOrder = data.order || data;
                         }
                     }
-                    this.showToast('✓ Cancellation request declined. Order returned to Pending.');
+                    this.showToast('Cancellation request declined. Order returned to Pending.');
                     this.showDeclineCancellationModal = false;
                     this.detailsModal = false;
                 } else {
@@ -897,7 +930,7 @@ function sellerOrdersManager() {
                             this.detailsOrder = updatedOrder;
                         }
                     }
-                    this.showToast('✓ Return request approved. Customer has been notified.');
+                    this.showToast('Return request approved. Customer has been notified.');
                     this.showApproveReturnModal = false;
                 } else {
                     this.approveReturnError = data.message || 'Failed to approve return request.';
@@ -1042,7 +1075,7 @@ function sellerOrdersManager() {
                         }
                     }
                     this.deliveryConfirmSuccess = true;
-                    this.showToast('✓ Order successfully marked as Delivered!');
+                    this.showToast('Order successfully marked as Delivered!');
                     setTimeout(() => {
                         this.showDeliveryConfirmModal = false;
                         this.detailsModal = false;
@@ -1177,7 +1210,7 @@ function sellerOrdersManager() {
                     message: `Invalid format for ${cfg.name || courier}. Expected: ${cfg.hint}`
                 };
             }
-            return { valid: true, message: `✓ Valid ${cfg.name || courier} format` };
+            return { valid: true, message: `Valid ${cfg.name || courier} format` };
         },
 
         get trackingValidationStatus() {
@@ -1225,7 +1258,7 @@ function sellerOrdersManager() {
                     if (this.detailsOrder && this.detailsOrder.id === target.id) {
                         this.detailsOrder = data;
                     }
-                    this.showToast('✓ Courier and tracking details saved successfully!');
+                    this.showToast('Courier and tracking details saved successfully!');
                 } else {
                     this.shippingError = data.message || 'Failed to update shipping info.';
                 }
@@ -1357,12 +1390,12 @@ function sellerOrdersManager() {
                     this.orders[idx].packingProof = data.packingProof;
                     this.orders[idx].packingProofUrl = data.packingProofUrl;
                 }
-                this.showToast('✓ Packing proof uploaded successfully!');
+                this.showToast('Packing proof uploaded successfully!');
                 return true;
             } catch(e) {
                 this.packingUploadError = e.message || 'Upload failed. Please try again.';
                 this.shippingError = this.packingUploadError;
-                this.showToast('✕ ' + this.packingUploadError);
+                this.showToast('' + this.packingUploadError);
                 return false;
             } finally {
                 this.packingUploading = false;
@@ -1402,7 +1435,7 @@ function sellerOrdersManager() {
             // 3. No photo selected yet for standard courier: alert seller and trigger file picker
             this.packingUploadError = 'Please upload or capture a packing proof photo before confirming courier shipment.';
             this.shippingError = this.packingUploadError;
-            this.showToast('⚠️ Please select or take a packing proof photo first.');
+            this.showToast('Please select or take a packing proof photo first.');
 
             const card = document.getElementById('packing-proof-card');
             if (card) {
@@ -1501,7 +1534,7 @@ function sellerOrdersManager() {
                 this.shippingError = '';
                 this.packingUploadSuccess = false;
                 this.closeCameraModal();
-                this.showToast('✓ Packing photo captured! Click Upload or Confirm Shipment.');
+                this.showToast('Packing photo captured! Click Upload or Confirm Shipment.');
             }, 'image/jpeg', 0.9);
         },
 
@@ -1824,10 +1857,17 @@ function sellerOrdersManager() {
                     this.detailsModal = false;
                     this.activeOrder = null;
                     this.shippingError = '';
-                    this.showToast('✓ Order status updated to ' + (data.status || statusVal));
+                    this.showToast('Order status updated to ' + (data.status || statusVal));
                     return true;
                 } else {
-                    this.shippingError = data.message || 'Failed to update status. Please check fields and try again.';
+                    let errMsg = data.message;
+                    if (data.errors && typeof data.errors === 'object') {
+                        const firstKey = Object.keys(data.errors)[0];
+                        if (firstKey && data.errors[firstKey] && data.errors[firstKey][0]) {
+                            errMsg = data.errors[firstKey][0];
+                        }
+                    }
+                    this.shippingError = errMsg || 'Failed to update status. Please check fields and try again.';
                     return false;
                 }
             } catch(e) {
@@ -1862,7 +1902,7 @@ function sellerOrdersManager() {
     <div id="tour-orders-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Orders</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em] inline-flex items-center gap-1" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Shop Orders</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Fulfillment Ledger</span>
             </div>
@@ -1958,18 +1998,18 @@ function sellerOrdersManager() {
         <div class="seller-order-tabs-track border-b pb-3" style="border-color: #E8DECB;">
             @php
                 $statusTabs = [
-                    'all' => ['label' => 'All Orders', 'icon' => '📋'],
-                    'pending' => ['label' => 'Pending', 'icon' => '⏳'],
-                    'store pickup' => ['label' => 'Store Pickup', 'icon' => '🏬'],
-                    'special delivery' => ['label' => 'Special Delivery', 'icon' => '🏍️'],
-                    'to ship' => ['label' => 'To Ship', 'icon' => '📦'],
-                    'shipped' => ['label' => 'Shipped', 'icon' => '🚚'],
-                    'in transit' => ['label' => 'In Transit', 'icon' => '🛣️'],
-                    'delivered' => ['label' => 'Delivered', 'icon' => '📬'],
-                    'completed' => ['label' => 'Completed', 'icon' => '✅'],
-                    'cancelled' => ['label' => 'Cancelled', 'icon' => '❌'],
-                    'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => '⚠️'],
-                    'return requests' => ['label' => 'Return Requests', 'icon' => '↩️'],
+                    'all' => ['label' => 'All Orders', 'icon' => 'clipboard-list'],
+                    'pending' => ['label' => 'Pending', 'icon' => 'clock'],
+                    'store pickup' => ['label' => 'Store Pickup', 'icon' => 'store'],
+                    'special delivery' => ['label' => 'Special Delivery', 'icon' => 'bike'],
+                    'to ship' => ['label' => 'To Ship', 'icon' => 'package'],
+                    'shipped' => ['label' => 'Shipped', 'icon' => 'truck'],
+                    'in transit' => ['label' => 'In Transit', 'icon' => 'route'],
+                    'delivered' => ['label' => 'Delivered', 'icon' => 'mail-check'],
+                    'completed' => ['label' => 'Completed', 'icon' => 'check-circle'],
+                    'cancelled' => ['label' => 'Cancelled', 'icon' => 'x-circle'],
+                    'cancellation pending' => ['label' => 'Cancellation Requests', 'icon' => 'alert-triangle'],
+                    'return requests' => ['label' => 'Return Requests', 'icon' => 'rotate-ccw'],
                 ];
             @endphp
             @foreach($statusTabs as $val => $tab)
@@ -1979,7 +2019,7 @@ function sellerOrdersManager() {
                         :style="statusFilter === '{{ $val }}' 
                             ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12); border: 1px solid #1E1915;' 
                             : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                    <span>{{ $tab['icon'] }} {{ $tab['label'] }}</span>
+                    <span class="flex items-center gap-1.5"><x-lucide :name="$tab['icon']" class="w-3.5 h-3.5 shrink-0" /> {{ $tab['label'] }}</span>
                     <span class="px-2 py-0.5 text-[10px] rounded-full font-bold transition-colors ml-0.5" 
                           :style="statusFilter === '{{ $val }}' ? 'background: rgba(196,149,32,0.28); color: #DFC97A;' : 'background: #F4EFE6; color: #766C60;'"
                           x-text="countForStatus('{{ $val }}')">
@@ -1994,7 +2034,7 @@ function sellerOrdersManager() {
     <div id="tour-orders-list" class="space-y-2.5 sm:space-y-3">
         <template x-if="filtered.length === 0">
             <div class="rounded-3xl p-10 text-center space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛍️</div>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="package" class="w-6 h-6" /></div>
                 <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Orders Found</h3>
                 <p class="text-[11px]" style="color: #766C60;">When customer orders match this filter state, they will be catalogued here.</p>
             </div>
@@ -2033,19 +2073,19 @@ function sellerOrdersManager() {
                             {{-- Fulfillment Workflow Badge --}}
                             <template x-if="isStorePickup(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
-                                    <span>🏬</span>
+                                    <x-lucide name="store" class="w-3 h-3 text-amber-900 shrink-0" />
                                     <span>Store Pickup</span>
                                 </span>
                             </template>
                             <template x-if="isSpecialDelivery(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-blue-50 text-blue-900 border border-blue-200 shadow-2xs">
-                                    <span>🏍️</span>
+                                    <x-lucide name="bike" class="w-3 h-3 text-blue-900 shrink-0" />
                                     <span>Special Delivery</span>
                                 </span>
                             </template>
                             <template x-if="!isStorePickup(order) && !isSpecialDelivery(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs">
-                                    <span>📦</span>
+                                    <x-lucide name="package" class="w-3 h-3 text-stone-700 shrink-0" />
                                     <span x-text="order.courierName || order.shipping?.provider_name || 'Standard Courier'"></span>
                                 </span>
                             </template>
@@ -2053,33 +2093,33 @@ function sellerOrdersManager() {
                             <template x-if="hasPendingReturn(order)">
                                 <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 animate-pulse"
                                       style="background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;">
-                                    <span>↩️</span>
+                                    <x-lucide name="rotate-ccw" class="w-3 h-3 text-amber-700 shrink-0" />
                                     <span>Return Requested</span>
                                 </span>
                             </template>
                             <template x-if="!hasPendingReturn(order) && getReturnRequest(order) && getReturnRequest(order).status === 'Approved'">
                                 <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
                                       style="background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;">
-                                    <span>✓</span>
+                                    <x-lucide name="check-circle" class="w-3 h-3 text-blue-700 shrink-0" />
                                     <span>Return Approved</span>
                                 </span>
                             </template>
                             <template x-if="!hasPendingReturn(order) && getReturnRequest(order) && getReturnRequest(order).status === 'Rejected'">
                                 <span class="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
                                       style="background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA;">
-                                    <span>✕</span>
+                                    <x-lucide name="x-circle" class="w-3 h-3 text-red-700 shrink-0" />
                                     <span>Return Declined</span>
                                 </span>
                             </template>
                             <template x-if="order.reviews && order.reviews.length > 0">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">
-                                    <span style="color: #C49520;">★</span>
+                                    <x-lucide name="star" class="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
                                     <span x-text="Number(order.reviews[0].rating).toFixed(1) + ' Rated'"></span>
                                 </span>
                             </template>
                             <template x-if="(order.items || []).some(i => i.inventory_mode === 'preorder' || i.is_preorder || i.product?.inventory_mode === 'preorder')">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 bg-amber-500/15 text-amber-800 border border-amber-600/30">
-                                    <span>⏳</span>
+                                    <x-lucide name="clock" class="w-3 h-3 text-amber-800 shrink-0" />
                                     <span>Preorder</span>
                                 </span>
                             </template>
@@ -2130,7 +2170,7 @@ function sellerOrdersManager() {
                 
                 {{-- Order Icon Circle --}}
                 <div class="w-14 h-14 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/20 mx-auto mb-2 overflow-hidden">
-                    🛍️
+                    <x-lucide name="package" class="w-4 h-4 inline" />
                 </div>
                 <h2 class="text-base sm:text-lg font-black uppercase tracking-tight" x-text="detailsOrder ? '#LB-' + detailsOrder.id.slice(-8).toUpperCase() : 'Order Details'"></h2>
                 <p class="text-xs text-gray-300 font-medium mt-0.5" x-text="detailsOrder &amp;&amp; detailsOrder.createdAt ? new Date(detailsOrder.createdAt).toLocaleDateString('en-PH', {month:'long', day:'numeric', year:'numeric'}) : ''"></p>
@@ -2155,7 +2195,7 @@ function sellerOrdersManager() {
                         <template x-if="detailsOrder && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
                             <div class="p-4 bg-orange-50 border border-orange-200 rounded-2xl space-y-1.5 shadow-2xs">
                                 <div class="flex items-center gap-2 text-orange-950 font-black text-xs uppercase tracking-wider">
-                                    <span>⏳ Buyer Requested Order Cancellation</span>
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="clock" class="w-3.5 h-3.5 text-amber-600" /> Buyer Requested Order Cancellation</span>
                                 </div>
                                 <p class="text-xs text-orange-900 leading-relaxed">
                                     <span class="font-bold">Reason: </span>
@@ -2177,7 +2217,7 @@ function sellerOrdersManager() {
                                  }">
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-base" x-text="hasPendingReturn(detailsOrder) ? '↩️' : (getReturnRequest(detailsOrder).status === 'Approved' ? '✓' : '✕')"></span>
+                                        <span class="text-base" x-text="hasPendingReturn(detailsOrder) ? 'Return' : (getReturnRequest(detailsOrder).status === 'Approved' ? 'Approved' : 'Declined')"></span>
                                         <span class="font-black text-xs uppercase tracking-wider"
                                               :class="{
                                                   'text-amber-950': hasPendingReturn(detailsOrder),
@@ -2222,7 +2262,7 @@ function sellerOrdersManager() {
                                 <template x-if="getProofImages(getReturnRequest(detailsOrder)).length > 0">
                                     <div class="space-y-1.5 pt-1">
                                         <div class="text-[10px] font-black uppercase tracking-widest text-gray-600 flex items-center gap-1.5">
-                                            <span>📷 Attached Proof Photos</span>
+                                            <span><x-lucide name="camera" class="w-3.5 h-3.5 inline mr-1 text-gray-600" /> Attached Proof Photos</span>
                                             <span class="text-[9px] font-medium text-gray-500">(Click photo to zoom)</span>
                                         </div>
                                         <div class="flex items-center gap-2 overflow-x-auto pb-1">
@@ -2244,13 +2284,13 @@ function sellerOrdersManager() {
                                                 @click="openRejectReturnModal(detailsOrder)"
                                                 :disabled="approveReturnLoading || rejectReturnLoading"
                                                 class="px-3.5 py-1.5 rounded-full border border-red-200 text-red-700 bg-white hover:bg-red-50 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
-                                            ✕ Decline Return
+                                            Decline Return
                                         </button>
                                         <button type="button" 
                                                 @click="openApproveReturnModal(detailsOrder)"
                                                 :disabled="approveReturnLoading || rejectReturnLoading"
                                                 class="px-4 py-1.5 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
-                                            <span>✓</span> Approve Return
+                                            <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Approve Return
                                         </button>
                                     </div>
                                 </template>
@@ -2260,7 +2300,7 @@ function sellerOrdersManager() {
                         {{-- PACKING PROOF UPLOAD CARD — shown only for standard courier To Ship --}}
                         <div id="packing-proof-card" x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-3 shadow-xs">
                             <div class="flex items-center gap-2">
-                                <span class="text-xl">📦</span>
+                                <x-lucide name="package" class="w-5 h-5 text-emerald-800 shrink-0" />
                                 <div>
                                     <div class="text-[10px] font-black uppercase tracking-widest text-emerald-900">
                                         Packing Proof Required <span class="text-red-500 font-bold">*</span>
@@ -2299,12 +2339,10 @@ function sellerOrdersManager() {
                                         <div class="space-y-2">
                                             <div class="w-full rounded-2xl overflow-hidden border-2 border-dashed border-emerald-400 bg-white max-h-60 flex items-center justify-center p-1 relative group">
                                                 <img :src="packingPhotoPreview" class="max-h-56 w-full object-contain rounded-xl" alt="Preview">
-                                                <button type="button" @click="removeSelectedPackingPhoto()" class="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md text-xs font-bold transition-all cursor-pointer" title="Remove photo">
-                                                    ✕
-                                                </button>
+                                                <button type="button" @click="removeSelectedPackingPhoto()" class="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md text-xs font-bold transition-all cursor-pointer" title="Remove photo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                                             </div>
                                             <div class="flex items-center justify-between text-[10px] text-emerald-800 font-bold px-1">
-                                                <span>✓ Photo ready to upload</span>
+                                                <span class="inline-flex items-center gap-1"><x-lucide name="check" class="w-3.5 h-3.5 text-emerald-600" /> Photo ready to upload</span>
                                                 <button type="button" @click="removeSelectedPackingPhoto()" class="text-red-600 hover:text-red-700 font-black uppercase text-[9px]">Remove</button>
                                             </div>
                                         </div>
@@ -2350,15 +2388,15 @@ function sellerOrdersManager() {
                         </div>
 
 
-                        {{-- 📦 STANDARD COURIER CARD — only for standard 3rd-party logistics --}}
+                        {{-- STANDARD COURIER CARD — only for standard 3rd-party logistics --}}
                         <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
-                                    <span>🚚 Courier & Shipping Information</span>
+                                    <span class="flex items-center gap-1.5"><x-lucide name="truck" class="w-3.5 h-3.5 text-indigo-700" /> Courier & Shipping Information</span>
                                 </div>
                                 <template x-if="isShippingLocked(detailsOrder)">
                                     <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                                        🔒 Read Only / Locked
+                                        <x-lucide name="lock" class="w-3 h-3 inline mr-1" /> Read Only / Locked
                                     </span>
                                 </template>
                             </div>
@@ -2456,7 +2494,7 @@ function sellerOrdersManager() {
                             <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/80 space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div class="text-[9px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-1.5">
-                                        <span>⭐ Customer Rating & Feedback</span>
+                                        <span class="flex items-center gap-1.5"><x-lucide name="star" class="w-4 h-4 text-amber-500 fill-amber-500" /> Customer Rating & Feedback</span>
                                     </div>
                                     <span class="text-[9px] font-bold text-amber-800" x-text="detailsOrder.reviews.length + ' Review(s)'"></span>
                                 </div>
@@ -2468,7 +2506,7 @@ function sellerOrdersManager() {
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex items-center text-amber-400 text-sm">
                                                         <template x-for="star in 5" :key="star">
-                                                             <span :class="star <= rev.rating ? 'text-amber-400' : 'text-gray-200'">★</span>
+                                                             <svg class="w-3.5 h-3.5 inline" :class="star <= rev.rating ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                                         </template>
                                                     </div>
                                                     <span class="text-xs font-black text-black" x-text="rev.rating + '.0'"></span>
@@ -2521,7 +2559,7 @@ function sellerOrdersManager() {
                                 <div class="pt-2 border-t border-gray-200/60 text-xs space-y-1">
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Method & Location</div>
                                     <div class="text-gray-800 font-medium mt-0.5 leading-relaxed flex items-center gap-1.5">
-                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">🏬 In-Shop Store Pickup</span>
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px] flex items-center gap-1"><x-lucide name="store" class="w-3 h-3" /> In-Shop Store Pickup</span>
                                         <span>· Lumban, Laguna Workshop</span>
                                     </div>
                                 </div>
@@ -2531,7 +2569,7 @@ function sellerOrdersManager() {
                                 <div class="pt-2 border-t border-gray-200/60 text-xs space-y-1">
                                     <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Fulfillment Method & Destination</div>
                                     <div class="text-gray-800 font-medium mt-0.5 leading-relaxed flex items-center gap-1.5">
-                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px]">🏍️ Special Delivery (Local Artisan Rider)</span>
+                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px] flex items-center gap-1"><x-lucide name="bike" class="w-3 h-3" /> Special Delivery (Local Artisan Rider)</span>
                                     </div>
                                     <div class="text-gray-700 font-medium mt-0.5 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
                                 </div>
@@ -2547,7 +2585,7 @@ function sellerOrdersManager() {
                                 <div class="pt-2.5 border-t border-amber-200/60 bg-amber-50/60 p-2.5 rounded-xl space-y-1 text-xs">
                                     <div class="text-[9px] font-black text-amber-900 uppercase tracking-wider flex items-center justify-between">
                                         <span class="flex items-center gap-1">
-                                            <span>📅</span>
+                                            <x-lucide name="calendar" class="w-3 h-3 text-amber-900 shrink-0" />
                                             <span x-text="isStorePickup(detailsOrder) ? 'In-Shop Pickup Appointment' : 'Scheduled Special Delivery Date'"></span>
                                         </span>
                                         <span class="text-[8px] font-black px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 uppercase tracking-widest">Scheduled</span>
@@ -2585,7 +2623,7 @@ function sellerOrdersManager() {
                                                 <span x-show="item.size" x-text="'Size: ' + item.size"></span>
                                                 <template x-if="item.inventory_mode === 'preorder' || item.is_preorder || item.product?.inventory_mode === 'preorder'">
                                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-600/30 text-amber-800 text-[8px] font-black">
-                                                        <span>⏳</span>
+                                                        <x-lucide name="clock" class="w-3.5 h-3.5 text-amber-600" />
                                                         <span>Preorder</span>
                                                     </span>
                                                 </template>
@@ -2652,7 +2690,7 @@ function sellerOrdersManager() {
                                     <button type="button" 
                                         @click="openRecordPaymentModal(detailsOrder)"
                                         class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                                        <span>💰</span> Record Payment Received
+                                        <x-lucide name="coins" class="w-4 h-4 inline mr-1" /> Record Payment Received
                                     </button>
                                     <p class="text-[9px] text-gray-500 mt-1 text-center">Record tender when customer pays at workshop or upon handover.</p>
                                 </div>
@@ -2662,7 +2700,7 @@ function sellerOrdersManager() {
                                     <button type="button" 
                                         @click="openSellerRefundModal(detailsOrder)"
                                         class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                                        <span>↩️</span> Record Direct Refund
+                                        <span class="inline-flex items-center gap-1"><x-lucide name="rotate-ccw" class="w-3.5 h-3.5" /> Record Direct Refund</span>
                                     </button>
                                     <p class="text-[9px] text-gray-500 mt-1 text-center">Record cash / direct refund returned to buyer for this order.</p>
                                 </div>
@@ -2694,7 +2732,7 @@ function sellerOrdersManager() {
                                 @click="openRejectReturnModal(detailsOrder)"
                                 :disabled="approveReturnLoading || rejectReturnLoading"
                                 class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
-                                <span>✕</span> Decline Return
+                                <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Return
                             </button>
                             <button type="button" 
                                 @click="openApproveReturnModal(detailsOrder)"
@@ -2714,7 +2752,7 @@ function sellerOrdersManager() {
                                 @click="openDeclineCancellationModal(detailsOrder)"
                                 :disabled="approveCancellationLoading || declineCancellationLoading"
                                 class="px-4 py-2.5 sm:py-3 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
-                                <span>✕</span> Decline Cancellation
+                                <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Cancellation
                             </button>
                             <button type="button" 
                                 @click="openApproveCancellationModal(detailsOrder)"
@@ -2733,7 +2771,7 @@ function sellerOrdersManager() {
                             <button type="button" 
                                 @click="openRejectPaymentModal(detailsOrder)"
                                 class="px-4 py-2.5 sm:py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
-                                <span>✕</span> Reject & Cancel
+                                <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Reject & Cancel
                             </button>
                             <button type="button" 
                                 @click="openVerifyPaymentModal(detailsOrder)"
@@ -2753,7 +2791,7 @@ function sellerOrdersManager() {
                                         )
                                     )
                                 )"></span>
-                                <span x-show="!statusUpdating && !verifyingPayment" class="text-xs">➔</span>
+                                <x-lucide name="arrow-right" class="w-3.5 h-3.5 inline" />
                             </button>
                         </div>
                     </template>
@@ -2772,7 +2810,7 @@ function sellerOrdersManager() {
                                 <template x-if="!packingUploading && !statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </template>
-                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup ➔' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery ➔' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped) ➔' : (packingPhotoFile ? 'Upload & Confirm Shipment ➔' : 'Upload Proof & Confirm Shipment ➔')))))"></span>
+                                <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped)' : (packingPhotoFile ? 'Upload & Confirm Shipment' : 'Upload Proof & Confirm Shipment')))))"></span>
                             </button>
                         </div>
                     </template>
@@ -2785,7 +2823,7 @@ function sellerOrdersManager() {
                                     <button type="button"
                                         @click="printOrderDetails()"
                                         class="px-4 py-2.5 sm:py-3 border border-stone-300 hover:bg-stone-100 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer flex items-center gap-1">
-                                        <span>🖨️</span> Print Invoice
+                                        <span><x-lucide name="printer" class="w-3.5 h-3.5 inline mr-1" /></span> Print Invoice
                                     </button>
                                     <button type="button"
                                         @click="confirmMarkAsDelivered(detailsOrder)"
@@ -2798,7 +2836,7 @@ function sellerOrdersManager() {
                                         <template x-if="!statusUpdating && !deliveryConfirmLoading">
                                             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                         </template>
-                                        <span x-text="(statusUpdating || deliveryConfirmLoading) ? 'Updating...' : 'Confirm Handed Over & Claimed ➔'"></span>
+                                        <span x-text="(statusUpdating || deliveryConfirmLoading) ? 'Updating...' : 'Confirm Handed Over & Claimed'"></span>
                                     </button>
                                 </div>
                             </template>
@@ -2814,7 +2852,7 @@ function sellerOrdersManager() {
                                     <template x-if="!statusUpdating && !statusConfirmLoading">
                                         <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                     </template>
-                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for Special Delivery ➔'"></span>
+                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for Special Delivery'"></span>
                                 </button>
                             </template>
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
@@ -2837,7 +2875,7 @@ function sellerOrdersManager() {
                                     <template x-if="!statusUpdating && !statusConfirmLoading">
                                         <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                     </template>
-                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Mark In Transit ➔'"></span>
+                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Mark In Transit'"></span>
                                 </button>
                             </template>
                         </div>
@@ -2857,7 +2895,7 @@ function sellerOrdersManager() {
                                 <template x-if="!statusUpdating">
                                     <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </template>
-                                <span x-text="statusUpdating ? 'Marking Delivered...' : (isSpecialDelivery(detailsOrder) ? 'Confirm Handed Over to Customer ➔' : 'Mark as Delivered ➔')"></span>
+                                <span x-text="statusUpdating ? 'Marking Delivered...' : (isSpecialDelivery(detailsOrder) ? 'Confirm Handed Over to Customer' : 'Mark as Delivered')"></span>
                             </button>
                         </div>
                     </template>
@@ -2866,13 +2904,13 @@ function sellerOrdersManager() {
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'delivered'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
                             <template x-if="isStorePickup(detailsOrder)">
-                                <span>🏬 Claimed at Workshop — Order Fulfilled</span>
+                                <span class="flex items-center gap-1.5"><x-lucide name="store" class="w-3.5 h-3.5 text-teal-800" /> Claimed at Workshop — Order Fulfilled</span>
                             </template>
                             <template x-if="isSpecialDelivery(detailsOrder)">
-                                <span>🏍️ Delivered by Artisan Rider — Completed</span>
+                                <span class="flex items-center gap-1.5"><x-lucide name="bike" class="w-3.5 h-3.5 text-teal-800" /> Delivered by Artisan Rider — Completed</span>
                             </template>
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                                <span>📦 Delivered — Awaiting Customer Receipt Confirmation</span>
+                                <span class="flex items-center gap-1.5"><x-lucide name="package" class="w-3.5 h-3.5 text-teal-800" /> Delivered — Awaiting Customer Receipt Confirmation</span>
                             </template>
                         </div>
                     </template>
@@ -2880,14 +2918,14 @@ function sellerOrdersManager() {
                     {{-- Status notice for Completed status --}}
                     <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'completed'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
-                            <span>✓ Order Completed by Customer</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-800" /> Order Completed by Customer</span>
                         </div>
                     </template>
 
                     {{-- Status notice for Cancelled status --}}
                     <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'cancelled'">
                         <div class="flex-1 py-2.5 sm:py-3 px-4 bg-red-50 border border-red-200 text-red-800 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center justify-center gap-2 text-center">
-                            <span>✕ Order Cancelled</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-800" /> Order Cancelled</span>
                             <span class="font-normal text-[10px] text-red-600 truncate max-w-xs" x-text="detailsOrder.cancellationReason ? '(' + detailsOrder.cancellationReason + ')' : ''"></span>
                         </div>
                     </template>
@@ -2927,7 +2965,7 @@ function sellerOrdersManager() {
         <div class="relative max-w-md w-full bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center border border-white/20 p-5 space-y-4">
             <div class="w-full flex items-center justify-between text-white">
                 <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <span>📷 Capture Packing Proof</span>
+                    <span class="flex items-center gap-1.5"><x-lucide name="camera" class="w-3.5 h-3.5" /> Capture Packing Proof</span>
                 </h3>
                 <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -3036,7 +3074,7 @@ function sellerOrdersManager() {
 
             <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner mt-2 transition-all"
                  :class="deliveryConfirmSuccess ? 'bg-emerald-100 text-emerald-700 ring-4 ring-emerald-200' : 'bg-emerald-50 text-emerald-600'">
-                <span x-text="deliveryConfirmSuccess ? '✓' : (isStorePickup(deliveryConfirmOrder) ? '🏬' : (isSpecialDelivery(deliveryConfirmOrder) ? '🏍️' : '🚚'))"></span>
+                <span x-text="deliveryConfirmSuccess ? 'Ready' : (isStorePickup(deliveryConfirmOrder) ? 'Store Pickup' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Special Delivery' : 'Courier'))"></span>
             </div>
 
             <div>
@@ -3108,7 +3146,7 @@ function sellerOrdersManager() {
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 shadow-xs"
                      style="background: #1E1915; color: #C49520; border: 1px solid rgba(196,149,32,0.4);">
-                    <span>⚡</span>
+                    <x-lucide name="sparkles" class="w-3.5 h-3.5 text-amber-500" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Confirm Order Status Update</h3>
@@ -3132,7 +3170,7 @@ function sellerOrdersManager() {
                             <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Fulfillment</span>
                             <span class="font-bold text-[11px] px-2 py-0.5 rounded-full"
                                   :class="isStorePickup(statusConfirmTarget) ? 'bg-amber-50 text-amber-900 border border-amber-200' : (isSpecialDelivery(statusConfirmTarget) ? 'bg-blue-50 text-blue-900 border border-blue-200' : 'bg-gray-100 text-gray-800')">
-                                <span x-text="isStorePickup(statusConfirmTarget) ? '🏬 Store Pickup' : (isSpecialDelivery(statusConfirmTarget) ? '🏍️ Special Delivery' : ('🚚 ' + (courierName || statusConfirmTarget.courierName || 'Standard Courier')))"></span>
+                                <span x-text="isStorePickup(statusConfirmTarget) ? 'Store Pickup' : (isSpecialDelivery(statusConfirmTarget) ? 'Special Delivery' : (courierName || statusConfirmTarget.courierName || 'Standard Courier'))"></span>
                             </span>
                         </div>
                     </div>
@@ -3145,7 +3183,7 @@ function sellerOrdersManager() {
                                 <div class="text-[9px] text-gray-400 font-bold uppercase">Current Status</div>
                                 <div class="text-xs font-black text-gray-700 mt-0.5" x-text="getStatusDisplayName(statusConfirmTarget, statusConfirmTarget.status)"></div>
                             </div>
-                            <div class="text-gray-400 font-bold text-sm shrink-0">➔</div>
+                            <div class="text-gray-400 shrink-0 inline-flex items-center"><x-lucide name="arrow-right" class="w-4 h-4" /></div>
                             <div class="flex-1 text-center py-2 px-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800">
                                 <div class="text-[9px] text-emerald-600 font-bold uppercase">New Status</div>
                                 <div class="text-xs font-black text-emerald-900 mt-0.5" x-text="getStatusDisplayName(statusConfirmTarget, statusConfirmNewStatus)"></div>
@@ -3203,7 +3241,7 @@ function sellerOrdersManager() {
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0"
-                     x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '💳' : (isStorePickup(verifyOrderTarget) ? '🏬' : '📦')">
+                     x-text="['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'E-Wallet' : (isStorePickup(verifyOrderTarget) ? 'Store' : 'Order')">
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight"
@@ -3254,7 +3292,7 @@ function sellerOrdersManager() {
                     {{-- Electronic Payment Verification Alert --}}
                     <template x-if="['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
                         <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] text-amber-900 leading-relaxed">
-                            <span class="font-black uppercase tracking-wider block mb-0.5">⚠️ Artisan Verification Check</span>
+                            <span class="font-black uppercase tracking-wider mb-0.5 flex items-center gap-1.5 text-amber-900"><x-lucide name="alert-triangle" class="w-3.5 h-3.5 text-amber-700" /> Artisan Verification Check</span>
                             Please confirm in your <strong x-text="verifyOrderTarget.paymentMethod || 'GCash'"></strong> mobile app that you received <strong>₱<span x-text="Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2})"></span></strong> with reference <strong x-text="verifyOrderTarget.paymentReference || 'N/A'"></strong> before proceeding.
                         </div>
                     </template>
@@ -3262,7 +3300,7 @@ function sellerOrdersManager() {
                     {{-- Non-electronic Payment Order Acceptance Info --}}
                     <template x-if="!['GCASH', 'MAYA'].includes((verifyOrderTarget.paymentMethod || '').toUpperCase())">
                         <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-[10px] text-blue-900 leading-relaxed">
-                            <span class="font-black uppercase tracking-wider block mb-0.5" x-text="isStorePickup(verifyOrderTarget) ? 'ℹ️ In-Shop Store Pickup' : (isSpecialDelivery(verifyOrderTarget) ? 'ℹ️ Special Delivery Order' : 'ℹ️ Cash on Delivery Order')"></span>
+                            <span class="font-black uppercase tracking-wider block mb-0.5" x-text="isStorePickup(verifyOrderTarget) ? 'In-Shop Store Pickup' : (isSpecialDelivery(verifyOrderTarget) ? 'Special Delivery Order' : 'Cash on Delivery Order')"></span>
                             <span x-text="isStorePickup(verifyOrderTarget) 
                                 ? 'Payment of ₱' + Number(verifyOrderTarget.totalAmount).toLocaleString(undefined, {minimumFractionDigits:2}) + ' will be collected directly when the customer claims the order at the workshop. Please schedule the pickup appointment below.'
                                 : (isSpecialDelivery(verifyOrderTarget)
@@ -3276,7 +3314,7 @@ function sellerOrdersManager() {
                         <div class="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-2.5">
                             <div class="flex items-center justify-between">
                                 <label class="text-[10px] font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
-                                    <span>📅</span>
+                                    <x-lucide name="calendar" class="w-3 h-3 text-amber-900 shrink-0" />
                                     <span x-text="isStorePickup(verifyOrderTarget) ? 'Set In-Shop Pickup Appointment' : 'Set Special Delivery Appointment'"></span>
                                     <span class="text-red-500">*</span>
                                 </label>
@@ -3297,10 +3335,19 @@ function sellerOrdersManager() {
                                     </label>
                                     <input type="date" 
                                            x-model="appointmentDateInput" 
+                                           @input="validateAppointmentDate()"
+                                           @change="validateAppointmentDate()"
                                            :min="todayDateString()"
                                            min="{{ date('Y-m-d') }}"
                                            required
-                                           class="w-full h-9 px-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-gray-900 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-200 transition-all cursor-pointer">
+                                           :class="appointmentDateError ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200 focus:border-amber-600 focus:ring-amber-200'"
+                                           class="w-full h-9 px-3 bg-white border rounded-xl text-xs font-bold text-gray-900 outline-none focus:ring-2 transition-all cursor-pointer">
+                                    <template x-if="appointmentDateError">
+                                        <div class="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold text-red-600 leading-tight bg-red-50/80 border border-red-200/80 rounded-lg p-1.5">
+                                            <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600" />
+                                            <span x-text="appointmentDateError"></span>
+                                        </div>
+                                    </template>
                                 </div>
                                 <div>
                                     <label class="text-[9px] font-bold text-gray-700 uppercase block mb-1">Preferred Time / Slot</label>
@@ -3323,6 +3370,10 @@ function sellerOrdersManager() {
                             </div>
                         </div>
                     </template>
+
+                    <template x-if="verifyPaymentError && verifyPaymentError !== appointmentDateError">
+                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600 text-center" x-text="verifyPaymentError"></div>
+                    </template>
                 </div>
             </template>
 
@@ -3334,7 +3385,7 @@ function sellerOrdersManager() {
                 </button>
                 <button type="button" 
                     @click="executeVerifyPayment()"
-                    :disabled="statusUpdating || verifyingPayment"
+                    :disabled="statusUpdating || verifyingPayment || ((isStorePickup(verifyOrderTarget) || isSpecialDelivery(verifyOrderTarget)) && Boolean(appointmentDateError))"
                     style="background-color: #059669; color: #ffffff;"
                     class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                     <template x-if="statusUpdating || verifyingPayment">
@@ -3342,7 +3393,7 @@ function sellerOrdersManager() {
                     </template>
                     <span x-text="(statusUpdating || verifyingPayment) 
                         ? (['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Verifying & Accepting...' : 'Accepting Order...') 
-                        : (['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? '✓ Confirm & Accept Order' : '✓ Accept & Prepare Order')"></span>
+                        : (['GCASH', 'MAYA'].includes((verifyOrderTarget?.paymentMethod || '').toUpperCase()) ? 'Confirm & Accept Order' : 'Accept & Prepare Order')"></span>
                 </button>
             </div>
         </div>
@@ -3364,9 +3415,7 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
-                </div>
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x-circle" class="w-5 h-5 text-red-600" /></div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Reject Payment & Cancel Order</h3>
                     <p class="text-[10px] text-gray-500 font-medium">Rejecting this payment will cancel the order and return stock to inventory.</p>
@@ -3417,7 +3466,7 @@ function sellerOrdersManager() {
                     <template x-if="rejectLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="rejectLoading ? 'Submitting...' : '✕ Reject & Cancel Order'"></span>
+                    <span x-text="rejectLoading ? 'Submitting...' : 'Reject & Cancel Order'"></span>
                 </button>
             </div>
         </div>
@@ -3440,15 +3489,13 @@ function sellerOrdersManager() {
         {{-- Lightbox Header --}}
         <div class="w-full max-w-2xl flex items-center justify-between text-white pb-3 px-2">
             <div class="flex items-center gap-2">
-                <span class="text-xs font-black uppercase tracking-widest text-emerald-400">📄 Customer Receipt Proof</span>
+                <span class="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5"><x-lucide name="file-text" class="w-3.5 h-3.5" /> Customer Receipt Proof</span>
             </div>
             <div class="flex items-center gap-3">
                 <a :href="receiptUrl" target="_blank" download class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-full transition-all flex items-center gap-1">
                     <span>Open in new tab</span> ↗
                 </a>
-                <button type="button" @click="receiptModal = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer">
-                    ✕
-                </button>
+                <button type="button" @click="receiptModal = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
         </div>
 
@@ -3474,9 +3521,7 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
-                </div>
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x-circle" class="w-5 h-5 text-red-600" /></div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
                     <p class="text-[10px] text-gray-500 font-medium">Please specify why this order is being cancelled.</p>
@@ -3548,9 +3593,7 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-red-600 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
-                </div>
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x-circle" class="w-5 h-5 text-red-600" /></div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Approve Order Cancellation</h3>
                     <p class="text-[10px] text-gray-500 font-medium">Cancel this order as requested by the buyer.</p>
@@ -3586,7 +3629,7 @@ function sellerOrdersManager() {
                     <template x-if="approveCancellationLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="approveCancellationLoading ? 'Approving...' : '✓ Approve Cancellation'"></span>
+                    <span x-text="approveCancellationLoading ? 'Approving...' : 'Approve Cancellation'"></span>
                 </button>
             </div>
         </div>
@@ -3659,7 +3702,7 @@ function sellerOrdersManager() {
                     <template x-if="declineCancellationLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="declineCancellationLoading ? 'Submitting...' : '✕ Confirm Decline'"></span>
+                    <span x-text="declineCancellationLoading ? 'Submitting...' : 'Confirm Decline'"></span>
                 </button>
             </div>
         </div>
@@ -3682,7 +3725,7 @@ function sellerOrdersManager() {
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-amber-100 text-[#C49520] flex items-center justify-center font-bold text-lg shrink-0">
-                    ↩️
+                    <x-lucide name="rotate-ccw" class="w-4 h-4 inline" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Approve Return Request</h3>
@@ -3729,7 +3772,7 @@ function sellerOrdersManager() {
                     <template x-if="approveReturnLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="approveReturnLoading ? 'Approving...' : '✓ Confirm Approval'"></span>
+                    <span x-text="approveReturnLoading ? 'Approving...' : 'Confirm Approval'"></span>
                 </button>
             </div>
         </div>
@@ -3751,8 +3794,8 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-red-500 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                    <x-lucide name="x-circle" class="w-5 h-5 text-red-700" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Decline Return Request</h3>
@@ -3803,7 +3846,7 @@ function sellerOrdersManager() {
                     <template x-if="rejectReturnLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="rejectReturnLoading ? 'Declining...' : '✕ Confirm Decline'"></span>
+                    <span x-text="rejectReturnLoading ? 'Declining...' : 'Confirm Decline'"></span>
                 </button>
             </div>
         </div>
@@ -3855,15 +3898,13 @@ function sellerOrdersManager() {
         <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 border border-gray-100 relative overflow-hidden">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">📷</span>
+                    <x-lucide name="camera" class="w-6 h-6 text-gray-400" />
                     <div>
                         <h3 class="text-sm font-black text-black uppercase tracking-tight">Capture Packing Proof</h3>
                         <p class="text-[10px] text-gray-500 font-medium">Position the packed garment clearly in view</p>
                     </div>
                 </div>
-                <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm transition-all cursor-pointer">
-                    ✕
-                </button>
+                <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm transition-all cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
 
             <div class="relative w-full aspect-4/3 bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200">
@@ -3879,7 +3920,7 @@ function sellerOrdersManager() {
                 <button type="button" 
                     @click="takePhoto()"
                     class="flex-1 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span>📸 Capture Photo</span>
+                    <span class="flex items-center gap-1.5"><x-lucide name="camera" class="w-3.5 h-3.5" /> Capture Photo</span>
                 </button>
             </div>
         </div>
@@ -3901,9 +3942,7 @@ function sellerOrdersManager() {
             <div class="h-1.5 w-full bg-emerald-500 absolute top-0 left-0"></div>
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shrink-0">
-                    💰
-                </div>
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><x-lucide name="coins" class="w-5 h-5 text-emerald-700" /></div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Payment Received</h3>
                     <p class="text-[10px] text-gray-500 font-medium" x-text="recordPaymentTarget ? '#LB-' + recordPaymentTarget.id.slice(-8).toUpperCase() + ' · ' + (recordPaymentTarget.customer?.name || 'Customer') : ''"></p>
@@ -3982,7 +4021,7 @@ function sellerOrdersManager() {
                     <template x-if="recordPaymentLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="recordPaymentLoading ? 'Recording...' : '✓ Confirm Payment Received'"></span>
+                    <span x-text="recordPaymentLoading ? 'Recording...' : 'Confirm Payment Received'"></span>
                 </button>
             </div>
         </div>
@@ -4005,7 +4044,7 @@ function sellerOrdersManager() {
 
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg shrink-0">
-                    ↩️
+                    <x-lucide name="rotate-ccw" class="w-4 h-4 inline" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Refund</h3>
@@ -4070,7 +4109,7 @@ function sellerOrdersManager() {
                     <template x-if="sellerRefundLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="sellerRefundLoading ? 'Recording...' : '✓ Complete Direct Refund'"></span>
+                    <span x-text="sellerRefundLoading ? 'Recording...' : 'Complete Direct Refund'"></span>
                 </button>
             </div>
         </div>
@@ -4082,25 +4121,25 @@ function sellerOrdersManager() {
             'all' => [
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '📋 All Orders Master Ledger',
+                    'title' => 'All Orders Master Ledger',
                     'text' => 'Welcome to your Client Orders ledger! Here you oversee all customer orders across every fulfillment stage from initial placement to completion.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-search',
-                    'title' => '🔍 Instant Order Search',
+                    'title' => 'Instant Order Search',
                     'text' => 'Rapidly find orders by typing the Order ID (e.g. #LB-XXXX), buyer name, or shipping courier tracking number.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '🏷️ Order Lifecycle Filter Tabs',
+                    'title' => 'Order Lifecycle Filter Tabs',
                     'text' => 'Click any status tab to filter orders by stage: Pending, To Ship, Shipped, In Transit, Delivered, Completed, or Customer Requests.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '📦 Order Dossiers & Tracking',
+                    'title' => 'Order Dossiers & Tracking',
                     'text' => 'Each capsule displays the order code, status badge, customer avatar, items summary, and total amount. Click any order row to open its full management dossier!',
                     'position' => 'top'
                 ]
@@ -4108,19 +4147,19 @@ function sellerOrdersManager() {
             'pending' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '⏳ Pending Orders Stage',
+                    'title' => 'Pending Orders Stage',
                     'text' => 'These are newly placed orders awaiting your verification, custom measurements review, or initial payment confirmation before production starts.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '✂️ Review & Accept Commission',
+                    'title' => 'Review & Accept Commission',
                     'text' => 'Click on any pending order to review bespoke measurements, verify buyer notes, and advance the order into the "To Ship" (In Production) stage.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '⚠️ Cancellation Grace Window',
+                    'title' => 'Cancellation Grace Window',
                     'text' => 'Buyers may request cancellation while an order is still in Pending. Once you advance to tailoring, custom made-to-order policies take effect.',
                     'position' => 'bottom'
                 ]
@@ -4128,19 +4167,19 @@ function sellerOrdersManager() {
             'to-ship' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '📦 To Ship & Production Stage',
+                    'title' => 'To Ship & Production Stage',
                     'text' => 'Orders in this stage have verified payment and are actively undergoing bespoke tailoring, embroidery, quality inspection, and packaging.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '📸 Live Packaging Photo Proof',
+                    'title' => 'Live Packaging Photo Proof',
                     'text' => 'Inside the order dossier, capture or upload photo proof of the packaged garment and waybill before courier dispatch or store pickup notification.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-search',
-                    'title' => '🚚 Logistics Courier / Special Delivery / Store Pickup',
+                    'title' => 'Logistics Courier / Special Delivery / Store Pickup',
                     'text' => 'Select an accredited courier (J&T, LBC), dispatch via Special Delivery (local rider), or mark ready for in-shop Store Pickup collection.',
                     'position' => 'bottom'
                 ]
@@ -4148,19 +4187,19 @@ function sellerOrdersManager() {
             'shipped' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '🚚 Shipped & Ready Orders Stage',
+                    'title' => 'Shipped & Ready Orders Stage',
                     'text' => 'Parcels dispatched via courier/rider or awaiting buyer claim at your Lumban artisan workshop.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '📲 Live Buyer Notification & GPS Map',
+                    'title' => 'Live Buyer Notification & GPS Map',
                     'text' => 'The customer receives real-time SMS and dashboard notifications with tracking details or workshop map directions upon dispatch.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '🛣️ Transitioning to In Transit / Claimed',
+                    'title' => 'Transitioning to In Transit / Claimed',
                     'text' => 'Track packages as they move through regional sorting hubs to the buyer\'s doorstep or are picked up in-shop.',
                     'position' => 'bottom'
                 ]
@@ -4168,19 +4207,19 @@ function sellerOrdersManager() {
             'in-transit' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '🛣️ In Transit Logistics Tracking',
+                    'title' => 'In Transit Logistics Tracking',
                     'text' => 'Packages actively moving through courier delivery routes and regional hubs traveling to the buyer\'s destination address.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '🔎 Courier Tracking & Delivery ETA',
+                    'title' => 'Courier Tracking & Delivery ETA',
                     'text' => 'Click on any order to view the direct courier tracking link and monitor live transit milestones and estimated delivery date.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '📬 Doorstep Delivery Confirmation',
+                    'title' => 'Doorstep Delivery Confirmation',
                     'text' => 'When the logistics courier completes delivery at the recipient\'s doorstep, transition the order state to "Delivered".',
                     'position' => 'bottom'
                 ]
@@ -4188,19 +4227,19 @@ function sellerOrdersManager() {
             'delivered' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '📬 Delivered Orders Stage',
+                    'title' => 'Delivered Orders Stage',
                     'text' => 'Handcrafted garments that have successfully reached the buyer\'s delivery address.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '🕒 Customer Inspection Grace Window',
+                    'title' => 'Customer Inspection Grace Window',
                     'text' => 'Buyers have a standard period to inspect the garment, verify custom sizing measurements, and confirm satisfaction.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '✅ Order Completion & Acceptance',
+                    'title' => 'Order Completion & Acceptance',
                     'text' => 'Once the customer clicks "Order Received" or the inspection timer completes with no disputes, the order moves to "Completed".',
                     'position' => 'bottom'
                 ]
@@ -4208,19 +4247,19 @@ function sellerOrdersManager() {
             'completed' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '✅ Completed Orders Ledger',
+                    'title' => 'Completed Orders Ledger',
                     'text' => 'Successfully fulfilled orders where the buyer confirmed receipt and satisfaction with their authentic Lumban creation.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '💵 Net Payout & Commission Calculation',
+                    'title' => 'Net Payout & Commission Calculation',
                     'text' => 'Earnings from completed orders are finalized and credited toward your net seller balance, with the platform commission itemized.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '⭐ Verified Buyer Reviews & Ratings',
+                    'title' => 'Verified Buyer Reviews & Ratings',
                     'text' => 'Completed orders allow customers to submit verified 5-star reviews and photos that showcase on your public artisan profile.',
                     'position' => 'bottom'
                 ]
@@ -4228,19 +4267,19 @@ function sellerOrdersManager() {
             'cancelled' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '❌ Cancelled Orders History',
+                    'title' => 'Cancelled Orders History',
                     'text' => 'Orders that were terminated prior to completion due to mutual cancellation, buyer request, or inventory adjustments.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '🔄 Automatic Inventory Restock',
+                    'title' => 'Automatic Inventory Restock',
                     'text' => 'When an order is cancelled, reserved pieces are automatically restored into your live catalog inventory.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-search',
-                    'title' => '📝 Audit History & Reason Logs',
+                    'title' => 'Audit History & Reason Logs',
                     'text' => 'Click any cancelled order to review the complete audit trail, timestamps, and recorded cancellation explanation.',
                     'position' => 'bottom'
                 ]
@@ -4248,19 +4287,19 @@ function sellerOrdersManager() {
             'cancellation-pending' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '⚠️ Cancellation Requests Hub',
+                    'title' => 'Cancellation Requests Hub',
                     'text' => 'Buyers have submitted a cancellation request for an order that is currently in preparation.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '⚖️ Reviewing & Approving Requests',
+                    'title' => 'Reviewing & Approving Requests',
                     'text' => 'Open the order to review the buyer\'s reason. If fabric cutting and custom embroidery have not begun, you may Approve the cancellation.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '🛡️ Custom Made-to-Order Policy',
+                    'title' => 'Custom Made-to-Order Policy',
                     'text' => 'If custom tailoring is already actively in progress, you may Decline with a polite explanation referencing your Shop Cancellation Policy.',
                     'position' => 'bottom'
                 ]
@@ -4268,19 +4307,19 @@ function sellerOrdersManager() {
             'return-requests' => [
                 [
                     'selector' => '#tour-orders-tabs',
-                    'title' => '↩️ Return & Sizing Requests',
+                    'title' => 'Return & Sizing Requests',
                     'text' => 'Customer inquiries requesting a return, sizing adjustment, or refund after receiving their order.',
                     'position' => 'bottom'
                 ],
                 [
                     'selector' => '#tour-orders-list',
-                    'title' => '📸 Unboxing Proof & Evidence Inspection',
+                    'title' => 'Unboxing Proof & Evidence Inspection',
                     'text' => 'Review the customer\'s uploaded photos, video proof, and reason description directly in the return review panel.',
                     'position' => 'top'
                 ],
                 [
                     'selector' => '#tour-orders-header',
-                    'title' => '🤝 Fair Dispute Resolution',
+                    'title' => 'Fair Dispute Resolution',
                     'text' => 'Coordinate sizing alterations or return shipping according to your Shop Refund & Return Policies to protect artisan craftsmanship.',
                     'position' => 'bottom'
                 ]

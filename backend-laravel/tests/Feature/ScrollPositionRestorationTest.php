@@ -23,6 +23,14 @@ class ScrollPositionRestorationTest extends TestCase
         $this->assertStringContainsString('handleUserInterrupt', $content);
         $this->assertStringContainsString('requestAnimationFrame', $content);
         $this->assertStringContainsString('sessionStorage.removeItem', $content);
+
+        // Active tab, wizard step, and progress preservation assertions
+        $this->assertStringContainsString('isTabKey', $content);
+        $this->assertStringContainsString('isStepKey', $content);
+        $this->assertStringContainsString('collectAlpineState', $content);
+        $this->assertStringContainsString('restoreAlpineState', $content);
+        $this->assertStringContainsString('activetab', $content);
+        $this->assertStringContainsString('statusfilter', $content);
     }
 
     /** @test */
@@ -78,5 +86,13 @@ class ScrollPositionRestorationTest extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
         $response->assertSee('lumbarong_scroll_pos:', false);
+    }
+
+    /** @test */
+    public function seller_registration_view_includes_scroll_position_restoration_component()
+    {
+        $content = file_get_contents(resource_path('views/auth/seller-register.blade.php'));
+        $this->assertStringContainsString('<x-scroll-position-restoration />', $content);
+        $this->assertStringContainsString('seller_reg_step', $content);
     }
 }

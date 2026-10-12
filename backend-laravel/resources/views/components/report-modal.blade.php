@@ -133,7 +133,7 @@
                                            class="w-4 h-4 rounded text-[#C49520] focus:ring-[#C49520] border-gray-300">
                                     <span x-text="r"></span>
                                 </div>
-                                <span x-show="selectedReasons.includes(r)" class="text-[#C49520] text-xs font-black">✓</span>
+                                <span x-show="selectedReasons.includes(r)" class="text-[#C49520]"><x-lucide name="check" class="w-3.5 h-3.5 inline" /></span>
                             </label>
                         </template>
                     </div>
@@ -202,7 +202,7 @@
                             <template x-for="(fileUrl, idx) in evidenceFiles" :key="idx">
                                 <div class="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50 shadow-2xs">
                                     <img :src="fileUrl" class="w-full h-full object-cover">
-                                    <button type="button" @click="removeEvidence(idx)" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-600 transition-colors text-[10px]">✕</button>
+                                    <button type="button" @click="removeEvidence(idx)" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-600 transition-colors"><x-lucide name="x" class="w-3 h-3" /></button>
                                 </div>
                             </template>
                         </div>
@@ -245,7 +245,7 @@
                 </div>
 
                 <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                    ⚖️ <strong>Trust &amp; Safety Commitment:</strong> Submitting this report opens a formal investigation. All reports are evaluated fairly by platform moderators without automatic penalties.
+                    <x-lucide name="scale" class="w-4 h-4 text-[#C49520] inline mr-1" /><strong>Trust &amp; Safety Commitment:</strong> Submitting this report opens a formal investigation. All reports are evaluated fairly by platform moderators without automatic penalties.
                 </div>
             </div>
 
@@ -284,7 +284,7 @@
                         :disabled="isSubmitting || isUploading"
                         class="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         style="background: #1E1915;">
-                    <span x-show="!isSubmitting" x-text="currentStep === 4 ? 'Submit Report ✓' : 'Continue →'"></span>
+                    <span x-show="!isSubmitting" x-text="currentStep === 4 ? 'Submit Report' : 'Continue →'"></span>
                     <span x-show="isSubmitting">Submitting...</span>
                 </button>
             </div>

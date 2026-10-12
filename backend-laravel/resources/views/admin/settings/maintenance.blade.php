@@ -56,7 +56,7 @@
 
             <button type="submit"
                 class="px-8 py-3 text-sm font-bold rounded-xl transition-all uppercase tracking-widest {{ $isMaintenanceMode ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white' }}">
-                {{ $isMaintenanceMode ? '✓ Bring Site Back Online' : '⚠ Enable Maintenance Mode' }}
+                {{ $isMaintenanceMode ? 'Bring Site Back Online' : 'Enable Maintenance Mode' }}
             </button>
         </form>
 

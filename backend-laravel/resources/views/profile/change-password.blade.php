@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background-color:#FAF5EA;border:1px solid #E6D8BA;color:#996515;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">
-                    <span>🛡️ 2-Step Verified</span>
+                    <span><x-lucide name="shield" class="w-3.5 h-3.5 inline mr-1 text-[#C49520]" />2-Step Verified</span>
                 </div>
             </div>
 
@@ -77,7 +77,7 @@
 
             @if(session('success'))
             <div style="margin-bottom:16px;padding:12px 16px;border-radius:16px;background-color:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;font-size:12px;display:flex;align-items:center;gap:10px;">
-                <div style="width:20px;height:20px;border-radius:50%;background-color:#D1FAE5;display:flex;align-items:center;justify-content:center;color:#059669;font-weight:800;flex-shrink:0;">✓</div>
+                <div style="width:20px;height:20px;border-radius:50%;background-color:#D1FAE5;display:flex;align-items:center;justify-content:center;color:#059669;flex-shrink:0;"><x-lucide name="check" class="w-3 h-3 text-[#059669]" /></div>
                 <strong>{{ session('success') }}</strong>
             </div>
             @endif
@@ -131,7 +131,7 @@
                                         :disabled="isSending || countdown > 0"
                                         style="font-size:11px;font-weight:800;color:#C0422A;background:none;border:none;padding:0;cursor:pointer;"
                                         class="hover:underline disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1">
-                                    <span x-show="isSending" class="inline-block animate-spin">⏳</span>
+                                    <span x-show="isSending" class="inline-flex items-center animate-spin"><x-lucide name="clock" class="w-3.5 h-3.5" /></span>
                                     <span x-show="!isSending && countdown === 0" x-text="codeSent ? 'Resend Code' : 'Send Code to Gmail'"></span>
                                     <span x-show="countdown > 0" x-text="'Resend in ' + countdown + 's'"></span>
                                 </button>
@@ -156,7 +156,7 @@
 
                             {{-- Verified checkmark icon --}}
                             <div x-show="codeState === 'verified'" x-cloak class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 font-bold text-xs">
-                                ✓ Verified
+                                <span class="inline-flex items-center gap-1"><x-lucide name="check" class="w-3.5 h-3.5" /> Verified</span>
                             </div>
                         </div>
 
@@ -164,33 +164,33 @@
                         <div class="mt-2 text-xs font-medium space-y-1.5">
                             {{-- Code Sent State --}}
                             <div x-show="codeState === 'code_sent'" x-cloak class="text-blue-700 bg-blue-50 p-2.5 rounded-xl border border-blue-200 flex items-center gap-2 text-xs">
-                                <span>✉️</span>
+                                <x-lucide name="mail" class="w-4 h-4 text-gray-500" />
                                 <span>Verification code sent to <strong>{{ $maskedEmail }}</strong>. Expires in 10 minutes.</span>
                             </div>
 
                             {{-- Resend Code State --}}
                             <div x-show="codeState === 'resend_code'" x-cloak class="text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200 flex items-center gap-2 text-xs">
-                                <span>🔄</span>
+                                <x-lucide name="refresh-cw" class="w-4 h-4 text-[#C49520]" />
                                 <span>A fresh 6-digit code was sent to your Gmail inbox.</span>
                             </div>
 
                             {{-- Incorrect Code State --}}
                             <div x-show="codeState === 'incorrect_code'" x-cloak class="text-red-700 bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center gap-2 text-xs">
-                                <span>❌</span>
+                                <x-lucide name="x-circle" class="w-4 h-4 text-red-500" />
                                 <span x-text="errorMessage || 'Incorrect verification code. Please check your Gmail.'"></span>
                             </div>
 
                             {{-- Expired Code State --}}
                             <div x-show="codeState === 'expired_code'" x-cloak class="text-red-700 bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center justify-between text-xs">
                                 <div class="flex items-center gap-2">
-                                    <span>⚠️</span>
+                                    <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-500" />
                                     <span>Code has expired. Click 'Resend Code' for a new code.</span>
                                 </div>
                             </div>
 
                             {{-- Successful Verification State --}}
                             <div x-show="codeState === 'verified'" x-cloak class="text-emerald-800 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 flex items-center gap-2 text-xs">
-                                <span>✅</span>
+                                <x-lucide name="check-circle" class="w-4 h-4 text-emerald-500" />
                                 <span>Security code verified! You can now create your new password below.</span>
                             </div>
                         </div>
@@ -273,9 +273,9 @@
                             :disabled="isSubmitting || code.length !== 6"
                             style="padding:12px 24px;border-radius:14px;background:linear-gradient(135deg, #C0422A 0%, #A33506 100%);color:#FFFFFF;border:none;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;box-shadow:0 3px 10px rgba(192,66,42,0.25);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;"
                             class="hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-show="!isSubmitting">Update Password ➔</span>
+                        <span x-show="!isSubmitting" class="inline-flex items-center gap-1.5"><span>Update Password</span><x-lucide name="arrow-right" class="w-3.5 h-3.5" /></span>
                         <span x-show="isSubmitting" x-cloak style="display:inline-flex;align-items:center;gap:6px;">
-                            <span class="inline-block animate-spin">⏳</span>
+                            <span class="inline-flex items-center animate-spin"><x-lucide name="clock" class="w-3.5 h-3.5" /></span>
                             <span>Updating...</span>
                         </span>
                     </button>

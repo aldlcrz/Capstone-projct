@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="mb-1">
-                <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: #A16D19;">✦ Deep Shop Insights</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em] inline-flex items-center gap-1" style="color: #A16D19;"><x-lucide name="sparkles" class="w-3 h-3 text-[#A16D19]" /> Deep Shop Insights</span>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold uppercase" style="color: #1E1915;">
@@ -45,7 +45,7 @@
                 </select>
             </div>
             @if(($filters['preset'] ?? 'all_time') !== 'all_time')
-                <a href="{{ route('seller.analytics') }}" class="text-[10px] font-bold uppercase tracking-widest px-2" style="color: #766C60;" onmouseover="this.style.color='#DC2626'" onmouseout="this.style.color='#766C60'">Reset ✕</a>
+                <a href="{{ route('seller.analytics') }}" class="text-[10px] font-bold uppercase tracking-widest px-2" style="color: #766C60;" onmouseover="this.style.color='#DC2626'" onmouseout="this.style.color='#766C60'">Reset <x-lucide name="x" class="w-3 h-3 inline ml-0.5" /></a>
             @endif
         </form>
     </div>
@@ -56,37 +56,37 @@
             <button @click="activeTab = 'sales'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'sales' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>💰 Sales Analytics</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="coins" class="w-3.5 h-3.5" /> Sales Analytics</span>
             </button>
             <button @click="activeTab = 'orders'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'orders' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>📦 Order Analytics</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="package" class="w-3.5 h-3.5" /> Order Analytics</span>
             </button>
             <button @click="activeTab = 'products'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'products' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>🛍️ Product Analytics</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="tag" class="w-3.5 h-3.5" /> Product Analytics</span>
             </button>
             <button @click="activeTab = 'customers'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'customers' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>👥 Customer Analytics</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="users" class="w-3.5 h-3.5" /> Customer Analytics</span>
             </button>
             <button @click="activeTab = 'category'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'category' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>🏷️ Category Demand</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="tag" class="w-3.5 h-3.5" /> Category Demand</span>
             </button>
             <button @click="activeTab = 'financials'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'financials' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>💵 Financials & Payout</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="banknote" class="w-3.5 h-3.5" /> Financials & Payout</span>
             </button>
             <button @click="activeTab = 'marketing'" 
                     class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer font-sans"
                     :style="activeTab === 'marketing' ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12);' : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                <span>🏷️ Promotions</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="percent" class="w-3.5 h-3.5" /> Promotions</span>
             </button>
         </div>
     </div>
@@ -131,7 +131,7 @@
                     <div class="text-base font-bold font-sans" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisMonthSales'], 2) }}</div>
                     <div class="text-[10px] mt-0.5 font-sans" style="color: #766C60;">Last Month: ₱{{ number_format($salesAnalytics['lastMonthSales'], 2) }}</div>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase font-sans {{ $salesAnalytics['monthGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                        {{ $salesAnalytics['monthGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['monthGrowthPct']) }}%
+                        {{ $salesAnalytics['monthGrowthPct'] >= 0 ? '+' : '-' }} {{ abs($salesAnalytics['monthGrowthPct']) }}%
                     </span>
                 </div>
 
@@ -140,7 +140,7 @@
                     <div class="text-base font-bold font-sans" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisWeekSales'], 2) }}</div>
                     <div class="text-[10px] mt-0.5 font-sans" style="color: #766C60;">Last Week: ₱{{ number_format($salesAnalytics['prevWeekSales'], 2) }}</div>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase font-sans {{ $salesAnalytics['weekGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                        {{ $salesAnalytics['weekGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['weekGrowthPct']) }}%
+                        {{ $salesAnalytics['weekGrowthPct'] >= 0 ? '+' : '-' }} {{ abs($salesAnalytics['weekGrowthPct']) }}%
                     </span>
                 </div>
 
@@ -149,7 +149,7 @@
                     <div class="text-base font-bold font-sans" style="color: #1E1915;">₱{{ number_format($salesAnalytics['thisYearSales'], 2) }}</div>
                     <div class="text-[10px] mt-0.5 font-sans" style="color: #766C60;">Last Year: ₱{{ number_format($salesAnalytics['prevYearSales'], 2) }}</div>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase font-sans {{ $salesAnalytics['yearGrowthPct'] >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                        {{ $salesAnalytics['yearGrowthPct'] >= 0 ? '▲' : '▼' }} {{ abs($salesAnalytics['yearGrowthPct']) }}%
+                        {{ $salesAnalytics['yearGrowthPct'] >= 0 ? '+' : '-' }} {{ abs($salesAnalytics['yearGrowthPct']) }}%
                     </span>
                 </div>
             </div>
@@ -325,7 +325,7 @@
             <!-- Best Selling Products -->
             <div id="tour-analytics-product-bestselling" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">🔥 Best Selling Creations</h3>
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;"><x-lucide name="sparkles" class="w-4 h-4 text-amber-600 inline mr-1" /> Best Selling Creations</h3>
                     <span class="text-[9px] font-bold uppercase tracking-wider" style="color: #C49520;">Top Revenue</span>
                 </div>
                 <div class="space-y-3">
@@ -335,7 +335,7 @@
                                 <img src="{{ $prod['image'] }}" class="w-10 h-10 rounded-xl object-cover border shrink-0" style="border-color: #E8DECB;">
                                 <div class="min-w-0">
                                     <div class="text-xs font-bold truncate uppercase" style="color: #1E1915;">{{ $prod['name'] }}</div>
-                                    <div class="text-[9px] font-bold mt-0.5 font-sans" style="color: #8C827A;">Stock: {{ $prod['stock'] }} | Rating: {{ $prod['rating'] }} ★</div>
+                                    <div class="text-[9px] font-bold mt-0.5 font-sans" style="color: #8C827A;">Stock: {{ $prod['stock'] }} | Rating: {{ $prod['rating'] }}</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
@@ -352,7 +352,7 @@
             <!-- Most Viewed Products -->
             <div id="tour-analytics-product-mostviewed" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">👁️ Most Viewed Creations</h3>
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;"><x-lucide name="eye" class="w-4 h-4 text-sky-600 inline mr-1" /> Most Viewed Creations</h3>
                     <span class="text-[9px] font-bold uppercase tracking-wider text-blue-600">High Traffic</span>
                 </div>
                 <div class="space-y-3">
@@ -407,7 +407,7 @@
                                 <td class="py-3 px-2 font-bold">{{ number_format($p['unitsSold']) }}</td>
                                 <td class="py-3 px-2 font-bold" style="color: #C49520;">₱{{ number_format($p['revenue']) }}</td>
                                 <td class="py-3 px-2">{{ $p['conversionRate'] }}%</td>
-                                <td class="py-3 px-2 font-bold" style="color: #A16D19;">{{ $p['rating'] }} ★</td>
+                                <td class="py-3 px-2 font-bold" style="color: #A16D19;">{{ $p['rating'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -661,8 +661,8 @@
         ['selector' => '#tour-analytics-guide-btn',          'title' => 'Product Analytics Guide',      'text' => 'Discover which handcrafted Barongs generate the highest revenues, traffic views, and customer checkout conversions.'],
         ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter product statistics across your preferred historical timeframe.'],
         ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
-        ['selector' => '#tour-analytics-product-bestselling','title' => '🔥 Best Selling Creations',   'text' => 'Highlights your top-performing Barong designs ranked by gross earnings, units sold, and stock inventory.'],
-        ['selector' => '#tour-analytics-product-mostviewed','title' => '👁️ Most Viewed Creations',   'text' => 'Shows creations receiving the highest customer discovery traffic alongside their conversion rates.'],
+        ['selector' => '#tour-analytics-product-bestselling','title' => '<x-lucide name="sparkles" class="w-4 h-4 text-amber-600 inline mr-1" /> Best Selling Creations',   'text' => 'Highlights your top-performing Barong designs ranked by gross earnings, units sold, and stock inventory.'],
+        ['selector' => '#tour-analytics-product-mostviewed','title' => '<x-lucide name="eye" class="w-4 h-4 text-sky-600 inline mr-1" /> Most Viewed Creations',   'text' => 'Shows creations receiving the highest customer discovery traffic alongside their conversion rates.'],
         ['selector' => '#tour-analytics-product-catalogue','title' => 'Product Performance Matrix',   'text' => 'Granular catalog table showing product views, add-to-carts, wishlists, units sold, revenue, conversion %, and star reviews for each item.'],
     ]"
 />
@@ -676,7 +676,7 @@
         ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter customer metrics across your chosen date intervals.'],
         ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
         ['selector' => '#tour-analytics-customer-cards',   'title' => 'Customer Retention KPIs',      'text' => 'Tracks Total Customers, Repeat Purchase Rate %, Customer Retention Rate %, and Average Spend per client.'],
-        ['selector' => '#tour-analytics-customer-funnel',  'title' => 'Conversion Behavior Funnel',   'text' => 'Visualizes drop-off across 5 stages: Product Views ➔ Add to Cart ➔ Saved to Wishlist ➔ Checkout Initiated ➔ Completed Purchases.'],
+        ['selector' => '#tour-analytics-customer-funnel',  'title' => 'Conversion Behavior Funnel',   'text' => 'Visualizes drop-off across 5 stages: Product Views -> Add to Cart -> Saved to Wishlist -> Checkout Initiated -> Completed Purchases.'],
         ['selector' => '#tour-analytics-customer-top',     'title' => 'Top Customer Leaderboard',     'text' => 'Ranks your most valuable and loyal customers based on total lifetime orders and money spent in your boutique.'],
     ]"
 />

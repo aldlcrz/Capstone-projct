@@ -506,7 +506,7 @@ class StorePickupFulfillmentFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Store Pickup');
         $response->assertSee('Ready for Pickup');
-        $response->assertSee('Self-Pickup at Workshop');
+        $response->assertSee('Workshop Pickup');
     }
 
     public function test_seller_can_set_appointment_when_accepting_store_pickup_order(): void

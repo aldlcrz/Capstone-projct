@@ -135,13 +135,13 @@
          x-cloak
          style="margin-bottom:18px;padding:14px 20px;border-radius:20px;background:#FDF8EE;border:1px solid #EEDBBA;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
         <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:18px;">✨</span>
+            <x-lucide name="sparkles" class="w-5 h-5 text-amber-600 shrink-0" />
             <div>
                 <span style="font-size:13px;font-weight:700;color:#7A5505;">Unsaved draft recovered!</span>
                 <span style="font-size:12px;color:#8C7355;margin-left:4px;">We restored your creation inputs from your previous session.</span>
                 <template x-if="variants[0] && variants[0].imagePreview && !variants[0].hasActualFile">
                     <div style="font-size:12px;font-weight:700;color:#D97706;margin-top:4px;display:flex;align-items:center;gap:5px;">
-                        <span>⚠️</span>
+                        <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0" />
                         <span>Photo preview restored from draft. Please re-select the image file before publishing.</span>
                     </div>
                 </template>
@@ -307,7 +307,7 @@
                                             </label>
                                             <span style="font-size:10.5px;font-weight:700;" 
                                                   :style="variant.images && variant.images.length >= 1 ? 'color:#059669;' : 'color:#DC2626;'" 
-                                                  x-text="(variant.images ? variant.images.length : 0) + ' / 3 uploaded' + (variant.images && variant.images.length >= 1 ? ' ✓' : ' (At least 1 required)')"></span>
+                                                  x-text="(variant.images ? variant.images.length : 0) + ' / 3 uploaded' + (variant.images && variant.images.length >= 1 ? ' (Ready)' : ' (At least 1 required)')"></span>
                                         </div>
 
                                         {{-- Image Cards Row (Flex layout: previews + upload button) --}}
@@ -329,9 +329,9 @@
                                                     {{-- Remove Button --}}
                                                     <button type="button" 
                                                             @click="removeVariantImageAt(index, imgIdx)" 
-                                                            style="position:absolute;top:5px;right:5px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;border:none;cursor:pointer;z-index:15;" 
+                                                            style="position:absolute;top:5px;right:5px;width:18px;height:18px;background-color:#DC2626;color:#FFFFFF;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;z-index:15;" 
                                                             title="Remove photo">
-                                                        ✕
+                                                        <svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                                     </button>
                                                 </div>
                                             </template>
@@ -390,7 +390,7 @@
             {{-- Centered Golden Diamond Divider (Exact from Screenshot) --}}
             <div style="position:relative;margin:28px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                <span style="position:absolute;background-color:#FFFFFF;padding:0 12px;color:#C49520;font-size:11px;">◆</span>
+                <span style="position:absolute;background-color:#FFFFFF;padding:0 12px;color:#C49520;" class="inline-flex items-center"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /></span>
             </div>
 
             {{-- 2. Who is this for? (Target Tag) & Category Selection --}}
@@ -403,7 +403,7 @@
                         </h2>
                         <span style="font-size:11px;font-weight:700;border-radius:20px;padding:3px 12px;background-color:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32;transition:all 0.2s;"
                               x-show="targetGroup"
-                              x-text="'✓ ' + targetGroup + ' selected'"></span>
+                              x-text="targetGroup + ' selected'"></span>
                     </div>
 
                     {{-- Target Tag Segmented Pills --}}
@@ -494,7 +494,7 @@
                                     class="target-pill" 
                                     :class="targetGroup === '{{ $group }}' ? 'target-pill-selected' : ''">
                                 <span>{{ $group }}</span>
-                                <span class="target-checkmark" x-show="targetGroup === '{{ $group }}'">✓</span>
+                                <span class="target-checkmark inline-flex items-center" x-show="targetGroup === '{{ $group }}'"><x-lucide name="check" class="w-3 h-3" /></span>
                             </button>
                         @endforeach
                         <input type="hidden" name="target_group" id="targetGroupInput" :value="targetGroup">
@@ -531,7 +531,7 @@
                                     class="cat-pill"
                                     :class="selectedCategories.includes(cat.id) ? 'cat-pill-selected' : ''">
                                 <span x-text="cat.name" style="line-height:1.3;"></span>
-                                <span class="cat-checkmark" x-show="selectedCategories.includes(cat.id)">✓</span>
+                                <span class="cat-checkmark inline-flex items-center" x-show="selectedCategories.includes(cat.id)"><x-lucide name="check" class="w-3 h-3" /></span>
                             </button>
                         </template>
 
@@ -546,8 +546,8 @@
                     <div x-show="selectedCategories.length > 0"
                          style="padding:10px 16px;border-radius:14px;background-color:#FDF8EE;border:1px solid #EEDBBA;margin-top:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <span style="color:#C49520;font-size:13px;font-weight:900;">✓</span>
-                            <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Categories:</span>
+                            <x-lucide name="check" class="w-3.5 h-3.5 text-[#C49520]" />
+                            <span style="font-size:11px;color:#7A5505;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Active Category:</span>
                             <template x-for="catId in selectedCategories" :key="catId">
                                 <span style="font-size:11px;background:#221F1C;color:#FCFAF6;border-radius:9999px;padding:2px 10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
                                     <span x-text="categoriesList.find(c => c.id === catId)?.name || catId"></span>
@@ -555,7 +555,7 @@
                                 </span>
                             </template>
                         </div>
-                        <span style="font-size:11px;color:#A07218;font-weight:600;" class="hidden sm:inline">Lumban Verified ✦</span>
+                        <span style="font-size:11px;color:#A07218;font-weight:600;display:inline-flex;align-items:center;gap:4px;" class="hidden sm:inline-flex">Lumban Verified <x-lucide name="sparkles" class="w-3 h-3 text-[#A07218]" /></span>
                     </div>
                 </div>
             </div>
@@ -572,31 +572,31 @@
                         <span class="rounded-full"
                               style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
                               :style="variants[0] && ((variants[0].images && variants[0].images.length > 0) || variants[0].imagePreview) ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
-                            <span x-text="variants[0] && ((variants[0].images && variants[0].images.length > 0) || variants[0].imagePreview) ? '✓ Photo added' : '✕ Photo missing'"></span>
+                            <span x-text="variants[0] && ((variants[0].images && variants[0].images.length > 0) || variants[0].imagePreview) ? 'Photo added' : 'Photo missing'"></span>
                         </span>
 
                         {{-- Name Status --}}
                         <span class="rounded-full"
                               style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
                               :style="((variants[0] && variants[0].name && variants[0].name.trim().length >= 3) || (productName && productName.trim().length >= 3)) ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
-                            <span x-text="((variants[0] && variants[0].name && variants[0].name.trim().length >= 3) || (productName && productName.trim().length >= 3)) ? '✓ Name set' : '✕ Name missing'"></span>
+                            <span x-text="((variants[0] && variants[0].name && variants[0].name.trim().length >= 3) || (productName && productName.trim().length >= 3)) ? 'Name set' : 'Name missing'"></span>
                         </span>
 
                         {{-- Target Status --}}
                         <span class="rounded-full"
                               style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
                               :style="targetGroup ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
-                            <span x-text="targetGroup ? '✓ ' + targetGroup : '✕ Target missing'"></span>
+                            <span x-text="targetGroup ? targetGroup : 'Target missing'"></span>
                         </span>
 
                         {{-- Category Status --}}
                         <span class="rounded-full"
                               style="font-size:10.5px;font-weight:700;border-radius:9999px !important;padding:4px 12px !important;display:inline-flex;align-items:center;gap:4px;"
                               :style="selectedCategories.length > 0 ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
-                            <span x-text="selectedCategories.length > 0 ? '✓ Category selected' : '✕ Category missing'"></span>
+                            <span x-text="selectedCategories.length > 0 ? 'Category selected' : 'Category missing'"></span>
                         </span>
 
-                        <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:3px 10px;">✓ Draft saved</span>
+                        <span id="draft-save-indicator" style="display:none;font-size:10px;font-weight:600;color:#2E7D32;white-space:nowrap;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:9999px;padding:3px 10px;" class="inline-flex items-center gap-1"><x-lucide name="check" class="w-3 h-3" /> Draft saved</span>
                     </div>
                 </div>
 
@@ -646,7 +646,7 @@
                         <div style="height:100%;background:linear-gradient(90deg,#C49520 0%,#1C160E 100%);border-radius:9999px;transition:width 0.5s;" :style="'width: ' + fillRate + '%'"></div>
                     </div>
                     <span style="font-size:12px;font-weight:800;color:#7A5505;" x-text="fillRate + '%'"></span>
-                    <span style="color:#C49520;font-size:11px;">✦</span>
+                    <x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" />
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -714,7 +714,7 @@
                           :style="hasValidSizing 
                               ? 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:inline-flex;align-items:center;' 
                               : 'border-radius:9999px !important;padding:4px 12px !important;font-size:10.5px;font-weight:700;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;display:inline-flex;align-items:center;'">
-                        <span x-text="hasValidSizing ? '✓ Sizing configured' : 'At least 1 size required'"></span>
+                        <span x-text="hasValidSizing ? 'Sizing configured' : 'At least 1 size required'"></span>
                     </span>
                 </div>
 
@@ -950,7 +950,7 @@
                             style="padding:8px 18px;border-radius:9999px;background-color:#1C160E;color:#FAF6F0;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(28,22,14,0.15);transition:all 0.2s;"
                             class="hover:opacity-90 active:scale-95 disabled:opacity-50">
                         <span x-show="!isAiLoading" style="display:flex;align-items:center;gap:6px;">
-                            <span style="color:#C49520;font-size:12px;">✦</span>
+                            <x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#C49520]" />
                             <span>Generate</span>
                         </span>
                         <span x-show="isAiLoading" style="display:flex;align-items:center;gap:6px;" x-cloak>
@@ -1275,7 +1275,7 @@ function addProductManager() {
     return {
         step: 1,
         productName: initData.name || '',
-        selectedCategories: initData.categoryIds || [],
+        selectedCategories: (initData.categoryIds || []).slice(0, 1),
         targetGroup: initData.targetGroup || '',
         fabricType: initData.fabricType || '100% Piña',
         price: initData.price || '',
@@ -1536,7 +1536,7 @@ function addProductManager() {
         get pricingStatusText() {
             const hasPrice = Boolean(this.price && parseFloat(this.price) >= 1 && parseFloat(this.price) <= 10000);
             if (!hasPrice) return 'Base price required (min ₱1)';
-            return '✓ Price & specs configured';
+            return 'Price & specs configured';
         },
 
         // Media State: Variations & Images (Min 1, Max 3 images per variation)
@@ -2110,9 +2110,9 @@ function addProductManager() {
             if (!cat) return;
             const idx = this.selectedCategories.indexOf(cat.id);
             if (idx === -1) {
-                this.selectedCategories.push(cat.id);
+                this.selectedCategories = [cat.id]; // Allow selecting only one category per product
             } else {
-                this.selectedCategories.splice(idx, 1);
+                this.selectedCategories = [];
             }
             const catContainer = document.getElementById('category-cards-container');
             if (catContainer) catContainer.classList.remove('border-red-500');
@@ -2243,7 +2243,7 @@ function addProductManager() {
 
             this.step = 2;
             this.calculateFillRate();
-            this.scheduleDraftSave();
+            this.saveDraftState();
             setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 100);
@@ -2332,7 +2332,7 @@ function addProductManager() {
 
             this.step = 3;
             this.calculateFillRate();
-            this.scheduleDraftSave();
+            this.saveDraftState();
             setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 100);
@@ -2893,14 +2893,14 @@ function validateProductForm(e, isEdit = false) {
         banner.id = 'js-error-banner';
         banner.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-red-200 p-4.5 flex items-start gap-3.5 transition-all';
         banner.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100 font-bold">✕</div>
+            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 border border-red-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
             <div class="grow pt-0.5">
                 <h4 class="text-xs font-black text-black uppercase tracking-wider">Please fix the following form errors</h4>
                 <ul class="text-xs text-red-600 font-semibold mt-1 leading-relaxed space-y-1 list-disc list-inside">
                     ${errors.map(err => `<li>${err}</li>`).join('')}
                 </ul>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-gray-500 shrink-0 font-bold">✕</button>
+            <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-gray-500 shrink-0 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         document.body.appendChild(banner);
 
@@ -2955,7 +2955,7 @@ function validateProductForm(e, isEdit = false) {
 
         {{-- Quote Banner with exact warning --}}
         <div style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;">
-            <span style="font-size:16px;line-height:1;margin-top:1px;">⚠️</span>
+            <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <p style="font-size:13px;font-weight:700;color:#9B2C2C;margin:0;line-height:1.45;">
                 When you leave this page, the data you entered will be gone.
             </p>
@@ -3036,7 +3036,7 @@ function hasUnsavedData() {
     // 3. Direct check: localStorage saved draft
     try {
         const sellerId = '{{ Auth::id() }}' || (typeof getProductInitData === 'function' ? getProductInitData().sellerId : null) || 'guest';
-        const raw = localStorage.getItem('lumbarong_seller_product_draft_' + sellerId);
+        const raw = localStorage.getItem('lumbarong_seller_product_draft_v2_' + sellerId) || localStorage.getItem('lumbarong_seller_product_draft_' + sellerId);
         if (raw) {
             const draft = JSON.parse(raw);
             if (
@@ -3162,27 +3162,27 @@ document.addEventListener('DOMContentLoaded', () => {
     $createStep1TourSteps = [
         [
             'selector' => '#tour-create-guide-btn',
-            'title' => '✨ Step 1: Media & Core Info Guide',
+            'title' => 'Step 1: Media & Core Info Guide',
             'text' => 'Welcome to Step 1! Here you enter your product details and upload 1 to 3 photos for each variation.'
         ],
         [
             'selector' => '#tour-create-stepper-card',
-            'title' => '🧭 3-Step Wizard Navigation',
+            'title' => '3-Step Wizard Navigation',
             'text' => 'The listing process is divided into 3 intuitive phases: 1) Media & Core Info, 2) Pricing & Sizing Matrix, and 3) Artisan Story & Direct Payouts.'
         ],
         [
             'selector' => '#tour-create-media-variants',
-            'title' => '📸 Variations & Product Images',
+            'title' => 'Variations & Product Images',
             'text' => 'Upload 1 to 3 product images for each variation. Click "+ Add Another Variant" to add additional style or color options with their own photos and names.'
         ],
         [
             'selector' => '#tour-create-target-category',
-            'title' => '👥 Target Audience & Categories',
+            'title' => 'Target Audience & Categories',
             'text' => 'Choose your target demographic (Men, Women, or Kids). Garment categories (such as Barong Tagalog, Filipiniana, or Bolero) will automatically adjust based on your selection.'
         ],
         [
             'selector' => '#tour-create-step1-footer',
-            'title' => '🚀 Step 1 Validation & Next',
+            'title' => 'Step 1 Validation & Next',
             'text' => 'Live validation tags confirm required inputs. Click "Save & Continue" to advance to Step 2 for Heritage Sizing & Pricing!'
         ]
     ];
@@ -3190,27 +3190,27 @@ document.addEventListener('DOMContentLoaded', () => {
     $createStep2TourSteps = [
         [
             'selector' => '#tour-create-guide-btn',
-            'title' => '✨ Step 2: Pricing & Sizing Guide',
+            'title' => 'Step 2: Pricing & Sizing Guide',
             'text' => 'Welcome to Step 2! Configure available stock quantities for standard sizes (S, M, L, XL, XXL) and set fair artisan prices.'
         ],
         [
             'selector' => '#tour-create-step2-completeness',
-            'title' => '📊 Listing Completeness Bar',
+            'title' => 'Listing Completeness Bar',
             'text' => 'Tracks your listing quality score in real time as you complete pricing, stock, and shipping matrices.'
         ],
         [
             'selector' => '#tour-create-step2-sizing',
-            'title' => '📐 Heritage Sizing & Inventory Matrix',
+            'title' => 'Heritage Sizing & Inventory Matrix',
             'text' => 'Check the sizes you offer (S to XXL) and specify current available inventory stock for each size. Stock is auto-calculated.'
         ],
         [
             'selector' => '#tour-create-step2-pricing',
-            'title' => '💵 Pricing, Lead Time & Promotional Discounts',
+            'title' => 'Pricing, Lead Time & Promotional Discounts',
             'text' => 'Set your base price, delivery lead days, and optionally enable promotional discounts with real-time price and sale timer calculations.'
         ],
         [
             'selector' => '#tour-create-step2-footer',
-            'title' => '🚀 Proceed to Step 3',
+            'title' => 'Proceed to Step 3',
             'text' => 'Click "Continue to Step 3" to configure your artisan storytelling and direct payout options, or return to Step 1 anytime.'
         ]
     ];
@@ -3218,17 +3218,17 @@ document.addEventListener('DOMContentLoaded', () => {
     $createStep3TourSteps = [
         [
             'selector' => '#tour-create-guide-btn',
-            'title' => '✨ Step 3: Story, Sizing & Publishing',
+            'title' => 'Step 3: Story, Sizing & Publishing',
             'text' => 'Welcome to the final step! Tell the handcrafted story behind this Lumban piece, review custom sizing, and finalize your listing.'
         ],
         [
             'selector' => '#tour-create-step3-story',
-            'title' => '✍️ Artisan Story & AI Generator',
-            'text' => 'Highlight fabric provenance, embroidery techniques (Calado, Callado, Burda), and care guidelines. Click "✦ Generate" to generate an authentic heritage story instantly!'
+            'title' => 'Artisan Story & AI Generator',
+            'text' => 'Highlight fabric provenance, embroidery techniques (Calado, Callado, Burda), and care guidelines. Click "Generate" to generate an authentic heritage story instantly!'
         ],
         [
             'selector' => '#tour-create-step3-footer',
-            'title' => '🚀 Draft or Submit for Quality Review',
+            'title' => 'Draft or Submit for Quality Review',
             'text' => 'Click "Save as Draft" to keep working later, or click "Publish Heritage Piece" to submit for Lumban artisan registry verification!'
         ]
     ];

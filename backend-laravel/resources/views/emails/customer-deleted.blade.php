@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="greeting">Notice: Account Closed</div>
-<span class="badge badge-danger">🛑 Account Deactivated</span>
+<span class="badge badge-danger">Account Deactivated</span>
 <p>Hello <strong>{{ $customerName }}</strong>,</p>
 <p>This is a formal confirmation that your LumBarong customer account has been deactivated and safely archived (soft-deleted).</p>
 

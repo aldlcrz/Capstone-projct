@@ -7,7 +7,7 @@
             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                     <td align="center" style="width: 44px; height: 44px; background-color: #FAF5EA; border: 1px solid #EADDC8; border-radius: 12px; text-align: center; vertical-align: middle;">
-                        <span style="font-size: 20px; line-height: 44px; display: inline-block;">✉️</span>
+                        <x-lucide name="mail" class="w-6 h-6 text-[#C49520]" style="display:inline-block;vertical-align:middle;" />
                     </td>
                 </tr>
             </table>
@@ -35,7 +35,7 @@
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                         <td align="center" style="width: 36px; height: 36px; background-color: #FAF3E5; border-radius: 50%; text-align: center; vertical-align: middle;">
-                            <span style="font-size: 16px; line-height: 36px; display: inline-block;">🛡️</span>
+                            <x-lucide name="shield" class="w-4 h-4 text-[#C49520]" style="display:inline-block;vertical-align:middle;" />
                         </td>
                     </tr>
                 </table>

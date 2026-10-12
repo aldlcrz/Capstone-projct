@@ -408,15 +408,37 @@ class CreateOrderService
             }
 
             // Server-Side Authoritative Shipping Calculation
-            $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
-            $providerId = $selectedProviderId ?: ($preferredProvider?->id);
-            $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $sellerItemsForShipping, $providerId);
-            $chosenQuote = $quotes[0] ?? null;
+            $storePickupProvider = \App\Models\ShippingProvider::where('code', 'store_pickup')->first();
+            $specialDeliveryProvider = \App\Models\ShippingProvider::where('code', 'seller_direct')->first();
 
-            if ($isCod && !$selectedProviderId && count($quotes) > 1) {
-                $courierQuote = collect($quotes)->first(fn($q) => ($q['provider_code'] ?? '') !== 'store_pickup');
-                if ($courierQuote) {
-                    $chosenQuote = $courierQuote;
+            $isExplicitStorePickup = in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true)
+                || ($selectedProviderId && $storePickupProvider && $selectedProviderId === $storePickupProvider->id);
+
+            $isExplicitSpecialDelivery = in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)
+                || ($selectedProviderId && $specialDeliveryProvider && $selectedProviderId === $specialDeliveryProvider->id);
+
+            if ($isExplicitStorePickup && $storePickupProvider) {
+                $providerId = $storePickupProvider->id;
+            } elseif ($isExplicitSpecialDelivery && $specialDeliveryProvider) {
+                $providerId = $specialDeliveryProvider->id;
+            } else {
+                $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
+                $providerId = $selectedProviderId ?: ($preferredProvider?->id);
+            }
+
+            $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $sellerItemsForShipping, $providerId);
+
+            if ($isExplicitStorePickup) {
+                $chosenQuote = collect($quotes)->firstWhere('provider_code', 'store_pickup') ?: ($quotes[0] ?? null);
+            } elseif ($isExplicitSpecialDelivery) {
+                $chosenQuote = collect($quotes)->firstWhere('provider_code', 'seller_direct') ?: ($quotes[0] ?? null);
+            } else {
+                $chosenQuote = $quotes[0] ?? null;
+                if ($isCod && !$selectedProviderId && count($quotes) > 1) {
+                    $courierQuote = collect($quotes)->first(fn($q) => ($q['provider_code'] ?? '') !== 'store_pickup');
+                    if ($courierQuote) {
+                        $chosenQuote = $courierQuote;
+                    }
                 }
             }
 

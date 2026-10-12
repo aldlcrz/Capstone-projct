@@ -47,19 +47,19 @@
 
         @if (session('info'))
             <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">ℹ️</span>
+                <x-lucide name="info" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                 <p class="font-medium leading-relaxed">{{ session('info') }}</p>
             </div>
         @endif
         @if (session('success'))
             <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">✓</span>
+                <x-lucide name="check-circle" class="w-4 h-4 text-emerald-600 shrink-0 inline" />
                 <p class="font-medium leading-relaxed">{{ session('success') }}</p>
             </div>
         @endif
         @if (session('warning'))
             <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">⚠️</span>
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                 <p class="font-medium leading-relaxed">{{ session('warning') }}</p>
             </div>
         @endif
@@ -255,7 +255,7 @@
                     <!-- In-App Browser Notice (Messenger / Facebook / Instagram) -->
                     <div id="in-app-browser-notice" class="hidden mt-4 p-3.5 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 leading-snug text-left shadow-2xs">
                         <div class="flex items-start gap-2.5">
-                            <span class="text-sm shrink-0">ℹ️</span>
+                            <x-lucide name="info" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                             <div>
                                 <span class="font-bold block mb-0.5 text-amber-950">Using Messenger / In-App Browser?</span>
                                 <span>Google blocks sign-up inside in-app webviews. You can register using the form above, or tap <strong class="font-bold">⋮</strong> / <strong class="font-bold">⋯</strong> and choose <strong class="font-bold">Open in Chrome / Safari</strong>.</span>
@@ -343,11 +343,11 @@
                 const msgEl = document.getElementById('js-pending-message');
 
                 if (intent.action === 'chat') {
-                    if (iconEl) iconEl.textContent = '💬';
+                    if (iconEl) iconEl.innerHTML = '<svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>';
                     if (titleEl) titleEl.textContent = 'Chat Request Saved';
                     if (msgEl) msgEl.innerHTML = 'Register to open the message box with <strong>' + (intent.sellerName || 'Artisan') + '</strong>.';
                 } else if (intent.action === 'view_shop') {
-                    if (iconEl) iconEl.textContent = '🏪';
+                    if (iconEl) iconEl.innerHTML = '<svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v4l-2 5v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7l-2-5V3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18"/></svg>';
                     if (titleEl) titleEl.textContent = 'Shop View Saved';
                     if (msgEl) msgEl.innerHTML = 'Register to return directly to the shop view.';
                 }

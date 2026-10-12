@@ -566,7 +566,7 @@
                         <!-- Star Divider -->
                         <div style="position:relative;margin:16px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
+                            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
                         </div>
 
                         <!-- Modal Body (Grid of Top Rated Shops) -->
@@ -682,7 +682,7 @@
         @if(request('sort') === 'best_sellers' || request('sort') === 'trending')
             <div class="text-xs text-amber-950 font-medium flex items-center justify-between bg-amber-50/90 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-xs">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-base shrink-0">🔥</div>
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><x-lucide name="flame" class="w-5 h-5 text-amber-700" /></div>
                     <div>
                         <strong class="text-sm font-extrabold text-amber-950 block leading-tight">Best Sellers Collection</strong>
                         <span class="text-xs text-amber-800/90">Displaying highest selling authentic Barong Tagalog & Filipiniana pieces</span>
@@ -794,7 +794,7 @@
                 <div class="flex items-center gap-1.5 text-[10px] mt-1">
                     @if($product->avgRating)
                         <div class="flex items-center gap-1 font-bold text-yellow-500">
-                            <span>★</span>
+                            <x-lucide name="star" class="w-3.5 h-3.5 text-[#C49520] fill-[#C49520] inline" />
                             <span>{{ number_format($product->avgRating, 1) }}</span>
                             <span class="text-gray-400 font-normal">({{ $product->reviewCount }})</span>
                         </div>

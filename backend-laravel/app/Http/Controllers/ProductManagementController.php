@@ -136,7 +136,7 @@ class ProductManagementController extends Controller
                 'handling_days'           => 'required|integer|min:1|max:30',
                 'shippingFee'         => 'nullable|numeric|min:0|max:500',
                 'shippingDays'        => 'nullable|integer|min:1|max:30',
-                'category_ids'        => 'required|array|min:1',
+                'category_ids'        => 'required|array|min:1|max:1',
                 'category_ids.*'      => 'exists:categories,id',
                 'CategoryId'          => 'nullable|exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
@@ -177,8 +177,9 @@ class ProductManagementController extends Controller
                 'shippingFee.max'         => 'Shipping Fee cannot exceed ₱500.00.',
                 'shippingDays.min'        => 'Estimated Shipping Days must be at least 1 day.',
                 'shippingDays.max'        => 'Estimated Shipping Days cannot exceed 30 days.',
-                'category_ids.required'   => 'Please select at least one Product Category.',
-                'category_ids.min'        => 'Please select at least one Product Category.',
+                'category_ids.required'   => 'Please select a Product Category.',
+                'category_ids.min'        => 'Please select a Product Category.',
+                'category_ids.max'        => 'Only one category can be selected per product.',
                 'CategoryId.required'     => 'Please select a Product Category.',
                 'target_group.required'   => 'Please select who this product is for (Men, Women, or Kids).',
                 'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
@@ -249,8 +250,9 @@ class ProductManagementController extends Controller
             $product->handling_days           = $request->filled('handling_days') ? (int)$request->handling_days : 2;
             $product->shippingFee = $request->shippingFee ?? null;
             $product->shippingDays = $request->shippingDays ?? 3;
-            $product->CategoryId = $request->CategoryId ?: ($request->input('category_ids.0') ?: \App\Models\Category::first()?->id);
-            $product->categories = $request->input('category_ids', $product->CategoryId ? [$product->CategoryId] : []);
+            $chosenCategory = $request->input('category_ids.0') ?: ($request->CategoryId ?: \App\Models\Category::first()?->id);
+            $product->CategoryId = $chosenCategory;
+            $product->categories = $chosenCategory ? [$chosenCategory] : [];
             $product->target_group = $request->target_group ?? 'Men';
             $product->inventory_mode = $inventoryMode;
             $product->sizes = !empty($selectedSizes) ? $selectedSizes : ['M'];
@@ -569,7 +571,7 @@ class ProductManagementController extends Controller
                 'shippingFee'         => 'nullable|numeric|min:0|max:500',
                 'shippingDays'        => 'nullable|integer|min:1|max:30',
                 'CategoryId'          => 'required|exists:categories,id',
-                'category_ids'        => 'nullable|array',
+                'category_ids'        => 'nullable|array|max:1',
                 'category_ids.*'      => 'exists:categories,id',
                 'target_group'        => 'required|string|in:Men,Women,Kids',
                 'inventory_mode'      => 'nullable|string|in:available_stock,preorder',
@@ -581,6 +583,7 @@ class ProductManagementController extends Controller
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
             ], [
                 'CategoryId'          => 'Please select a Product Category.',
+                'category_ids.max'    => 'Only one category can be selected per product.',
                 'target_group'        => 'Please select who this product is for (Men, Women, or Kids).',
                 'sizes.required'          => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
                 'sizes.min'               => 'Please select at least one Heritage Size (e.g. S, M, L, XL, XXL).',
@@ -662,8 +665,9 @@ class ProductManagementController extends Controller
         $product->package_height_per_unit = $request->input('package_height_per_unit', $product->package_height_per_unit ?? 5.00);
         $product->handling_days           = $request->input('handling_days', $product->handling_days ?? 2);
         $product->shippingFee  = $request->shippingFee ?? $product->shippingFee;
-        $product->shippingDays = $request->shippingDays ?? $product->shippingDays ?? 3;
-        $product->CategoryId   = $request->CategoryId ?: ($request->input('category_ids.0') ?: $product->CategoryId);
+        $chosenCategory        = $request->input('category_ids.0') ?: ($request->CategoryId ?: $product->CategoryId);
+        $product->CategoryId   = $chosenCategory;
+        $product->categories   = $chosenCategory ? [$chosenCategory] : ($product->categories ? array_slice($product->categories, 0, 1) : []);
         $product->target_group = $request->target_group ?? $product->target_group ?? 'Men';
         $product->inventory_mode = $inventoryMode;
         $product->sizes        = !empty($selectedSizes) ? $selectedSizes : ($product->sizes ?? ['M']);

@@ -6,7 +6,7 @@
     <div id="tour-customers-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Client Relations</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em] inline-flex items-center gap-1" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Client Relations</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Customer Directory</span>
             </div>
@@ -100,7 +100,7 @@
             </div>
         @empty
             <div class="rounded-3xl p-10 text-center space-y-2" style="background: #FFFCF7; border: 1px solid #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">👥</div>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="users" class="w-6 h-6 text-[#C49520]" /></div>
                 <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Clients Recorded</h3>
                 <p class="text-[11px]" style="color: #766C60;">When buyers commission products from your shop, their client profile will be catalogued here.</p>
             </div>
@@ -139,7 +139,7 @@
                 <h2 class="font-serif text-lg font-bold" style="color: #FFFCF7;" x-text="customer ? customer.name : 'Client Details'"></h2>
                 <p class="text-xs font-medium mt-0.5" style="color: rgba(255,252,247,0.6);" x-text="customer ? customer.email : ''"></p>
                 <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style="background: rgba(196,149,32,0.15); color: #C49520; border: 1px solid rgba(196,149,32,0.3);">
-                    <span x-text="viewTab === 'orders' ? 'Transaction History (' + (customer ? customer.ordersCount : 0) + ')' : 'Verified Customer ✦'"></span>
+                    <span x-text="viewTab === 'orders' ? 'Transaction History (' + (customer ? customer.ordersCount : 0) + ')' : 'Verified Customer'"></span>
                 </div>
             </div>
 
@@ -239,30 +239,30 @@
         $customerTourSteps = [
             [
                 'selector' => '#tour-customers-header',
-                'title' => '👥 Client Relations Directory',
+                'title' => 'Client Relations Directory',
                 'text' => 'Welcome to your Client Directory! Here you can monitor all customers who have commissioned handcrafted creations from your shop, tracking their purchasing habits and lifetime value.',
                 'position' => 'bottom'
             ],
             [
                 'selector' => '#tour-customers-search',
-                'title' => '🔍 Search & Filter Clients',
+                'title' => 'Search & Filter Clients',
                 'text' => 'Quickly lookup specific clients by typing their name or registered email address to view their personalized order history.',
                 'position' => 'bottom'
             ],
             [
                 'selector' => '#tour-customers-stats',
-                'title' => '📊 Client Summary Metrics',
+                'title' => 'Client Summary Metrics',
                 'text' => 'High-level dashboard overview showing your total count of registered buyers, completed orders placed, and cumulative lifetime revenue generated.',
                 'position' => 'bottom'
             ],
             [
                 'selector' => '#tour-customers-list',
-                'title' => '🗂️ Client Profiles & Spend Capsules',
+                'title' => 'Client Profiles & Spend Capsules',
                 'text' => 'Each capsule highlights the buyer avatar, full name, email, order count, and total spend. Click any customer row to open their detailed dossier!',
                 'position' => 'top'
             ],
             [
-                'title' => '📑 Detailed Client Dossier & Messaging',
+                'title' => 'Detailed Client Dossier & Messaging',
                 'text' => 'When viewing a client, you can inspect their phone number, average spend per order, itemized purchase breakdown, and start a direct chat via the "Message" button.',
                 'position' => 'center'
             ],

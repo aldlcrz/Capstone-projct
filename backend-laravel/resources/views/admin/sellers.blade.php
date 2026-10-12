@@ -317,7 +317,7 @@
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $seller->name }}</span>
                                                 @if($seller->isVerified)
-                                                    <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded uppercase leading-none">✓</span>
+                                                    <x-lucide name="check" class="w-3 h-3 text-emerald-600" />
                                                 @endif
                                             </div>
                                             <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">
@@ -715,7 +715,7 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="rejectModal = false"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
             <div class="flex items-start gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0 font-black text-lg">✕</div>
+                <div class="w-11 h-11 rounded-2xl bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0"><x-lucide name="x" class="w-5 h-5" /></div>
                 <div class="flex-1">
                     <h3 class="text-lg font-bold text-gray-900 leading-snug">Reject Seller Application</h3>
                     <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -736,7 +736,7 @@
                             :class="rejectType === 'document_correction' ? 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
                             class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm">📄</span>
+                                <x-lucide name="file-text" class="w-4 h-4 text-gray-500" />
                                 <span class="text-xs font-bold text-gray-900">Correction Required</span>
                             </div>
                             <p class="text-[10px] text-gray-500 leading-relaxed">Allows seller to fix documents &amp; re-upload on the portal.</p>
@@ -746,7 +746,7 @@
                             :class="rejectType === 'ineligible' ? 'border-rose-500 bg-rose-50/80 text-rose-950 ring-2 ring-rose-500/20 shadow-xs' : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:bg-gray-100'"
                             class="p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm">🚫</span>
+                                <x-lucide name="ban" class="w-4 h-4 text-red-500" />
                                 <span class="text-xs font-bold text-gray-900">Permanent Ineligible</span>
                             </div>
                             <p class="text-[10px] text-gray-500 leading-relaxed">Non-Lumban resident or out-of-scope. No re-upload.</p>
@@ -822,7 +822,7 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="suspendModal = false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10">
             <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0 font-black">⚠️</div>
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0"><x-lucide name="alert-triangle" class="w-5 h-5" /></div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">Suspend Seller Account</h3>
                     <p class="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -879,7 +879,7 @@
             </div>
 
             <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1" /><strong>Critical Warning:</strong> This action is permanent and irreversible. Active sessions, seller listings, and profile records will be completely removed from the registry.
             </div>
 
             <form :action="'/admin/sellers/' + deleteSellerId" method="POST" class="space-y-4">
@@ -1209,7 +1209,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-500 font-medium">Rating:</span>
-                            <span class="font-bold text-gray-800" x-text="Number(selectedProductPreview?.rating || 0).toFixed(1) + ' ★ (' + (selectedProductPreview?.reviewCount || 0) + ' reviews)'"></span>
+                            <span class="font-bold text-gray-800" x-text="Number(selectedProductPreview?.rating || 0).toFixed(1) + ' (' + (selectedProductPreview?.reviewCount || 0) + ' reviews)'"></span>
                         </div>
                     </div>
 
@@ -1220,7 +1220,7 @@
 
                     {{-- Admin Read-Only Notice --}}
                     <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-snug">
-                        <strong>🛡️ Ordering Inactive:</strong> Administrators cannot place customer orders or add items to cart from the admin control panel.
+                        <x-lucide name="shield" class="w-4 h-4 text-amber-600 inline mr-1" /><strong>Ordering Inactive:</strong> Administrators cannot place customer orders or add items to cart from the admin control panel.
                     </div>
                 </div>
             </div>

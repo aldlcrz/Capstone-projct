@@ -119,15 +119,15 @@
 
             <div class="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <div class="flex items-start gap-2.5">
-                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</div>
+                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5"><x-lucide name="check" class="w-3 h-3 text-emerald-700" /></div>
                     <p><strong>Super Admin Bypass:</strong> Super Admins always bypass maintenance via role validation.</p>
                 </div>
                 <div class="flex items-start gap-2.5">
-                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</div>
+                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5"><x-lucide name="check" class="w-3 h-3 text-emerald-700" /></div>
                     <p><strong>Logout Lock:</strong> Sign Out is disabled during maintenance to prevent orphaned sessions.</p>
                 </div>
                 <div class="flex items-start gap-2.5">
-                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</div>
+                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5"><x-lucide name="check" class="w-3 h-3 text-emerald-700" /></div>
                     <p><strong>Session Keep-Alive:</strong> Background heartbeat pings keep your Super Admin session active.</p>
                 </div>
             </div>
@@ -179,7 +179,7 @@
             <!-- Warning Callout -->
             <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl text-xs space-y-1.5 leading-relaxed">
                 <div class="font-bold flex items-center gap-1.5">
-                    <span>⚠️ Immediate Platform Impact:</span>
+                    <span class="inline-flex items-center gap-1.5"><x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600" /><span>Immediate Platform Impact:</span></span>
                 </div>
                 <ul class="list-disc pl-4 space-y-1 text-[11px] text-amber-800">
                     <li>All customers, sellers, and regular admins will be <strong>blocked immediately</strong> (HTTP 503).</li>

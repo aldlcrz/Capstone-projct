@@ -100,27 +100,41 @@ class ShippingCalculatorService
             }
         }
 
-        // 4. Retrieve Active & Seller-Enabled Providers
+        // 4. Retrieve Active Core & Courier Providers
+        $storePickupProvider = ShippingProvider::where('code', 'store_pickup')->where('is_active', true)->first();
+        if (!$storePickupProvider) {
+            $storePickupProvider = ShippingProvider::where('code', 'store_pickup')->first();
+            if ($storePickupProvider) {
+                $storePickupProvider->update(['is_active' => true]);
+            }
+        }
+
+        $specialDeliveryProvider = ShippingProvider::where('code', 'seller_direct')->where('is_active', true)->first();
+        if (!$specialDeliveryProvider) {
+            $specialDeliveryProvider = ShippingProvider::where('code', 'seller_direct')->first();
+            if ($specialDeliveryProvider) {
+                $specialDeliveryProvider->update(['is_active' => true]);
+            }
+        }
+
         $hasCustomSettings = SellerShippingProvider::where('seller_id', $seller->id)->exists();
-        $query = ShippingProvider::where('is_active', true);
+        $courierQuery = ShippingProvider::where('is_active', true);
 
         if ($hasCustomSettings) {
             $enabledProviderIds = SellerShippingProvider::where('seller_id', $seller->id)
                 ->where('is_enabled', true)
                 ->pluck('provider_id')
                 ->toArray();
-            $query->whereIn('id', $enabledProviderIds);
+            if (!empty($enabledProviderIds)) {
+                $courierQuery->whereIn('id', $enabledProviderIds);
+            }
         }
 
         if ($specificProviderId) {
-            $query->where('id', $specificProviderId);
+            $courierQuery->where('id', $specificProviderId);
         }
 
-        $providers = $query->get();
-
-        if ($providers->isEmpty()) {
-            throw new \Exception("No logistics couriers are currently active or supported for this seller.");
-        }
+        $providers = $courierQuery->get();
 
         $destProvinceStr = strtolower(trim((string) $destProvince));
         $isDestLaguna = !empty($destProvinceStr) ? str_contains($destProvinceStr, 'laguna') : true;
@@ -140,9 +154,6 @@ class ShippingCalculatorService
 
         // 1. STORE PICKUP (Universal across all scenarios)
         // Store pickup is always available for customers who wish to visit the artisan's workshop in Lumban, Laguna.
-        $storePickupProvider = $providers->firstWhere('code', 'store_pickup')
-            ?: ShippingProvider::where('code', 'store_pickup')->where('is_active', true)->first();
-
         if ($storePickupProvider && (!$specificProviderId || $specificProviderId === $storePickupProvider->id)) {
             $shopAddressParts = array_filter([
                 $seller->shopHouseNo,
@@ -161,8 +172,8 @@ class ShippingCalculatorService
                 'shipping_rate_id'                => null,
                 'origin_zone_id'                  => $originZone->id,
                 'origin_zone_name'                => $originZone->name,
-                'destination_zone_id'             => $destinationZone->id,
-                'destination_zone_name'           => $destinationZone->name,
+                'destination_zone_id'             => $destinationZone ? $destinationZone->id : $originZone->id,
+                'destination_zone_name'           => $destinationZone ? $destinationZone->name : $originZone->name,
                 'actual_weight'                   => round($totalActualWeight, 2),
                 'volumetric_weight'               => round($totalPackedVolume / 3500, 2),
                 'chargeable_weight'               => round($totalActualWeight, 2),
@@ -251,7 +262,7 @@ class ShippingCalculatorService
                 // Find seller's preferred provider, or pick the first candidate that services the route
                 $preferred = $this->getSellerPreferredProvider($seller);
                 if ($preferred && !in_array($preferred->code, ['store_pickup', 'seller_direct']) && $courierProviders->contains('id', $preferred->id)) {
-                    $courierCandidates = collect([$preferred]);
+                    $courierCandidates = collect([$preferred])->merge($courierProviders->reject(fn($c) => $c->id === $preferred->id));
                 } else {
                     $courierCandidates = $courierProviders;
                 }

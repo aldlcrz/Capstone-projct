@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Catalogue</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 inline mr-1 text-[#C49520]" />Shop Catalogue</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Archived Registry</span>
             </div>
@@ -36,14 +36,14 @@
         <div x-data="{ show: true, init() { setTimeout(() => this.show = false, 5000) } }" x-show="show"
              class="p-3.5 rounded-2xl text-xs font-semibold"
              style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #166534;">
-            ✓ {{ session('success') }}
+            <span class="inline-flex items-center gap-1"><x-lucide name="check-circle" class="w-4 h-4 text-emerald-600" /> {{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div x-data="{ show: true, init() { setTimeout(() => this.show = false, 6000) } }" x-show="show"
              class="p-3.5 rounded-2xl text-xs font-semibold"
              style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
-            ✕ {{ session('error') }}
+            <span class="inline-flex items-center gap-1"><x-lucide name="x-circle" class="w-4 h-4 text-red-600" /> {{ session('error') }}</span>
         </div>
     @endif
 
@@ -88,7 +88,7 @@
                    class="px-3 py-2 rounded-xl text-xs font-bold transition-all"
                    style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"
                    onmouseover="this.style.borderColor='#C49520';"
-                   onmouseout="this.style.borderColor='#E8DECB';">✕</a>
+                   onmouseout="this.style.borderColor='#E8DECB';"><x-lucide name="x" class="w-3.5 h-3.5 inline" /></a>
             @endif
         </form>
     </div>
@@ -97,7 +97,7 @@
     @if($archives->isEmpty())
         <div class="py-20 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
             <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-xl"
-                 style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🗄</div>
+                 style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="archive" class="w-6 h-6 text-[#C49520]" /></div>
             <h3 class="font-serif text-lg font-bold mb-1" style="color: #1E1915;">No Archived Products</h3>
             <p class="text-xs max-w-xs mx-auto" style="color: #766C60;">
                 @if($search)
@@ -184,9 +184,9 @@
                             </div>
                         @endif
                         <div class="absolute top-2.5 left-2.5">
-                            <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-xs"
+                            <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1"
                                   style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
-                                🗄 Archived
+                                <x-lucide name="archive" class="w-3 h-3 text-stone-500" /> Archived
                             </span>
                         </div>
                     </div>
@@ -332,7 +332,7 @@
             </div>
 
             <p class="text-xs leading-relaxed p-3 rounded-2xl" style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
-                ⚠️ <strong>Warning:</strong> This action cannot be undone. This product record and its archived images will be permanently erased.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 inline mr-1" /><strong>Warning:</strong> This action cannot be undone. This product record and its archived images will be permanently erased.
             </p>
 
             <form :action="'/seller/products/archives/' + deletingProductId" method="POST" class="flex gap-3 pt-1">
@@ -344,8 +344,8 @@
                     Cancel
                 </button>
                 <button type="submit"
-                        class="flex-1 py-2.5 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border-0 cursor-pointer shadow-xs bg-red-600 hover:bg-red-700">
-                    🗑 Delete Forever
+                        class="flex-1 py-2.5 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border-0 cursor-pointer shadow-xs bg-red-600 hover:bg-red-700 flex items-center justify-center gap-1.5">
+                    <x-lucide name="trash-2" class="w-3.5 h-3.5" /> Delete Forever
                 </button>
             </form>
         </div>

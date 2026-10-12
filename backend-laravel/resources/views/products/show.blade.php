@@ -733,13 +733,13 @@
                     <div class="flex items-center gap-1.5 text-gray-700">
                         @if(($product->reviewCount ?? 0) > 0)
                             <div class="flex items-center gap-1 font-bold text-amber-500">
-                                <span>★</span>
+                                <svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 <span>{{ number_format($product->avgRating, 1) }}</span>
                             </div>
                             <span class="text-gray-400">({{ $product->reviewCount }})</span>
                         @else
                             <div class="flex items-center gap-1 text-gray-400 font-medium">
-                                <span>★</span>
+                                <svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 <span>0.0 (0)</span>
                             </div>
                         @endif
@@ -841,7 +841,7 @@
                                         <img :src="imageUrl(variant.image_url || variant.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-6 h-6 rounded-lg object-cover">
                                     </template>
                                     <span x-text="variant.name || ('Style ' + (index + 1))"></span>
-                                    <span x-show="selectedStyle === variant.id" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center text-[8px] font-bold">✓</span>
+                                    <span x-show="selectedStyle === variant.id" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center"><x-lucide name="check" class="w-2.5 h-2.5 text-white" /></span>
                                 </button>
                             </template>
                         </div>
@@ -1034,7 +1034,7 @@
                         <div class="space-y-3.5 p-5 rounded-2xl bg-amber-50 border border-amber-200">
                             <div class="flex items-center justify-between gap-2 pb-3 border-b border-amber-200/80">
                                 <span class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                                    🏪 Artisan Owner Preview
+                                    <span class="flex items-center gap-1.5"><x-lucide name="store" class="w-4 h-4 inline text-amber-600" /> Artisan Owner Preview</span>
                                 </span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">
                                     Your Creation
@@ -1191,7 +1191,7 @@
         <div class="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-gray-100 text-xs">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
-                    🚚
+                    <x-lucide name="truck" class="w-4 h-4 text-gray-700" />
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Shipping Fee</div>
@@ -1204,7 +1204,7 @@
 
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
-                    📦
+                    <x-lucide name="package" class="w-4 h-4 text-gray-700" />
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Estimated Delivery</div>
@@ -1217,7 +1217,7 @@
 
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 shrink-0 border border-gray-100">
-                    📍
+                    <x-lucide name="map-pin" class="w-4 h-4 text-gray-700" />
                 </div>
                 <div>
                     <div class="font-medium text-gray-500">Ships from</div>
@@ -1424,7 +1424,7 @@
                             <span class="font-bold text-gray-900">{{ number_format($product->avgRating, 1) }}</span>
                             <div class="flex items-center text-amber-400 text-xs">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
+                                    <span class="inline-flex">{{ $i <= round($product->avgRating) ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
                                 @endfor
                             </div>
                         @else
@@ -1439,13 +1439,13 @@
                 <div class="flex items-center gap-2 py-2.5 overflow-x-auto no-scrollbar border-b border-gray-100 text-[11px]">
                     @if($mediaReviewsCount > 0)
                     <button type="button" @click="reviewsModal = true; setFilter('media')" class="px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/60 font-medium shrink-0 flex items-center gap-1 cursor-pointer">
-                        <span>📷</span>
+                        <x-lucide name="camera" class="w-3.5 h-3.5 inline mr-1" />
                         <span>With images/videos ({{ $mediaReviewsCount }})</span>
                     </button>
                     @endif
                     @if(($starBreakdown[5] ?? 0) > 0)
                     <button type="button" @click="reviewsModal = true; setFilter('5')" class="px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/60 font-medium shrink-0 flex items-center gap-1 cursor-pointer">
-                        <span>★ 5 Stars ({{ $starBreakdown[5] }})</span>
+                        <span>5 Stars ({{ $starBreakdown[5] }})</span>
                     </button>
                     @endif
                 </div>
@@ -1468,7 +1468,7 @@
                                 <div class="flex items-center gap-2 mt-2">
                                     <div class="flex items-center text-amber-400 text-[10px]">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <span>{{ $i <= (int)$rev->rating ? '★' : '☆' }}</span>
+                                            <span class="inline-flex">{{ $i <= (int)$rev->rating ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
                                         @endfor
                                     </div>
                                     <span class="text-[11px] text-gray-500 font-medium">{{ $rev->customer->name ?? 'Verified Buyer' }}</span>
@@ -1514,7 +1514,7 @@
                         <div>
                             <div class="flex items-center gap-0.5 text-amber-400 text-sm">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <span>{{ $i <= round($product->avgRating) ? '★' : '☆' }}</span>
+                                    <span class="inline-flex">{{ $i <= round($product->avgRating) ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
                                 @endfor
                             </div>
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 block">
@@ -1535,7 +1535,7 @@
                             $starPct = $totalRevCount > 0 ? round(($starCount / $totalRevCount) * 100) : 0;
                         @endphp
                         <div class="flex items-center gap-3 text-xs">
-                            <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} ★</span>
+                            <span class="w-8 font-bold text-gray-600 text-right">{{ $star }} Stars</span>
                             <div class="flex-1 h-3 rounded-full overflow-hidden bg-[#ECE7DE] min-h-2.5">
                                 <div class="h-full rounded-full bg-amber-500 min-h-2.5" :style="'width: ' + {{ (int)$starPct }} + '%'"></div>
                             </div>
@@ -1562,7 +1562,7 @@
                                             <span class="text-sm font-bold text-black">{{ $review->customer->name ?? 'Customer' }}</span>
                                             <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                 @for($i = 1; $i <= 5; $i++)
-                                                    <span>{{ $i <= $review->rating ? '★' : '☆' }}</span>
+                                                    <span class="inline-flex">{{ $i <= $review->rating ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
                                                 @endfor
                                             </div>
                                         </div>
@@ -1574,7 +1574,7 @@
 
                                 @if($review->orderId || $review->orderItemId)
                                     <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1" style="background-color: #E8F8F0; color: #1E9E65; border: 1px solid #D0F0E0;">
-                                        ✓ Verified Purchase
+                                        <x-lucide name="check-circle" class="w-3.5 h-3.5 inline text-emerald-600 mr-1" /> Verified Purchase
                                     </span>
                                 @endif
                             </div>
@@ -1599,8 +1599,8 @@
                                                     @click="openLightbox('image', '{{ $rImgUrl }}')" 
                                                     class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-white shrink-0 hover:scale-105 transition-all shadow-2xs border border-[#EAE6DF] relative group cursor-pointer">
                                                 <img src="{{ $rImgUrl }}" class="w-full h-full object-cover" onerror="this.style.display='none'" alt="Customer Review Photo">
-                                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
-                                                    🔍
+                                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                    <x-lucide name="search" class="w-3.5 h-3.5 text-white" />
                                                 </div>
                                             </button>
                                         @endif
@@ -1613,8 +1613,8 @@
                                                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-black shrink-0 hover:scale-105 transition-all shadow-2xs border border-gray-800 relative group cursor-pointer flex items-center justify-center">
                                             <video src="{{ $revVideo }}" class="w-full h-full object-cover opacity-70" preload="metadata"></video>
                                             <div class="absolute inset-0 bg-black/25 flex items-center justify-center">
-                                                <div class="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center text-[10px] font-black pl-0.5 shadow-sm group-hover:scale-110 transition-transform">
-                                                    ▶
+                                                <div class="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                                    <svg class="w-3 h-3 fill-current text-black ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                 </div>
                                             </div>
                                             <span class="absolute bottom-1 right-1 bg-black/80 text-[8px] font-bold text-white px-1.5 py-0.2 rounded">VIDEO</span>
@@ -1628,7 +1628,7 @@
                                 <div class="mt-3 p-3.5 sm:p-4 bg-[#FAF9F5] rounded-2xl border-l-4 border-[#C0420A] space-y-1.5 shadow-2xs">
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
-                                            <span>💬 Seller's Response</span>
+                                            <span class="flex items-center gap-1.5"><x-lucide name="message-square" class="w-3.5 h-3.5 text-amber-700 inline" /> Seller's Response</span>
                                             <span class="text-gray-400 font-medium">• {{ $product->seller?->name ?? 'Artisan Store' }}</span>
                                         </span>
                                         @if($review->seller_reply_at)
@@ -1649,7 +1649,7 @@
                             class="w-full py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group active:scale-[0.99] hover:bg-[#C0420A] hover:text-white"
                             style="background-color: #FAF9F6; border: 1px solid #E88058; color: #C0420A;">
                         <span>VIEW ALL REVIEWS ({{ $totalRevCount }})</span>
-                        <span class="group-hover:translate-y-0.5 transition-transform text-sm font-bold">⌄</span>
+                        <span class="group-hover:translate-y-0.5 transition-transform inline-flex items-center"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></span>
                     </button>
                 </div>
 
@@ -1669,19 +1669,17 @@
                     {{-- Modal Header --}}
                     <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 font-black text-sm shadow-xs shrink-0">
-                                ★
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shadow-xs shrink-0">
+                                <x-lucide name="star" class="w-5 h-5 text-amber-500 fill-current" />
                             </div>
                             <div>
                                 <h3 class="font-serif text-base sm:text-lg font-bold text-gray-900">Customer Reviews</h3>
                                 <p class="text-xs text-gray-500 font-medium mt-0.5">
-                                    <span class="font-bold text-amber-500">★ {{ number_format($product->avgRating, 1) }}</span> out of 5 • <span class="font-semibold text-gray-700" x-text="allReviews.length + ' Total ' + (allReviews.length === 1 ? 'Review' : 'Reviews')"></span>
+                                    <span class="font-bold text-amber-500">{{ number_format($product->avgRating, 1) }} Stars</span> out of 5 • <span class="font-semibold text-gray-700" x-text="allReviews.length + ' Total ' + (allReviews.length === 1 ? 'Review' : 'Reviews')"></span>
                                 </p>
                             </div>
                         </div>
-                        <button type="button" @click="reviewsModal = false" class="w-8 h-8 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all cursor-pointer">
-                            ✕
-                        </button>
+                        <button type="button" @click="reviewsModal = false" class="w-8 h-8 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                     </div>
 
                     {{-- Shopee/Lazada Style Filter Tabs --}}
@@ -1732,7 +1730,7 @@
                             @click="setFilter('media')"
                             :class="activeFilter === 'media' ? 'bg-[#C0420A] text-white shadow-xs font-bold' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium'"
                             class="px-3.5 py-1.5 sm:px-4 sm:py-1.5 rounded-full text-[11px] sm:text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 shrink-0">
-                            <span>📷 With Media</span>
+                            <span class="inline-flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5" /> With Media</span>
                             <span class="opacity-80" x-text="'(' + countFilter('media') + ')'"></span>
                         </button>
                     </div>
@@ -1741,7 +1739,7 @@
                     <div x-ref="reviewsContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-gray-50/40">
                         <template x-if="filteredReviews.length === 0">
                             <div class="text-center py-12 text-gray-400 space-y-2">
-                                <div class="text-3xl">💬</div>
+                                <div class="text-3xl flex justify-center"><x-lucide name="message-square" class="w-8 h-8 text-gray-300" /></div>
                                 <p class="text-xs font-bold uppercase tracking-widest">No reviews found under this filter.</p>
                             </div>
                         </template>
@@ -1763,7 +1761,7 @@
                                                 <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="review.customerName"></span>
                                                 <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                     <template x-for="s in 5" :key="s">
-                                                        <span x-text="s <= review.rating ? '★' : '☆'"></span>
+                                                        <span class="inline-flex" x-html="s <= review.rating ? '<svg class=\"w-3.5 h-3.5 inline fill-current text-amber-400\" viewBox=\"0 0 24 24\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>' : '<svg class=\"w-3.5 h-3.5 inline text-gray-200 fill-gray-200\" viewBox=\"0 0 24 24\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>'"></span>
                                                     </template>
                                                 </div>
                                             </div>
@@ -1773,7 +1771,7 @@
 
                                     <template x-if="review.verified">
                                         <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100/80 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
-                                            ✓ Verified Purchase
+                                            <x-lucide name="check-circle" class="w-3.5 h-3.5 inline text-emerald-600 mr-1" /> Verified Purchase
                                         </span>
                                     </template>
                                 </div>
@@ -1791,8 +1789,8 @@
                                                     @click="openLightbox('image', img)" 
                                                     class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shrink-0 hover:scale-105 transition-all shadow-xs block cursor-pointer relative group">
                                                 <img :src="img" class="w-full h-full object-cover" alt="Review Photo">
-                                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
-                                                    🔍
+                                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                    <x-lucide name="search" class="w-3.5 h-3.5 text-white" />
                                                 </div>
                                             </button>
                                         </template>
@@ -1805,8 +1803,8 @@
                                                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-800 bg-black shrink-0 hover:scale-105 transition-all shadow-xs cursor-pointer relative group flex items-center justify-center">
                                             <video :src="review.video" class="w-full h-full object-cover opacity-70" preload="metadata"></video>
                                             <div class="absolute inset-0 bg-black/25 flex items-center justify-center">
-                                                <div class="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center text-[10px] font-black pl-0.5 shadow-sm group-hover:scale-110 transition-transform">
-                                                    ▶
+                                                <div class="w-7 h-7 rounded-full bg-white/90 text-black flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                                    <svg class="w-3 h-3 fill-current text-black ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                 </div>
                                             </div>
                                             <span class="absolute bottom-1 right-1 bg-black/80 text-[8px] font-bold text-white px-1.5 py-0.2 rounded">VIDEO</span>
@@ -1819,7 +1817,7 @@
                                     <div class="mt-3 p-3.5 bg-[#FAF9F5] rounded-2xl border-l-4 border-[#C0420A] space-y-1 shadow-2xs">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-[10px] font-black uppercase tracking-wider text-[#C0420A] flex items-center gap-1.5">
-                                                <span>💬 Seller's Response</span>
+                                                <span class="flex items-center gap-1.5"><x-lucide name="message-square" class="w-3.5 h-3.5 text-amber-700 inline" /> Seller's Response</span>
                                                 <span class="text-gray-400 font-normal" x-text="'• ' + (review.seller_name || 'Artisan Store')"></span>
                                             </span>
                                             <span class="text-[9px] text-gray-400 font-medium" x-text="review.seller_reply_date || ''"></span>
@@ -1886,9 +1884,7 @@
                     {{-- Obvious Close Button --}}
                     <button type="button" 
                             @click="closeLightbox()" 
-                            class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20">
-                        ✕
-                    </button>
+                            class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 
                     {{-- Lightbox Display Container --}}
                     <div class="w-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black/60 p-1 sm:p-2 border border-white/10">
@@ -1923,11 +1919,11 @@
                             <div class="flex items-center gap-1.5 text-[11px] mt-1 flex-wrap">
                                 @if(!is_null($sellerAvgRating) && $sellerAvgRating > 0)
                                     <span class="inline-flex items-center gap-0.5 text-[#946A24] bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full font-bold text-[10px]">
-                                        ★ {{ number_format($sellerAvgRating, 1) }} Rating
+                                        {{ number_format($sellerAvgRating, 1) }} Stars Rating
                                     </span>
                                 @else
                                     <span class="inline-flex items-center text-[#946A24] bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full font-bold text-[10px]">
-                                        ✨ New Artisan
+                                        <x-lucide name="sparkles" class="w-3.5 h-3.5 inline mr-1 text-amber-500" /> New Artisan
                                     </span>
                                 @endif
                                 <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full font-semibold text-[10px]">
@@ -2026,7 +2022,7 @@
                                     @click="chatWithSeller('{{ $product->sellerId }}', '{{ e($product->seller->shopName ?? $product->seller->name ?? 'Artisan') }}')"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-[#C0422A] text-[9px] font-black uppercase tracking-widest text-amber-900 hover:text-white rounded-lg border border-amber-200/60 transition-all shadow-sm cursor-pointer"
                                 >
-                                    💬 Chat with Seller
+                                    <span class="flex items-center gap-1.5"><x-lucide name="message-square" class="w-3.5 h-3.5 inline" /> Chat with Seller</span>
                                 </button>
                                 @if(!$isAdminUser)
                                 <button 
@@ -2035,7 +2031,7 @@
                                     class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-red-50 text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-red-600 rounded-lg border border-gray-200/80 hover:border-red-200 transition-all shadow-2xs cursor-pointer"
                                     title="Report this listing for policy violations"
                                 >
-                                    🛡️ Report
+                                    <span class="flex items-center gap-1.5"><x-lucide name="flag" class="w-3.5 h-3.5 inline" /> Report</span>
                                 </button>
                                 @endif
                             </div>
@@ -2103,9 +2099,9 @@
                                     <div class="mt-1.5 flex items-center justify-between">
                                         <div class="text-[9px] text-gray-500 flex items-center gap-1">
                                             @if($rec->avgRating && (float)$rec->avgRating > 0)
-                                                <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                                <span class="text-amber-500 font-bold">{{ number_format($rec->avgRating, 1) }} Stars</span>
                                             @else
-                                                <span class="text-gray-400 font-medium">★ 0.0</span>
+                                                <span class="text-gray-400 font-medium">0.0</span>
                                             @endif
                                             <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                         </div>
@@ -2156,9 +2152,9 @@
                                 <div class="mt-1.5 flex items-center justify-between">
                                     <div class="text-[9px] text-gray-500 flex items-center gap-1">
                                         @if($rec->avgRating && (float)$rec->avgRating > 0)
-                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                            <span class="text-amber-500 font-bold">{{ number_format($rec->avgRating, 1) }} Stars</span>
                                         @else
-                                            <span class="text-gray-400 font-medium">★ 0.0</span>
+                                            <span class="text-gray-400 font-medium">0.0</span>
                                         @endif
                                         <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                     </div>
@@ -2197,9 +2193,9 @@
                                 <div class="mt-1.5 flex items-center justify-between">
                                     <div class="text-[9px] text-gray-500 flex items-center gap-1">
                                         @if($rec->avgRating && (float)$rec->avgRating > 0)
-                                            <span class="text-amber-500 font-bold">★ {{ number_format($rec->avgRating, 1) }}</span>
+                                            <span class="text-amber-500 font-bold">{{ number_format($rec->avgRating, 1) }} Stars</span>
                                         @else
-                                            <span class="text-gray-400 font-medium">★ 0.0</span>
+                                            <span class="text-gray-400 font-medium">0.0</span>
                                         @endif
                                         <span>{{ (int)($rec->sold_count ?? 0) }} sold</span>
                                     </div>
@@ -2281,7 +2277,7 @@
                     <div class="flex items-center gap-1.5 text-[10px] mt-1">
                         @if($rec->avgRating)
                             <div class="flex items-center gap-1 font-bold text-yellow-500">
-                                <span>★</span>
+                                <svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 <span>{{ number_format($rec->avgRating, 1) }}</span>
                                 <span class="text-gray-400 font-normal">({{ $rec->reviewCount }})</span>
                             </div>
@@ -2347,7 +2343,7 @@
                 @if($product->getSizeGuideUrl())
                     <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-5 space-y-3">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-xs font-extrabold uppercase tracking-wider text-[#C0422A]">📐 Seller's Custom Size Chart</span>
+                            <span class="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#C0422A]"><x-lucide name="ruler" class="w-3.5 h-3.5 inline" /> Seller's Custom Size Chart</span>
                             <span class="text-[9px] bg-[#C0422A]/10 text-[#C0422A] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Artisan Size Guide</span>
                         </div>
                         <div class="rounded-xl overflow-hidden bg-white border border-gray-200 p-2 shadow-xs">
@@ -2360,7 +2356,7 @@
                 @if(!empty($product->size_guide_measurements) && is_array($product->size_guide_measurements))
                     <div class="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-5 space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-black uppercase tracking-wider text-[#C0422A]">👕 Seller Specific Product Measurements</span>
+                            <span class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#C0422A]"><x-lucide name="ruler" class="w-3.5 h-3.5 inline" /> Seller Specific Product Measurements</span>
                             <span class="text-[9px] bg-amber-200/60 text-amber-900 px-2 py-0.5 rounded-full font-bold uppercase">Exact Garment Specs</span>
                         </div>
                         <div class="overflow-x-auto">
@@ -2424,15 +2420,15 @@
                     <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl w-full">
                         <button type="button" id="size-tab-btn-men" @click="sizeTab = 'men'" onclick="switchSizeGuideTab('men')"
                             class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all">
-                            👔 Men
+                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Men
                         </button>
                         <button type="button" id="size-tab-btn-women" @click="sizeTab = 'women'" onclick="switchSizeGuideTab('women')"
                             class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
-                            👗 Women
+                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Women
                         </button>
                         <button type="button" id="size-tab-btn-kids" @click="sizeTab = 'kids'" onclick="switchSizeGuideTab('kids')"
                             class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
-                            🧒 Kids
+                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Kids
                         </button>
                     </div>
 
@@ -2444,7 +2440,7 @@
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            👔 {{ $isCustomMen ? "Artisan's Shop Men's Size Guide Chart" : "Men's Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomMen ? "Artisan's Shop Men's Size Guide Chart" : "Men's Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
                         </p>
                     </div>
 
@@ -2456,7 +2452,7 @@
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            👗 {{ $isCustomWomen ? "Artisan's Shop Women's Size Guide Chart" : "Women's Baro't Saya / Filipiniana Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomWomen ? "Artisan's Shop Women's Size Guide Chart" : "Women's Baro't Saya / Filipiniana Standard Size Guide Chart" }} • Click image to open high-resolution view
                         </p>
                     </div>
 
@@ -2468,7 +2464,7 @@
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            🧒 {{ $isCustomKids ? "Artisan's Shop Kids' Size Guide Chart" : "Kids' Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomKids ? "Artisan's Shop Kids' Size Guide Chart" : "Kids' Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
                         </p>
                     </div>
                 </div>
@@ -2523,13 +2519,13 @@
              x-data="{
                 rejectReason: '',
                 premadeReasons: [
-                    { label: '📷 Blurry / Low Quality Photo', text: 'Photo resolution is too low or images are blurry. Please upload clear, well-lit photos highlighting the fabric texture, embroidery, and full garment.' },
-                    { label: '📏 Missing Sizing Specs', text: 'Missing accurate sizing measurements or size guide. Please include chest, length, and sleeve measurements to help buyers find the right fit.' },
-                    { label: '📝 Incomplete Description', text: 'Product description is incomplete. Please specify key details including fabric type (e.g., Piña, Jusi, Cocoon, Organza), lining, and craftsmanship method.' },
-                    { label: '🏷️ Incorrect Category', text: 'This item is assigned to an incorrect category. Please update it to the proper category so customers can discover it easily.' },
-                    { label: '💰 Pricing or Stock Issue', text: 'The listing price or inventory quantity appears inaccurate or incomplete. Please review and provide valid pricing and stock details.' },
-                    { label: '⚠️ Policy Violation', text: 'This listing does not adhere to LumBarong marketplace quality standards or artisan community policies.' },
-                    { label: '📑 Duplicate Listing', text: 'This product appears to be an identical duplicate of an already active listing in your shop.' }
+                    { label: 'Blurry / Low Quality Photo', text: 'Photo resolution is too low or images are blurry. Please upload clear, well-lit photos highlighting the fabric texture, embroidery, and full garment.' },
+                    { label: 'Missing Sizing Specs', text: 'Missing accurate sizing measurements or size guide. Please include chest, length, and sleeve measurements to help buyers find the right fit.' },
+                    { label: 'Incomplete Description', text: 'Product description is incomplete. Please specify key details including fabric type (e.g., Piña, Jusi, Cocoon, Organza), lining, and craftsmanship method.' },
+                    { label: 'Incorrect Category', text: 'This item is assigned to an incorrect category. Please update it to the proper category so customers can discover it easily.' },
+                    { label: 'Pricing or Stock Issue', text: 'The listing price or inventory quantity appears inaccurate or incomplete. Please review and provide valid pricing and stock details.' },
+                    { label: 'Policy Violation', text: 'This listing does not adhere to LumBarong marketplace quality standards or artisan community policies.' },
+                    { label: 'Duplicate Listing', text: 'This product appears to be an identical duplicate of an already active listing in your shop.' }
                 ],
                 applyPremadeReason(text) {
                     this.rejectReason = text;
@@ -2541,7 +2537,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     <span>Reject Product / Revoke Approval</span>
                 </div>
-                <button type="button" @click="closeAdminReject()" class="text-gray-400 hover:text-black text-sm font-bold cursor-pointer">✕</button>
+                <button type="button" @click="closeAdminReject()" class="text-gray-400 hover:text-black text-sm font-bold cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
 
             <p class="text-xs text-gray-600 leading-relaxed">
@@ -2699,8 +2695,8 @@
                                             
                                             <!-- Checkmark Badge on Active Card -->
                                             <template x-if="isCardActive(card)">
-                                                <div class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#A67C2E] text-white flex items-center justify-center text-[9px] font-black shadow-xs">
-                                                    ✓
+                                                <div class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#A67C2E] text-white flex items-center justify-center shadow-xs">
+                                                    <x-lucide name="check" class="w-2.5 h-2.5 text-white" />
                                                 </div>
                                             </template>
                                         </div>
@@ -2757,7 +2753,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-black text-gray-900">Size</span>
                         <button type="button" onclick="openSizeGuideModal()" class="text-[11px] font-bold text-[#A67C2E] hover:underline flex items-center gap-1 cursor-pointer">
-                            📏 Size Chart
+                            <span class="flex items-center gap-1.5"><x-lucide name="ruler" class="w-3.5 h-3.5 inline" /> Size Chart</span>
                         </button>
                     </div>
                     <div class="flex flex-wrap gap-2">

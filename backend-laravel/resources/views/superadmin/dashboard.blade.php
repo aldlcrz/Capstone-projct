@@ -36,7 +36,7 @@
             <button type="button"
                     onclick="window.startSpotlightTour ? window.startSpotlightTour('superadmin-dashboard-guide') : null"
                     class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
-                <span>💡 Guide</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="sparkles" class="w-3.5 h-3.5 text-amber-500" /><span>Guide</span></span>
             </button>
             <a href="{{ route('superadmin.export') }}"
                class="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-gray-200 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
@@ -109,8 +109,8 @@
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Platform Registry</div>
                 <div class="text-2xl font-black text-gray-900 mt-0.5">{{ $sellerCount }} <span class="text-xs text-gray-400 font-normal">Shops</span> · {{ $customerCount }} <span class="text-xs text-gray-400 font-normal">Buyers</span></div>
                 <div class="text-[11px] mt-1 flex items-center gap-2.5 font-medium">
-                    <span class="text-emerald-600 font-bold">✓ {{ $verifiedSellers }} Verified</span>
-                    <span class="text-blue-500 font-bold">❄️ {{ $frozenCount }} Frozen</span>
+                    <span class="text-emerald-600 font-bold flex items-center gap-1"><x-lucide name="check-circle" class="w-3.5 h-3.5" /> {{ $verifiedSellers }} Verified</span>
+                    <span class="text-blue-500 font-bold flex items-center gap-1"><x-lucide name="snowflake" class="w-3.5 h-3.5" /> {{ $frozenCount }} Frozen</span>
                     <span class="text-gray-400">{{ $productCount }} Items</span>
                 </div>
             </div>
@@ -154,7 +154,7 @@
                                         <div class="font-bold text-gray-900 flex items-center gap-1.5">
                                             <span>{{ $shop['shop_name'] }}</span>
                                             @if($shop['is_verified'])
-                                                <span class="text-blue-500 font-bold" title="Verified Artisan">✓</span>
+                                                <x-lucide name="check-circle" class="w-3.5 h-3.5 text-blue-500 inline" title="Verified Artisan" />
                                             @endif
                                         </div>
                                         <div class="text-[10px] text-gray-400">{{ $shop['name'] }}</div>
@@ -192,7 +192,7 @@
                     <a href="{{ route('superadmin.error-logs') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                                📜
+                                <x-lucide name="file-text" class="w-4 h-4 text-rose-600" />
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-gray-900">System Error Logs</div>
@@ -205,7 +205,7 @@
                     <a href="{{ route('superadmin.maintenance') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                                🧪
+                                <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-700" />
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-gray-900">Maintenance Mode</div>
@@ -218,7 +218,7 @@
                     <a href="{{ route('superadmin.audit-logs') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                                📋
+                                <x-lucide name="clipboard-list" class="w-4 h-4 text-blue-600" />
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-gray-900">Audit &amp; Security Logs</div>

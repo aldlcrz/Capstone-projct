@@ -185,7 +185,7 @@
                 </button>
             </form>
             <p class="mt-3 text-[10px] text-gray-400 leading-relaxed px-2">
-                💡 Can't find the email? Check your <span class="font-semibold text-gray-500">Spam</span> or <span class="font-semibold text-gray-500">Junk</span> folder — it may have been filtered automatically.
+                <x-lucide name="info" class="w-4 h-4 text-amber-600 inline mr-1" />Can't find the email? Check your <span class="font-semibold text-gray-500">Spam</span> or <span class="font-semibold text-gray-500">Junk</span> folder — it may have been filtered automatically.
             </p>
         </div>
     </div>

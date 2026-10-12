@@ -42,7 +42,7 @@
                     </a>
 
                     <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background-color:#FAF5EA;border:1px solid #E6D8BA;border-radius:20px;font-size:12px;font-weight:700;color:#8C6212;">
-                        <span>✦</span>
+                        <x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#C49520] inline" />
                         <span>{{ $wishlists->count() }} {{ Str::plural('piece', $wishlists->count()) }} saved</span>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
             {{-- Star Divider --}}
             <div style="position:relative;margin:16px 0 0 0;display:flex;align-items:center;justify-content:center;">
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:11px;">✦</span>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
             </div>
         </div>
 

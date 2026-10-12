@@ -4,9 +4,9 @@
 <div class="greeting">Notice: Artisan Application Status</div>
 
 @if(($rejectionType ?? 'document_correction') === 'ineligible')
-    <span class="badge badge-danger" style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:9999px; font-weight:bold; font-size:11px; text-transform:uppercase;">🚫 Application Ineligible</span>
+    <span class="badge badge-danger" style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:9999px; font-weight:bold; font-size:11px; text-transform:uppercase;">Application Ineligible</span>
 @else
-    <span class="badge badge-warning" style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:9999px; font-weight:bold; font-size:11px; text-transform:uppercase;">⚠️ Document Correction Required</span>
+    <span class="badge badge-warning" style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:9999px; font-weight:bold; font-size:11px; text-transform:uppercase;">Document Correction Required</span>
 @endif
 
 <p>Hello <strong>{{ $userName ?? $sellerName }}</strong>,</p>

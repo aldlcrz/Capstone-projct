@@ -172,7 +172,7 @@
                                              :class="activeTab === 'province' ? 'text-[#C0420A] border-b-2 border-[#C0420A] bg-white' : ''"
                                              class="flex-1 py-3 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                          Province
-                                         <span x-show="!selectedRegion" class="text-[10px] text-red-500">🚫</span>
+                                         <span x-show="!selectedRegion" class="text-[10px] text-red-500"><x-lucide name="ban" class="w-3 h-3 inline" /></span>
                                      </button>
                                      <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'"
                                              type="button"
@@ -180,7 +180,7 @@
                                              :class="activeTab === 'city' ? 'text-[#C0420A] border-b-2 border-[#C0420A] bg-white' : ''"
                                              class="flex-1 py-3 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                          City
-                                         <span x-show="!selectedProvince && hasProvinces" class="text-[10px] text-red-500">🚫</span>
+                                         <span x-show="!selectedProvince && hasProvinces" class="text-[10px] text-red-500"><x-lucide name="ban" class="w-3 h-3 inline" /></span>
                                      </button>
                                      <button @click="if(selectedCity) activeTab = 'barangay'"
                                              type="button"
@@ -188,7 +188,7 @@
                                              :class="activeTab === 'barangay' ? 'text-[#C0420A] border-b-2 border-[#C0420A] bg-white' : ''"
                                              class="flex-1 py-3 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                          Barangay
-                                         <span x-show="!selectedCity" class="text-[10px] text-red-500">🚫</span>
+                                         <span x-show="!selectedCity" class="text-[10px] text-red-500"><x-lucide name="ban" class="w-3 h-3 inline" /></span>
                                      </button>
                                  </div>
 
@@ -217,7 +217,7 @@
                                                       :class="selectedRegion?.code === reg.code ? 'bg-[#C0420A]/5 text-[#C0420A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                                       class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                                       <span x-text="reg.name + ' (' + reg.regionName + ')'"></span>
-                                                      <span x-show="selectedRegion?.code === reg.code" class="text-xs">✓</span>
+                                                      <span x-show="selectedRegion?.code === reg.code" class="text-xs text-[#C49520]"><x-lucide name="check" class="w-3.5 h-3.5 inline" /></span>
                                                  </button>
                                              </template>
                                          </div>
@@ -231,7 +231,7 @@
                                                       :class="selectedProvince?.code === prov.code ? 'bg-[#C0420A]/5 text-[#C0420A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                                       class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                                       <span x-text="prov.name"></span>
-                                                      <span x-show="selectedProvince?.code === prov.code" class="text-xs">✓</span>
+                                                      <span x-show="selectedProvince?.code === prov.code" class="text-xs text-[#C49520]"><x-lucide name="check" class="w-3.5 h-3.5 inline" /></span>
                                                  </button>
                                              </template>
                                          </div>
@@ -245,7 +245,7 @@
                                                       :class="selectedCity?.code === ct.code ? 'bg-[#C0420A]/5 text-[#C0420A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                                       class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                                       <span x-text="ct.name"></span>
-                                                      <span x-show="selectedCity?.code === ct.code" class="text-xs">✓</span>
+                                                      <span x-show="selectedCity?.code === ct.code" class="text-xs text-[#C49520]"><x-lucide name="check" class="w-3.5 h-3.5 inline" /></span>
                                                  </button>
                                              </template>
                                          </div>
@@ -259,7 +259,7 @@
                                                       :class="selectedBarangay?.code === brgy.code ? 'bg-[#C0420A]/5 text-[#C0420A] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                                       class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                                       <span x-text="brgy.name"></span>
-                                                      <span x-show="selectedBarangay?.code === brgy.code" class="text-xs">✓</span>
+                                                      <span x-show="selectedBarangay?.code === brgy.code" class="text-xs text-[#C49520]"><x-lucide name="check" class="w-3.5 h-3.5 inline" /></span>
                                                  </button>
                                              </template>
                                          </div>

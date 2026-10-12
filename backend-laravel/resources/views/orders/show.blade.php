@@ -246,7 +246,7 @@
                         {{-- Payment Method Badge --}}
                         @if(!($isStorePickup && in_array(strtolower($order->paymentMethod ?? ''), ['cod', 'cash', 'cash_on_delivery', 'cash on delivery'])))
                             <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#FAF6EE] text-[#996515] border border-[#E2D9C8] flex items-center gap-1">
-                                <span>💳</span>
+                                <x-lucide name="credit-card" class="w-4 h-4 inline text-stone-600" />
                                 <span>{{ $order->formatted_payment_method }}</span>
                             </span>
                         @endif
@@ -267,7 +267,7 @@
                 {{-- 4-Step Stepper --}}
                 @if($isCancellationPending)
                     <div style="background-color:#FFF7ED;border:1px solid #FED7AA;border-radius:14px;padding:12px 16px;" class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 text-sm">⏳</div>
+                        <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0"><x-lucide name="clock" class="w-4 h-4 text-orange-600" /></div>
                         <div class="text-xs">
                             <span class="font-bold text-orange-900 block">Cancellation Pending Artisan Approval</span>
                             <span class="text-orange-700 text-[11px]">Your request has been submitted and is currently being reviewed.</span>
@@ -275,7 +275,7 @@
                     </div>
                 @elseif($isCancelled)
                     <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:12px 16px;" class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0 text-sm">✕</div>
+                        <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x" class="w-4 h-4 text-red-600" /></div>
                         <div class="text-xs">
                             <span class="font-bold text-red-900 block">Order Cancelled</span>
                             @if($order->cancellationReason)
@@ -340,11 +340,11 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs rounded-[14px] p-3 sm:px-4 border {{ $isStorePickup ? 'bg-linear-to-r from-amber-100 via-amber-100 to-amber-200 border-amber-400' : 'bg-linear-to-r from-blue-50 via-blue-50 to-blue-100 border-blue-300' }}">
                         <div class="flex items-start sm:items-center gap-3">
                             <div class="w-9 h-9 rounded-xl {{ $isStorePickup ? 'bg-amber-100 border border-amber-300 text-amber-900' : 'bg-blue-100 border border-blue-300 text-blue-900' }} flex items-center justify-center shrink-0 text-base">
-                                {{ $isStorePickup ? '🏬' : '🏍️' }}
+                                <x-lucide :name="$isStorePickup ? 'store' : 'bike'" class="w-5 h-5 inline" />
                             </div>
                             <div>
                                 <div class="text-[10px] font-black uppercase tracking-wider {{ $isStorePickup ? 'text-amber-900' : 'text-blue-900' }}">
-                                    {{ $isStorePickup ? '📅 In-Shop Store Visit Appointment' : '📅 Scheduled Delivery Date' }}
+                                    <span class="flex items-center gap-1.5"><x-lucide name="calendar" class="w-4 h-4 inline text-amber-700" /> {{ $isStorePickup ? 'In-Shop Store Visit Appointment' : 'Scheduled Delivery Date' }}</span>
                                 </div>
                                 <div class="text-xs sm:text-sm font-extrabold {{ $isStorePickup ? 'text-amber-950' : 'text-blue-950' }} mt-0.5">
                                     {{ \Carbon\Carbon::parse($order->appointment_date)->format('l, F j, Y') }}
@@ -375,9 +375,9 @@
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0">
                                 @if($isStorePickup)
-                                    <span class="text-sm">🏬</span>
+                                    <x-lucide name="store" class="w-4 h-4 text-emerald-800" />
                                 @elseif($isSpecialDelivery)
-                                    <span class="text-sm">🏍️</span>
+                                    <x-lucide name="bike" class="w-4 h-4 text-emerald-800" />
                                 @else
                                     <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                 @endif
@@ -399,8 +399,8 @@
                 <div class="px-4 sm:px-5 pb-4 pt-0">
                     <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1px solid #BFDBFE; border-radius: 14px; padding: 10px 16px;" class="flex items-center justify-between gap-3 shadow-2xs">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100/90 border border-blue-300 text-blue-800 flex items-center justify-center shrink-0 text-sm">
-                                🏍️
+                            <div class="w-8 h-8 rounded-lg bg-blue-100/90 border border-blue-300 text-blue-800 flex items-center justify-center shrink-0">
+                                <x-lucide name="bike" class="w-4 h-4 text-blue-800" />
                             </div>
                             <div>
                                 <h3 class="text-xs sm:text-sm font-extrabold text-blue-950 m-0">Local artisan rider &bull; Out for delivery</h3>
@@ -424,7 +424,7 @@
                 <div class="px-4 sm:px-5 pb-4 pt-0">
                     <div style="background-color:#FAF8F5;border:1px solid #ECE3D2;border-radius:14px;padding:10px 16px;" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-black text-xs">✓</div>
+                            <div class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center"><x-lucide name="check" class="w-3.5 h-3.5 text-emerald-700" /></div>
                             <div>
                                 <h3 class="text-xs sm:text-sm font-extrabold text-[#1E1915] m-0">Order Completed</h3>
                                 <p class="text-[11px] text-[#78716C] mt-0.5 m-0">Thank you for supporting Lumban artisanal craftsmanship.</p>
@@ -437,7 +437,7 @@
                                 </span>
                             @elseif($hasReviews)
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                    ★ Reviewed by Buyer
+                                    <x-lucide name="star" class="w-3.5 h-3.5 inline mr-1 text-amber-500 fill-current" /> Reviewed by Buyer
                                 </span>
                             @else
                                 @if($unreviewedItem)
@@ -449,7 +449,7 @@
                                         @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
                                         style="background-color:#1E1915;color:#FFFFFF;"
                                         class="px-3.5 py-1.5 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 cursor-pointer">
-                                        <span>⭐ Rate</span>
+                                        <span class="flex items-center gap-1"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Rate</span>
                                     </button>
                                 @endif
                                 <button type="button"
@@ -527,14 +527,14 @@
                                         </span>
                                         @if($canRate && $existingReview)
                                             <span class="px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-200 text-[10px] font-extrabold text-emerald-800">
-                                                ✓ {{ $existingReview->rating }}/5 Stars
+                                                <x-lucide name="check-circle" class="w-3.5 h-3.5 inline mr-1 text-emerald-600" /> {{ $existingReview->rating }}/5 Stars
                                             </span>
                                         @endif
                                         @if($order->isReceivedByCustomer())
                                             <button type="button"
                                                     @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', productId: '{{ $item->productId }}', productName: '{{ addslashes($item->product->name ?? 'Product') }}', orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: '{{ addslashes($item->size ?? $item->variation ?? '') }}', reportType: 'product' } }))"
                                                     class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
-                                                <span>🚩 Report Product</span>
+                                                <span class="flex items-center gap-1"><x-lucide name="flag" class="w-3.5 h-3.5 text-red-600" /> Report Product</span>
                                             </button>
                                         @endif
                                     </div>
@@ -567,12 +567,12 @@
                     <div class="p-4 sm:p-5 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                <span>📍</span>
+                                <x-lucide name="map-pin" class="w-4 h-4 inline text-amber-600" />
                                 <span>Delivery address</span>
                             </span>
                             @if(!empty($addr['phone']))
                                 <span class="text-[11px] font-mono text-[#1E1915] font-bold flex items-center gap-1 px-2 py-0.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-full">
-                                    <span>📞</span>
+                                    <x-lucide name="phone" class="w-4 h-4 inline text-stone-600" />
                                     <span>{{ $addr['phone'] }}</span>
                                 </span>
                             @endif
@@ -619,12 +619,12 @@
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                    <span>📸</span>
+                                    <x-lucide name="camera" class="w-4 h-4 inline text-stone-600" />
                                     <span>Artisan inspection proof</span>
                                 </span>
                                 @if($order->packingProof)
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 shadow-2xs">
-                                        ✓ Verified
+                                        <x-lucide name="check-circle" class="w-3.5 h-3.5 inline text-emerald-600 mr-1" /> Verified
                                     </span>
                                 @endif
                             </div>
@@ -636,13 +636,13 @@
                                     <img src="{{ $order->packing_proof_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Packing inspection proof">
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <span class="px-2.5 py-0.5 bg-black/80 text-white rounded-md text-[11px] font-bold backdrop-blur-xs flex items-center gap-1">
-                                            🔍 Zoom
+                                            <x-lucide name="search" class="w-3 h-3 inline mr-1" /> Zoom
                                         </span>
                                     </div>
                                 </div>
                             @else
                                 <div class="p-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl flex items-center gap-2 text-xs text-[#78716C]">
-                                    <span class="text-sm">⏳</span>
+                                    <x-lucide name="clock" class="w-4 h-4 text-amber-600 inline" />
                                     <div class="text-[11px] leading-tight">
                                         <strong class="text-[#1E1915] block">Photo pending</strong>
                                         <span>Artisan will upload quality inspection photo before dispatch.</span>
@@ -660,12 +660,12 @@
                         {{-- Workshop Pickup Address --}}
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                <span>📍</span>
+                                <x-lucide name="map-pin" class="w-4 h-4 inline text-amber-600" />
                                 <span>Workshop Pickup</span>
                             </span>
                             <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer"
                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FAF6EE] hover:bg-[#FAF0E6] text-[#996515] border border-[#E2D9C8] hover:border-[#D4AF37] transition-all shadow-2xs">
-                                <span>🗺️</span>
+                                <x-lucide name="map" class="w-4 h-4 inline text-amber-600" />
                                 <span>Directions</span>
                                 <span>↗</span>
                             </a>
@@ -690,12 +690,12 @@
                         {{-- Special Delivery Address --}}
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black uppercase tracking-wider text-[#8C827A] flex items-center gap-1.5">
-                                <span>📍</span>
+                                <x-lucide name="map-pin" class="w-4 h-4 inline text-amber-600" />
                                 <span>Delivery address</span>
                             </span>
                             @if(!empty($addr['phone']))
                                 <span class="text-[11px] font-mono text-[#1E1915] font-bold flex items-center gap-1 px-2 py-0.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-full">
-                                    <span>📞</span>
+                                    <x-lucide name="phone" class="w-4 h-4 inline text-stone-600" />
                                     <span>{{ $addr['phone'] }}</span>
                                 </span>
                             @endif
@@ -754,7 +754,7 @@
                                 @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}' } }))"
                                 style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#1E1915;"
                                 class="w-full py-2 rounded-xl hover:bg-[#1E1915] hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
-                            <span>💬</span>
+                            <x-lucide name="message-square" class="w-4 h-4 inline text-stone-600" />
                             <span>Chat with artisan</span>
                         </button>
                     @endif
@@ -828,7 +828,7 @@
                         <div class="mt-3 p-3 rounded-xl border text-xs space-y-1.5 transition-all {{ $sukliCardClass }}">
                             <div class="flex items-center justify-between font-bold">
                                 <span class="flex items-center gap-1.5">
-                                    <span>💸</span>
+                                    <x-lucide name="banknote" class="w-4 h-4 inline text-emerald-600" />
                                     <span>Sukli / Excess Payment</span>
                                 </span>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $sukliBadgeClass }}">
@@ -864,7 +864,7 @@
 
             {{-- 6. AUTHENTIC HERITAGE GUARANTEE FOOTER --}}
             <div class="border-t border-[#FAF4EB] bg-[#FAF8F5]/50 py-2.5 px-4 text-center text-xs text-[#78716C] flex items-center justify-center gap-2">
-                <span>🛡️</span>
+                <x-lucide name="shield" class="w-4 h-4 inline text-blue-600" />
                 <span><strong>Lumban Heritage Guarantee:</strong> Verified genuine artisanal embroidery craft.</span>
             </div>
 
@@ -876,8 +876,8 @@
     <div x-show="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="confirmModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-4 text-gray-900">
             <div class="text-center space-y-1.5">
-                <div class="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
-                    ✓
+                <div class="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+                    <x-lucide name="check-circle" class="w-7 h-7 text-emerald-600" />
                 </div>
                 <h3 class="text-base font-bold text-[#1E1915]">Confirm Order Received?</h3>
                 <p class="text-xs text-[#78716C] leading-relaxed">Please only confirm once you have physically received and inspected all items.</p>
@@ -999,7 +999,7 @@
                                 @mouseenter="hover = {{ $i }}"
                                 @mouseleave="hover = 0"
                                 class="text-2xl focus:outline-none transition-transform active:scale-125">
-                                <span :class="(hover || rating) >= {{ $i }} ? 'text-amber-400' : 'text-gray-200'">★</span>
+                                <svg class="w-6 h-6 inline" :class="(hover || rating) >= {{ $i }} ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             </button>
                         @endfor
                         <span class="text-xs font-bold text-[#78716C] ml-2" x-text="rating > 0 ? rating + '/5' : 'Select'"></span>
@@ -1018,7 +1018,7 @@
                 <div class="space-y-1.5 pt-1" style="border-top:1px solid #EAE1D0;">
                     <div class="flex items-center justify-between">
                         <label class="text-[10px] text-[#1E1915] font-bold uppercase tracking-wider flex items-center gap-1">
-                            <span>📷 Add Photos</span>
+                            <span class="flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5 inline" /> Add Photos</span>
                             <span class="text-stone-400 font-normal" x-text="'(' + photoPreviews.length + '/3)'"></span>
                         </label>
                         <span class="text-[9px] text-[#8C827A]">Max 3 images • 10MB each</span>
@@ -1031,9 +1031,7 @@
                         <template x-for="(photo, index) in photoPreviews" :key="index">
                             <div class="relative w-14 h-14 rounded-xl border border-[#ECE3D2] overflow-hidden group bg-[#FAF8F5] shrink-0 shadow-2xs">
                                 <img :src="photo.url" @click="openLightbox('image', photo.url)" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" title="Click to view full image">
-                                <button type="button" @click.stop="removePhoto(index)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[9px] font-bold shadow-xs cursor-pointer">
-                                    ✕
-                                </button>
+                                <button type="button" @click.stop="removePhoto(index)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[9px] font-bold shadow-xs cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                             </div>
                         </template>
 
@@ -1054,7 +1052,7 @@
                 <div class="space-y-1.5 pt-1" style="border-top:1px solid #EAE1D0;">
                     <div class="flex items-center justify-between">
                         <label class="text-[10px] text-[#1E1915] font-bold uppercase tracking-wider flex items-center gap-1">
-                            <span>🎥 Add Video</span>
+                            <span class="flex items-center gap-1"><x-lucide name="video" class="w-3.5 h-3.5 inline" /> Add Video</span>
                             <span class="text-stone-400 font-normal">(1 video)</span>
                         </label>
                         <span class="text-[9px] text-[#8C827A]">Max 50MB (MP4, MOV, WEBM)</span>
@@ -1072,16 +1070,16 @@
                     <template x-if="videoPreview">
                         <div class="p-2 bg-gray-900 rounded-xl flex items-center justify-between gap-2 text-white">
                             <div class="flex items-center gap-2 min-w-0 cursor-pointer" @click="openLightbox('video', videoPreview)">
-                                <div class="w-8 h-8 rounded-lg bg-black/60 border border-white/20 flex items-center justify-center shrink-0 text-[10px]">
-                                    ▶
+                                <div class="w-8 h-8 rounded-lg bg-black/60 border border-white/20 flex items-center justify-center shrink-0 text-white">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[11px] font-bold truncate text-white" x-text="videoName || 'Attached Video'"></p>
-                                    <span class="text-[9px] text-orange-400 font-semibold">🔍 Preview Video</span>
+                                    <span class="text-[9px] text-orange-400 font-semibold inline-flex items-center gap-1"><x-lucide name="video" class="w-3 h-3" /> Preview Video</span>
                                 </div>
                             </div>
                             <button type="button" @click="removeVideo()" class="px-2 py-1 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-[10px] font-bold transition-colors cursor-pointer shrink-0">
-                                ✕ Remove
+                                <span class="flex items-center gap-1"><x-lucide name="x" class="w-3 h-3" /> Remove</span>
                             </button>
                         </div>
                     </template>
@@ -1140,9 +1138,7 @@
         <div @click.away="closeLightbox()" class="relative max-w-4xl w-full flex flex-col items-center justify-center">
             <button type="button" 
                     @click="closeLightbox()" 
-                    class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20">
-                ✕
-            </button>
+                    class="absolute -top-12 right-0 sm:-right-2 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center text-lg font-black backdrop-blur-md transition-all cursor-pointer shadow-lg z-20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 
             <div class="w-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black/60 p-1 sm:p-2 border border-white/10">
                 <template x-if="lightboxType === 'image'">
@@ -1159,8 +1155,8 @@
     <div x-show="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
         <div @click.away="cancelModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-4 text-gray-900">
             <div class="flex items-center gap-3 pb-3" style="border-bottom:1px solid #EAE1D0;">
-                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
-                    ✕
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <x-lucide name="x-circle" class="w-5 h-5 text-red-600" />
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Request Order Cancellation</h3>
@@ -1308,7 +1304,7 @@
 
         const shopPinIcon = L.divIcon({
             className: 'lumbarong-workshop-pin-icon',
-            html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
+            html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;display:flex;align-items:center;justify-content:center;"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="22" y1="22" y2="22"/><line x1="6" x2="6" y1="18"/><line x1="10" x2="10" y1="18"/><line x1="14" x2="14" y1="18"/><line x1="18" x2="18" y1="18"/><polygon points="12 2 20 7 4 7"/></svg></span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
             iconSize: [38, 38],
             iconAnchor: [19, 38],
             popupAnchor: [0, -38]

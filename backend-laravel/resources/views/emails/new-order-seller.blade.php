@@ -7,7 +7,7 @@
             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                     <td align="center" style="width: 44px; height: 44px; background-color: #FAF5EA; border: 1px solid #EADDC8; border-radius: 12px; text-align: center; vertical-align: middle;">
-                        <span style="font-size: 20px; line-height: 44px; display: inline-block;">🎉</span>
+                        <x-lucide name="party-popper" class="w-6 h-6 text-[#C49520]" style="display:inline-block;vertical-align:middle;" />
                     </td>
                 </tr>
             </table>

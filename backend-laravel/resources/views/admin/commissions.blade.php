@@ -136,9 +136,9 @@
 
                         <td class="px-6 py-4">
                             @if($s['status'] === 'paid')
-                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold uppercase text-[9px]">✓ Paid</span>
+                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold uppercase text-[9px]"><span class="inline-flex items-center gap-1"><x-lucide name="check" class="w-3 h-3 text-emerald-700" /> Paid</span></span>
                             @elseif($s['status'] === 'verification_pending')
-                                <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold uppercase text-[9px]">⏳ Proof Submitted</span>
+                                <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold uppercase text-[9px]"><span class="inline-flex items-center gap-1"><x-lucide name="clock" class="w-3 h-3 text-amber-700" /> Proof Submitted</span></span>
                             @else
                                 <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full font-bold uppercase text-[9px]">Unpaid</span>
                             @endif
@@ -156,7 +156,7 @@
                                 <div class="text-[10px] space-y-1">
                                     @if($s['referenceNumber'] || $s['paymentProof'])
                                         <div class="text-blue-700 font-bold flex items-center gap-1">
-                                            <span>💳 {{ $s['paymentMethod'] ?? 'Payment' }}</span>
+                                            <span class="inline-flex items-center gap-1"><x-lucide name="credit-card" class="w-3.5 h-3.5 text-gray-500" /> {{ $s['paymentMethod'] ?? 'Payment' }}</span>
                                         </div>
                                         @if($s['referenceNumber'])
                                             <div class="font-mono text-gray-900 font-bold">Ref: {{ $s['referenceNumber'] }}</div>
@@ -165,7 +165,7 @@
                                             <button type="button"
                                                     @click="openProofModal('{{ asset('storage/' . ltrim($s['paymentProof'], '/')) }}', '{{ $shopName }} · Proof of Payment', '{{ $s['referenceNumber'] ?? '' }}')"
                                                     class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer">
-                                                🔍 View Proof
+                                                <span class="inline-flex items-center gap-1"><x-lucide name="eye" class="w-3.5 h-3.5 text-blue-600" /> View Proof</span>
                                             </button>
                                         @endif
                                     @else
@@ -196,7 +196,7 @@
             <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4" @click.stop>
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-sm font-bold text-gray-900" x-text="proofTitle"></h3>
-                    <button type="button" @click="showProofModal = false" class="text-gray-400 hover:text-gray-700">✕</button>
+                    <button type="button" @click="showProofModal = false" class="text-gray-400 hover:text-gray-700"><x-lucide name="x" class="w-4 h-4" /></button>
                 </div>
                 <div class="rounded-xl overflow-hidden border bg-gray-50">
                     <img x-bind:src="proofUrl" class="max-h-80 w-full object-contain mx-auto p-2">

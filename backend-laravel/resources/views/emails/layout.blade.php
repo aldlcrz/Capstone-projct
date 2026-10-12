@@ -298,7 +298,7 @@
             <div class="footer-section">
                 <div>
                     <span class="footer-pill">
-                        🛡️ AUTOMATED OFFICIAL NOTIFICATION &bull; DO NOT REPLY
+                        AUTOMATED OFFICIAL NOTIFICATION &bull; DO NOT REPLY
                     </span>
                 </div>
                 <p class="footer-text-1">

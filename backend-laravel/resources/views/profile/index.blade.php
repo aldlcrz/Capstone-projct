@@ -54,7 +54,7 @@
         {{-- Star Divider --}}
         <div style="position:relative;margin:18px 0 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
+            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
         </div>
 
         {{-- DESKTOP HERO BANNER (Visible on lg screens >= 1024px) --}}
@@ -424,7 +424,7 @@
             </div>
 
             <div class="text-[11px] text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-start gap-2">
-                <span class="text-amber-600 text-xs">ℹ️</span>
+                <x-lucide name="info" class="w-4 h-4 text-amber-600 inline shrink-0" />
                 <span>Your download will begin immediately once confirmed. The file will be delivered as a secure <code>.pdf</code> document.</span>
             </div>
 
@@ -464,9 +464,7 @@
 
             <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
-                        ⚠️
-                    </div>
+                    <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center"><x-lucide name="alert-triangle" class="w-5 h-5 text-red-600" /></div>
                     <div>
                         <h3 class="text-base font-extrabold text-gray-900">Delete your account</h3>
                         <p class="text-[10px] text-gray-400 font-medium">7-Day Account Deletion &amp; Recovery</p>
@@ -640,9 +638,7 @@
             </div>
 
             <div class="py-3 text-center space-y-3">
-                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-[#C0422A] mx-auto flex items-center justify-center font-bold text-2xl shadow-xs border border-amber-100">
-                    🛡️
-                </div>
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-[#C0422A] mx-auto flex items-center justify-center shadow-xs border border-amber-100"><x-lucide name="shield" class="w-7 h-7 text-[#C0422A]" /></div>
                 <p class="text-xs text-gray-600 leading-relaxed font-medium">
                     To keep your LumBarong account safe, password changes require entering a 6-digit verification code sent to your registered Gmail address.
                 </p>
@@ -1224,7 +1220,7 @@
                                 :disabled="emailLoading"
                                 class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                                 style="background: #1E1915;">
-                            <span x-show="!emailLoading">Confirm & Update Email ✓</span>
+                            <span x-show="!emailLoading" class="inline-flex items-center gap-1.5"><span>Confirm & Update Email</span><x-lucide name="check" class="w-3.5 h-3.5" /></span>
                             <span x-show="emailLoading">Updating...</span>
                         </button>
                         <button type="button" @click="closeChangeEmailModal()" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
@@ -2056,7 +2052,7 @@ function profileApp() {
                     html: `
                         <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
                             <div style="width:28px;height:28px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
-                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:11px;font-weight:900;">✦</span>
+                                <svg style="transform:rotate(45deg);width:13px;height:13px;color:#DFC97A;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             </div>
                             <div style="position:absolute;bottom:-6px;width:10px;height:4px;background:rgba(0,0,0,0.25);border-radius:50%;filter:blur(1px);"></div>
                         </div>

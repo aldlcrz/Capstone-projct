@@ -7,7 +7,7 @@
     <div id="tour-reports-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Trust &amp; Safety</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em] inline-flex items-center gap-1" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Trust &amp; Safety</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold uppercase tracking-wider" style="color: #766C60;">Compliance &amp; Case Ledger</span>
             </div>
@@ -52,7 +52,7 @@
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #766C60;">Total Reports</span>
-                <span class="text-xs">📋</span>
+                <x-lucide name="clipboard-list" class="w-4 h-4 text-gray-600" />
             </div>
             <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $counts['total'] }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">All lifetime cases</div>
@@ -63,7 +63,7 @@
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #1D4ED8;">In Review</span>
-                <span class="text-xs">🔍</span>
+                <x-lucide name="search" class="w-4 h-4 text-sky-600" />
             </div>
             <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1D4ED8;">{{ $counts['under_review'] }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Active investigation</div>
@@ -74,7 +74,7 @@
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #4A6741;">Resolved</span>
-                <span class="text-xs">✅</span>
+                <x-lucide name="check-circle" class="w-4 h-4 text-emerald-600" />
             </div>
             <div class="text-xl sm:text-2xl font-black font-sans" style="color: #4A6741;">{{ $counts['resolved'] }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Closed cases</div>
@@ -85,7 +85,7 @@
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
                 <span class="text-[9px] font-black uppercase tracking-widest {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#766C60]' }}">Violations</span>
-                <span class="text-xs">🛡️</span>
+                <x-lucide name="shield" class="w-4 h-4 text-purple-600" />
             </div>
             <div class="text-xl sm:text-2xl font-black font-sans {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#4A6741]' }}">
                 {{ $counts['confirmed_violations'] }}
@@ -101,7 +101,7 @@
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold shadow-2xs"
                      style="background: #FFFFFF; border: 1px solid #E8DECB; color: #C49520;">
-                    🛡️
+                    <x-lucide name="shield" class="w-5 h-5 text-amber-700" />
                 </div>
                 <div>
                     <span class="text-xs font-bold text-[#1E1915]">Trust &amp; Safety Standard:</span>
@@ -112,7 +112,7 @@
                     class="text-[11px] font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
                     style="color: #C49520;"
                     onmouseover="this.style.color='#A16D19';" onmouseout="this.style.color='#C49520';">
-                <span x-text="showNoticeDetails ? 'Hide details ▴' : 'Learn more ▾'"></span>
+                <span x-text="showNoticeDetails ? 'Hide details' : 'Learn more'"></span>
             </button>
         </div>
         
@@ -128,10 +128,10 @@
             <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
                 @php
                     $statusTabs = [
-                        'all'          => ['label' => 'All Reports', 'icon' => '📋', 'count' => $counts['total']],
-                        'Under Review' => ['label' => 'Under Review', 'icon' => '🔍', 'count' => $counts['under_review']],
-                        'Pending'      => ['label' => 'Pending', 'icon' => '⏳', 'count' => $counts['pending']],
-                        'Resolved'     => ['label' => 'Resolved', 'icon' => '✅', 'count' => $counts['resolved']],
+                        'all'          => ['label' => 'All Reports', 'lucide' => 'clipboard-list', 'count' => $counts['total']],
+                        'Under Review' => ['label' => 'Under Review', 'lucide' => 'search', 'count' => $counts['under_review']],
+                        'Pending'      => ['label' => 'Pending', 'lucide' => 'clock', 'count' => $counts['pending']],
+                        'Resolved'     => ['label' => 'Resolved', 'lucide' => 'check-circle', 'count' => $counts['resolved']],
                         'Dismissed'    => ['label' => 'Dismissed', 'icon' => '—', 'count' => $counts['dismissed']],
                     ];
                 @endphp
@@ -166,14 +166,14 @@
                     :style="typeFilter === 'account' 
                         ? 'background: #1E1915; color: #FFFCF7; border-color: #1E1915;' 
                         : 'background: #FFFFFF; color: #766C60; border-color: #ECE3D2;'">
-                👤 Account Reports ({{ $counts['account_reports'] }})
+                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Account Reports ({{ $counts['account_reports'] }})
             </button>
             <button type="button" @click="typeFilter = 'product'"
                     class="px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border"
                     :style="typeFilter === 'product' 
                         ? 'background: #1E1915; color: #FFFCF7; border-color: #1E1915;' 
                         : 'background: #FFFFFF; color: #766C60; border-color: #ECE3D2;'">
-                📦 Product Reports ({{ $counts['product_reports'] }})
+                <x-lucide name="package" class="w-3.5 h-3.5 inline mr-1" /> Product Reports ({{ $counts['product_reports'] }})
             </button>
         </div>
     </div>
@@ -182,7 +182,7 @@
     <div id="tour-reports-list">
         @if($reports->isEmpty())
             <div class="py-16 sm:py-20 text-center rounded-3xl p-10 space-y-2 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">🛡️</div>
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="shield" class="w-5 h-5 text-amber-700" /></div>
                 <h3 class="font-serif text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">No Reports Found</h3>
                 <p class="text-[11px]" style="color: #766C60;">Your shop has a clean Trust &amp; Safety record. Keep delivering authentic creations to maintain it.</p>
             </div>
@@ -203,9 +203,9 @@
                     };
 
                     $statusIcon = match($report->status) {
-                        'Pending'      => '⏳',
-                        'Under Review' => '🔍',
-                        'Resolved'     => '✅',
+                        'Pending'      => 'clock',
+                        'Under Review' => 'search',
+                        'Resolved'     => 'check-circle',
                         'Dismissed'    => '—',
                         default        => '•',
                     };
@@ -230,7 +230,7 @@
                             </span>
                             <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
                                   style="background: #F8F5F0; border: 1px solid #E8DECB; color: #766C60;">
-                                {{ $reportType === 'product' ? '📦 Product' : '👤 Account' }}
+                                <x-lucide :name="$reportType === 'product' ? 'package' : 'user'" class="w-3.5 h-3.5 inline mr-1" /> {{ $reportType === 'product' ? 'Product' : 'Account' }}
                             </span>
                         </div>
 
@@ -238,7 +238,7 @@
                             @if($report->sellerResponse)
                                 <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
                                       style="background: #FAF5EA; color: #A16D19; border: 1px solid #E8DECB;">
-                                    ✓ Responded
+                                    <x-lucide name="check" class="w-2.5 h-2.5 inline mr-0.5" /> Responded
                                 </span>
                             @endif
                             <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 {{ $statusBadgeClass }}">
@@ -299,7 +299,7 @@
                                 style="background: #1E1915;"
                                 onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                             <span>View Case</span>
-                            <span class="text-xs" style="color: #DFC97A;">➔</span>
+                            <x-lucide name="arrow-right" class="w-3.5 h-3.5 inline text-[#DFC97A]" />
                         </button>
                     </div>
                 </div>
@@ -399,7 +399,7 @@
                                      @click="lightboxUrl = imgUrl; showLightbox = true">
                                     <img :src="imgUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider">
-                                        🔍 Zoom Photo
+                                        <x-lucide name="search" class="w-3.5 h-3.5 inline mr-1" /> Zoom Photo
                                     </div>
                                 </div>
                             </template>
@@ -497,7 +497,7 @@
                                     <template x-for="(sFile, sIdx) in sellerEvidenceFiles" :key="sIdx">
                                         <div class="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200">
                                             <img :src="sFile" class="w-full h-full object-cover">
-                                            <button type="button" @click="sellerEvidenceFiles.splice(sIdx, 1)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/70 text-white text-[8px] flex items-center justify-center">✕</button>
+                                            <button type="button" @click="sellerEvidenceFiles.splice(sIdx, 1)" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/70 text-white flex items-center justify-center p-0.5"><x-lucide name="x" class="w-2.5 h-2.5" /></button>
                                         </div>
                                     </template>
                                 </div>

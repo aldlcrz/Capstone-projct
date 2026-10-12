@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div id="tour-seller-header-welcome">
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Overview</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;"><x-lucide name="sparkles" class="w-3.5 h-3.5 inline mr-1 text-[#C49520]" />Shop Overview</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">
                     Verified Artisan
@@ -349,7 +349,7 @@
                         <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #766C60;">Shop Rating</div>
                         <div class="text-base font-black mt-0.5 flex items-center gap-1 font-sans" style="color: #C49520;">
                             <span>{{ $storePerformance['rating'] ?? 5.0 }}</span>
-                            <span class="text-xs">★</span>
+                            <x-lucide name="star" class="w-3.5 h-3.5 text-[#C49520] fill-[#C49520] inline" />
                         </div>
                     </div>
 
@@ -405,7 +405,7 @@
                             <div class="min-w-0">
                                 @if(!empty($prod->is_preorder) || ($prod->inventory_mode ?? '') === 'preorder')
                                     <div class="text-[9px] font-bold font-sans text-amber-700 flex items-center gap-1">
-                                        <span>⏳ Preorder</span>
+                                        <span class="inline-flex items-center gap-1"><x-lucide name="clock" class="w-3 h-3 text-amber-600" /> Preorder</span>
                                         <span class="text-stone-400 font-normal">&bull; Made to order</span>
                                     </div>
                                 @else

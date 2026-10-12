@@ -36,7 +36,7 @@
         {{-- Star Divider --}}
         <div class="relative my-4 sm:my-5 flex items-center justify-center">
             <div class="w-full border-t border-[#EAE1D0]"></div>
-            <span class="absolute bg-[#FDFBF7] px-3 text-[#C49520] text-xs">✦</span>
+            <span class="absolute bg-[#FDFBF7] px-3 text-[#C49520] flex items-center justify-center"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
         </div>
 
         {{-- Reports Pill List --}}
@@ -44,9 +44,9 @@
             @forelse($reports as $report)
                 @php
                     $statusConfig = match($report->status) {
-                        'Pending'      => ['class' => 'bg-[#FEF9EE] border-[#F6DFA0] text-[#A16D19]', 'label' => '⏳ Pending Review'],
-                        'Under Review' => ['class' => 'bg-[#EEF3FE] border-[#B8CEFA] text-[#2E5FCA]', 'label' => '🔍 Under Investigation'],
-                        'Resolved'     => ['class' => 'bg-[#F0F4EF] border-[#C5D9B8] text-[#4A6741]', 'label' => '✓ Resolved'],
+                        'Pending'      => ['class' => 'bg-[#FEF9EE] border-[#F6DFA0] text-[#A16D19]', 'label' => 'Pending Review'],
+                        'Under Review' => ['class' => 'bg-[#EEF3FE] border-[#B8CEFA] text-[#2E5FCA]', 'label' => 'Under Investigation'],
+                        'Resolved'     => ['class' => 'bg-[#F0F4EF] border-[#C5D9B8] text-[#4A6741]', 'label' => 'Resolved'],
                         'Dismissed'    => ['class' => 'bg-[#F7F4EC] border-[#E0D9CC] text-[#766C60]', 'label' => '— Dismissed'],
                         default        => ['class' => 'bg-[#FDF8EE] border-[#E8DECB] text-[#766C60]', 'label' => $report->status],
                     };
@@ -64,7 +64,7 @@
                                 {{ $report->getReportCode() }}
                             </span>
                             <span class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
-                                {{ $rType === 'product' ? '📦 Product' : '👤 Account' }}
+                                {!! $rType === 'product' ? '<span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-stone-600" /> Product</span>' : '<span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-stone-600" /> Account</span>' !!}
                             </span>
                         </div>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shrink-0 {{ $statusConfig['class'] }}">
@@ -102,7 +102,7 @@
                 </div>
             @empty
                 <div class="py-12 sm:py-16 text-center rounded-2xl border-2 border-dashed border-[#E8DECB] bg-white p-6">
-                    <div class="text-3xl mb-2">🛡️</div>
+                    <div class="mb-2 flex justify-center text-[#C49520]"><x-lucide name="shield" class="w-8 h-8" /></div>
                     <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915] m-0">No Reports Filed</h3>
                     <p class="text-xs text-[#78716C] mt-1.5 max-w-sm mx-auto leading-relaxed">
                         You have not submitted any trust &amp; safety reports. When you report concerns regarding shops or products, they will appear here with live tracking.
@@ -138,9 +138,9 @@
             @foreach($reports as $report)
                 @php
                     $statusConfig = match($report->status) {
-                        'Pending'      => ['class' => 'bg-[#FEF9EE] border-[#F6DFA0] text-[#A16D19]', 'label' => '⏳ Pending Review'],
-                        'Under Review' => ['class' => 'bg-[#EEF3FE] border-[#B8CEFA] text-[#2E5FCA]', 'label' => '🔍 Under Investigation'],
-                        'Resolved'     => ['class' => 'bg-[#F0F4EF] border-[#C5D9B8] text-[#4A6741]', 'label' => '✓ Resolved'],
+                        'Pending'      => ['class' => 'bg-[#FEF9EE] border-[#F6DFA0] text-[#A16D19]', 'label' => 'Pending Review'],
+                        'Under Review' => ['class' => 'bg-[#EEF3FE] border-[#B8CEFA] text-[#2E5FCA]', 'label' => 'Under Investigation'],
+                        'Resolved'     => ['class' => 'bg-[#F0F4EF] border-[#C5D9B8] text-[#4A6741]', 'label' => 'Resolved'],
                         'Dismissed'    => ['class' => 'bg-[#F7F4EC] border-[#E0D9CC] text-[#766C60]', 'label' => '— Dismissed'],
                         default        => ['class' => 'bg-[#FDF8EE] border-[#E8DECB] text-[#766C60]', 'label' => $report->status],
                     };
@@ -174,7 +174,7 @@
                     <div class="flex items-center justify-between gap-2 bg-white border border-[#E8DECB] p-3 rounded-xl shadow-2xs flex-wrap">
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
-                                {{ $rType === 'product' ? '📦 Product Report' : '👤 Account Report' }}
+                                {!! $rType === 'product' ? '<span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-stone-600" /> Product Report</span>' : '<span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-stone-600" /> Account Report</span>' !!}
                             </span>
                         </div>
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border {{ $statusConfig['class'] }}">

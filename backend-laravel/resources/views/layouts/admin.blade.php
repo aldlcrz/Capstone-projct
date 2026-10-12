@@ -40,6 +40,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
+    </script>
     <style>
         :root {
             --rust: #C0420A;
@@ -96,7 +102,7 @@
                             <span class="font-serif text-lg font-bold text-[#1F2937] tracking-tight">LUMBARONG</span>
                             <div class="flex items-center gap-1.5 px-0.5 text-[#C0420A] font-bold tracking-widest text-[9px] uppercase">
                                 @if($isSuperAdmin)
-                                    <span>👑 SUPER ADMIN</span>
+                                    <span class="flex items-center gap-1 text-amber-500"><x-lucide name="crown" class="w-3.5 h-3.5 inline shrink-0" /> SUPER ADMIN</span>
                                 @else
                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                                     CONTROL PANEL
@@ -299,7 +305,7 @@
                     <div class="flex items-center gap-3 px-2">
                         @if($isSuperAdmin)
                             <div class="w-10 h-10 rounded-xl bg-[#1F2937] text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs border border-amber-500/20">
-                                👑
+                                <x-lucide name="crown" class="w-5 h-5 text-amber-400" />
                             </div>
                             <div class="overflow-hidden">
                                 <div class="text-sm font-bold text-[#1F2937] truncate">{{ Auth::user()->name }}</div>
@@ -424,7 +430,7 @@
                             <div class="text-right hidden sm:block">
                                 <div class="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
                                     {{ $isSuperAdmin ? Auth::user()->name : (in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name) }}
-                                    <span class="text-xs {{ $isSuperAdmin ? 'text-amber-500' : 'text-[#C0420A]' }}" title="{{ $isSuperAdmin ? 'Super Administrator' : 'System Administrator' }}">{{ $isSuperAdmin ? '👑' : '🛡️' }}</span>
+                                    <span class="inline-flex items-center {{ $isSuperAdmin ? 'text-amber-500' : 'text-[#C0420A]' }}" title="{{ $isSuperAdmin ? 'Super Administrator' : 'System Administrator' }}"><x-lucide :name="$isSuperAdmin ? 'crown' : 'shield'" class="w-3.5 h-3.5 inline" /></span>
                                 </div>
                                 <div class="text-[10px] font-bold uppercase tracking-widest text-[#C0420A]">
                                     {{ $isSuperAdmin ? 'Super Administrator' : 'Administrator' }}
@@ -434,7 +440,7 @@
                                 @if(Auth::user()->profilePhoto)
                                     <img src="{{ str_starts_with(Auth::user()->profilePhoto, 'http') || str_starts_with(Auth::user()->profilePhoto, '/') ? Auth::user()->profilePhoto : asset('storage/' . Auth::user()->profilePhoto) }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                 @elseif($isSuperAdmin)
-                                    👑
+                                    <x-lucide name="crown" class="w-4 h-4 text-amber-400" />
                                 @else
                                     {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                                 @endif
@@ -460,7 +466,7 @@
                             <div class="px-4 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-xl {{ $isSuperAdmin ? 'bg-[#1F2937] text-amber-400' : 'bg-black text-white' }} flex items-center justify-center font-bold text-xs shrink-0">
                                     @if($isSuperAdmin)
-                                        👑
+                                        <x-lucide name="crown" class="w-4 h-4 text-amber-400" />
                                     @else
                                         {{ strtoupper(substr(in_array(Auth::user()->name, ['Super Admin', 'LumBarong Admin']) ? 'LumBarong' : Auth::user()->name, 0, 1)) }}
                                     @endif
@@ -651,12 +657,12 @@
                     <button @click="mobileMoreOpen = !mobileMoreOpen" class="flex flex-col items-center gap-0.5 px-2.5 py-1 text-gray-500 hover:text-gray-700 cursor-pointer">
                         <div class="w-6 h-6 rounded-full {{ $isSuperAdmin ? 'bg-[#1F2937] text-amber-400' : 'bg-black text-white' }} flex items-center justify-center text-[10px] font-bold overflow-hidden border border-white">
                             @if($isSuperAdmin)
-                                👑
+                                <x-lucide name="crown" class="w-3.5 h-3.5 text-amber-400" />
                             @else
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             @endif
                         </div>
-                        <span class="text-[9px] font-semibold">More ▾</span>
+                        <span class="text-[9px] font-semibold flex items-center gap-0.5"><span>More</span><x-lucide name="chevron-down" class="w-2.5 h-2.5 inline" /></span>
                     </button>
 
                     <!-- Profile Overflow Menu Popup -->

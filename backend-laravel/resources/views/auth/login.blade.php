@@ -107,7 +107,7 @@
                 </div>
 
                 <div class="p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-950 text-[11px] flex items-start gap-2 leading-relaxed">
-                    <span class="text-amber-600 font-bold text-sm shrink-0">⚠️</span>
+                    <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                     <span><strong>Important:</strong> Repeated or continued violations could result in a <strong>permanent ban</strong> from LumBarong.</span>
                 </div>
 
@@ -119,13 +119,13 @@
 
         @if (session('info'))
             <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">ℹ️</span>
+                <x-lucide name="info" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                 <p class="font-medium leading-relaxed">{{ session('info') }}</p>
             </div>
         @endif
         @if (session('success'))
             <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
-                <span class="text-base shrink-0">✓</span>
+                <x-lucide name="check-circle" class="w-4 h-4 text-emerald-600 shrink-0 inline" />
                 <p class="font-medium leading-relaxed">{{ session('success') }}</p>
             </div>
         @endif
@@ -171,15 +171,15 @@
                         <!-- 3-Stage Status Tracker -->
                         <div class="grid grid-cols-3 gap-1.5 p-1 bg-white/70 rounded-2xl border border-[#EAE3DA]">
                             <div class="py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 bg-[#FAF7F2] border border-[#E2D5C5]/60">
-                                <span class="text-[10px] text-emerald-700 font-black">✓</span>
+                                <x-lucide name="check" class="w-3 h-3 text-emerald-700 inline" />
                                 <span class="text-[8px] font-black uppercase tracking-wider text-gray-700">Submitted</span>
                             </div>
                             <div class="py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 bg-[#3D2B1F] text-[#E8DCCF] shadow-xs">
-                                <span class="text-[10px] text-[#D4AF37] font-black animate-pulse">⏳</span>
+                                <x-lucide name="clock" class="w-3 h-3 text-[#D4AF37] animate-pulse inline" />
                                 <span class="text-[8px] font-black uppercase tracking-wider text-[#F2EAE0]">Admin Review</span>
                             </div>
                             <div class="py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 bg-[#FAF7F2]/60 text-gray-400">
-                                <span class="text-[10px]">🔒</span>
+                                <x-lucide name="lock" class="w-3 h-3 text-gray-400 inline" />
                                 <span class="text-[8px] font-bold uppercase tracking-wider">Restored</span>
                             </div>
                         </div>
@@ -190,7 +190,7 @@
                                 Your payment proof has been submitted and is currently undergoing priority review by the administration.
                             </p>
                             <div class="p-2.5 bg-white rounded-xl border border-[#EAE3DA] flex items-center gap-2">
-                                <span class="text-xs text-[#C0422A] shrink-0">✦</span>
+                                <x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#C0422A] shrink-0 inline" />
                                 <span class="text-[10px] font-semibold text-gray-600 leading-tight">
                                     No further action or payment is required. Storefront access will be restored immediately upon confirmation.
                                 </span>
@@ -200,7 +200,7 @@
                 @elseif($isFrozenErr)
                     <div class="mt-3 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-2.5 text-left shadow-xs">
                         <div class="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
-                            <span class="text-base">💳</span>
+                            <x-lucide name="credit-card" class="w-4 h-4 text-amber-800 shrink-0 inline" />
                             <span>Overdue Commission Settle Portal</span>
                         </div>
                         <p class="text-[11px] text-amber-900 leading-relaxed font-medium">
@@ -281,7 +281,7 @@
                     <!-- In-App Browser Notice (Messenger / Facebook / Instagram) -->
                     <div id="in-app-browser-notice" class="hidden mt-4 p-3.5 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 leading-snug text-left shadow-2xs">
                         <div class="flex items-start gap-2.5">
-                            <span class="text-sm shrink-0">ℹ️</span>
+                            <x-lucide name="info" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                             <div>
                                 <span class="font-bold block mb-0.5 text-amber-950">Using Messenger / In-App Browser?</span>
                                 <span>Google blocks sign-in inside in-app webviews. You can log in using your email & password above, or tap <strong class="font-bold">⋮</strong> / <strong class="font-bold">⋯</strong> and choose <strong class="font-bold">Open in Chrome / Safari</strong>.</span>
@@ -422,7 +422,7 @@
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $gcashNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
                                 class="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
-                            <span x-text="copied ? 'Copied! ✓' : 'Copy'">Copy</span>
+                            <span x-text="copied ? 'Copied!' : 'Copy'">Copy</span>
                         </button>
                     </div>
                 @elseif(!$gcashQr)
@@ -450,7 +450,7 @@
                         <button type="button" 
                                 @click="navigator.clipboard.writeText('{{ $mayaNumber }}'); copied = true; setTimeout(() => copied = false, 2500)"
                                 class="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer">
-                            <span x-text="copied ? 'Copied! ✓' : 'Copy'">Copy</span>
+                            <span x-text="copied ? 'Copied!' : 'Copy'">Copy</span>
                         </button>
                     </div>
                 @elseif(!$mayaQr)
@@ -507,9 +507,7 @@
             <!-- Top Accent Strip -->
             <div class="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-amber-500 via-[#C49520] to-amber-600"></div>
 
-            <div class="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
-                ⏳
-            </div>
+            <div class="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center text-2xl mx-auto shadow-inner"><x-lucide name="clock" class="w-7 h-7 text-amber-600" /></div>
 
             <div>
                 <h2 class="font-serif text-xl sm:text-2xl font-black text-gray-900">
@@ -587,11 +585,11 @@
                 const msgEl = document.getElementById('js-pending-message');
 
                 if (intent.action === 'chat') {
-                    if (iconEl) iconEl.textContent = '💬';
+                    if (iconEl) iconEl.innerHTML = '<svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>';
                     if (titleEl) titleEl.textContent = 'Chat Request Saved';
                     if (msgEl) msgEl.innerHTML = 'Log in or register to open the message box with <strong>' + (intent.sellerName || 'Artisan') + '</strong>.';
                 } else if (intent.action === 'view_shop') {
-                    if (iconEl) iconEl.textContent = '🏪';
+                    if (iconEl) iconEl.innerHTML = '<svg class="w-4 h-4 text-[#C0422A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v4l-2 5v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7l-2-5V3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18"/></svg>';
                     if (titleEl) titleEl.textContent = 'Shop View Saved';
                     if (msgEl) msgEl.innerHTML = 'Log in or register to return directly to the shop view.';
                 }

@@ -93,7 +93,7 @@
     <div class="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div class="space-y-1">
             <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                <span>⚙️ Global Commission Rate Configuration</span>
+                <span class="inline-flex items-center gap-1.5"><x-lucide name="percent" class="w-4 h-4 text-amber-500" /> Global Commission Rate Configuration</span>
             </h3>
             <p class="text-xs text-gray-500">Configured platform rate is <strong class="text-gray-800 font-bold">{{ $rate }}%</strong> of commissionable sales per eligible order across all registered shops.</p>
         </div>
@@ -117,7 +117,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h3 class="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                ❄️ Currently Frozen Shops ({{ $frozenSellers->count() }})
+                <span class="flex items-center gap-1.5"><x-lucide name="snowflake" class="w-4 h-4 text-blue-500 inline" /> Currently Frozen Shops ({{ $frozenSellers->count() }})</span>
             </h3>
             <span class="text-[11px] text-blue-600 font-medium">Products remain visible to buyers, but purchases &amp; seller dashboard access are locked.</span>
         </div>
@@ -148,7 +148,7 @@
                 <button type="button"
                         @click="openUnfreezeModal('{{ $sellerObj->id }}', '{{ $shopName }}', '{{ $email }}', '{{ $reason }}', '{{ $pm }}', '{{ $ref }}', '{{ $proof }}')"
                         class="px-3.5 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                    🔓 Unfreeze
+                    <span class="flex items-center gap-1"><x-lucide name="unlock" class="w-3 h-3" /> Unfreeze</span>
                 </button>
             </div>
             @endforeach
@@ -217,7 +217,7 @@
 
                         <td class="px-6 py-4">
                             @if($s['status'] === 'paid')
-                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold uppercase text-[9px]">✓ Paid</span>
+                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold uppercase text-[9px] inline-flex items-center gap-1"><x-lucide name="check-circle" class="w-3 h-3" /> Paid</span>
                             @else
                                 <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full font-bold uppercase text-[9px]">Unpaid</span>
                             @endif
@@ -235,7 +235,7 @@
                                 <div class="text-[10px] space-y-1">
                                     @if($s['referenceNumber'] || $s['paymentProof'])
                                         <div class="text-blue-700 font-bold flex items-center gap-1">
-                                            <span>💳 {{ $s['paymentMethod'] ?? 'Payment' }}</span>
+                                            <span class="inline-flex items-center gap-1"><x-lucide name="credit-card" class="w-3.5 h-3.5" /> {{ $s['paymentMethod'] ?? 'Payment' }}</span>
                                         </div>
                                         @if($s['referenceNumber'])
                                             <div class="font-mono text-gray-900 font-bold">Ref: {{ $s['referenceNumber'] }}</div>
@@ -244,7 +244,7 @@
                                             <button type="button"
                                                     @click="openProofModal('{{ asset('storage/' . ltrim($s['paymentProof'], '/')) }}', '{{ $shopName }} · Proof of Payment', '{{ $s['referenceNumber'] ?? '' }}')"
                                                     class="inline-flex items-center gap-1 text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer">
-                                                🔍 View Proof
+                                                <x-lucide name="search" class="w-3.5 h-3.5 inline mr-1" /> View Proof
                                             </button>
                                         @endif
                                     @else
@@ -261,7 +261,7 @@
                                     <button type="button"
                                             @click="openMarkPaidModal('{{ $s['seller']->id }}', '{{ $shopName }}', '{{ $email }}', '{{ $amountStr }}', '{{ $pm }}', '{{ $ref }}', '{{ $proof }}')"
                                             class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                        ✓ Mark Paid
+                                        <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Mark Paid
                                     </button>
                                 @else
                                     <button type="button"
@@ -276,13 +276,13 @@
                                     <button type="button"
                                             @click="openUnfreezeModal('{{ $s['seller']->id }}', '{{ $shopName }}', '{{ $email }}', '{{ addslashes($s['seller']->violationReason ?? '') }}', '{{ $pm }}', '{{ $ref }}', '{{ $proof }}')"
                                             class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                        🔓 Unfreeze
+                                        <span class="flex items-center gap-1"><x-lucide name="unlock" class="w-3 h-3" /> Unfreeze</span>
                                     </button>
                                 @else
                                     <button type="button"
                                             @click="openFreezeModal('{{ $s['seller']->id }}', '{{ $shopName }}', '{{ $amountStr }}')"
                                             class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer">
-                                        ❄️ Freeze
+                                        <span class="flex items-center gap-1"><x-lucide name="snowflake" class="w-3 h-3" /> Freeze</span>
                                     </button>
                                 @endif
                             </div>
@@ -316,7 +316,7 @@
             <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-5" @click.stop>
                 <div class="flex items-center gap-3 text-rose-600">
                     <div class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center font-bold text-lg shrink-0">
-                        ⚠️
+                        <x-lucide name="alert-triangle" class="w-4 h-4 inline mr-1 text-amber-600" />
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">Confirm Account Freeze</h3>
@@ -373,7 +373,7 @@
             <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto" @click.stop>
                 <div class="flex items-center gap-3 text-emerald-600">
                     <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-lg shrink-0">
-                        💳
+                        <x-lucide name="credit-card" class="w-4 h-4 inline" />
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">Confirm Mark Commission as Paid</h3>
@@ -421,7 +421,7 @@
                                     <button type="button" @click="openProofModal('/storage/' + markPaidProof, markPaidShopName + ' · Payment Receipt', markPaidRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
                                         <img x-bind:src="'/storage/' + markPaidProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                            🔍 Click to Expand Proof Modal
+                                            <x-lucide name="search" class="w-3.5 h-3.5 inline mr-1" /> Click to Expand Proof Modal
                                         </div>
                                     </button>
                                 </div>
@@ -449,7 +449,7 @@
                             Cancel
                         </button>
                         <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
-                            ✓ Confirm &amp; Mark Paid
+                            <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Confirm &amp; Mark Paid
                         </button>
                     </div>
                 </form>
@@ -543,7 +543,7 @@
             <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 space-y-5 max-h-[90vh] overflow-y-auto" @click.stop>
                 <div class="flex items-center gap-3 text-blue-600">
                     <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-lg shrink-0">
-                        🔓
+                        <x-lucide name="unlock" class="w-4 h-4 inline" />
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">Confirm Account Unfreeze</h3>
@@ -593,7 +593,7 @@
                                     <button type="button" @click="openProofModal('/storage/' + unfreezeProof, unfreezeShopName + ' · Proof Receipt', unfreezeRef)" class="block w-full group relative overflow-hidden rounded-xl border border-blue-200 bg-white cursor-pointer text-left">
                                         <img x-bind:src="'/storage/' + unfreezeProof" class="w-full max-h-48 object-contain p-2 group-hover:scale-105 transition-all">
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all">
-                                            🔍 Click to Expand Proof Modal
+                                            <x-lucide name="search" class="w-3.5 h-3.5 inline mr-1" /> Click to Expand Proof Modal
                                         </div>
                                     </button>
                                 </div>
@@ -620,7 +620,7 @@
                             Cancel
                         </button>
                         <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
-                            🔓 Confirm &amp; Unfreeze Account
+                            <span class="flex items-center gap-1.5 justify-center"><x-lucide name="unlock" class="w-3.5 h-3.5" /> Confirm &amp; Unfreeze Account</span>
                         </button>
                     </div>
                 </form>
@@ -661,7 +661,7 @@
                             <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 mt-0.5">
                                 <span x-text="selectedSeller?.seller?.shopName || selectedSeller?.seller?.name"></span>
                                 <template x-if="selectedSeller?.seller?.isVerified">
-                                    <span class="w-5 h-5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-[10px] font-black" title="Verified Artisan">✓</span>
+                                    <span class="w-5 h-5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center" title="Verified Artisan"><x-lucide name="check" class="w-3 h-3 text-blue-600" /></span>
                                 </template>
                                 <template x-if="selectedSeller?.seller?.status === 'frozen'">
                                     <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[9px] font-bold rounded-full uppercase">Frozen</span>
@@ -700,7 +700,7 @@
                                  x-text="formatMoney(selectedSeller?.totalOutstandingBalance)"></div>
                         </div>
                         <div class="text-[10px] mt-2 font-medium" :class="selectedSeller?.totalOutstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'">
-                            <span x-text="selectedSeller?.totalOutstandingBalance > 0 ? 'Total unpaid platform fees due across all periods' : '✓ All billing periods fully settled'"></span>
+                            <span x-text="selectedSeller?.totalOutstandingBalance > 0 ? 'Total unpaid platform fees due across all periods' : 'All billing periods fully settled'"></span>
                         </div>
                     </div>
 
@@ -748,7 +748,7 @@
                     <div class="bg-blue-50/60 border border-blue-200 rounded-2xl p-5 space-y-3">
                         <div class="flex items-center justify-between border-b border-blue-200/80 pb-3">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">💳 Latest Remittance Submission ({{ $period }})</span>
+                                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider"><x-lucide name="credit-card" class="w-4 h-4 inline" /> Latest Remittance Submission ({{ $period }})</span>
                                 <template x-if="selectedSeller?.status === 'paid'">
                                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full uppercase">Verified &amp; Paid</span>
                                 </template>
@@ -757,7 +757,7 @@
                                 <button type="button"
                                         @click="openMarkPaidModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.commissionAmount, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
                                         class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                                    ✓ Verify &amp; Mark Paid
+                                    <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Verify &amp; Mark Paid
                                 </button>
                             </template>
                         </div>
@@ -781,7 +781,7 @@
                                             @click="openProofModal(selectedSeller?.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' · Remittance Proof', selectedSeller?.referenceNumber)"
                                             class="inline-block group relative overflow-hidden rounded-xl border border-blue-200 bg-white p-1 max-w-xs shadow-xs cursor-pointer text-left">
                                         <img :src="'/storage/' + selectedSeller?.paymentProof" class="w-full max-h-32 object-contain rounded-lg group-hover:scale-105 transition-transform" alt="Proof Receipt">
-                                        <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline">🔍 Click to inspect receipt modal</div>
+                                        <div class="text-[10px] text-blue-600 font-bold text-center mt-1 group-hover:underline"><x-lucide name="search" class="w-3 h-3 inline mr-1" /> Click to inspect receipt modal</div>
                                     </button>
                                 </div>
                             </template>
@@ -830,7 +830,7 @@
                                         <td class="px-5 py-3">
                                             <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
                                                   :class="rec.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
-                                                  x-text="rec.status === 'paid' ? '✓ Paid' : 'Unpaid'"></span>
+                                                  x-text="rec.status === 'paid' ? 'Paid' : 'Unpaid'"></span>
                                         </td>
                                         <td class="px-5 py-3 text-gray-400 font-mono text-[11px]" x-text="rec.dueDate || '7th of month'"></td>
                                         <td class="px-5 py-3">
@@ -841,7 +841,7 @@
                                                         <button type="button"
                                                                 @click="openProofModal(rec.paymentProof, (selectedSeller?.seller?.shopName || selectedSeller?.seller?.name) + ' (' + rec.period + ') · Proof Receipt', rec.referenceNumber)"
                                                                 class="text-[10px] text-[#C0422A] hover:underline font-bold cursor-pointer inline-flex items-center gap-1">
-                                                            🔍 Proof Receipt
+                                                            <x-lucide name="search" class="w-3 h-3 inline mr-1" /> Proof Receipt
                                                         </button>
                                                     </template>
                                                 </div>
@@ -870,14 +870,14 @@
                             <button type="button"
                                     @click="openUnfreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.seller?.email, selectedSeller?.seller?.violationReason, selectedSeller?.paymentMethod, selectedSeller?.referenceNumber, selectedSeller?.paymentProof); showStatementModal = false;"
                                     class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-xs">
-                                🔓 Unfreeze Account
+                                <span class="flex items-center gap-1"><x-lucide name="unlock" class="w-3 h-3" /> Unfreeze</span> Account
                             </button>
                         </template>
                         <template x-if="selectedSeller?.seller?.status !== 'frozen' && selectedSeller?.totalOutstandingBalance > 0">
                             <button type="button"
                                     @click="openFreezeModal(selectedSeller?.seller?.id, selectedSeller?.seller?.shopName || selectedSeller?.seller?.name, selectedSeller?.commissionAmount); showStatementModal = false;"
                                     class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-all cursor-pointer">
-                                ❄️ Freeze Account
+                                <span class="flex items-center gap-1"><x-lucide name="snowflake" class="w-3 h-3" /> Freeze</span> Account
                             </button>
                         </template>
 

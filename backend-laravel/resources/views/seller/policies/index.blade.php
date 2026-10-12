@@ -84,7 +84,7 @@
             {{-- AI Actions Bar --}}
             <div id="tour-policies-ai-cancellation" class="bg-linear-to-r from-amber-50/70 via-[#FDF9F4] to-orange-50/70 p-3.5 rounded-2xl border border-amber-200/50 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950">
-                    <span class="inline-block animate-pulse text-amber-600">✨</span>
+                    <x-lucide name="sparkles" class="w-4 h-4 inline text-amber-600 animate-pulse" />
                     <span>AI Policy Assistant:</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -102,11 +102,11 @@
                     </button>
 
                     <button type="button" @click="runAi('cancellation', 'improve')" :disabled="loadingCancellation || !cancellation_policy.trim()" class="px-3 py-1.5 bg-white border border-amber-200 text-gray-800 hover:border-[#C0420A] rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <span>🪄 Improve Draft</span>
+                        <span class="flex items-center gap-1.5"><x-lucide name="wand-2" class="w-3.5 h-3.5 text-amber-600" /> Improve Draft</span>
                     </button>
 
                     <button type="button" @click="runAi('cancellation', 'translate')" :disabled="loadingCancellation || !cancellation_policy.trim()" class="px-3 py-1.5 bg-white border border-amber-200 text-gray-800 hover:border-[#C0420A] rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" title="Translate Tagalog/Taglish input into professional English">
-                        <span>🌐 Translate Tagalog ➔ EN</span>
+                        <span class="flex items-center gap-1.5"><x-lucide name="globe" class="w-3.5 h-3.5 text-blue-600" /> Translate Tagalog → EN</span>
                     </button>
                 </div>
             </div>
@@ -162,7 +162,7 @@
             {{-- AI Actions Bar --}}
             <div id="tour-policies-ai-refund" class="bg-linear-to-r from-blue-50/70 via-[#FDF9F4] to-cyan-50/70 p-3.5 rounded-2xl border border-blue-200/50 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-blue-950">
-                    <span class="inline-block animate-pulse text-blue-600">✨</span>
+                    <x-lucide name="sparkles" class="w-4 h-4 inline text-blue-600 animate-pulse" />
                     <span>AI Policy Assistant:</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -180,11 +180,11 @@
                     </button>
 
                     <button type="button" @click="runAi('refund', 'improve')" :disabled="loadingRefund || !refund_policy.trim()" class="px-3 py-1.5 bg-white border border-blue-200 text-gray-800 hover:border-blue-500 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <span>🪄 Improve Draft</span>
+                        <span class="flex items-center gap-1.5"><x-lucide name="wand-2" class="w-3.5 h-3.5 text-blue-600" /> Improve Draft</span>
                     </button>
 
                     <button type="button" @click="runAi('refund', 'translate')" :disabled="loadingRefund || !refund_policy.trim()" class="px-3 py-1.5 bg-white border border-blue-200 text-gray-800 hover:border-blue-500 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" title="Translate Tagalog/Taglish input into professional English">
-                        <span>🌐 Translate Tagalog ➔ EN</span>
+                        <span class="flex items-center gap-1.5"><x-lucide name="globe" class="w-3.5 h-3.5 text-blue-600" /> Translate Tagalog → EN</span>
                     </button>
                 </div>
             </div>
@@ -365,7 +365,7 @@ function policiesApp(config) {
                         this.refund_policy = data.text;
                     }
                     if (window.Alpine && Alpine.store('toast')) {
-                        Alpine.store('toast').show('✨ AI generated and refined your policy successfully!', 'success');
+                        Alpine.store('toast').show('AI generated and refined your policy successfully!', 'success');
                     }
                 } else {
                     alert(data.message || 'AI request could not be completed. Please try again.');

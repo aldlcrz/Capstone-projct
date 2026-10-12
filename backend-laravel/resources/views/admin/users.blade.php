@@ -322,7 +322,7 @@
             </div>
 
             <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Critical Warning:</strong> This action cannot be undone. All active sessions, authentication tokens, and customer records will be permanently deleted from the system.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1" /><strong>Critical Warning:</strong> This action cannot be undone. All active sessions, authentication tokens, and customer records will be permanently deleted from the system.
             </div>
 
             <form :action="'/admin/users/' + deleteUserId" method="POST" class="space-y-4">

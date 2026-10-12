@@ -473,7 +473,7 @@
                                         <div>
                                             @if($isEwalletOrder)
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                                    ✓ Paid to Seller (Direct)
+                                                    <span class="inline-flex items-center gap-1"><x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-600" /> Paid to Seller (Direct)</span>
                                                 </span>
                                             @elseif(str_contains(strtolower($order->paymentMethod ?? ''), 'pickup') || str_contains(strtolower($order->courierName ?? ''), 'pickup'))
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
@@ -552,7 +552,7 @@
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-                        📷
+                        <x-lucide name="camera" class="w-4 h-4 text-gray-500 inline" />
                     </div>
                     <div>
                         <h3 class="text-sm font-black text-gray-900 truncate max-w-sm" x-text="selectedOrder ? getOrderProductSummary(selectedOrder) : 'Customer Payment Receipt'"></h3>
@@ -566,10 +566,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         <span>Download</span>
                     </a>
-                    <button type="button" @click="receiptModal = false"
-                            class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-xs transition-colors">
-                        ✕
-                    </button>
+                    <button type="button" @click="receiptModal = false" class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors"><x-lucide name="x" class="w-4 h-4" /></button>
                 </div>
             </div>
 

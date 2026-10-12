@@ -11,7 +11,7 @@
             </svg>
         </a>
         <div>
-            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em]">✦ Logistics &amp; Artisan Rider</div>
+            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] inline-flex items-center gap-1"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Logistics &amp; Artisan Rider</div>
             <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Special Delivery <span class="text-[#766C60] font-light italic">Settings</span></h1>
             <p class="text-xs text-[#766C60] mt-0.5 font-medium">Set your delivery coverage, areas, and delivery fee for Special Delivery. This will be used for customers in your selected areas.</p>
         </div>
@@ -19,7 +19,7 @@
 
     @if(session('success'))
         <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2.5 shadow-2xs">
-            <span class="text-base">✓</span>
+            <x-lucide name="check" class="w-4 h-4 text-emerald-600" />
             <span>{{ session('success') }}</span>
         </div>
     @endif
@@ -44,7 +44,7 @@
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-2xs shrink-0"
                      :style="isEnabled ? 'background: #E1F5E1; color: #2E7D32;' : 'background: #F0EAE1; color: #A09585;'">
-                    🏍️
+                    <x-lucide name="bike" class="w-5 h-5 text-emerald-700" />
                 </div>
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-[#1E1915]">Enable Special Delivery</h2>
@@ -76,7 +76,7 @@
                 <div class="rounded-3xl p-5 sm:p-7 bg-[#FFFCF7] border border-[#E8DECB] shadow-xs space-y-5">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C49520] border border-amber-200/60 flex items-center justify-center font-bold text-base shrink-0">
-                            📍
+                            <x-lucide name="map-pin" class="w-5 h-5 text-[#C49520]" />
                         </div>
                         <div>
                             <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-[#1E1915]">Delivery Coverage Area</h3>
@@ -89,7 +89,7 @@
                         <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest block">Province / Region</label>
                         <div class="flex items-center justify-between p-3.5 rounded-2xl bg-[#FDF8EE] border border-[#E8DECB]">
                             <div class="flex items-center gap-2.5">
-                                <span class="text-base">🇵🇭</span>
+                                <x-lucide name="flag" class="w-4 h-4 text-gray-500" />
                                 <div>
                                     <span class="text-xs font-black text-[#1E1915] block">Laguna, Philippines</span>
                                     <span class="text-[10px] text-[#766C60]">Special Delivery is strictly limited to Laguna artisan municipalities</span>
@@ -117,11 +117,11 @@
                             <div class="flex items-center gap-2 shrink-0">
                                 <button type="button" @click="selectAll()"
                                         class="px-3 py-2 bg-[#FDF8EE] hover:bg-[#1E1915] text-[#996515] hover:text-[#DFC97A] border border-[#E8DECB] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
-                                    ✓ Select All (30)
+                                    <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Select All (30)
                                 </button>
                                 <button type="button" @click="clearAll()"
                                         class="px-3 py-2 bg-white hover:bg-rose-50 text-[#766C60] hover:text-rose-700 border border-[#E8DECB] hover:border-rose-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
-                                    ✕ Clear All
+                                    <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Clear All
                                 </button>
                             </div>
                         </div>
@@ -210,7 +210,7 @@
                 <div class="rounded-3xl p-5 sm:p-7 bg-[#FFFCF7] border border-[#E8DECB] shadow-xs space-y-4 sticky top-6">
                     <div class="flex items-center justify-between pb-3 border-b border-[#ECE3D2]">
                         <div class="flex items-center gap-2.5">
-                            <span class="text-base">📊</span>
+                            <x-lucide name="bar-chart-2" class="w-4 h-4 text-gray-600" />
                             <div>
                                 <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-[#1E1915]">Delivery Fee Preview</h3>
                                 <p class="text-[10px] text-[#766C60]">Live customer fee calculation per destination</p>
@@ -248,7 +248,7 @@
                         </table>
 
                         <div x-show="selectedCount === 0" class="py-12 text-center text-xs text-[#A09585] italic space-y-2">
-                            <div class="text-2xl">🛵</div>
+                            <div class="text-2xl flex justify-center"><x-lucide name="bike" class="w-6 h-6 text-gray-400" /></div>
                             <p class="font-semibold text-[#1E1915]">No Laguna municipalities covered</p>
                             <p class="text-[11px]">Check the boxes on the left to activate Special Delivery for specific towns.</p>
                         </div>
@@ -256,7 +256,7 @@
 
                     {{-- Preview Footer Note --}}
                     <div class="pt-3 border-t border-[#ECE3D2] flex items-start gap-2 text-[10px] text-[#766C60] leading-snug">
-                        <span class="text-xs shrink-0">ℹ️</span>
+                        <x-lucide name="info" class="w-4 h-4 text-[#1A56DB] shrink-0 inline" />
                         <span>During checkout, buyers with delivery addresses in your selected municipalities will see these exact fees.</span>
                     </div>
                 </div>
@@ -266,7 +266,7 @@
         {{-- 3. Live Coverage Summary Box --}}
         <div class="rounded-3xl p-5 sm:p-7 bg-[#F4FBF4] border border-[#BFE5BF] shadow-xs space-y-3">
             <div class="flex items-center gap-2 text-emerald-800 text-xs font-black uppercase tracking-wider">
-                <span class="w-5 h-5 rounded-full bg-[#2E7D32] text-white flex items-center justify-center text-[10px]">✓</span>
+                <span class="w-5 h-5 rounded-full bg-[#2E7D32] text-white flex items-center justify-center"><x-lucide name="check" class="w-3 h-3 text-white" /></span>
                 <span>Coverage Summary</span>
             </div>
 
@@ -299,7 +299,7 @@
         {{-- 4. Important Notes Card --}}
         <div class="p-5 rounded-3xl bg-[#F0F7FF] border border-[#CDE1F8] text-xs space-y-2 text-[#1E429F]">
             <div class="flex items-center gap-2 font-black uppercase text-[10px] tracking-wider text-[#1A56DB]">
-                <span>ℹ️</span>
+                <x-lucide name="info" class="w-4 h-4 text-[#1A56DB] inline" />
                 <span>Important Guidelines for Artisan Riders</span>
             </div>
             <ul class="list-disc list-inside space-y-1 text-[11px] text-[#1E429F]/90 leading-relaxed">

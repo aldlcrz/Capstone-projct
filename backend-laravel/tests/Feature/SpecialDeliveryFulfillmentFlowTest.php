@@ -318,10 +318,79 @@ class SpecialDeliveryFulfillmentFlowTest extends TestCase
             ->get('/orders/' . $order->id);
 
         $response->assertStatus(200);
-        $response->assertSee('Special Delivery');
-        $response->assertSee('Special Delivery Fulfillment Progress');
+        $response->assertSee('Special delivery');
         $response->assertSee('Local Artisan Rider');
-        $response->assertSee('Out for Special Delivery');
+        $response->assertSee('Out for delivery');
         $response->assertDontSee('Track on J&T Express');
+    }
+
+    public function test_seller_can_set_appointment_when_accepting_special_delivery_order(): void
+    {
+        $order = $this->createSpecialDeliveryOrder('Pending');
+
+        $futureDate = date('Y-m-d', strtotime('+3 days'));
+        $response = $this->actingAs($this->seller)
+            ->patchJson('/seller/api/orders/' . $order->id . '/status', [
+                'status' => 'In Transit',
+                'appointment_date' => $futureDate,
+                'appointment_time' => 'Morning (9:00 AM - 12:00 PM)',
+                'appointment_notes' => 'Rider will deliver before lunch.',
+            ]);
+
+        $response->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals($futureDate, \Carbon\Carbon::parse($order->appointment_date)->format('Y-m-d'));
+        $this->assertEquals('Morning (9:00 AM - 12:00 PM)', $order->appointment_time);
+        $this->assertEquals('Rider will deliver before lunch.', $order->appointment_notes);
+    }
+
+    public function test_seller_cannot_set_past_appointment_date_for_special_delivery(): void
+    {
+        $order = $this->createSpecialDeliveryOrder('Pending');
+
+        $pastDate = date('Y-m-d', strtotime('-2 days'));
+        $response = $this->actingAs($this->seller)
+            ->patchJson('/seller/api/orders/' . $order->id . '/status', [
+                'status' => 'In Transit',
+                'appointment_date' => $pastDate,
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['appointment_date']);
+        $this->assertStringContainsString('cannot be in the past', $response->json('message'));
+
+        $order->refresh();
+        $this->assertNull($order->appointment_date);
+    }
+
+    public function test_seller_can_set_today_appointment_date_for_special_delivery(): void
+    {
+        $order = $this->createSpecialDeliveryOrder('Pending');
+
+        $todayDate = date('Y-m-d');
+        $response = $this->actingAs($this->seller)
+            ->patchJson('/seller/api/orders/' . $order->id . '/status', [
+                'status' => 'In Transit',
+                'appointment_date' => $todayDate,
+            ]);
+
+        $response->assertStatus(200);
+        $order->refresh();
+        $this->assertEquals($todayDate, \Carbon\Carbon::parse($order->appointment_date)->format('Y-m-d'));
+    }
+
+    public function test_seller_cannot_set_invalid_appointment_date_format(): void
+    {
+        $order = $this->createSpecialDeliveryOrder('Pending');
+
+        $response = $this->actingAs($this->seller)
+            ->patchJson('/seller/api/orders/' . $order->id . '/status', [
+                'status' => 'In Transit',
+                'appointment_date' => 'invalid-not-a-date',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['appointment_date']);
+        $this->assertStringContainsString('invalid', strtolower($response->json('message')));
     }
 }

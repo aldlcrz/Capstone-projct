@@ -100,7 +100,7 @@
                         <div class="flex items-center gap-2">
                             <h2 class="text-sm font-bold text-gray-900">1. Payment Method <span class="font-medium text-gray-500">(GCash Payout & Maya)</span></h2>
                             @if($hasGcash || $hasMaya)
-                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Configured</span>
+                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><x-lucide name="check" class="w-3 h-3 text-emerald-800" /> Configured</span>
                             @else
                                 <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Pending Setup</span>
                             @endif
@@ -130,7 +130,7 @@
                         <div class="flex items-center gap-2">
                             <h2 class="text-sm font-bold text-gray-900">2. Shop Return & Cancellation Policies</h2>
                             @if($hasPolicies)
-                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Custom Terms Set</span>
+                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><x-lucide name="check" class="w-3 h-3 text-emerald-800" /> Custom Terms Set</span>
                             @else
                                 <span class="text-[9.5px] font-extrabold text-gray-700 bg-gray-100 border border-gray-300/80 px-2 py-0.5 rounded-full">Standard Lumban Terms</span>
                             @endif
@@ -160,7 +160,7 @@
                         <div class="flex items-center gap-2">
                             <h2 class="text-sm font-bold text-gray-900">3. Publish Your First Barong</h2>
                             @if($productsCount > 0)
-                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ {{ $productsCount }} Listed</span>
+                                <span class="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><x-lucide name="check" class="w-3 h-3 text-emerald-800" /> {{ $productsCount }} Listed</span>
                             @else
                                 <span class="text-[9.5px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">0 Published</span>
                             @endif

@@ -78,7 +78,7 @@
         {{-- Star Divider --}}
         <div style="position:relative;margin:18px 0 22px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
+            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;" class="inline-flex items-center"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
         </div>
 
     <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" novalidate @submit="isSubmitting = true">
@@ -182,7 +182,7 @@
                                              @endif
                                         </div>
                                         <div class="inline-flex items-center gap-1 mt-1.5 bg-[#FAF5E6] text-[#8C6D1F] text-[9px] lg:text-[10px] font-bold px-2 py-0.5 rounded border border-[#D4AF37]/30 max-w-full">
-                                            <span class="shrink-0">🛡️</span> <span class="truncate">30 Days Heritage Return Guarantee</span>
+                                            <x-lucide name="shield" class="w-3 h-3 shrink-0 text-[#8C6D1F]" /> <span class="truncate">30 Days Heritage Return Guarantee</span>
                                         </div>
                                         <div class="flex items-center justify-between mt-2 flex-wrap gap-1">
                                             <div class="flex items-center gap-2">
@@ -317,7 +317,7 @@
                                         </div>
                                         <p class="text-xs text-stone-600 font-medium leading-relaxed wrap-break-word" x-text="shippingQuote?.shop_address || '{{ addslashes(trim(($seller->shopHouseNo ? $seller->shopHouseNo . " " : "") . ($seller->shopStreet ? $seller->shopStreet . ", " : "") . ($seller->shopBarangay ? $seller->shopBarangay . ", " : "") . ($seller->shopCity ?: "Lumban") . ", " . ($seller->shopProvince ?: "Laguna"))) }}'"></p>
                                         <p class="text-[10px] text-[#996515] font-semibold mt-1">
-                                            📍 Present your Order Reference Number when picking up your crafted item at the workshop.
+                                            <span class="inline-flex items-center gap-1"><x-lucide name="map-pin" class="w-3 h-3 text-[#996515] shrink-0" /> Present your Order Reference Number when picking up your crafted item at the workshop.</span>
                                         </p>
                                     </div>
 
@@ -375,7 +375,7 @@
                             <!-- Store Pickup Direct Settlement Card -->
                             <div x-show="shippingQuote?.provider_code === 'store_pickup'" class="rounded-2xl border-2 border-[#1E1915] bg-[#FAF6EE] p-4 sm:p-5 shadow-xs space-y-3">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0">🏛️</div>
+                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="landmark" class="w-5 h-5 text-[#DFC97A]" /></div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Store Pickup — Direct Payment at Workshop</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Pay directly to the artisan upon claiming and inspecting your item</div>
@@ -383,7 +383,7 @@
                                 </div>
                                 <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
                                     <div class="flex items-start gap-2 text-[#996515] font-bold">
-                                        <span class="text-sm shrink-0">ℹ️</span>
+                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
                                         <span>Seller will set an appointment for you, please wait.</span>
                                     </div>
                                     <p class="text-gray-700">
@@ -395,7 +395,7 @@
                             <!-- Special Delivery Direct Settlement Card -->
                             <div x-show="shippingQuote?.provider_code === 'seller_direct'" class="rounded-2xl border-2 border-[#1E1915] bg-[#FAF6EE] p-4 sm:p-5 shadow-xs space-y-3">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0">🏍️</div>
+                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="bike" class="w-5 h-5 text-[#DFC97A]" /></div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-sm lg:text-base">Special Delivery — Direct Payment to Artisan Rider</div>
                                         <div class="text-[10px] lg:text-xs text-gray-500">Pay directly upon handover by the local artisan rider</div>
@@ -403,7 +403,7 @@
                                 </div>
                                 <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
                                     <div class="flex items-start gap-2 text-[#996515] font-bold">
-                                        <span class="text-sm shrink-0">ℹ️</span>
+                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
                                         <span>Seller will set an appointment for you, please wait.</span>
                                     </div>
                                     <p class="text-gray-700">
@@ -421,7 +421,7 @@
                                  :class="paymentMethod === 'COD' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                                 <label class="flex items-center justify-between cursor-pointer">
                                     <div class="flex items-center gap-3.5">
-                                        <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0">💵</div>
+                                        <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0"><x-lucide name="banknote" class="w-5 h-5 text-[#DFC97A]" /></div>
                                         <div>
                                             <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery</div>
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay cash upon courier delivery</div>
@@ -432,7 +432,7 @@
                                 
                                 <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
                                     <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
-                                        <span class="text-base shrink-0">ℹ️</span>
+                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
                                         <span>You can pay directly with cash upon courier delivery. No online receipt screenshot required.</span>
                                     </div>
                                 </div>
@@ -547,6 +547,23 @@
                         <input type="hidden" name="paymentReference" :value="receipts.length > 0 ? receipts[0].detected_ref : paymentRef">
                         <input type="hidden" name="refund_mobile_number" :value="refundMobileNumber">
 
+                        <!-- Exact Payment Notice (No Sukli / Change Reminder) -->
+                        <div class="p-3.5 bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs shadow-2xs">
+                                <x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#DFC97A]" />
+                            </div>
+                            <div class="space-y-1 min-w-0 flex-1">
+                                <div class="flex items-center justify-between flex-wrap gap-1">
+                                    <span class="text-xs font-black uppercase tracking-wider text-[#1E1915]">Exact Order Payment Required</span>
+                                    <span class="text-xs font-black text-[#8C6D1F]" x-text="'Required: ₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                </div>
+                                <p class="text-xs text-[#78716C] leading-relaxed font-medium">
+                                    Please pay the <strong>exact order total</strong> of <span class="font-bold text-[#1E1915]" x-text="'₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>.
+                                    The system <strong>does not support change or sukli</strong>. Checkouts with underpayment or overpayment cannot proceed.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="space-y-3.5">
 
                             <div class="space-y-2">
@@ -572,10 +589,10 @@
                                     <div>
                                         <div class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-800 group-hover:text-[#1E1915]">
                                             <span class="px-3.5 py-1.5 bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs"
-                                                  x-text="receipts.length > 0 ? '+ Upload Additional Receipt' : 'Attach Screenshot'">Attach Screenshot</span>
+                                                  x-text="receipts.length > 0 ? '+ Upload Replacement Receipt' : 'Attach Screenshot'">Attach Screenshot</span>
                                             <span class="hidden sm:inline text-gray-500">or tap to select</span>
                                         </div>
-                                        <p class="text-[10px] text-gray-400 mt-1.5">PNG, JPG, or JPEG (Clear receipt showing reference # & amount)</p>
+                                        <p class="text-[10px] text-gray-400 mt-1.5">PNG, JPG, or JPEG (Clear receipt showing exact amount)</p>
                                     </div>
                                 </div>
 
@@ -598,7 +615,7 @@
                                                         <div class="min-w-0">
                                                             <div class="flex items-center gap-1.5">
                                                                 <span class="text-xs font-bold text-gray-900 truncate" x-text="rcpt.fileName"></span>
-                                                                <span class="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">✓ Scanned</span>
+                                                                <span class="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0 inline-flex items-center gap-1"><x-lucide name="check" class="w-2.5 h-2.5" /> Scanned</span>
                                                             </div>
                                                             <div class="flex items-center gap-2 text-[10px] text-gray-600 font-medium mt-0.5">
                                                                 <span class="font-mono font-bold text-[#1E1915]" x-text="'Ref: ' + (rcpt.detected_ref || 'N/A')"></span>
@@ -630,20 +647,31 @@
                                                 <span class="font-black text-emerald-700" x-text="'₱' + Number(totalVerifiedPayments).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
                                             </div>
                                             
-                                            <!-- Payment Complete Banner (Exact or Overpaid) -->
-                                            <div x-show="isExactPayment || isOverpaid" class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
-                                                <span>Remaining Amount:</span>
-                                                <span>₱0.00 (Payment Complete)</span>
+                                            <!-- Payment Complete Banner (Exact amount only) -->
+                                            <div x-show="isExactPayment" class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-emerald-800 font-bold">
+                                                <span>Payment Status:</span>
+                                                <span class="inline-flex items-center gap-1.5"><x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-600" /> Exact Amount Verified (₱0.00 Remaining)</span>
                                             </div>
 
-                                            <!-- Partial Payment Banner -->
-                                            <div x-show="isPartialPayment" class="pt-2 border-t border-gray-100 space-y-2">
+                                            <!-- Overpayment Warning (No Sukli / Change Support) -->
+                                            <div x-show="isOverpaid" class="pt-2 border-t border-red-100 space-y-1.5">
+                                                <div class="flex justify-between items-center text-xs text-rose-700 font-bold">
+                                                    <span>Payment Amount Mismatch:</span>
+                                                    <span x-text="'Overpaid by ₱' + Number(sukliAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                </div>
+                                                <div class="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-700 leading-relaxed font-semibold">
+                                                    Payment amount exceeds order total. The system does not support change or sukli. Please remove this receipt and upload one with the exact total of <span x-text="'₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>.
+                                                </div>
+                                            </div>
+
+                                            <!-- Underpayment Warning -->
+                                            <div x-show="isPartialPayment" class="pt-2 border-t border-amber-100 space-y-2">
                                                 <div class="flex justify-between items-center text-xs text-amber-900 font-bold">
                                                     <span>Remaining Amount:</span>
                                                     <span class="text-rose-600 font-black" x-text="'₱' + Number(remainingAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
                                                 </div>
                                                 <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed font-medium">
-                                                    <span x-text="'Please upload another ' + paymentMethod + ' receipt for the remaining ₱' + Number(remainingAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '.'"></span>
+                                                    <span x-text="'Payment amount does not match the required total. Please upload a receipt with the exact total of ₱' + Number(payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '.'"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1225,7 +1253,7 @@
                                      :class="activeTab === 'province' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  Province
-                                 <span x-show="!selectedRegion" class="text-[10px] text-red-500">🚫</span>
+                                 <span x-show="!selectedRegion" class="text-red-500 inline-flex items-center"><x-lucide name="ban" class="w-2.5 h-2.5" /></span>
                              </button>
                              <button @click="if(selectedProvince || (selectedRegion && !hasProvinces)) activeTab = 'city'"
                                      type="button"
@@ -1233,7 +1261,7 @@
                                      :class="activeTab === 'city' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  City
-                                 <span x-show="!selectedProvince && hasProvinces" class="text-[10px] text-red-500">🚫</span>
+                                 <span x-show="!selectedProvince && hasProvinces" class="text-red-500 inline-flex items-center"><x-lucide name="ban" class="w-2.5 h-2.5" /></span>
                              </button>
                              <button @click="if(selectedCity) activeTab = 'barangay'"
                                      type="button"
@@ -1241,7 +1269,7 @@
                                      :class="activeTab === 'barangay' ? 'text-[#8C6D1F] border-b-2 border-[#D4AF37] bg-white' : ''"
                                      class="flex-1 py-2.5 text-center border-b border-transparent hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1">
                                  Barangay
-                                 <span x-show="!selectedCity" class="text-[10px] text-red-500">🚫</span>
+                                 <span x-show="!selectedCity" class="text-red-500 inline-flex items-center"><x-lucide name="ban" class="w-2.5 h-2.5" /></span>
                              </button>
                          </div>
 
@@ -1270,7 +1298,7 @@
                                               :class="selectedRegion?.code === reg.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="reg.name + ' (' + reg.regionName + ')'"></span>
-                                              <span x-show="selectedRegion?.code === reg.code" class="text-xs text-[#8C6D1F]">✓</span>
+                                              <span x-show="selectedRegion?.code === reg.code" class="text-[#8C6D1F] inline-flex items-center"><x-lucide name="check" class="w-3 h-3" /></span>
                                          </button>
                                      </template>
                                  </div>
@@ -1284,7 +1312,7 @@
                                               :class="selectedProvince?.code === prov.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="prov.name"></span>
-                                              <span x-show="selectedProvince?.code === prov.code" class="text-xs text-[#8C6D1F]">✓</span>
+                                              <span x-show="selectedProvince?.code === prov.code" class="text-[#8C6D1F] inline-flex items-center"><x-lucide name="check" class="w-3 h-3" /></span>
                                          </button>
                                      </template>
                                  </div>
@@ -1298,7 +1326,7 @@
                                               :class="selectedCity?.code === ct.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="ct.name"></span>
-                                              <span x-show="selectedCity?.code === ct.code" class="text-xs text-[#8C6D1F]">✓</span>
+                                              <span x-show="selectedCity?.code === ct.code" class="text-[#8C6D1F] inline-flex items-center"><x-lucide name="check" class="w-3 h-3" /></span>
                                          </button>
                                      </template>
                                  </div>
@@ -1312,7 +1340,7 @@
                                               :class="selectedBarangay?.code === brgy.code ? 'bg-[#FAF5E6] text-[#8C6D1F] font-bold' : 'text-gray-700 hover:bg-gray-50'"
                                               class="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between">
                                               <span x-text="brgy.name"></span>
-                                              <span x-show="selectedBarangay?.code === brgy.code" class="text-xs text-[#8C6D1F]">✓</span>
+                                              <span x-show="selectedBarangay?.code === brgy.code" class="text-[#8C6D1F] inline-flex items-center"><x-lucide name="check" class="w-3 h-3" /></span>
                                          </button>
                                      </template>
                                  </div>
@@ -1401,7 +1429,7 @@
                 </div>
 
                 <div class="flex items-center justify-between w-full mt-3 px-1 text-[11px] sm:text-xs text-gray-500 font-medium">
-                    <span>💡 Long press or screenshot to save</span>
+                    <span class="inline-flex items-center gap-1"><x-lucide name="info" class="w-3.5 h-3.5 text-amber-500" /> Long press or screenshot to save</span>
                     <button type="button" @click="showZoomModal = false" class="text-[#996515] font-bold hover:underline cursor-pointer">Done</button>
                 </div>
             </div>
@@ -1546,6 +1574,15 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.refError = '';
                 }
             });
+
+            this.$watch('step', (val) => {
+                if (val === 2) {
+                    this.policyAccepted = true;
+                }
+            });
+            if (this.step === 2) {
+                this.policyAccepted = true;
+            }
         },
 
         selectQuote(q) {
@@ -1596,7 +1633,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     html: `
                         <div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
                             <div style="width:32px;height:32px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:13px;font-weight:900;">🏛️</span>
+                                <span style="transform:rotate(45deg);color:#DFC97A;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="22" y1="22" y2="22"/><line x1="6" x2="6" y1="18"/><line x1="10" x2="10" y1="18"/><line x1="14" x2="14" y1="18"/><line x1="18" x2="18" y1="18"/><polygon points="12 2 20 7 4 7"/></svg></span>
                             </div>
                             <div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div>
                         </div>
@@ -1807,9 +1844,9 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         },
 
         getVerificationIcon() {
-            if (this.isVerificationSuccess()) return '✓';
-            if (this.isVerificationError()) return '✕';
-            return '⚠';
+            if (this.isVerificationSuccess()) return 'check-circle';
+            if (this.isVerificationError()) return 'x-circle';
+            return 'alert-triangle';
         },
 
         getVerificationPrimaryMessage() {
@@ -1864,8 +1901,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
 
             // 8. Reference successfully read
             return provider === 'Maya'
-                ? `✓ Maya reference successfully read: ${res.detected_ref}. Reference accepted.`
-                : `✓ GCash reference successfully read: ${res.detected_ref}. Reference accepted.`;
+                ? `Maya reference successfully read: ${res.detected_ref}. Reference accepted.`
+                : `GCash reference successfully read: ${res.detected_ref}. Reference accepted.`;
         },
 
         getVerificationSecondaryMessage() {
@@ -1919,7 +1956,8 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             if (!this.receipts || this.receipts.length === 0) {
                 return false;
             }
-            if (this.isPartialPayment) {
+            // Enforce exact payment: underpayment and overpayment are prohibited because system does not support sukli
+            if (!this.isExactPayment) {
                 return false;
             }
             return true;
@@ -2029,6 +2067,12 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 const isDupeInBatch = this.receipts.some(r => r.detected_ref === cleanDetected);
                 if (isDupeInBatch || data.reason_code === 'REFERENCE_ALREADY_USED') {
                     this.screenshotError = 'The reference number used is already in use. Please check your payment receipt or upload a new transaction.';
+                    return;
+                }
+
+                if (data.reason_code === 'OVERPAYMENT_DETECTED' || (data.detected_amount && Number(data.detected_amount) > Number(this.payableAmount))) {
+                    const overAmt = Number(data.detected_amount) || Number(this.payableAmount);
+                    this.screenshotError = `Payment amount (₱${overAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) exceeds the required total of ₱${Number(this.payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. The system does not support change or sukli. Please pay the exact amount.`;
                     return;
                 }
 
@@ -2209,7 +2253,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     html: `
                         <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
                             <div style="width:28px;height:28px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.35);">
-                                <span style="transform:rotate(45deg);color:#DFC97A;font-size:11px;font-weight:900;">✦</span>
+                                <span style="transform:rotate(45deg);color:#DFC97A;display:flex;align-items:center;justify-content:center;"><svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>
                             </div>
                             <div style="position:absolute;bottom:-6px;width:10px;height:4px;background:rgba(0,0,0,0.25);border-radius:50%;filter:blur(1px);"></div>
                         </div>

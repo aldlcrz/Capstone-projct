@@ -20,6 +20,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
+    </script>
 
     <style>
         html, body { overflow-x: clip; max-width: 100vw; }
@@ -57,7 +63,7 @@
 
                     @auth
                         @if(Auth::user()->role === 'superadmin')
-                            <a href="/superadmin/dashboard" class="flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors whitespace-nowrap">👑 Governance</a>
+                            <a href="/superadmin/dashboard" class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors whitespace-nowrap"><x-lucide name="crown" class="w-3.5 h-3.5 shrink-0" /> Governance</a>
                         @elseif(Auth::user()->role === 'admin')
                             <a href="/admin/dashboard" class="flex text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-gray-700 hover:text-black transition-colors whitespace-nowrap">Admin Panel</a>
                         @elseif(Auth::user()->role === 'seller')
@@ -272,12 +278,12 @@
                                     </div>
                                 </div>
                                 @if(Auth::user()->role === 'superadmin')
-                                    <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-all">👑 Super Admin Governance</a>
+                                    <a href="/superadmin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-all"><x-lucide name="crown" class="w-4 h-4 text-amber-600 shrink-0" /> <span>Super Admin Governance</span></a>
                                 @elseif(Auth::user()->role === 'admin')
                                     <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-800 hover:bg-gray-50 transition-all">Admin Panel</a>
                                 @elseif(Auth::user()->role === 'seller')
-                                    <a href="/seller/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-[#C0422A] hover:bg-[#C0422A]/10 transition-all">🏪 Seller Dashboard</a>
-                                    <a href="/seller/orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all">📦 My Sales Orders</a>
+                                    <a href="/seller/dashboard" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-[#C0422A] hover:bg-[#C0422A]/10 transition-all"><x-lucide name="store" class="w-4 h-4 text-[#C0422A] shrink-0" /> <span>Seller Dashboard</span></a>
+                                    <a href="/seller/orders" class="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all"><x-lucide name="package" class="w-4 h-4 text-gray-700 shrink-0" /> <span>My Sales Orders</span></a>
                                 @endif
                                 <a href="/profile" class="group flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all">
                                     <svg class="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,14 +381,82 @@
         <!-- Breadcrumbs -->
         @yield('breadcrumbs')
 
-        {{-- Global Flash Messages (Floating Toasts) --}}
+        {{-- Global Flash Messages (Floating Toasts with Smooth Mobile & Desktop Swipe-to-Dismiss) --}}
         @if(session('success') || session('error') || session('status'))
         <div 
             x-data="{ 
-                show: true, 
+                show: true,
+                isSwiping: false,
+                startX: 0,
+                startY: 0,
+                diffX: 0,
+                diffY: 0,
+                dismissed: false,
+                timer: null,
                 init() { 
-                    setTimeout(() => this.show = false, 2500) 
-                } 
+                    this.timer = setTimeout(() => {
+                        if (!this.isSwiping) this.dismiss();
+                    }, 4000);
+                },
+                dismiss() {
+                    this.dismissed = true;
+                    if (this.timer) clearTimeout(this.timer);
+                    setTimeout(() => { this.show = false; }, 220);
+                },
+                onPointerDown(e) {
+                    if (e.target.closest('button')) return;
+                    this.isSwiping = true;
+                    this.startX = e.clientX;
+                    this.startY = e.clientY;
+                    this.diffX = 0;
+                    this.diffY = 0;
+                    if (this.timer) clearTimeout(this.timer);
+                    const el = e.currentTarget || e.target;
+                    if (el && el.setPointerCapture && e.pointerId) {
+                        try { el.setPointerCapture(e.pointerId); } catch(_) {}
+                    }
+                },
+                onPointerMove(e) {
+                    if (!this.isSwiping) return;
+                    this.diffX = e.clientX - this.startX;
+                    this.diffY = Math.min(0, e.clientY - this.startY);
+                },
+                onPointerUp(e) {
+                    if (!this.isSwiping) return;
+                    this.isSwiping = false;
+                    const el = e.currentTarget || e.target;
+                    if (el && el.releasePointerCapture && e.pointerId) {
+                        try { el.releasePointerCapture(e.pointerId); } catch(_) {}
+                    }
+                    const absX = Math.abs(this.diffX);
+                    const upY = -this.diffY;
+                    if (absX > 60 || upY > 40) {
+                        this.dismiss();
+                    } else {
+                        this.diffX = 0;
+                        this.diffY = 0;
+                        this.timer = setTimeout(() => this.dismiss(), 3000);
+                    }
+                },
+                get cardTransform() {
+                    if (this.dismissed) {
+                        if (this.diffX > 40) return 'translate3d(120%, 0, 0)';
+                        if (this.diffX < -40) return 'translate3d(-120%, 0, 0)';
+                        return 'translate3d(0, -120%, 0)';
+                    }
+                    if (this.isSwiping) {
+                        return `translate3d(${this.diffX}px, ${this.diffY}px, 0)`;
+                    }
+                    return 'translate3d(0, 0, 0)';
+                },
+                get cardOpacity() {
+                    if (this.dismissed) return '0';
+                    if (this.isSwiping) {
+                        const dist = Math.max(Math.abs(this.diffX), Math.abs(this.diffY));
+                        return Math.max(0.1, 1 - (dist / 180));
+                    }
+                    return '1';
+                }
             }"
             x-show="show"
             x-transition:enter="transition ease-out duration-300 transform"
@@ -391,43 +465,56 @@
             x-transition:leave="transition ease-in duration-200 transform"
             x-transition:leave-start="opacity-100 translate-y-0 -translate-x-1/2"
             x-transition:leave-end="opacity-0 -translate-y-4 -translate-x-1/2"
-            class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-[calc(100%-2rem)] max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3.5"
+            class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 w-[calc(100%-2rem)] max-w-sm"
             style="display: none;"
             x-cloak
         >
-            @if(session('success'))
-                <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0 shadow-sm border border-green-100">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div class="grow pt-0.5">
-                    <h4 class="text-xs font-black text-black uppercase tracking-wider">Success</h4>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('success') }}</p>
-                </div>
-            @endif
+            <div 
+                @pointerdown="onPointerDown($event)"
+                @pointermove="onPointerMove($event)"
+                @pointerup="onPointerUp($event)"
+                @pointercancel="onPointerUp($event)"
+                :style="{
+                    transform: cardTransform,
+                    opacity: cardOpacity,
+                    transition: isSwiping ? 'none' : 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease'
+                }"
+                class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3.5 select-none touch-none cursor-grab active:cursor-grabbing w-full"
+            >
+                @if(session('success'))
+                    <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0 shadow-sm border border-green-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div class="grow pt-0.5">
+                        <h4 class="text-xs font-black text-black uppercase tracking-wider">Success</h4>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('success') }}</p>
+                    </div>
+                @endif
 
-            @if(session('error'))
-                <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </div>
-                <div class="grow pt-0.5">
-                    <h4 class="text-xs font-black text-black uppercase tracking-wider">Error</h4>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('error') }}</p>
-                </div>
-            @endif
+                @if(session('error'))
+                    <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+                    <div class="grow pt-0.5">
+                        <h4 class="text-xs font-black text-black uppercase tracking-wider">Error</h4>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('error') }}</p>
+                    </div>
+                @endif
 
-            @if(session('status'))
-                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 shadow-sm border border-blue-100">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div class="grow pt-0.5">
-                    <h4 class="text-xs font-black text-black uppercase tracking-wider">Status Update</h4>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('status') }}</p>
-                </div>
-            @endif
+                @if(session('status'))
+                    <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 shadow-sm border border-blue-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="grow pt-0.5">
+                        <h4 class="text-xs font-black text-black uppercase tracking-wider">Status Update</h4>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('status') }}</p>
+                    </div>
+                @endif
 
-            <button @click="show = false" class="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+                <button type="button" @click.stop="dismiss()" class="text-gray-300 hover:text-gray-500 transition-colors shrink-0 p-1 -mr-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
         </div>
         @endif
 
@@ -742,10 +829,10 @@
         :user-id="Auth::id()"
         :auto-start="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
         :steps="[
-            ['selector' => '#tour-search-bar',          'title' => '🔍 Search Artisans & Barongs',     'text' => 'Search across authentic hand-embroidered Barong Tagalog, Filipiniana attire, master tailoring guilds, or specific fabrics by keyword.'],
-            ['selector' => '#shop-by-category-section', 'title' => '🏷️ Browse Heritage Categories',   'text' => 'Browse curated styles organized by audience (Men, Women, Kids) and occasions (Wedding, Modern Barong, Traditional Calado).'],
-            ['selector' => '#tour-artisan-shops',        'title' => '🏛️ Master Workshops & Promos',    'text' => 'Explore verified Lumban artisan shops, browse customer reviews, and take advantage of limited-time seasonal promotional discounts.'],
-            ['selector' => '#tour-cart-btn',             'title' => '🛍️ Shopping Bag & Flexible Delivery', 'text' => 'Review your cart and proceed to checkout with Special Delivery (local courier) or in-person Store Pickup with interactive workshop maps!'],
+            ['selector' => '#tour-search-bar',          'title' => 'Search Artisans & Barongs',         'text' => 'Search across authentic hand-embroidered Barong Tagalog, Filipiniana attire, master tailoring guilds, or specific fabrics by keyword.'],
+            ['selector' => '#shop-by-category-section', 'title' => 'Browse Heritage Categories',       'text' => 'Browse curated styles organized by audience (Men, Women, Kids) and occasions (Wedding, Modern Barong, Traditional Calado).'],
+            ['selector' => '#tour-artisan-shops',        'title' => 'Master Workshops & Promos',        'text' => 'Explore verified Lumban artisan shops, browse customer reviews, and take advantage of limited-time seasonal promotional discounts.'],
+            ['selector' => '#tour-cart-btn',             'title' => 'Shopping Bag & Flexible Delivery', 'text' => 'Review your cart and proceed to checkout with Special Delivery (local courier) or in-person Store Pickup with interactive workshop maps!'],
         ]"
     />
     @endif

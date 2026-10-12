@@ -30,6 +30,12 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) { window.lucide.createIcons(); }
+        });
+    </script>
     <script>
         (function() {
             var origFetch = window.fetch;
@@ -123,7 +129,7 @@
                         <div>
                             <span class="font-serif text-xl font-bold tracking-tight" style="color: #1E1915;">LUMBARONG</span>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                                <span style="font-size:10px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;">✦ Artisan Shop</span>
+                                <span class="flex items-center gap-1" style="font-size:10px; font-weight:800; color:#A16D19; letter-spacing:0.18em; text-transform:uppercase;"><x-lucide name="sparkles" class="w-3 h-3 text-[#A16D19]" /> Artisan Shop</span>
                             </div>
                         </div>
                     </a>
@@ -562,7 +568,7 @@
             ['selector' => '#tour-seller-financials',     'title' => 'Financial Revenue Summary',        'text' => 'Gives you clear breakdown of your earnings: Today\'s revenue, weekly 7-day revenue, monthly 30-day earnings, and cumulative total revenue across all completed client orders.'],
             ['selector' => '#tour-seller-pipeline',       'title' => 'Order Fulfillment Pipeline',       'text' => 'Tracks your orders through every fulfillment stage: Pending (awaiting action), Custom Fit (made-to-measure bespoke orders), To Ship (in packaging), and Delivered (completed). Click any box to view orders.'],
             ['selector' => '#tour-seller-revenue-chart',  'title' => 'Revenue Trajectory Line Graph',     'text' => 'Visualizes your store\'s sales velocity and revenue trends day-by-day. Higher points on the curve indicate peak sales days, helping you spot seasonal trends and high-performing periods.'],
-            ['selector' => '#tour-seller-benchmarks',     'title' => 'Artisan Benchmark & Metrics',      'text' => 'Monitors your store\'s reputation and conversion power: Star rating (★), follower count, total catalogue impressions, sales conversion rate %, and loyal repeat customers.'],
+            ['selector' => '#tour-seller-benchmarks',     'title' => 'Artisan Benchmark & Metrics',      'text' => 'Monitors your store\'s reputation and conversion power: Star rating, follower count, total catalogue impressions, sales conversion rate %, and loyal repeat customers.'],
             ['selector' => '#tour-seller-signatures',     'title' => 'Heritage Signatures & Activity',   'text' => 'Displays your top-selling handcrafted Barongs ranked by volume and earnings, plus a live stream of recent customer purchases with their current fulfillment status.'],
         ]"
     />

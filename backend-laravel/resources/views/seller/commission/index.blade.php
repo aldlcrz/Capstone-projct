@@ -5,7 +5,7 @@
     {{-- Header with Guide Button --}}
     <div id="tour-commission-header" class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
-            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1">✦ Monthly Commission Remittance</div>
+            <div class="text-[10px] font-bold text-[#C49520] uppercase tracking-[0.2em] mb-1 inline-flex items-center gap-1"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> Monthly Commission Remittance</div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915]">Seller <span class="text-[#766C60] font-light italic">Platform Commission</span></h1>
                 {{-- Guide Button --}}
@@ -58,9 +58,9 @@
                 <div class="text-xs text-amber-100/80 font-sans">
                     Status: 
                     @if($currentRecord && $currentRecord->status === 'paid')
-                        <span class="font-bold text-emerald-400 uppercase">✓ Paid</span>
+                        <span class="font-bold text-emerald-400 uppercase"><x-lucide name="check-circle" class="w-3 h-3 inline mr-1" /> Paid</span>
                     @elseif($currentRecord && $currentRecord->status === 'verification_pending')
-                        <span class="font-bold text-amber-300 uppercase">⏳ Verification Pending</span>
+                        <span class="font-bold text-amber-300 uppercase"><x-lucide name="clock" class="w-3 h-3 inline mr-1" /> Verification Pending</span>
                     @else
                         <span class="font-bold text-rose-400 uppercase">Payment Due</span>
                     @endif
@@ -111,7 +111,7 @@
 
                 @if($currentRecord && $currentRecord->status === 'paid')
                     <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
-                        <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto">✓</div>
+                        <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto"><x-lucide name="check-circle" class="w-6 h-6 text-white" /></div>
                         <div class="text-sm font-bold text-emerald-900">Commission Settled for {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
                         <div class="text-xs text-emerald-700 font-sans">
                             Your platform commission of ₱{{ number_format($currentRecord->commissionAmount, 2) }} was verified as Paid by Super Administrator on {{ $currentRecord->paidAt ? $currentRecord->paidAt->format('M d, Y h:i A') : 'N/A' }}.
@@ -120,7 +120,7 @@
                 @else
                     <div class="p-6 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3">
                         <div class="flex items-center gap-3">
-                            <span class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">⏳</span>
+                            <span class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0"><x-lucide name="clock" class="w-5 h-5 text-white" /></span>
                             <div>
                                 <div class="text-sm font-bold text-amber-900">Payment Due: ₱{{ number_format($commissionDue, 2) }}</div>
                                 <div class="text-xs text-amber-700 font-sans">Billing Period: {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }} (Rate: {{ $rate }}%)</div>
@@ -196,31 +196,31 @@
         $commissionTourSteps = [
             [
                 'selector' => '#tour-commission-header',
-                'title' => '💵 Platform Commission Remittance',
+                'title' => 'Platform Commission Remittance',
                 'text' => 'Welcome to your Commission Remittance hub! Here you track monthly platform commission dues for cash sales (Store Pickup & COD) and submit remittances to Superadmin.',
                 'position' => 'bottom'
             ],
             [
                 'selector' => '#tour-commission-summary',
-                'title' => '📈 Monthly Cash Sales & Net Due Summary',
+                'title' => 'Monthly Cash Sales & Net Due Summary',
                 'text' => 'Track your eligible cash sales, commission tier percentage, and the net commission amount due by the 10th of each month.',
                 'position' => 'bottom'
             ],
             [
                 'selector' => '#tour-commission-accounts',
-                'title' => '💳 Platform Remittance Accounts',
+                'title' => 'Platform Remittance Accounts',
                 'text' => 'Official LumBarong platform GCash and Maya account numbers and scannable QR codes for seamless commission remittances.',
                 'position' => 'top'
             ],
             [
                 'selector' => '#tour-commission-form',
-                'title' => '📤 Submit Remittance Proof',
+                'title' => 'Submit Remittance Proof',
                 'text' => 'After transferring your dues, select the payment method, enter your transaction reference number, and upload the receipt screenshot.',
                 'position' => 'top'
             ],
             [
                 'selector' => '#tour-commission-history',
-                'title' => '📜 Settlement History & Status Audit',
+                'title' => 'Settlement History & Status Audit',
                 'text' => 'Audit past monthly billing cycles, payment reference codes, and real-time verification statuses.',
                 'position' => 'top'
             ],

@@ -376,7 +376,7 @@
                     </table>
 
                     <div style="margin-top: 6px;">
-                        <span class="auth-badge">✓ Verified LumBarong Artisan Pass</span>
+                        <span class="auth-badge">Verified LumBarong Artisan Pass</span>
                     </div>
                 </div>
             </td>

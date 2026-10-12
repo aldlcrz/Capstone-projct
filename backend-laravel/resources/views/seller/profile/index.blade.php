@@ -139,7 +139,7 @@
 
                     const shopPinIcon = L.divIcon({
                         className: 'lumbarong-workshop-pin-icon',
-                        html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;font-size:14px;font-weight:900;">🏛️</span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
+                        html: '<div style="position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;"><div style="width:34px;height:34px;background:#1E1915;border:2.5px solid #DFC97A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.4);"><span style="transform:rotate(45deg);color:#DFC97A;display:flex;align-items:center;justify-content:center;"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="22" y1="22" y2="22"/><line x1="6" x2="6" y1="18"/><line x1="10" x2="10" y1="18"/><line x1="14" x2="14" y1="18"/><line x1="18" x2="18" y1="18"/><polygon points="12 2 20 7 4 7"/></svg></span></div><div style="position:absolute;bottom:-6px;width:12px;height:4px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(1px);"></div></div>',
                         iconSize: [38, 38],
                         iconAnchor: [19, 38],
                         popupAnchor: [0, -38]
@@ -209,9 +209,9 @@
                         if (addr.postcode) {
                             this.shopPostalCode = addr.postcode;
                         }
-                        this.gpsMessage = '📍 Pin & address updated in real-time!';
+                        this.gpsMessage = 'Pin & address updated in real-time!';
                         setTimeout(() => {
-                            if (this.gpsMessage === '📍 Pin & address updated in real-time!') {
+                            if (this.gpsMessage === 'Pin & address updated in real-time!') {
                                 this.gpsMessage = '';
                             }
                         }, 4000);
@@ -243,9 +243,9 @@
                             }
                         }
                         this.reverseGeocodeWorkshop(this.shopLatitude, this.shopLongitude);
-                        this.gpsMessage = '📍 Location pinned from device GPS!';
+                        this.gpsMessage = 'Location pinned from device GPS!';
                         setTimeout(() => {
-                            if (this.gpsMessage === '📍 Location pinned from device GPS!') {
+                            if (this.gpsMessage === 'Location pinned from device GPS!') {
                                 this.gpsMessage = '';
                             }
                         }, 4000);
@@ -503,7 +503,7 @@
             {{-- Star Divider --}}
             <div style="position:relative;margin:18px 0 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;font-size:12px;">✦</span>
+                <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;" class="inline-flex items-center"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
             </div>
 
             {{-- Flash Messages --}}
@@ -620,7 +620,7 @@
                     <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Sales</div>
                 </a>
                 <a href="{{ route('seller.products.index') }}" style="text-decoration:none;background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:15px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.02);display:block;transition:all 0.2s;" class="hover:border-[#C49520] hover:scale-102">
-                    <div style="font-size:16px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}★</div>
+                    <div style="font-size:16px;font-weight:800;color:#1E1915;" class="font-sans">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '5.0' }}</div>
                     <div style="font-size:8.5px;font-weight:700;color:#8C827A;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">Rating</div>
                 </a>
             </div>
@@ -688,8 +688,8 @@
                        style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.02);cursor:pointer;width:100%;text-align:left;transition:all 0.2s;text-decoration:none;"
                        class="hover:border-[#C49520] hover:bg-[#FDFBF7] group">
                         <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:38px;height:38px;border-radius:11px;background-color:#EBF7EB;border:1px solid #C8E6C9;display:flex;align-items:center;justify-content:center;color:#2E7D32;flex-shrink:0;font-size:16px;" class="group-hover:scale-105 transition-transform">
-                                🏍️
+                            <div style="width:38px;height:38px;border-radius:11px;background-color:#EBF7EB;border:1px solid #C8E6C9;display:flex;align-items:center;justify-content:center;color:#2E7D32;flex-shrink:0;" class="group-hover:scale-105 transition-transform">
+                                <x-lucide name="bike" class="w-5 h-5 text-[#2E7D32]" />
                             </div>
                             <div>
                                 <div style="font-size:14px;font-weight:700;color:#1E1915;">Special Delivery Settings</div>
@@ -885,14 +885,14 @@
                                         </div>
                                         <button type="button" @click="openWorkshopLocationModal()"
                                                 class="px-2.5 py-1 rounded-lg bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] hover:bg-[#C49520] hover:text-white transition-all text-[10px] font-extrabold uppercase tracking-wider shrink-0 cursor-pointer">
-                                            📍 Pin Map
+                                            <x-lucide name="map-pin" class="w-3.5 h-3.5 inline mr-1" /> Pin Map
                                         </button>
                                     </div>
 
                                     <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] flex items-center justify-between">
                                         <span class="text-[10px] font-bold uppercase tracking-widest text-[#78716C]">Seller Payout Account</span>
                                         <span class="text-xs font-bold {{ ($user->gcashNumber || $user->mayaNumber) ? 'text-[#4A6741]' : 'text-amber-700' }}">
-                                            {{ ($user->gcashNumber || $user->mayaNumber) ? '✓ Configured (Superadmin Payouts)' : '⚠️ Setup Pending' }}
+                                            {{ ($user->gcashNumber || $user->mayaNumber) ? 'Configured (Superadmin Payouts)' : 'Setup Pending' }}
                                         </span>
                                     </div>
                                 </div>
@@ -1256,7 +1256,7 @@
                 </div>
 
                 <div class="text-[11px] text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-start gap-2">
-                    <span class="text-amber-600 text-xs">ℹ️</span>
+                    <x-lucide name="info" class="w-4 h-4 text-amber-600 inline" />
                     <span>Your download will begin immediately once confirmed. The file will be delivered as a secure <code>.pdf</code> document.</span>
                 </div>
 
@@ -1296,8 +1296,8 @@
 
                 <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
-                            ⚠️
+                        <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                            <x-lucide name="alert-triangle" class="w-5 h-5 text-red-600" />
                         </div>
                         <div>
                             <h3 class="text-base font-extrabold text-gray-900">Delete your seller account</h3>
@@ -1503,7 +1503,7 @@
                 <div class="overflow-y-auto flex-1 p-5 space-y-4">
                     {{-- Superadmin Disbursal Notice Banner --}}
                     <div class="p-3 bg-[#FAF5EA] border border-[#E6D8BA] rounded-2xl flex items-start gap-2.5 text-xs">
-                        <span class="text-sm shrink-0">ℹ️</span>
+                        <x-lucide name="info" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                         <p class="text-[11px] text-[#7A6439] leading-relaxed">
                             <strong>Earnings Disbursals:</strong> The Superadmin (Finance) transfers your shop's sales revenue directly to your registered GCash or Maya account using your provided mobile number or QR code.
                         </p>
@@ -1513,7 +1513,7 @@
                     @if($user->status === 'frozen')
                         <div class="p-3.5 bg-orange-50 border border-orange-200 rounded-2xl flex items-start justify-between gap-3 text-orange-900 text-xs">
                             <div class="flex items-start gap-3">
-                                <span class="text-base shrink-0">🔒</span>
+                                <x-lucide name="lock" class="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
                                 <div class="space-y-0.5">
                                     <div class="font-extrabold uppercase text-[10px] tracking-wider text-orange-800">Account Frozen — Overdue Monthly Commission</div>
                                     <p class="text-[11px] text-orange-700 leading-relaxed">
@@ -1527,7 +1527,7 @@
                         </div>
                     @elseif(in_array($user->status, ['blocked', 'suspended']))
                         <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-red-900 text-xs">
-                            <span class="text-base shrink-0">🚫</span>
+                            <x-lucide name="ban" class="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                             <div class="space-y-0.5">
                                 <div class="font-extrabold uppercase text-[10px] tracking-wider text-red-800">Account Suspended — Policy Violation</div>
                                 <p class="text-[11px] text-red-700 leading-relaxed">
@@ -1543,7 +1543,7 @@
                         <div class="rounded-2xl border overflow-hidden" style="border-color: #E8DECB;">
                             <div class="flex items-center justify-between px-4 py-2.5" style="background: #1E1915; color: #FFFCF7;">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ GCash Payout Account</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520] inline mr-1" /> GCash Payout Account</span>
                                 </div>
                                 @if($user->gcashNumber)
                                     <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase" style="background: rgba(196,149,32,0.25); color: #FFFCF7;">Active</span>
@@ -1570,7 +1570,7 @@
                                     @if($user->gcashNumber)
                                         <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->gcashNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
-                                            ✓ Ready for Superadmin earnings disbursal
+                                            <x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-600 inline mr-1" /> Ready for Superadmin earnings disbursal
                                         </div>
                                     @else
                                         <div class="text-xs italic" style="color: #A09585;">Not configured</div>
@@ -1583,7 +1583,7 @@
                         <div class="rounded-2xl border overflow-hidden" style="border-color: #E8DECB;">
                             <div class="flex items-center justify-between px-4 py-2.5" style="background: #1E1915; color: #FFFCF7;">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]">✦ Maya Payout Account</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#C49520]"><x-lucide name="sparkles" class="w-3 h-3 text-[#C49520] inline mr-1" /> Maya Payout Account</span>
                                 </div>
                                 @if($user->mayaNumber)
                                     <span class="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase" style="background: rgba(196,149,32,0.25); color: #FFFCF7;">Active</span>
@@ -1610,7 +1610,7 @@
                                     @if($user->mayaNumber)
                                         <div class="text-base font-bold font-sans select-all" style="color: #1E1915;">{{ $user->mayaNumber }}</div>
                                         <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex items-center gap-1" style="color: #4A6741;">
-                                            ✓ Ready for Superadmin earnings disbursal
+                                            <x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-600 inline mr-1" /> Ready for Superadmin earnings disbursal
                                         </div>
                                     @else
                                         <div class="text-xs italic" style="color: #A09585;">Not configured</div>
@@ -1695,8 +1695,8 @@
             <div class="w-full sm:max-w-3xl md:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
                 <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB;">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C49520] border border-amber-200/60 flex items-center justify-center text-sm font-bold">
-                            💳
+                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C49520] border border-amber-200/60 flex items-center justify-center">
+                            <x-lucide name="credit-card" class="w-4 h-4 text-[#C49520]" />
                         </div>
                         <div>
                             <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Seller Payout History</h2>
@@ -1798,8 +1798,8 @@
                         </div>
                     @else
                         <div class="py-12 text-center space-y-2">
-                            <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center text-lg">
-                                📋
+                            <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 mx-auto flex items-center justify-center">
+                                <x-lucide name="clipboard-list" class="w-6 h-6 text-gray-400" />
                             </div>
                             <p class="text-xs font-bold text-gray-700">No payment transaction records found</p>
                             <p class="text-[11px] text-gray-500">Payments from completed customer orders will appear here automatically.</p>
@@ -1824,7 +1824,7 @@
                 <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: #E8DECB;">
                     <div>
                         <h2 class="font-serif text-sm sm:text-base font-bold uppercase tracking-wider" style="color: #1E1915;">Legal Documents</h2>
-                        <p class="text-[10px] sm:text-xs" style="color: #766C60;">Verification status: <span class="{{ $user->isVerified ? 'text-green-600' : 'text-amber-600' }} font-bold uppercase">{{ $user->isVerified ? 'Verified ✓' : 'Pending Verification' }}</span></p>
+                        <p class="text-[10px] sm:text-xs" style="color: #766C60;">Verification status: <span class="{{ $user->isVerified ? 'text-green-600' : 'text-amber-600' }} font-bold uppercase">{{ $user->isVerified ? 'Verified' : 'Pending Verification' }}</span></p>
                     </div>
                     <button @click="showLegalModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FDF8EE; color: #766C60;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1848,7 +1848,7 @@
                                 <div>
                                     <div class="text-xs font-bold" style="color: #1E1915;">{{ $doc['label'] }}</div>
                                     @if($user->{$doc['field']})
-                                        <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #4A6741;">✓ Uploaded</div>
+                                        <div class="text-[9px] font-bold uppercase tracking-widest inline-flex items-center gap-1" style="color: #4A6741;"><x-lucide name="check" class="w-2.5 h-2.5" /> Uploaded</div>
                                     @else
                                         <div class="text-[9px] font-bold uppercase tracking-widest" style="color: #A09585;">Not uploaded</div>
                                     @endif
@@ -1906,7 +1906,7 @@
                 {{-- View Mode Footer --}}
                 <div x-show="!legalEditing" class="px-5 py-4 border-t shrink-0 flex items-center gap-3" style="border-color: #E8DECB;">
                     <button @click="legalEditing = true" class="flex-1 py-2.5 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md cursor-pointer" style="background: #1E1915;">
-                        ✏ Upload / Replace Documents
+                        <span class="flex items-center justify-center gap-1.5"><x-lucide name="pencil" class="w-3.5 h-3.5" /> Upload / Replace Documents</span>
                     </button>
                     <button @click="showLegalModal = false" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
                         Close
@@ -2157,7 +2157,7 @@
                                 :disabled="emailLoading"
                                 class="flex-1 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                                 style="background: #1E1915;">
-                            <span x-show="!emailLoading">Confirm & Update Email ✓</span>
+                            <span x-show="!emailLoading">Confirm & Update Email</span>
                             <span x-show="emailLoading">Updating...</span>
                         </button>
                         <button type="button" @click="closeChangeEmailModal()" class="px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
@@ -2228,7 +2228,7 @@
 
                 {{-- Info Banner --}}
                 <div class="p-3.5 bg-[#FAF7F0] border border-[#EAE1D0] rounded-2xl flex items-start gap-2.5">
-                    <span class="text-base shrink-0">📍</span>
+                    <x-lucide name="map-pin" class="w-4 h-4 text-amber-600 shrink-0 inline" />
                     <div class="text-xs text-[#78716C] leading-relaxed">
                         <strong class="text-[#1E1915]">Store Pickup Route:</strong> When customers choose Store Pickup during checkout, they will see this exact map location, complete address, and one-tap Google Maps driving directions to visit your workshop.
                     </div>
@@ -2243,7 +2243,7 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
-                                <span>🏛️ Workshop Physical Address</span>
+                                <span class="flex items-center gap-1.5"><x-lucide name="landmark" class="w-4 h-4 text-[#996515]" /> Workshop Physical Address</span>
                             </div>
                             <span x-show="reverseGeocoding" x-cloak class="text-[10.5px] text-[#C49520] font-bold flex items-center gap-1">
                                 <svg class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
@@ -2306,7 +2306,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
                                 <div class="text-xs font-black uppercase tracking-wider text-[#996515] flex items-center gap-1.5">
-                                    <span>🗺️ Real-Time Workshop Pin on Map</span>
+                                    <span class="flex items-center gap-1.5"><x-lucide name="map" class="w-4 h-4 text-[#996515]" /> Real-Time Workshop Pin on Map</span>
                                 </div>
                                 <p class="text-[10.5px] text-[#78716C] mt-0.5">Drag the gold artisan pin or click anywhere on the map to pinpoint your workshop entrance.</p>
                             </div>
@@ -2314,7 +2314,7 @@
                             <button type="button" @click="locateCurrentGps()"
                                     :disabled="locatingGps"
                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#E6D8BA] text-[#996515] hover:bg-[#C49520] hover:text-white transition-all text-xs font-bold shrink-0 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-50">
-                                <span x-show="!locatingGps">🎯 Use My Current GPS</span>
+                                <span x-show="!locatingGps" class="flex items-center gap-1"><x-lucide name="crosshair" class="w-3.5 h-3.5" /> Use My Current GPS</span>
                                 <span x-show="locatingGps" class="flex items-center gap-1">
                                     <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                                     <span>Detecting GPS...</span>
@@ -2324,7 +2324,7 @@
 
                         {{-- Dynamic GPS Message Toast --}}
                         <div x-show="gpsMessage" x-cloak class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold flex items-center gap-2">
-                            <span>ℹ️</span>
+                            <x-lucide name="info" class="w-4 h-4 text-amber-600 inline" />
                             <span x-text="gpsMessage"></span>
                         </div>
 
@@ -2333,7 +2333,7 @@
                             <div id="seller-workshop-leaflet-map" class="w-full h-64 sm:h-72 relative z-0"></div>
                             <div class="absolute bottom-2 left-2 right-2 bg-white/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#ECE3D2] flex items-center justify-between text-[11px] font-bold text-[#1E1915] shadow-xs pointer-events-none">
                                 <span class="flex items-center gap-1 text-[#C49520]">
-                                    <span>📍</span>
+                                    <x-lucide name="map-pin" class="w-4 h-4 text-amber-600 inline" />
                                     <span>Coordinates:</span>
                                 </span>
                                 <span class="font-mono text-[#78716C]">
@@ -2355,7 +2355,7 @@
                         </button>
                         <button type="submit"
                                 class="flex-1 py-3 rounded-xl bg-[#1E1915] hover:bg-[#C49520] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2">
-                            <span>💾 Save Workshop Location</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="save" class="w-3.5 h-3.5" /> Save Workshop Location</span>
                         </button>
                     </div>
                 </form>
@@ -2455,37 +2455,37 @@
         $profileTourSteps = [
             [
                 'target' => '#tour-profile-header',
-                'title' => '🏛️ Artisan Shop Hub',
+                'title' => 'Artisan Shop Hub',
                 'content' => 'This is your central artisan shop administration hub. Manage your public profile, business credentials, payouts, orders, catalogue, and shop settings.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-hero',
-                'title' => '✨ Artisan Storefront Identity',
+                'title' => 'Artisan Storefront Identity',
                 'content' => 'Displays your official artisan shop name, verified badge, email, and contact number. Click "Edit Profile" to update your avatar photo, mobile number, and artisan shop biography.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-metrics',
-                'title' => '📊 Artisan Quick Metrics',
+                'title' => 'Artisan Quick Metrics',
                 'content' => 'At-a-glance performance snapshot displaying your live Creations count, total Orders received, aggregate Sales revenue, and buyer Star Rating.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-col-account',
-                'title' => '🔒 Account & Security Settings',
+                'title' => 'Account & Security Settings',
                 'content' => 'Manage your email with 2-step verification, review legal accreditation permits, configure your direct GCash & Maya payout accounts, or update your password.',
                 'position' => 'right'
             ],
             [
                 'target' => '#tour-profile-col-operations',
-                'title' => '📦 Creations & Logistics Center',
+                'title' => 'Creations & Logistics Center',
                 'content' => 'Manage your Products Catalogue and Orders & Dispatch pipeline.',
                 'position' => 'bottom'
             ],
             [
                 'target' => '#tour-profile-col-insights',
-                'title' => '📈 Insights, Analytics & Shop Policies',
+                'title' => 'Insights, Analytics & Shop Policies',
                 'content' => 'Access your Customer Directory, review detailed 7-tab Shop Analytics & financial statements, or tailor your custom Shop Cancellation & Refund Policies.',
                 'position' => 'left'
             ]

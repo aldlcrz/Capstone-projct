@@ -25,7 +25,7 @@
     </table>
     <div style="margin-top: 16px;">
         <span style="background-color: #FAF5EA; border: 1px solid #EADDC8; color: #996515; font-size: 11.5px; font-weight: 600; border-radius: 9999px; padding: 6px 18px; display: inline-block;">
-            ⏱️ &nbsp; {{ $expiryText }} &bull; Single-use security passkey
+            <x-lucide name="clock" class="w-3.5 h-3.5 text-[#C49520]" style="display:inline-block;vertical-align:middle;" /> &nbsp; {{ $expiryText }} &bull; Single-use security passkey
         </span>
     </div>
 </div>

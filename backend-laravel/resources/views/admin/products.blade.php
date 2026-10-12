@@ -386,7 +386,7 @@
                                             @if($photoCount > 1)
                                                 <span class="text-gray-300">·</span>
                                                 <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200/80 text-[8px] font-bold" title="{{ $photoCount }} photos">
-                                                    📷 {{ $photoCount }}
+                                                    <span class="inline-flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5 text-gray-500" /> {{ $photoCount }}</span>
                                                 </span>
                                             @endif
                                         </div>
@@ -546,7 +546,7 @@
                             @endphp
                             @if($gridPhotoCount > 1)
                                 <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/75 backdrop-blur-md rounded-md text-white text-[9px] font-bold flex items-center gap-1 shadow-xs">
-                                    📷 {{ $gridPhotoCount }}
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5 text-gray-500" /> {{ $gridPhotoCount }}</span>
                                 </div>
                             @endif
 
@@ -680,7 +680,7 @@
                     </template>
                     <button type="button" @click="closeInspect()" 
                             class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer">
-                        ✕
+                        <x-lucide name="x" class="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -890,7 +890,7 @@
                         <div class="flex items-center justify-between mt-1">
                             <span class="text-xs font-black text-[#C0422A]" x-text="'₱' + approveProductPrice"></span>
                             <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200">
-                                📷 <span x-text="approveProductImages.length + (approveProductImages.length === 1 ? ' photo' : ' photos')"></span>
+                                <span class="inline-flex items-center gap-1"><x-lucide name="camera" class="w-3.5 h-3.5 text-gray-500" /><span x-text="approveProductImages.length + (approveProductImages.length === 1 ? ' photo' : ' photos')"></span></span>
                             </span>
                         </div>
                     </div>
@@ -1007,7 +1007,7 @@
             </div>
 
             <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Critical Warning:</strong> This action cannot be undone. The product and all associated customer cart entries will be permanently removed.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1" /><strong>Critical Warning:</strong> This action cannot be undone. The product and all associated customer cart entries will be permanently removed.
             </div>
 
             <form :action="'/admin/products/' + deleteProductId" method="POST" class="space-y-4">

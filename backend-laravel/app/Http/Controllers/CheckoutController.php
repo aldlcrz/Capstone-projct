@@ -473,6 +473,14 @@ class CheckoutController extends Controller
                         return redirect()->back()->withInput()->with('error', $errorMessage);
                     }
 
+                    if (($screening['reason_code'] ?? '') === 'OVERPAYMENT_DETECTED' || ($screening['reason_code'] ?? '') === 'AMOUNT_OVERPAY' || ($screening['sukli_amount'] ?? 0) > 0) {
+                        $errorMessage = 'Payment amount exceeds the required order total. The system does not support change or sukli. Please pay the exact amount.';
+                        if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                            return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                        }
+                        return redirect()->back()->withInput()->with('error', $errorMessage);
+                    }
+
                     $receiptList[] = [
                         'screening'        => $screening,
                         'paymentProof'     => $paymentProofPath,

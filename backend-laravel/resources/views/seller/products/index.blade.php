@@ -117,7 +117,7 @@ document.addEventListener('alpine:init', () => {
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;">✦ Shop Catalogue</span>
+                <span class="text-[9px] font-extrabold uppercase tracking-[0.25em]" style="color: #C49520;"><x-lucide name="sparkles" class="w-3 h-3 inline mr-1 text-[#C49520]" />Shop Catalogue</span>
                 <span class="text-xs" style="color: #E8DECB;">•</span>
                 <span class="text-[10px] font-semibold tracking-wider uppercase" style="color: #766C60;">Lumban Artisan Registry</span>
             </div>
@@ -172,34 +172,34 @@ document.addEventListener('alpine:init', () => {
             <button @click="activeTab = 'all'"
                 :style="activeTab === 'all' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'all'" style="color:#C49520;">✓</span>
+                <span x-show="activeTab === 'all'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span>All Creations ({{ $totalCount ?? $products->total() }})</span>
             </button>
             <button @click="activeTab = 'approved'"
                 :style="activeTab === 'approved' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'approved'" style="color:#C49520;">✓</span>
+                <span x-show="activeTab === 'approved'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#4A6741;"></span>
                 <span>Approved ({{ $approvedCount ?? $approvedProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'pending'"
                 :style="activeTab === 'pending' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'pending'" style="color:#C49520;">✓</span>
+                <span x-show="activeTab === 'pending'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#C49520;"></span>
                 <span>Pending Review ({{ $pendingCount ?? $pendingProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'drafts'"
                 :style="activeTab === 'drafts' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'drafts'" style="color:#C49520;">✓</span>
+                <span x-show="activeTab === 'drafts'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#64748B;"></span>
                 <span>Drafts ({{ $draftCount ?? $draftProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'rejected'"
                 :style="activeTab === 'rejected' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #DC2626;' : 'background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'rejected'" style="color:#DC2626;">✓</span>
+                <span x-show="activeTab === 'rejected'" class="inline-flex items-center text-[#DC2626]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#DC2626;"></span>
                 <span>Needs Revision ({{ $rejectedCount ?? $rejectedProducts->count() }})</span>
             </button>
@@ -217,7 +217,7 @@ document.addEventListener('alpine:init', () => {
             <svg class="w-4 h-4 absolute left-3 top-2.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            <button x-show="search" @click="search = ''" class="absolute right-2.5 top-2 text-xs font-bold transition-colors" style="color: #766C60;" onmouseover="this.style.color='#C49520';" onmouseout="this.style.color='#766C60';">✕</button>
+            <button x-show="search" @click="search = ''" class="absolute right-2.5 top-2 text-xs font-bold transition-colors flex items-center justify-center text-[#766C60] hover:text-[#C49520]"><x-lucide name="x" class="w-3.5 h-3.5" /></button>
         </div>
     </div>
 
@@ -248,7 +248,7 @@ document.addEventListener('alpine:init', () => {
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">
-                                    📝 Draft
+                                    <span class="flex items-center gap-1"><x-lucide name="file-text" class="w-3.5 h-3.5 inline text-gray-500" /> Draft</span>
                                 </span>
                             </div>
 
@@ -330,9 +330,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @else
             <div x-show="activeTab === 'drafts'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;">
-                    📝
-                </div>
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;"><x-lucide name="file-text" class="w-6 h-6 text-[#766C60]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No saved drafts found</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">When you choose "Save as Draft" during product creation, it will appear here.</p>
                 <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -367,7 +365,7 @@ document.addEventListener('alpine:init', () => {
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">
-                                    ⏳ Pending
+                                    <span class="flex items-center gap-1"><x-lucide name="clock" class="w-3.5 h-3.5 inline text-amber-500" /> Pending</span>
                                 </span>
                             </div>
 
@@ -405,7 +403,7 @@ document.addEventListener('alpine:init', () => {
                                 {{-- Product Rating summary --}}
                                 <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="text-xs" style="color: #C49520;">★</span>
+                                        <x-lucide name="star" class="w-3.5 h-3.5 text-[#C49520] fill-[#C49520] inline" />
                                         <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
                                         <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
                                     </div>
@@ -460,9 +458,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @else
             <div x-show="activeTab === 'pending'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
-                    ⏳
-                </div>
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="clock" class="w-6 h-6 text-[#C49520]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations awaiting review</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">All your published creations have been reviewed or are active in your catalogue.</p>
                 <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -497,7 +493,7 @@ document.addEventListener('alpine:init', () => {
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F0F4EF; color: #4A6741; border: 1px solid #C5D9B8;">
-                                    ✓ Approved
+                                    <span class="flex items-center gap-1"><x-lucide name="check-circle" class="w-3.5 h-3.5 inline text-green-600" /> Approved</span>
                                 </span>
                             </div>
 
@@ -535,7 +531,7 @@ document.addEventListener('alpine:init', () => {
                                 {{-- Product Rating summary --}}
                                 <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style="border-color: #E8DECB;">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="text-xs" style="color: #C49520;">★</span>
+                                        <x-lucide name="star" class="w-3.5 h-3.5 text-[#C49520] fill-[#C49520] inline" />
                                         <span class="text-[11px] font-black font-sans" style="color: #1E1915;">{{ $product->reviews_avg_rating ? number_format($product->reviews_avg_rating, 1) : '0.0' }}</span>
                                         <span class="text-[9px] font-medium font-sans" style="color: #766C60;">({{ $product->reviews_count }})</span>
                                     </div>
@@ -590,9 +586,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @else
             <div x-show="activeTab === 'approved'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #4A6741; border: 1px solid #E8DECB;">
-                    ✓
-                </div>
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #4A6741; border: 1px solid #E8DECB;"><x-lucide name="check-circle" class="w-6 h-6 text-[#4A6741]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No approved creations yet</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">Creations approved by administrators will appear here and in the marketplace.</p>
                 <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -627,7 +621,7 @@ document.addEventListener('alpine:init', () => {
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
-                                    ✕ Needs Revision
+                                    <span class="flex items-center gap-1"><x-lucide name="alert-circle" class="w-3.5 h-3.5 inline text-red-600" /> Needs Revision</span>
                                 </span>
                             </div>
 
@@ -664,7 +658,7 @@ document.addEventListener('alpine:init', () => {
                                 {{-- Rejection Reason Box --}}
                                 <div class="p-2.5 rounded-xl text-[10px] leading-relaxed" style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
                                     <div class="font-bold flex items-center gap-1 mb-0.5">
-                                        <span>⚠️ Admin Feedback:</span>
+                                        <span class="flex items-center gap-1.5"><x-lucide name="alert-triangle" class="w-3.5 h-3.5 inline text-amber-500" /> Admin Feedback:</span>
                                     </div>
                                     <p class="line-clamp-3">{{ $product->rejectionReason ?: 'Please review the product details and photos before resubmitting.' }}</p>
                                 </div>
@@ -714,9 +708,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @else
             <div x-show="activeTab === 'rejected'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
-                    ✓
-                </div>
+                <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"><x-lucide name="check-circle" class="w-6 h-6 text-[#DC2626]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations requiring revision</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">None of your submitted creations have been rejected. Keep up the authentic craftsmanship!</p>
                 <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -729,9 +721,7 @@ document.addEventListener('alpine:init', () => {
     {{-- GLOBAL EMPTY STATE IF NO PRODUCTS AT ALL --}}
     @if($products->isEmpty())
         <div class="py-20 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
-            <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;">
-                ✦
-            </div>
+            <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="sparkles" class="w-6 h-6 text-[#C49520]" /></div>
             <h3 class="font-serif text-lg font-bold mb-1" style="color: #1E1915;">Your catalogue is ready for its first creation</h3>
             <p class="text-xs max-w-xs mx-auto mb-5" style="color: #766C60;">Add your first handcrafted barong or embroidery piece to begin showcase.</p>
             <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -795,9 +785,7 @@ document.addEventListener('alpine:init', () => {
                     <h2 class="font-serif text-lg font-bold tracking-wide" style="color: #1E1915;">Artisan Size Guides</h2>
                     <p class="text-[11px] font-medium" style="color: #766C60;">Standard size specifications for Men, Women, and Kids collections</p>
                 </div>
-                <button @click="showSizeGuideModal = false" type="button" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #766C60;">
-                    ✕
-                </button>
+                <button @click="showSizeGuideModal = false" type="button" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #766C60;"><x-lucide name="x" class="w-4 h-4" /></button>
             </div>
 
             {{-- Modal Body --}}
@@ -808,7 +796,7 @@ document.addEventListener('alpine:init', () => {
                         <button type="button" @click="activeSGTab = tab"
                             :style="activeSGTab === tab ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'color:#766C60;'"
                             class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all text-center font-bold cursor-pointer">
-                            <span x-text="tab === 'Men' ? '👔 Men' : (tab === 'Women' ? '👗 Women' : '🧒 Kids')"></span>
+                            <span x-text="tab"></span>
                         </button>
                     </template>
                 </div>
@@ -821,9 +809,7 @@ document.addEventListener('alpine:init', () => {
                             @csrf
                             <input type="hidden" name="target_group" :value="activeSGTab">
                             <label class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-8 transition-all text-center group" style="border-color: #E8DECB; background: #FDF8EE;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
-                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-3 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #C49520;">
-                                    📐
-                                </div>
+                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-3 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #C49520;"><x-lucide name="ruler" class="w-6 h-6 text-[#C49520]" /></div>
                                 <div class="text-sm font-serif font-bold mb-1" style="color: #1E1915;">
                                     No size guide chart uploaded yet
                                 </div>
@@ -897,16 +883,14 @@ document.addEventListener('alpine:init', () => {
                     <h3 class="font-serif text-lg font-bold" style="color: #1E1915;" x-text="selectedProduct ? selectedProduct.name : 'Product Reviews'"></h3>
                     <p class="text-xs mt-0.5" style="color: #766C60;" x-text="selectedProduct && selectedProduct.reviews ? (selectedProduct.reviews.length + ' client feedback entries') : '0 reviews'"></p>
                 </div>
-                <button @click="showReviewsModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
-                    ✕
-                </button>
+                <button @click="showReviewsModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;"><x-lucide name="x" class="w-4 h-4" /></button>
             </div>
 
             {{-- Reviews List --}}
             <div class="flex-1 overflow-y-auto space-y-3 pr-1">
                 <template x-if="!selectedProduct || !selectedProduct.reviews || selectedProduct.reviews.length === 0">
                     <div class="py-12 text-center" style="color: #A09585;">
-                        <div class="text-2xl mb-2" style="color: #C49520;">✦</div>
+                        <div class="mb-2 flex justify-center text-[#C49520]"><x-lucide name="sparkles" class="w-6 h-6" /></div>
                         <p class="text-xs italic">No client reviews registered for this creation yet.</p>
                     </div>
                 </template>
@@ -922,7 +906,7 @@ document.addEventListener('alpine:init', () => {
                                     <div class="text-xs font-bold" style="color: #1E1915;" x-text="rev.customer ? rev.customer.name : 'Verified Customer'"></div>
                                     <div class="flex items-center text-xs" style="color: #C49520;">
                                         <template x-for="star in 5" :key="star">
-                                            <span :style="star <= rev.rating ? 'color:#C49520;' : 'color:#E8DECB;'">★</span>
+                                            <x-lucide name="star" class="w-3.5 h-3.5 inline" ::class="star <= rev.rating ? 'text-[#C49520] fill-[#C49520]' : 'text-[#E8DECB] fill-transparent'" />
                                         </template>
                                     </div>
                                 </div>
@@ -950,7 +934,7 @@ document.addEventListener('alpine:init', () => {
                                 <div class="p-3 rounded-xl border-l-3 space-y-1" style="background: #FFFCF7; border-color: #C49520;">
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5" style="color: #C49520;">
-                                            <span>💬 Artisan's Response</span>
+                                            <span class="flex items-center gap-1.5"><x-lucide name="message-square" class="w-3.5 h-3.5 inline text-amber-600" /> Artisan's Response</span>
                                             <span class="font-medium" style="color: #766C60;" x-text="rev.seller_reply_at ? '• ' + new Date(rev.seller_reply_at).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
                                         </span>
                                         <button type="button" @click="startReply(rev)" class="text-[9px] font-bold uppercase tracking-wider hover:underline cursor-pointer" style="color: #766C60;">
@@ -976,7 +960,7 @@ document.addEventListener('alpine:init', () => {
                                 <div class="p-3.5 rounded-2xl space-y-2.5" style="background: #FFFCF7; border: 1px solid #C49520;">
                                     <div class="flex items-center justify-between">
                                         <span class="text-[10px] font-black uppercase tracking-wider flex items-center gap-1" style="color: #C49520;">
-                                            <span>💬</span>
+                                            <x-lucide name="message-square" class="w-3.5 h-3.5 text-[#C49520]" />
                                             <span x-text="rev.seller_reply ? 'Edit Your Response' : 'Reply to ' + (rev.customer ? rev.customer.name : 'Client')"></span>
                                         </span>
                                         <span class="text-[9px] font-medium" style="color: #766C60;" x-text="(1000 - replyText.length) + ' chars left'"></span>
@@ -1094,32 +1078,32 @@ document.addEventListener('alpine:init', () => {
     $catalogueTourSteps = [
         [
             'selector' => '#tour-products-guide-btn',
-            'title' => '✨ Catalogue Management Guide',
+            'title' => 'Catalogue Management Guide',
             'text' => 'Welcome to your Shop Catalogue! Here you can manage all your handcrafted Lumban garments, organize style variants, monitor verification statuses, and update inventory.'
         ],
         [
             'selector' => '#tour-products-action-bar',
-            'title' => '⚡ Quick Catalogue Actions',
+            'title' => 'Quick Catalogue Actions',
             'text' => 'Access essential catalogue tools: configure your artisan Size Guides for standard buyer measurements, view your Archived items, or launch the Add Product wizard.'
         ],
         [
             'selector' => '#tour-products-filter-tabs',
-            'title' => '🏷️ Status Filter Tabs',
+            'title' => 'Status Filter Tabs',
             'text' => 'Easily filter creations by lifecycle status: Approved (live on marketplace), Pending Review (awaiting Lumban quality check), Drafts (saved work), or Needs Revision.'
         ],
         [
             'selector' => '#tour-products-search-bar',
-            'title' => '🔍 Real-Time Search',
+            'title' => 'Real-Time Search',
             'text' => 'Instantly filter your catalogue by garment name, embroidery style (Calado, Burda), or description keywords as you type.'
         ],
         [
             'selector' => '#tour-products-grid',
-            'title' => '📦 Product Inventory & Actions',
+            'title' => 'Product Inventory & Actions',
             'text' => 'Manage individual creation cards: review current stock levels, view customer ratings and reply to buyer reviews, edit listing details, or archive items.'
         ],
         [
             'selector' => '#tour-products-add-btn',
-            'title' => '✨ Add New Heritage Piece',
+            'title' => 'Add New Heritage Piece',
             'text' => 'Ready to list a new piece? Click Add Product anytime to open the 3-step listing creation wizard with media uploads, sizing matrix, and AI storytelling.'
         ]
     ];

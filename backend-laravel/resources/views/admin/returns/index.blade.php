@@ -787,11 +787,11 @@
                                             <div>
                                                 @if($isPaymentVerified)
                                                     <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                                        ✓ Payment Verified
+                                                        <span class="inline-flex items-center gap-1"><x-lucide name="check-circle" class="w-3 h-3 text-emerald-600" /> Payment Verified</span>
                                                     </span>
                                                 @else
                                                     <span class="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                                        ⏳ Unverified Receipt
+                                                        <span class="inline-flex items-center gap-1"><x-lucide name="clock" class="w-3 h-3 text-amber-600" /> Unverified Receipt</span>
                                                     </span>
                                                 @endif
                                             </div>
@@ -1271,7 +1271,7 @@
              @click.outside="evidenceModal = false">
             <div class="flex items-center justify-between border-b border-gray-100 pb-2">
                 <h3 class="text-sm font-black text-gray-900">Attached Evidence Images</h3>
-                <button type="button" @click="evidenceModal = false" class="text-gray-400 hover:text-gray-700 text-sm font-bold">✕</button>
+                <button type="button" @click="evidenceModal = false" class="text-gray-400 hover:text-gray-700"><x-lucide name="x" class="w-4 h-4" /></button>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto p-1">
                 <template x-for="(ev, idx) in activeEvidences" :key="idx">
@@ -1295,9 +1295,7 @@
             
             <div class="flex items-center justify-between pb-3 border-b border-gray-800">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 text-lg">
-                        💰
-                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 text-lg"><x-lucide name="coins" class="w-5 h-5 text-amber-400" /></div>
                     <div>
                         <h3 class="text-base font-bold text-white">Sukli / Overpayments</h3>
                         <p class="text-xs text-gray-400" x-text="selectedSukliOrder ? selectedSukliOrder.order_number + ' · ' + selectedSukliOrder.customer_name : ''"></p>
@@ -1372,7 +1370,7 @@
                         <template x-if="selectedSukliOrder.is_payment_verified && selectedSukliOrder.remaining_sukli > 0">
                             <button type="button" @click="sukliDetailModal = false; openSukliRefund(selectedSukliOrder)"
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-600/30 transition-all cursor-pointer">
-                                <span>💸</span>
+                                <x-lucide name="banknote" class="w-4 h-4 text-white inline" />
                                 <span>Disburse Sukli</span>
                             </button>
                         </template>
@@ -1391,9 +1389,7 @@
              @click.outside="sukliRefundModal = false">
             
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200 text-lg">
-                    💸
-                </div>
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200"><x-lucide name="banknote" class="w-5 h-5 text-amber-700" /></div>
                 <div>
                     <h3 class="text-base font-bold text-gray-900">Disburse Sukli / Overpayment</h3>
                     <p class="text-xs text-gray-500">Record customer overpayment refund transfer</p>
@@ -1513,9 +1509,7 @@
             
             <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200 text-lg">
-                        📦
-                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200"><x-lucide name="package" class="w-5 h-5 text-indigo-700" /></div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">Cancellation Dossier</h3>
                         <p class="text-xs text-gray-500" x-text="selectedCancelOrder ? selectedCancelOrder.order_number : ''"></p>
@@ -1572,7 +1566,7 @@
                         <template x-if="selectedCancelOrder.remaining_cancellation_refund > 0">
                             <button type="button" @click="cancelDetailModal = false; openCancelRefund(selectedCancelOrder)"
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
-                                <span>💸</span>
+                                <x-lucide name="banknote" class="w-4 h-4 text-white inline" />
                                 <span>Disburse Refund</span>
                             </button>
                         </template>
@@ -1591,9 +1585,7 @@
              @click.outside="cancelRefundModal = false">
             
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200 text-lg">
-                    💸
-                </div>
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200"><x-lucide name="banknote" class="w-5 h-5 text-indigo-700" /></div>
                 <div>
                     <h3 class="text-base font-bold text-gray-900">Disburse Cancellation Refund</h3>
                     <p class="text-xs text-gray-500">Record full payout transfer for paid cancelled order</p>

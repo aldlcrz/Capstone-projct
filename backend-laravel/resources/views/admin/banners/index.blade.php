@@ -403,7 +403,7 @@
                         <div class="p-2.5 bg-[#171717] border border-[#2B2B2B] rounded-xl space-y-1.5">
                             <div class="flex items-center justify-between">
                                 <label class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                    <span>🎨 Select Photo / Variant:</span>
+                                    <span class="inline-flex items-center gap-1.5"><x-lucide name="camera" class="w-4 h-4 text-gray-500" /><span>Select Photo / Variant:</span></span>
                                 </label>
                                 <span class="text-[9px] text-gray-400 font-mono" x-text="currentProductVariants.length + ' variants'"></span>
                             </div>
@@ -416,7 +416,7 @@
                                             class="relative rounded-lg overflow-hidden border bg-[#0D0D0D] shrink-0 transition-all cursor-pointer">
                                         <img :src="imgUrl" style="width: 100%; height: 100%; object-fit: cover;" class="block">
                                         <div x-show="imagePreviewUrl === imgUrl" class="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-black text-black shadow-xs">
-                                            ✓
+                                            <x-lucide name="check" class="w-3.5 h-3.5 inline" />
                                         </div>
                                     </button>
                                 </template>
@@ -455,7 +455,7 @@
                             <input type="file" name="image" @change="handleFileSelect($event)" accept="image/*" class="hidden">
                         </label>
                         <div x-show="fileInfo.name" class="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
-                            <span class="text-green-400">✓</span>
+                            <x-lucide name="check" class="w-3.5 h-3.5 text-green-400 inline" />
                             <span x-text="fileInfo.name"></span>
                             <span x-show="fileInfo.dimensions" x-text="'(' + fileInfo.dimensions + ')'"></span>
                         </div>

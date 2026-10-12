@@ -356,7 +356,7 @@
             </div>
 
             <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
-                ⚠️ <strong>Critical Warning:</strong> This action cannot be undone. All active sessions, authentication tokens, and customer records will be permanently archived and deleted from the live system.
+                <x-lucide name="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1" /><strong>Critical Warning:</strong> This action cannot be undone. All active sessions, authentication tokens, and customer records will be permanently archived and deleted from the live system.
             </div>
 
             <form :action="'{{ url('/superadmin/customers') }}/' + deleteUserId" method="POST" class="space-y-4">
@@ -412,10 +412,10 @@
     tourId="admin-customers-guide"
     :autoStart="false"
     :steps="[
-        ['selector' => '#tour-superadmin-users-header',  'title' => '👥 Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers and enforce supreme account governance.'],
-        ['selector' => '#tour-superadmin-users-search',  'title' => '🔍 Customer Search',              'description' => 'Instantly lookup customer accounts by name or registered email address.'],
-        ['selector' => '#tour-superadmin-users-stats',   'title' => '📊 Account Status Filters',        'description' => 'Filter between Total registered buyers, Active accounts, and Banned/Blocked users.'],
-        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, and live access statuses with ban, restore, and deletion controls.']
+        ['selector' => '#tour-superadmin-users-header',  'title' => 'Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers and enforce supreme account governance.'],
+        ['selector' => '#tour-superadmin-users-search',  'title' => 'Customer Search',              'description' => 'Instantly lookup customer accounts by name or registered email address.'],
+        ['selector' => '#tour-superadmin-users-stats',   'title' => 'Account Status Filters',        'description' => 'Filter between Total registered buyers, Active accounts, and Banned/Blocked users.'],
+        ['selector' => '#tour-superadmin-users-table',   'title' => 'Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, and live access statuses with ban, restore, and deletion controls.']
     ]"
 />
 

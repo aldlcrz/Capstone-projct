@@ -797,8 +797,8 @@ body.chat-open {
                                                 <div class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Why this match:</div>
                                                 <template x-for="(reason, rIdx) in prod.reasons" :key="rIdx">
                                                     <div class="text-[10px] text-gray-600 font-medium flex items-start gap-1.5 leading-tight">
-                                                        <span class="text-emerald-600 font-bold">✓</span>
-                                                        <span x-text="reason.replace(/^✓\s*/, '')"></span>
+                                                        <x-lucide name="check" class="w-3.5 h-3.5 text-emerald-600 inline" />
+                                                        <span x-text="reason.replace(/^[\u2713\u2714]\s*/, '')"></span>
                                                     </div>
                                                 </template>
                                             </div>
