@@ -366,18 +366,21 @@
                                 <td class="px-4 py-3.5">
                                     <div class="flex items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-full bg-[#FFF5F2] text-[#C0422A] font-bold text-xs flex items-center justify-center shrink-0 border border-[#C0422A]/20">
-                                            {{ strtoupper(substr($order->customer->name ?? 'C', 0, 1)) }}
+                                            {{ strtoupper(substr($order->customer?->name ?? 'C', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
                                             <div class="text-xs font-bold text-gray-900 truncate leading-snug">
-                                                {{ $order->customer->name ?? 'Guest / Deleted' }}
+                                                {{ $order->customer?->name ?? 'Guest / Deleted' }}
                                             </div>
                                             <div class="text-[10px] text-gray-400 truncate mt-0.5">
-                                                {{ $order->customer->email ?? 'No email' }}
+                                                {{ $order->customer?->email ?? 'No email' }}
                                             </div>
-                                            @if(!empty($order->customer->phone ?? $order->customer->contactNumber))
+                                            @php
+                                                $custPhone = $order->customer?->phone ?? $order->customer?->contactNumber ?? $order->customer?->mobileNumber;
+                                            @endphp
+                                            @if(!empty($custPhone))
                                                 <div class="text-[10px] text-gray-500 font-mono mt-0.5">
-                                                    {{ $order->customer->phone ?? $order->customer->contactNumber }}
+                                                    {{ $custPhone }}
                                                 </div>
                                             @endif
                                         </div>
@@ -388,10 +391,10 @@
                                 <td class="px-4 py-3.5">
                                     <div class="min-w-0">
                                         <div class="text-xs font-bold text-gray-800 truncate">
-                                            {{ $order->seller->shopName ?? $order->seller->name ?? 'LumBarong Artisan' }}
+                                            {{ $order->seller?->shopName ?? $order->seller?->name ?? 'LumBarong Artisan' }}
                                         </div>
                                         <div class="text-[10px] text-gray-400 truncate mt-0.5">
-                                            {{ $order->seller->email ?? 'Artisan Partner' }}
+                                            {{ $order->seller?->email ?? 'Artisan Partner' }}
                                         </div>
                                         <div class="inline-flex items-center gap-1 text-[9px] font-semibold text-gray-500 mt-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
@@ -509,21 +512,27 @@
                                     @if($isEwallet)
                                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                             @if(!$isPaid)
-                                                {{-- Approve / Verify Button (GCash / Maya Only) --}}
-                                                <button type="button" 
-                                                        @click="openVerify({{ json_encode($order) }})"
-                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                    <span>Verify</span>
-                                                </button>
+                                                @if(auth()->user()?->role === 'superadmin')
+                                                    {{-- Approve / Verify Button (GCash / Maya Only) --}}
+                                                    <button type="button" 
+                                                            @click="openVerify({{ json_encode($order) }})"
+                                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                        <span>Verify</span>
+                                                    </button>
 
-                                                {{-- Reject Button (GCash / Maya Only) --}}
-                                                <button type="button" 
-                                                        @click="openReject({{ json_encode($order) }})"
-                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200/80 transition-all cursor-pointer">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                    <span>Reject</span>
-                                                </button>
+                                                    {{-- Reject Button (GCash / Maya Only) --}}
+                                                    <button type="button" 
+                                                            @click="openReject({{ json_encode($order) }})"
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200/80 transition-all cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        <span>Reject</span>
+                                                    </button>
+                                                @else
+                                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
+                                                        Read-Only
+                                                    </span>
+                                                @endif
                                             @else
                                                 {{-- Already Verified Options --}}
                                                 <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200/60">
