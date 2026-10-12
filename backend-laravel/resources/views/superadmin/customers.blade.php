@@ -1,7 +1,50 @@
 @extends('layouts.superadmin')
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-4" x-data="{
+    banModal: false,
+    banUserId: null,
+    banUserName: '',
+    banReason: '',
+    deleteModal: false,
+    deleteUserId: null,
+    deleteUserName: '',
+    deleteReason: '',
+    deleteConfirmChecked: false,
+    openBan(user) {
+        this.banUserId = user.id;
+        this.banUserName = user.name;
+        this.banReason = 'Violation of platform customer terms';
+        this.banModal = true;
+    },
+    openDelete(user) {
+        this.deleteUserId = user.id;
+        this.deleteUserName = user.name;
+        this.deleteReason = '';
+        this.deleteConfirmChecked = false;
+        this.deleteModal = true;
+    }
+}">
+
+    @if(session('success'))
+        <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 text-sm leading-none">&times;</button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 text-sm leading-none">&times;</button>
+        </div>
+    @endif
 
     {{-- ═══ PAGE HEADER + SEARCH BAR ═══ --}}
     <div id="tour-superadmin-users-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -12,7 +55,7 @@
                 <span class="text-gray-300 text-xs">·</span>
                 <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Super Admin Center</span>
                 <span class="text-gray-300 text-xs">·</span>
-                <span class="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">View Only</span>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200/80">Supreme Control</span>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
@@ -32,7 +75,7 @@
                     <span>Customer Guide</span>
                 </button>
             </div>
-            <p class="text-[11px] text-gray-400 font-medium">Browse registered marketplace buyers and their account access status in view-only mode</p>
+            <p class="text-[11px] text-gray-400 font-medium">Manage registered marketplace buyers, oversee purchasing activity, and enforce account governance</p>
         </div>
 
         {{-- Larger Search Bar --}}
@@ -141,9 +184,10 @@
                 <table class="w-full text-left min-w-160">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/60">
-                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[50%]">Customer Details</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[26%] hidden sm:table-cell">Orders Placed</th>
-                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[24%] text-right">Status</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[38%]">Customer Details</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[20%] hidden sm:table-cell">Orders Placed</th>
+                            <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[18%]">Status</th>
+                            <th class="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-gray-400 w-[24%] text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
@@ -189,7 +233,7 @@
                                 </td>
 
                                 {{-- Status badge --}}
-                                <td class="px-4 py-4 text-right">
+                                <td class="px-4 py-4">
                                     @if($isBanned)
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200/80">
                                             <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
@@ -202,10 +246,34 @@
                                         </span>
                                     @endif
                                 </td>
+
+                                {{-- Supreme Authority Actions --}}
+                                <td class="px-5 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        @if($isBanned)
+                                            <form action="{{ route('superadmin.customers.unban', ['id' => $user->id]) }}" method="POST" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit"
+                                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-600 hover:text-white transition-all cursor-pointer">
+                                                    Restore
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button type="button" @click="openBan({{ json_encode($user) }})"
+                                                class="px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                                Ban
+                                            </button>
+                                        @endif
+                                        <button type="button" @click="openDelete({{ json_encode($user) }})"
+                                            class="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200/80 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all cursor-pointer">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-5 py-12 text-center text-gray-400">
+                                <td colspan="4" class="px-5 py-12 text-center text-gray-400">
                                     <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
                                         <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                     </div>
@@ -227,16 +295,127 @@
         </div>
     </div>
 
+    {{-- Ban Confirmation Modal --}}
+    <div x-show="banModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="banModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 z-10 border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-900">Ban Customer Account</h3>
+            <p class="text-xs text-gray-500 leading-relaxed">
+                Are you sure you want to ban customer <strong x-text="banUserName" class="text-black"></strong>? Please provide a reason below for audit logs and customer notification.
+            </p>
+            <form :action="'{{ url('/superadmin/customers') }}/' + banUserId + '/ban'" method="POST" class="space-y-4">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" @click="banReason = 'Violation of platform customer terms'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Terms Violation
+                        </button>
+                        <button type="button" @click="banReason = 'Fraudulent transaction / payment dispute'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Payment Fraud
+                        </button>
+                        <button type="button" @click="banReason = 'Abusive behavior towards sellers or staff'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Abusive Behavior
+                        </button>
+                        <button type="button" @click="banReason = 'Suspicious or automated spam activity'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Spam Activity
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Explanation / Reason (Sent to Customer) *</label>
+                    <textarea name="reason" x-model="banReason" required rows="3" placeholder="Specify why this account is being suspended..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500 font-medium"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="banModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 transition-all cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-700 transition-all cursor-pointer shadow-xs">Confirm Ban</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Delete Confirmation Modal --}}
+    <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="deleteModal = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 z-10 border border-gray-100">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Delete Customer Account</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Permanently purge <strong x-text="deleteUserName" class="text-black"></strong> and all associated customer account records.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-red-50/80 border border-red-200 rounded-2xl text-[11px] text-red-800 leading-relaxed font-medium">
+                ⚠️ <strong>Critical Warning:</strong> This action cannot be undone. All active sessions, authentication tokens, and customer records will be permanently archived and deleted from the live system.
+            </div>
+
+            <form :action="'{{ url('/superadmin/customers') }}/' + deleteUserId" method="POST" class="space-y-4">
+                @csrf @method('DELETE')
+                
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Quick Reason Presets</label>
+                    <div class="flex flex-wrap gap-1.5 mb-2.5">
+                        <button type="button" @click="deleteReason = 'Violation of platform customer terms and conditions'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Terms Violation
+                        </button>
+                        <button type="button" @click="deleteReason = 'Requested by customer account closure'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            User Request
+                        </button>
+                        <button type="button" @click="deleteReason = 'Inactive or duplicate customer account cleanup'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Inactive Account
+                        </button>
+                        <button type="button" @click="deleteReason = 'Fraudulent chargeback activity or abusive behavior'"
+                            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                            Fraud / Abuse
+                        </button>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1 block">Reason for Permanent Deletion *</label>
+                    <textarea name="reason" x-model="deleteReason" required rows="2.5" placeholder="Specify reason for deletion for platform audit logs..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-red-500 font-medium"></textarea>
+                </div>
+
+                <label class="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                    <input type="checkbox" x-model="deleteConfirmChecked" class="mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer">
+                    <span class="text-[11px] text-gray-600 font-medium leading-snug">
+                        I confirm that I want to permanently delete this customer account and understand that this action cannot be undone.
+                    </span>
+                </label>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 border border-gray-200 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="!deleteConfirmChecked || !deleteReason.trim()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer">
+                        Confirm &amp; Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <x-spotlight-tour
     tourId="admin-customers-guide"
     :autoStart="false"
     :steps="[
-        ['selector' => '#tour-superadmin-users-header',  'title' => '👥 Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers and monitor customer purchasing activity.'],
+        ['selector' => '#tour-superadmin-users-header',  'title' => '👥 Customer & Buyer Governance', 'description' => 'Oversee registered marketplace buyers and enforce supreme account governance.'],
         ['selector' => '#tour-superadmin-users-search',  'title' => '🔍 Customer Search',              'description' => 'Instantly lookup customer accounts by name or registered email address.'],
         ['selector' => '#tour-superadmin-users-stats',   'title' => '📊 Account Status Filters',        'description' => 'Filter between Total registered buyers, Active accounts, and Banned/Blocked users.'],
-        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, and live access statuses.']
+        ['selector' => '#tour-superadmin-users-table',   'title' => '📋 Customer Directory Ledger',     'description' => 'Comprehensive table showing avatars, contact emails, order counts, and live access statuses with ban, restore, and deletion controls.']
     ]"
 />
 
