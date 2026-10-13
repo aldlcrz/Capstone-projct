@@ -239,7 +239,7 @@
                         if (isTabKey(key)) {
                             var targetVal = (saved.tabs[prefix + key] !== undefined)
                                 ? saved.tabs[prefix + key]
-                                : saved.tabs[key];
+                                : (comp.id && !comp.id.startsWith('comp_') ? undefined : saved.tabs[key]);
                             if (targetVal !== undefined && data[key] !== targetVal) {
                                 try {
                                     data[key] = targetVal;

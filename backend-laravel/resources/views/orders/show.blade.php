@@ -169,7 +169,7 @@
             $historyDates = [];
             if ($order->statusHistories) {
                 foreach ($order->statusHistories as $h) {
-                    $historyDates[strtolower(trim($h->newStatus))] = $h->createdAt ? $h->createdAt->format('g:i A') : null;
+                    $historyDates[strtolower(trim($h->newStatus ?? ''))] = $h->createdAt ? (($h->createdAt instanceof \Carbon\Carbon) ? $h->createdAt->format('g:i A') : \Carbon\Carbon::parse($h->createdAt)->format('g:i A')) : null;
                 }
             }
 
@@ -207,8 +207,8 @@
 
             $displayCourier = $order->shipping?->fulfillment_provider_name 
                 ?? ($order->courierName ?? ($order->shipping?->pricing_provider_name ?? ($order->shipping?->provider_name ?? null)));
-            $hasCourierTracking = !$isStorePickup && !$isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status)), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
-            $hasSpecialDeliveryActive = $isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status)), ['shipped', 'in transit', 'out for delivery', 'delivered', 'completed']);
+            $hasCourierTracking = !$isStorePickup && !$isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status ?? '')), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+            $hasSpecialDeliveryActive = $isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status ?? '')), ['shipped', 'in transit', 'out for delivery', 'delivered', 'completed']);
         @endphp
 
         {{-- UNIFIED MASTER ORDER DETAILS CARD CONTAINER --}}
@@ -223,7 +223,7 @@
                             #LB-OR-{{ strtoupper(substr($order->id, -8)) }}
                         </div>
                         <div class="text-xs text-[#78716C]">
-                            Placed {{ $order->createdAt ? $order->createdAt->format('M d, Y \a\t g:i A') : 'Recently' }}
+                            Placed {{ $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('M d, Y \a\t g:i A') : \Carbon\Carbon::parse($order->createdAt)->format('M d, Y \a\t g:i A')) : 'Recently' }}
                         </div>
                     </div>
 
@@ -306,7 +306,7 @@
                                     $isDone = $i < $currentStep;
                                     $isCurrent = $i === $currentStep;
                                     $stepKey = strtolower($step['status']);
-                                    $timeLabel = $historyDates[$stepKey] ?? ($i === 0 && $order->createdAt ? $order->createdAt->format('g:i A') : null);
+                                    $timeLabel = $historyDates[$stepKey] ?? ($i === 0 && $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('g:i A') : \Carbon\Carbon::parse($order->createdAt)->format('g:i A')) : null);
                                     if (!$timeLabel && $stepKey === 'to receive') {
                                         $timeLabel = $historyDates['in transit'] ?? ($historyDates['in_transit'] ?? null);
                                     }
@@ -532,7 +532,7 @@
                                         @endif
                                         @if($order->isReceivedByCustomer())
                                             <button type="button"
-                                                    @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}', productId: '{{ $item->productId }}', productName: '{{ addslashes($item->product->name ?? 'Product') }}', orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: '{{ addslashes($item->size ?? $item->variation ?? '') }}', reportType: 'product' } }))"
+                                                    @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: '{{ addslashes($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }}', productId: '{{ $item->productId }}', productName: '{{ addslashes($item->product?->name ?? 'Product') }}', orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: '{{ addslashes($item->size ?? $item->variation ?? '') }}', reportType: 'product' } }))"
                                                     class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
                                                 <span class="flex items-center gap-1"><x-lucide name="flag" class="w-3.5 h-3.5 text-red-600" /> Report Product</span>
                                             </button>
@@ -751,7 +751,7 @@
                         </div>
 
                         <button type="button"
-                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller->shopName ?? $order->seller->name ?? 'Artisan') }}' } }))"
+                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }}' } }))"
                                 style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#1E1915;"
                                 class="w-full py-2 rounded-xl hover:bg-[#1E1915] hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
                             <x-lucide name="message-square" class="w-4 h-4 inline text-stone-600" />
@@ -852,7 +852,7 @@
                                 <div class="pt-1 border-t border-emerald-200 flex flex-wrap items-center justify-between gap-1 text-[10px] text-emerald-800 font-mono">
                                     <span>Ref: <strong>{{ $cLatestSukliTx->transfer_reference ?? 'Manual Transfer' }}</strong></span>
                                     @if($cLatestSukliTx->created_at)
-                                        <span>{{ $cLatestSukliTx->created_at->format('M d, Y g:i A') }}</span>
+                                        <span>{{ ($cLatestSukliTx->created_at instanceof \Carbon\Carbon) ? $cLatestSukliTx->created_at->format('M d, Y g:i A') : \Carbon\Carbon::parse($cLatestSukliTx->created_at)->format('M d, Y g:i A') }}</span>
                                     @endif
                                 </div>
                             @endif

@@ -1566,7 +1566,7 @@ function addProductManager() {
 
         saveDraftState() {
             try {
-                const sellerId = initData.sellerId || 'guest';
+                const sellerId = '{{ Auth::id() }}' || initData.sellerId || 'guest';
                 const DRAFT_KEY = 'lumbarong_seller_product_draft_v2_' + sellerId;
 
                 const mainName = (this.variants[0] && this.variants[0].name) ? this.variants[0].name.trim() : (this.productName || '').trim();
@@ -1637,14 +1637,14 @@ function addProductManager() {
 
         restoreDraftState() {
             try {
-                const sellerId = initData.sellerId || 'guest';
+                const sellerId = '{{ Auth::id() }}' || initData.sellerId || 'guest';
                 // Clean up any legacy draft that had targetGroup hardcoded to 'Men'
                 try {
                     localStorage.removeItem('lumbarong_seller_product_draft_' + sellerId);
                 } catch (err) {}
 
                 const DRAFT_KEY = 'lumbarong_seller_product_draft_v2_' + sellerId;
-                const raw = localStorage.getItem(DRAFT_KEY);
+                const raw = localStorage.getItem(DRAFT_KEY) || localStorage.getItem('lumbarong_seller_product_draft_v2_guest');
                 if (!raw) return;
 
                 const draft = JSON.parse(raw);

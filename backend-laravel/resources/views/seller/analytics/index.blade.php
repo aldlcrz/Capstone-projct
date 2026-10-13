@@ -1,7 +1,7 @@
 @extends('layouts.seller')
 
 @section('content')
-<div x-data="{ activeTab: 'sales' }" class="space-y-6 sm:space-y-8">
+<div id="seller-analytics-component" x-data="{ activeTab: 'sales' }" class="space-y-6 sm:space-y-8">
     {{-- Header & Date Filter Toolbar --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -666,8 +666,8 @@
         ['selector' => '#tour-analytics-guide-btn',          'title' => 'Product Analytics Guide',      'text' => 'Discover which handcrafted Barongs generate the highest revenues, traffic views, and customer checkout conversions.'],
         ['selector' => '#tour-analytics-date-filter',      'title' => 'Date Preset Filters',          'text' => 'Filter product statistics across your preferred historical timeframe.'],
         ['selector' => '#tour-analytics-tabs',             'title' => 'Analytics Hubs',              'text' => 'Switch between any of the 7 analytics modules anytime.'],
-        ['selector' => '#tour-analytics-product-bestselling','title' => '<x-lucide name="sparkles" class="w-4 h-4 text-amber-600 inline mr-1" /> Best Selling Creations',   'text' => 'Highlights your top-performing Barong designs ranked by gross earnings, units sold, and stock inventory.'],
-        ['selector' => '#tour-analytics-product-mostviewed','title' => '<x-lucide name="eye" class="w-4 h-4 text-sky-600 inline mr-1" /> Most Viewed Creations',   'text' => 'Shows creations receiving the highest customer discovery traffic alongside their conversion rates.'],
+        ['selector' => '#tour-analytics-product-bestselling','title' => 'Best Selling Creations',   'text' => 'Highlights your top-performing Barong designs ranked by gross earnings, units sold, and stock inventory.'],
+        ['selector' => '#tour-analytics-product-mostviewed','title' => 'Most Viewed Creations',   'text' => 'Shows creations receiving the highest customer discovery traffic alongside their conversion rates.'],
         ['selector' => '#tour-analytics-product-catalogue','title' => 'Product Performance Matrix',   'text' => 'Granular catalog table showing product views, add-to-carts, wishlists, units sold, revenue, conversion %, and star reviews for each item.'],
     ]"
 />

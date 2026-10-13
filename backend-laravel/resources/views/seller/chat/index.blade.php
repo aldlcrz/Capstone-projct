@@ -494,8 +494,8 @@ document.addEventListener('alpine:init', () => {
                 <!-- Messages Stream -->
                 <div x-ref="threadBox" class="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-8 space-y-4 bg-gray-50/10">
                     <template x-for="msg in messages" :key="msg.id">
-                        <div class="flex flex-col" :class="msg.senderId === currentUserId ? 'items-end' : 'items-start'">
-                            <div class="max-w-[85%] sm:max-w-[70%] px-4 sm:px-5 py-3 rounded-2xl text-xs leading-relaxed"
+                        <div class="flex flex-col max-w-full min-w-0" :class="msg.senderId === currentUserId ? 'items-end' : 'items-start'">
+                            <div class="max-w-[85%] sm:max-w-[70%] px-4 sm:px-5 py-3 rounded-2xl text-xs leading-relaxed break-words [overflow-wrap:anywhere] [word-break:break-word] overflow-hidden"
                                  :class="msg.senderId === currentUserId
                                      ? 'bg-[#C0422A] text-white rounded-tr-none'
                                      : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200/50'"

@@ -67,6 +67,10 @@ window.sellerProducts = function() {
         },
 
         init() {
+            const validTabs = ['all', 'approved', 'pending', 'drafts', 'rejected'];
+            if (!validTabs.includes(this.activeTab)) {
+                this.activeTab = 'all';
+            }
             if (!this.productsData || this.productsData.length === 0) {
                 try {
                     const el = document.getElementById('seller-products-data');
@@ -239,26 +243,28 @@ window.sellerProducts = function() {
         },
         matchesProduct(productId, fallbackStatus = '') {
             const prod = (this.productsData || []).find(p => String(p.id) === String(productId));
-            const name = prod?.name || '';
-            const desc = prod?.description || '';
-            const status = (prod?.status || fallbackStatus || '').toLowerCase();
-            const query = (this.search || '').toLowerCase().trim();
+            const name = String(prod?.name || '');
+            const desc = String(prod?.description || '');
+            const status = String(prod?.status || fallbackStatus || '').toLowerCase();
+            const query = String(this.search || '').toLowerCase().trim();
             const matchesSearch = !query || name.toLowerCase().includes(query) || desc.toLowerCase().includes(query);
-            const tabLower = (this.activeTab || 'all').toLowerCase();
+            const validTabs = ['all', 'approved', 'pending', 'drafts', 'rejected'];
+            const tabLower = validTabs.includes(this.activeTab) ? String(this.activeTab).toLowerCase() : 'all';
             const matchesTab = tabLower === 'all' 
                 || status === tabLower 
-                || (tabLower === 'drafts' && status === 'draft')
+                || (tabLower === 'drafts' && (status === 'draft' || status === 'drafts'))
                 || (tabLower === 'rejected' && status === 'rejected');
             return matchesSearch && matchesTab;
         },
         matches(productName, productDesc, productStatus) {
-            const query = (this.search || '').toLowerCase().trim();
-            const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
-            const statusLower = (productStatus || '').toLowerCase();
-            const tabLower = (this.activeTab || 'all').toLowerCase();
+            const query = String(this.search || '').toLowerCase().trim();
+            const matchesSearch = !query || String(productName || '').toLowerCase().includes(query) || String(productDesc || '').toLowerCase().includes(query);
+            const statusLower = String(productStatus || '').toLowerCase();
+            const validTabs = ['all', 'approved', 'pending', 'drafts', 'rejected'];
+            const tabLower = validTabs.includes(this.activeTab) ? String(this.activeTab).toLowerCase() : 'all';
             const matchesTab = tabLower === 'all' 
                 || statusLower === tabLower 
-                || (tabLower === 'drafts' && statusLower === 'draft')
+                || (tabLower === 'drafts' && (statusLower === 'draft' || statusLower === 'drafts'))
                 || (tabLower === 'rejected' && statusLower === 'rejected');
             return matchesSearch && matchesTab;
         },
@@ -321,7 +327,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
 </script>
 
-<div class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
+<div id="seller-products-component" class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b" style="border-color: #E8DECB;">
         <div>
@@ -368,10 +374,10 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
     </div>
 
     @php
-        $approvedProducts = $products->filter(fn($p) => $p->status === 'approved');
-        $pendingProducts  = $products->filter(fn($p) => $p->status === 'pending');
-        $draftProducts    = $products->filter(fn($p) => $p->status === 'draft');
-        $rejectedProducts = $products->filter(fn($p) => $p->status === 'rejected');
+        $approvedProducts = $products->filter(fn($p) => strtolower($p->status ?? '') === 'approved');
+        $pendingProducts  = $products->filter(fn($p) => strtolower($p->status ?? '') === 'pending');
+        $draftProducts    = $products->filter(fn($p) => strtolower($p->status ?? '') === 'draft');
+        $rejectedProducts = $products->filter(fn($p) => strtolower($p->status ?? '') === 'rejected');
     @endphp
 
     {{-- Filter Toolbar & Real-Time Search Bar --}}
@@ -655,13 +661,13 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                                     @if($product->isPreorder())
                                         <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                     @else
-                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ (int)$product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ (int)$product->stock }})">{{ $product->stock }}</div>
                                     @endif
                                 </div>
                             </div>
 
                             @if(!$product->isPreorder())
-                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
                                             data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
                                             @click.stop="openRestockModal($el.dataset.product)"
@@ -708,7 +714,7 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
     </div>
 
     {{-- SECTION 3: APPROVED PRODUCTS --}}
-    <div x-show="@if($approvedProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'approved' @else activeTab === 'approved' @endif" x-cloak class="space-y-5">
+    <div x-show="@if($approvedProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'approved' || !['approved', 'pending', 'drafts', 'rejected'].includes(activeTab) @else activeTab === 'approved' @endif" x-cloak class="space-y-5">
         @if($approvedProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
                 <span class="w-2 h-2 rounded-full" style="background: #4A6741;"></span>

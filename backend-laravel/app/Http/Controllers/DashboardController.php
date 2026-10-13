@@ -732,7 +732,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $orders = $query->orderBy('createdAt', 'desc')->get();
+            $orders = $query->orderBy('createdAt', 'desc')->get()->values();
 
             $counts = [
                 'all'                  => $orders->count(),

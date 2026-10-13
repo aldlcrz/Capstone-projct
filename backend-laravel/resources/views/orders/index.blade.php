@@ -187,7 +187,7 @@
                         'id' => $order->id,
                         'shortId' => strtoupper(substr($order->id, -8)),
                         'status' => $order->status,
-                        'createdAt' => $order->createdAt ? $order->createdAt->format('F d, Y \a\t h:i A') : '',
+                        'createdAt' => $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('F d, Y \a\t h:i A') : \Carbon\Carbon::parse($order->createdAt)->format('F d, Y \a\t h:i A')) : '',
                         'totalAmount' => number_format($order->totalAmount, 2),
                         'paymentMethod' => $order->formatted_payment_method,
                         'paymentStatus' => $order->resolved_payment_status,
@@ -282,7 +282,7 @@
                                 #LB-OR-{{ $orderData['shortId'] }}
                             </span>
                             <span class="w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
-                            <span class="text-[#8C827A] font-medium">{{ $order->createdAt->format('M d, Y • g:i A') }}</span>
+                            <span class="text-[#8C827A] font-medium">{{ $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('M d, Y • g:i A') : \Carbon\Carbon::parse($order->createdAt)->format('M d, Y • g:i A')) : '' }}</span>
 
                             <span class="hidden sm:inline-block w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
 

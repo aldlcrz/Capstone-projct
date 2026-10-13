@@ -606,9 +606,17 @@ class WebController extends Controller
      */
     public function orderDetail(string $id)
     {
-        $order = Order::where('id', $id)
-            ->where('customerId', Auth::id())
-            ->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests', 'shipping.provider'])
+        $query = Order::where('id', $id);
+
+        $user = Auth::user();
+        if ($user && !in_array($user->role, ['admin', 'superadmin'], true)) {
+            $query->where(function ($q) use ($user) {
+                $q->where('customerId', $user->id)
+                  ->orWhere('sellerId', $user->id);
+            });
+        }
+
+        $order = $query->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests', 'shipping.provider'])
             ->firstOrFail();
 
         $recommended = $this->getRecommendedProductsForOrder($order);

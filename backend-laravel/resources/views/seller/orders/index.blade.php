@@ -32,7 +32,7 @@ function buyerOrderPhone(order) {
 function printSellerOrder(order) {
     if (!order) return;
 
-    const orderId = '#LB-' + order.id.slice(-8).toUpperCase();
+    const orderId = '#LB-' + String(order?.id || '').slice(-8).toUpperCase();
     const date = order.createdAt
         ? new Date(order.createdAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
         : '';
@@ -92,13 +92,46 @@ function sellerOrdersManager() {
     try {
         const jsonEl = document.getElementById('seller-orders-json');
         if (jsonEl && jsonEl.textContent) {
-            initialOrders = JSON.parse(jsonEl.textContent);
+            const raw = JSON.parse(jsonEl.textContent.trim());
+            if (Array.isArray(raw)) {
+                initialOrders = raw;
+            } else if (raw && typeof raw === 'object') {
+                if (Array.isArray(raw.data)) {
+                    initialOrders = raw.data;
+                } else {
+                    initialOrders = Object.values(raw);
+                }
+            } else {
+                initialOrders = [];
+            }
         }
     } catch(e) {
+        console.error('Error parsing seller orders:', e);
         initialOrders = [];
     }
     return {
-        orders: initialOrders || [],
+        orders: Array.isArray(initialOrders) ? initialOrders : [],
+        formatOrderId(orderOrId) {
+            if (!orderOrId) return '';
+            const id = typeof orderOrId === 'object' ? orderOrId.id : orderOrId;
+            if (!id) return '';
+            return '#LB-' + String(id).slice(-8).toUpperCase();
+        },
+        getGuideLabel() {
+            const labels = {
+                'all': 'Orders Guide',
+                'pending': 'Pending Guide',
+                'to ship': 'To Ship Guide',
+                'shipped': 'Shipped Guide',
+                'in transit': 'In Transit Guide',
+                'delivered': 'Delivered Guide',
+                'completed': 'Completed Guide',
+                'cancelled': 'Cancelled Guide',
+                'cancellation pending': 'Cancellations Guide',
+                'return requests': 'Returns Guide'
+            };
+            return labels[this.statusFilter] || 'Orders Guide';
+        },
         searchTerm: '',
         statusFilter: 'all',
         activeOrder: null,
@@ -1879,13 +1912,24 @@ function sellerOrdersManager() {
         }
     };
 }
+
+window.sellerOrdersManager = sellerOrdersManager;
+if (window.Alpine) {
+    window.Alpine.data('sellerOrdersManager', sellerOrdersManager);
+} else {
+    document.addEventListener('alpine:init', () => {
+        if (window.Alpine) {
+            window.Alpine.data('sellerOrdersManager', sellerOrdersManager);
+        }
+    });
+}
 </script>
 
 <script id="seller-orders-json" type="application/json">
-    {!! json_encode($orders, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
+    {!! json_encode($orders->values(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) !!}
 </script>
 
-<div class="space-y-4 sm:space-y-6 w-full max-w-7xl pb-28 lg:pb-12" x-data="sellerOrdersManager()">
+<div id="seller-orders-component" class="space-y-4 sm:space-y-6 w-full max-w-7xl pb-28 lg:pb-12" x-data="sellerOrdersManager()">
 
     {{-- Floating Toast Notification --}}
     <div x-show="toastMessage" x-transition:enter="transition ease-out duration-300 transform"
@@ -1936,21 +1980,7 @@ function sellerOrdersManager() {
                     <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span x-text="
-                        const labels = {
-                            'all': 'Orders Guide',
-                            'pending': 'Pending Guide',
-                            'to ship': 'To Ship Guide',
-                            'shipped': 'Shipped Guide',
-                            'in transit': 'In Transit Guide',
-                            'delivered': 'Delivered Guide',
-                            'completed': 'Completed Guide',
-                            'cancelled': 'Cancelled Guide',
-                            'cancellation pending': 'Cancellations Guide',
-                            'return requests': 'Returns Guide'
-                        };
-                        return labels[statusFilter] || 'Orders Guide';
-                    ">Orders Guide</span>
+                    <span x-text="getGuideLabel()">Orders Guide</span>
                 </button>
             </div>
             <p class="text-xs font-medium mt-1" style="color: #766C60;">Track bespoke commissions, customer delivery details, and fulfillment state.</p>
@@ -2063,7 +2093,7 @@ function sellerOrdersManager() {
                         <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="font-sans text-xs sm:text-sm font-extrabold tracking-tight transition-colors"
                                 style="color: #1E1915;"
-                                x-text="'#LB-' + order.id.slice(-8).toUpperCase()"></h3>
+                                x-text="formatOrderId(order)"></h3>
                             
                             {{-- Dynamic Status Stage Badge --}}
                             <span class="px-2.5 py-0.5 rounded-full border text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0"
@@ -2172,8 +2202,8 @@ function sellerOrdersManager() {
                 <div class="w-14 h-14 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0420A] flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/20 mx-auto mb-2 overflow-hidden">
                     <x-lucide name="package" class="w-4 h-4 inline" />
                 </div>
-                <h2 class="text-base sm:text-lg font-black uppercase tracking-tight" x-text="detailsOrder ? '#LB-' + detailsOrder.id.slice(-8).toUpperCase() : 'Order Details'"></h2>
-                <p class="text-xs text-gray-300 font-medium mt-0.5" x-text="detailsOrder &amp;&amp; detailsOrder.createdAt ? new Date(detailsOrder.createdAt).toLocaleDateString('en-PH', {month:'long', day:'numeric', year:'numeric'}) : ''"></p>
+                <h2 class="text-base sm:text-lg font-black uppercase tracking-tight" x-text="detailsOrder ? formatOrderId(detailsOrder) : 'Order Details'"></h2>
+                <p class="text-xs text-gray-300 font-medium mt-0.5" x-text="(detailsOrder && detailsOrder.createdAt) ? new Date(detailsOrder.createdAt).toLocaleDateString('en-PH', {month:'long', day:'numeric', year:'numeric'}) : ''"></p>
                 
                 <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">
                     <span>Status:</span>
@@ -3088,7 +3118,7 @@ function sellerOrdersManager() {
                         : (isStorePickup(deliveryConfirmOrder) ? 'Are you sure this order has been claimed by the customer at your workshop?' : (isSpecialDelivery(deliveryConfirmOrder) ? 'Are you sure this order has been delivered by your artisan rider?' : 'Are you sure this order has been delivered?'))"></p>
                 <template x-if="deliveryConfirmOrder">
                     <div class="mt-2 py-1.5 px-3 bg-gray-50 rounded-xl text-[11px] font-bold text-gray-700 inline-block border border-gray-100">
-                        <span x-text="'#LB-' + deliveryConfirmOrder.id.slice(-8).toUpperCase()"></span>
+                        <span x-text="formatOrderId(deliveryConfirmOrder)"></span>
                         <span class="text-gray-400"> • </span>
                         <span x-text="deliveryConfirmOrder.customer?.name || 'Customer'"></span>
                     </div>
@@ -3160,7 +3190,7 @@ function sellerOrdersManager() {
                     <div class="p-3.5 bg-[#FFFCF7] rounded-2xl border border-[#E8DECB] space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Order</span>
-                            <span class="font-extrabold text-xs text-[#1E1915]" x-text="'#LB-' + statusConfirmTarget.id.slice(-8).toUpperCase()"></span>
+                            <span class="font-extrabold text-xs text-[#1E1915]" x-text="formatOrderId(statusConfirmTarget)"></span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 font-bold text-[10px] uppercase tracking-wider">Customer</span>
@@ -3611,7 +3641,7 @@ function sellerOrdersManager() {
                 </div>
 
                 <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] text-red-700 leading-relaxed">
-                    <strong>Notice:</strong> Approving will immediately cancel order <span class="font-bold font-mono" x-text="approveCancellationTarget ? '#LB-' + approveCancellationTarget.id.slice(-8).toUpperCase() : ''"></span>, restore product and size stock back into your active inventory, and notify the customer.
+                    <strong>Notice:</strong> Approving will immediately cancel order <span class="font-bold font-mono" x-text="approveCancellationTarget ? formatOrderId(approveCancellationTarget) : ''"></span>, restore product and size stock back into your active inventory, and notify the customer.
                 </div>
             </div>
 
@@ -3729,7 +3759,7 @@ function sellerOrdersManager() {
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Approve Return Request</h3>
-                    <p class="text-[10px] text-gray-500 font-medium" x-text="approveReturnTarget ? '#LB-' + approveReturnTarget.id.slice(-8).toUpperCase() + ' · ' + (approveReturnTarget.customer?.name || 'Customer') : ''"></p>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="approveReturnTarget ? formatOrderId(approveReturnTarget) + ' · ' + (approveReturnTarget.customer?.name || 'Customer') : ''"></p>
                 </div>
             </div>
 
@@ -3799,7 +3829,7 @@ function sellerOrdersManager() {
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Decline Return Request</h3>
-                    <p class="text-[10px] text-gray-500 font-medium" x-text="rejectReturnTarget ? '#LB-' + rejectReturnTarget.id.slice(-8).toUpperCase() + ' · ' + (rejectReturnTarget.customer?.name || 'Customer') : ''"></p>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="rejectReturnTarget ? formatOrderId(rejectReturnTarget) + ' · ' + (rejectReturnTarget.customer?.name || 'Customer') : ''"></p>
                 </div>
             </div>
 
@@ -3945,7 +3975,7 @@ function sellerOrdersManager() {
                 <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><x-lucide name="coins" class="w-5 h-5 text-emerald-700" /></div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Payment Received</h3>
-                    <p class="text-[10px] text-gray-500 font-medium" x-text="recordPaymentTarget ? '#LB-' + recordPaymentTarget.id.slice(-8).toUpperCase() + ' · ' + (recordPaymentTarget.customer?.name || 'Customer') : ''"></p>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="recordPaymentTarget ? formatOrderId(recordPaymentTarget) + ' · ' + (recordPaymentTarget.customer?.name || 'Customer') : ''"></p>
                 </div>
             </div>
 
@@ -4048,7 +4078,7 @@ function sellerOrdersManager() {
                 </div>
                 <div>
                     <h3 class="text-sm font-black text-black uppercase tracking-tight">Record Direct Refund</h3>
-                    <p class="text-[10px] text-gray-500 font-medium" x-text="sellerRefundTarget ? '#LB-' + sellerRefundTarget.id.slice(-8).toUpperCase() + ' · ' + (sellerRefundTarget.customer?.name || 'Customer') : ''"></p>
+                    <p class="text-[10px] text-gray-500 font-medium" x-text="sellerRefundTarget ? formatOrderId(sellerRefundTarget) + ' · ' + (sellerRefundTarget.customer?.name || 'Customer') : ''"></p>
                 </div>
             </div>
 
