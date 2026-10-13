@@ -138,7 +138,7 @@ class AnalyticsController extends Controller
             'toShip'    => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['processing', 'to ship', 'confirmed', 'packed']))->count(),
             'delivered' => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['delivered', 'completed']))->count(),
             'cancelled' => $orders->filter(fn ($o) => $this->isCancelledOrder($o->status))->count(),
-            'returned'  => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['returned', 'refunded', 'return requested', 'return approved', 'return_requested', 'return_approved'], true) || ($o->relationLoaded('returnRequests') && $o->returnRequests->isNotEmpty()))->count(),
+            'returned'  => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['returned', 'refunded', 'return requested', 'return approved', 'return_requested', 'return_approved'], true) || (($o instanceof \Illuminate\Database\Eloquent\Model) && $o->relationLoaded('returnRequests') && $o->returnRequests->isNotEmpty()))->count(),
         ];
 
         $completionRate = $orderStats['total'] > 0

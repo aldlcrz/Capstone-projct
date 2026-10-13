@@ -124,7 +124,7 @@
                        autocomplete="one-time-code"
                        placeholder="" 
                        autofocus
-                       class="w-full text-center text-3xl font-black tracking-[0.35em] px-4 py-3 bg-[#F9F6F2] border-2 {{ $errors->has('code') ? 'border-red-400' : 'border-transparent' }} focus:border-[#C0422A] focus:bg-white rounded-2xl outline-none transition-all">
+                       class="w-full text-center text-3xl font-black tracking-[0.35em] px-4 py-3 bg-[#F9F6F2] border-2 @error('code') border-red-400 @else border-transparent @enderror focus:border-[#C0422A] focus:bg-white rounded-2xl outline-none transition-all">
                 @error('code')
                     <p class="text-xs font-bold text-red-500 text-center mt-2">{{ $message }}</p>
                 @enderror

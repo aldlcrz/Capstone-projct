@@ -514,10 +514,10 @@
                 </div>
             @endif
 
-            @if(session('error') || $errors->any())
+            @if(session('error') || (isset($errors) && $errors instanceof \Illuminate\Support\ViewErrorBag && $errors->any()))
                 <div class="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-bold flex items-center gap-2.5 shadow-2xs">
                     <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>{{ session('error') ?? $errors->first() }}</span>
+                    <span>{{ session('error') ?? ($errors instanceof \Illuminate\Support\ViewErrorBag ? $errors->first() : '') }}</span>
                 </div>
             @endif
 

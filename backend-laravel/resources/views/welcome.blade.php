@@ -340,7 +340,7 @@
                                 ));
                             $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
                         @endphp
-                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-[72px] sm:w-[88px] cursor-pointer">
+                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-18 sm:w-22 cursor-pointer">
                             <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
                                 <div class="w-full h-full rounded-full overflow-hidden">
                                     <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">

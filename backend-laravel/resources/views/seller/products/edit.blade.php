@@ -119,7 +119,7 @@
         </div>
     </div>
 
-    @if($errors->any())
+    @if(isset($errors) && $errors instanceof \Illuminate\Support\ViewErrorBag && $errors->any())
     <div 
         x-data="{ show: true, init() { setTimeout(() => this.show = false, 7000) } }"
         x-show="show"

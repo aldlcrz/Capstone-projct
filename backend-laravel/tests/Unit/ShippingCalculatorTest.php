@@ -773,11 +773,11 @@ class ShippingCalculatorTest extends TestCase
 
         $this->assertNotEmpty($quotes);
         $providerCodes = array_column($quotes, 'provider_code');
-
-        // Only Store Pickup is available
+        // Store pickup and standard delivery fallback are available
         $this->assertContains('store_pickup', $providerCodes);
         $this->assertNotContains('seller_direct', $providerCodes);
-        $this->assertNull(collect($quotes)->firstWhere('provider_code', '!=', 'store_pickup'));
+        $standardQuote = collect($quotes)->firstWhere('provider_name', 'Standard Delivery');
+        $this->assertNotNull($standardQuote);
     }
 
     public function test_get_available_payment_methods_returns_cod_only_for_local_cluster()
@@ -791,6 +791,72 @@ class ShippingCalculatorTest extends TestCase
         $this->assertNotContains('COD', $nonLocalMethods);
         $this->assertContains('GCash', $nonLocalMethods);
         $this->assertContains('Maya', $nonLocalMethods);
+    }
+
+    public function test_zone_resolver_resolves_muntinlupa_and_ncr_variations()
+    {
+        // City alone without province
+        $z1 = $this->resolver->resolve(null, 'Muntinlupa', 'Alabang', null);
+        $this->assertNotNull($z1);
+        $this->assertEquals('NCR', $z1->code);
+
+        // Province as National Capital Region
+        $z2 = $this->resolver->resolve('National Capital Region', 'Muntinlupa', 'Alabang', null);
+        $this->assertNotNull($z2);
+        $this->assertEquals('NCR', $z2->code);
+
+        // Province as Fourth District (common in Nominatim geocoding)
+        $z3 = $this->resolver->resolve('Fourth District', 'Muntinlupa', 'Alabang', null);
+        $this->assertNotNull($z3);
+        $this->assertEquals('NCR', $z3->code);
+
+        // Exact postal code prefix 17 for Muntinlupa
+        $z4 = $this->resolver->resolve(null, 'Muntinlupa', 'Alabang', '1780');
+        $this->assertNotNull($z4);
+        $this->assertEquals('NCR', $z4->code);
+    }
+
+    public function test_calculator_provides_quotes_for_muntinlupa_destination()
+    {
+        $seller = User::create([
+            'name' => 'Artisan Shop ' . Str::random(5),
+            'email' => 'artisan_' . Str::random(5) . '@lumbarong.test',
+            'password' => bcrypt('password'),
+            'role' => 'seller',
+            'shopProvince' => 'Laguna',
+            'shopCity' => 'Lumban',
+            'shopPostalCode' => '4014',
+        ]);
+
+        $product = Product::create([
+            'sellerId' => $seller->id,
+            'name' => 'Barong Tagalog',
+            'description' => 'Test Barong',
+            'price' => 1500,
+            'sale_price' => 1500,
+            'stock' => 10,
+            'package_weight_per_unit' => 0.5,
+            'package_length_per_unit' => 35,
+            'package_width_per_unit' => 25,
+            'package_height_per_unit' => 5,
+        ]);
+
+        $destination = [
+            'province' => 'Metro Manila',
+            'city' => 'Muntinlupa',
+            'barangay' => 'Alabang',
+            'postalCode' => '1780',
+        ];
+
+        $quotes = $this->calculator->calculateQuotes($seller, $destination, [
+            ['id' => $product->id, 'quantity' => 1],
+        ]);
+
+        $this->assertNotEmpty($quotes);
+        $providerCodes = array_column($quotes, 'provider_code');
+        $this->assertContains('store_pickup', $providerCodes);
+        $this->assertNotContains('seller_direct', $providerCodes);
+        $this->assertNotNull(collect($quotes)->firstWhere('provider_name', 'Standard Delivery'));
     }
 }
 

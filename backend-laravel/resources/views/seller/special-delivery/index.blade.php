@@ -324,10 +324,18 @@
     </form>
 </div>
 
+<script id="special-delivery-json-data" type="application/json">{!! json_encode(["municipalities" => $municipalitiesData, "isEnabled" => $isEnabled, "baseFee" => $baseFee]) !!}</script>
+
 <script>
 function specialDeliverySettings() {
-    const serverData = JSON.parse('{!! addslashes(json_encode(["municipalities" => $municipalitiesData, "isEnabled" => $isEnabled, "baseFee" => $baseFee])) !!}');
-    const rawMunicipalities = serverData.municipalities;
+    let serverData = {};
+    try {
+        const dataEl = document.getElementById('special-delivery-json-data');
+        serverData = dataEl ? JSON.parse(dataEl.textContent || '{}') : {};
+    } catch (e) {
+        console.error('Failed to parse special delivery data:', e);
+    }
+    const rawMunicipalities = serverData.municipalities || {};
 
     // Build initial state
     const selectedMunis = {};
