@@ -128,11 +128,11 @@
             <div class="flex items-center gap-2 border-b pb-3 min-w-max" style="border-color: #E8DECB;">
                 @php
                     $statusTabs = [
-                        'all'          => ['label' => 'All Reports', 'lucide' => 'clipboard-list', 'count' => $counts['total']],
-                        'Under Review' => ['label' => 'Under Review', 'lucide' => 'search', 'count' => $counts['under_review']],
-                        'Pending'      => ['label' => 'Pending', 'lucide' => 'clock', 'count' => $counts['pending']],
-                        'Resolved'     => ['label' => 'Resolved', 'lucide' => 'check-circle', 'count' => $counts['resolved']],
-                        'Dismissed'    => ['label' => 'Dismissed', 'icon' => '—', 'count' => $counts['dismissed']],
+                        'all'          => ['label' => 'All Reports', 'lucide' => 'clipboard-list', 'count' => $counts['total'] ?? 0],
+                        'Under Review' => ['label' => 'Under Review', 'lucide' => 'search', 'count' => $counts['under_review'] ?? 0],
+                        'Pending'      => ['label' => 'Pending', 'lucide' => 'clock', 'count' => $counts['pending'] ?? 0],
+                        'Resolved'     => ['label' => 'Resolved', 'lucide' => 'check-circle', 'count' => $counts['resolved'] ?? 0],
+                        'Dismissed'    => ['label' => 'Dismissed', 'lucide' => 'slash', 'count' => $counts['dismissed'] ?? 0],
                     ];
                 @endphp
                 @foreach($statusTabs as $val => $tab)
@@ -141,7 +141,14 @@
                             :style="statusFilter === '{{ $val }}' 
                                 ? 'background: #1E1915; color: #FFFCF7; box-shadow: 0 2px 8px rgba(30,25,21,0.12); border: 1px solid #1E1915;' 
                                 : 'background: #FFFFFF; color: #6C6256; border: 1px solid #ECE3D2;'">
-                        <span>{{ $tab['icon'] }} {{ $tab['label'] }}</span>
+                        <span class="flex items-center gap-1.5">
+                            @if(!empty($tab['lucide']))
+                                <x-lucide :name="$tab['lucide']" class="w-3.5 h-3.5 shrink-0" />
+                            @elseif(!empty($tab['icon']))
+                                <span>{{ $tab['icon'] }}</span>
+                            @endif
+                            <span>{{ $tab['label'] }}</span>
+                        </span>
                         <span class="px-2 py-0.5 text-[10px] rounded-full font-bold transition-colors ml-0.5" 
                               :style="statusFilter === '{{ $val }}' ? 'background: rgba(196,149,32,0.28); color: #DFC97A;' : 'background: #F4EFE6; color: #766C60;'">
                             {{ $tab['count'] }}
@@ -206,8 +213,8 @@
                         'Pending'      => 'clock',
                         'Under Review' => 'search',
                         'Resolved'     => 'check-circle',
-                        'Dismissed'    => '—',
-                        default        => '•',
+                        'Dismissed'    => 'slash',
+                        default        => 'shield',
                     };
 
                     $searchCorpus = strtolower($report->getReportCode() . ' ' . $report->reason . ' ' . $report->description . ' ' . ($report->product->name ?? ''));
@@ -242,7 +249,7 @@
                                 </span>
                             @endif
                             <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 {{ $statusBadgeClass }}">
-                                <span>{{ $statusIcon }}</span>
+                                <x-lucide :name="$statusIcon" class="w-3 h-3 shrink-0" />
                                 <span>{{ $report->status }}</span>
                             </span>
                         </div>
