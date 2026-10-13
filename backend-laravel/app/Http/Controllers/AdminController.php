@@ -1175,7 +1175,10 @@ class AdminController extends Controller
     public function deleteSeller(Request $request, string $id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::find($id);
+            if (!$user) {
+                return redirect()->route('admin.sellers')->with('info', 'Seller has already been deleted or removed.');
+            }
             $reason = $request->input('reason', 'Administrative deletion');
             $sellerName = $user->name;
             $sellerEmail = $user->email;

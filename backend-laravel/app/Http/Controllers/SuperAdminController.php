@@ -834,7 +834,10 @@ class SuperAdminController extends Controller
 
     public function deleteSeller(Request $request, string $id)
     {
-        $seller = User::where('role', 'seller')->findOrFail($id);
+        $seller = User::where('role', 'seller')->find($id);
+        if (!$seller) {
+            return back()->with('info', 'Seller has already been deleted or removed.');
+        }
         $reason = $request->input('reason', 'Administrative deletion by Super Admin');
         $name = $seller->name;
 
@@ -1328,7 +1331,7 @@ class SuperAdminController extends Controller
             $tables = [];
         }
 
-        return view('superadmin.platform', compact('info', 'tables'));
+        return view('admin.settings.platform', compact('info', 'tables'));
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

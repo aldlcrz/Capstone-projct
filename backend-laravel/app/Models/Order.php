@@ -161,7 +161,10 @@ class Order extends Model
                 return round($sum, 2);
             }
         } elseif ($this->paymentTransactions()->exists()) {
-            $sum = (float) $this->paymentTransactions()->whereIn('status', $validStatuses)->selectRaw('SUM(COALESCE(detected_amount, expected_amount)) as total')->value('total');
+            $sum = (float) $this->paymentTransactions()
+                ->whereIn('status', $validStatuses)
+                ->get()
+                ->sum(fn($tx) => (float) ($tx->detected_amount ?: $tx->expected_amount));
             if ($sum > 0) {
                 return round($sum, 2);
             }
@@ -316,8 +319,8 @@ class Order extends Model
         } elseif ($this->paymentTransactions()->whereIn('status', $validStatuses)->exists()) {
             $sum = (float) $this->paymentTransactions()
                 ->whereIn('status', $validStatuses)
-                ->selectRaw('SUM(COALESCE(detected_amount, expected_amount)) as total')
-                ->value('total');
+                ->get()
+                ->sum(fn($tx) => (float) ($tx->detected_amount ?: $tx->expected_amount));
             if ($sum > 0.0) {
                 return round($sum, 2);
             }

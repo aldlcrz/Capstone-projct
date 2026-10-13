@@ -182,60 +182,34 @@
             </div>
         </div>
 
-        <!-- Quick Developer Actions & Error Logs (1 col) -->
+        <!-- Platform Governance & Commission Policy (1 col) -->
         <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-6">
             <div>
-                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Developer Fast Track</div>
-                <h3 class="text-sm font-bold text-gray-900 mb-4">Quick Developer Actions</h3>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Platform Governance</div>
+                <h3 class="text-sm font-bold text-gray-900 mb-4">Commission Rate Policy</h3>
 
-                <div class="space-y-2.5">
-                    <a href="{{ route('superadmin.error-logs') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                                <x-lucide name="file-text" class="w-4 h-4 text-rose-600" />
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-gray-900">System Error Logs</div>
-                                <div class="text-[10px] text-gray-400">{{ $recentErrorCount }} recorded error entries</div>
-                            </div>
-                        </div>
-                        <span class="text-xs text-gray-400 group-hover:text-gray-700">→</span>
-                    </a>
-
-                    <a href="{{ route('superadmin.maintenance') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                                <x-lucide name="alert-triangle" class="w-4 h-4 text-amber-700" />
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-gray-900">Maintenance Mode</div>
-                                <div class="text-[10px] text-gray-400">System maintenance &amp; bypass keys</div>
-                            </div>
-                        </div>
-                        <span class="text-xs text-gray-400 group-hover:text-gray-700">→</span>
-                    </a>
-
-                    <a href="{{ route('superadmin.audit-logs') }}" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 hover:bg-gray-100/80 border border-gray-100 transition-all group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                                <x-lucide name="clipboard-list" class="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-gray-900">Audit &amp; Security Logs</div>
-                                <div class="text-[10px] text-gray-400">Track operations and admin activities</div>
-                            </div>
-                        </div>
-                        <span class="text-xs text-gray-400 group-hover:text-gray-700">→</span>
-                    </a>
+                <div class="p-4 rounded-2xl bg-stone-50 border border-stone-200/60 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-stone-600">Global Rate</span>
+                        <span class="text-2xl font-black text-[#C0422A] font-mono">{{ $rate }}%</span>
+                    </div>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">
+                        Enforced platform-wide across verified artisan sales transactions upon order completion.
+                    </p>
+                    <div class="pt-2">
+                        <a href="{{ route('superadmin.commissions') }}" class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#1E1915] text-[#DFC97A] hover:bg-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs no-underline">
+                            Adjust Policy &amp; Rates →
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-gray-100">
-                <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-2">Commission Rate Policy</div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Global Rate: <strong class="text-[#C0422A]">{{ $rate }}%</strong></span>
-                    <a href="{{ route('superadmin.commissions') }}" class="text-[10px] font-bold uppercase tracking-widest text-[#C0422A] hover:underline">Adjust Rate</a>
-                </div>
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs">
+                <span class="text-stone-500 font-medium">Platform Status:</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Operational
+                </span>
             </div>
         </div>
     </div>
