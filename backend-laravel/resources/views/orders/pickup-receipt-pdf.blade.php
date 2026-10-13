@@ -278,9 +278,9 @@
             </td>
             <td class="receipt-badge">
                 <div class="badge-box">
-                    <div class="badge-title">Pickup Claim Code</div>
-                    <div class="badge-code">{{ $pickupCode }}</div>
-                    <div style="font-size: 8px; color: #78716C; margin-top: 2px;">Order #LB-OR-{{ strtoupper(substr($order->id, -8)) }}</div>
+                    <div class="badge-title">Official Receipt</div>
+                    <div class="badge-code" style="font-size: 13px; color: #1E1915; letter-spacing: 0.5px;">#LB-OR-{{ strtoupper(substr($order->id, -8)) }}</div>
+                    <div style="font-size: 8px; color: #78716C; margin-top: 2px;">Store Pickup Pass</div>
                 </div>
             </td>
         </tr>
