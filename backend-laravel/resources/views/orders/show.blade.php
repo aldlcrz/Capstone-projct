@@ -446,7 +446,7 @@
                                             ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
                                     @endphp
                                     <button type="button"
-                                        @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
+                                        @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product?->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
                                         style="background-color:#1E1915;color:#FFFFFF;"
                                         class="px-3.5 py-1.5 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 cursor-pointer">
                                         <span class="flex items-center gap-1"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Rate</span>
@@ -491,14 +491,14 @@
                             if (!$existingReview && $order->reviews) {
                                 $existingReview = $order->reviews->where('productId', $item->productId)->first();
                             }
-                            $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Barong Piece');
+                            $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product?->name ?? 'Heritage Barong Piece');
                         @endphp
                         <div class="py-2.5 first:pt-0 last:pb-0">
                             <div class="flex items-center gap-3">
                                 {{-- Thumbnail --}}
                                 <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[#FAF8F5] border border-[#ECE3D2] shrink-0 cursor-pointer group"
                                      onclick="window.location.href='/products/{{ $item->productId }}'">
-                                    <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product->name ?? 'Product' }}">
+                                    <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onerror="this.src='/uploads/products/default.jpg'" alt="{{ $item->product?->name ?? 'Product' }}">
                                 </div>
 
                                 {{-- Info --}}
@@ -736,9 +736,9 @@
                         <div class="flex items-center gap-2.5">
                             <div class="w-9 h-9 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0422A] border border-[#ECE3D2] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
                                 @if($order->seller?->profile_photo_url)
-                                    <img src="{{ $order->seller->profile_photo_url }}" alt="{{ $order->seller->display_name ?? 'Artisan' }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
+                                    <img src="{{ $order->seller->profile_photo_url }}" alt="{{ $order->seller?->display_name ?? 'Artisan' }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
                                 @else
-                                    {{ strtoupper(substr($order->seller->shopName ?: ($order->seller->name ?: 'AR'), 0, 2)) }}
+                                    {{ strtoupper(substr($order->seller?->shopName ?: ($order->seller?->name ?: 'AR'), 0, 2)) }}
                                 @endif
                             </div>
                             <div class="min-w-0 flex-1">

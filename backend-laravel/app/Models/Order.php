@@ -464,17 +464,29 @@ class Order extends Model
      */
     public function getNormalizedShippingAddressAttribute(): array
     {
-        $address = $this->shippingAddress;
+        $raw = $this->shippingAddress;
 
-        if (is_string($address)) {
-            $address = json_decode($address, true);
+        if (is_array($raw)) {
+            return $raw;
         }
 
-        if (is_string($address)) {
-            $address = json_decode($address, true);
+        if (is_string($raw) && trim($raw) !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+
+            // Fallback for plain formatted address string
+            return [
+                'address'       => trim($raw),
+                'recipientName' => $this->customer?->name ?? 'Customer',
+            ];
         }
 
-        return is_array($address) ? $address : [];
+        return [];
     }
 
     /**
@@ -894,7 +906,7 @@ class Order extends Model
      * Scope a query to only include orders visible to the seller.
      * - Platform GCash/Maya orders must be verified by Admin (Paid/Verified) before appearing to the seller.
      * - Unverified (Pending Verification) or Admin-Rejected platform GCash/Maya orders are hidden from the seller.
-     * - Store Pickup, Special Delivery, COD, and seller-direct orders are directly visible to the seller.
+     * - Store Pickup, Special Delivery, COD, and seller-direct / standard delivery direct orders are directly visible to the seller.
      */
     public function scopeVisibleToSeller(Builder $query): Builder
     {
@@ -907,10 +919,35 @@ class Order extends Model
                     });
             })
             ->orWhere(function ($ewallet) {
-                // Verified platform e-wallet orders
                 $ewallet->whereIn(DB::raw('UPPER(TRIM(COALESCE(paymentMethod, "")))'), ['GCASH', 'MAYA', 'PAYMAYA'])
-                    ->whereIn('paymentStatus', ['Paid', 'Verified', 'Paid (Verified)'])
-                    ->whereNotIn('paymentStatus', ['Payment Rejected', 'Rejected', 'Pending Verification', 'Pending Verification (Overpayment)']);
+                    ->where(function ($sub) {
+                        // 1. Direct-to-seller orders (fund_holder = 'seller' or paymentStatus contains 'Direct to Seller')
+                        $sub->where(function ($direct) {
+                            $direct->where(function ($d) {
+                                $d->where('fund_holder', 'seller')
+                                  ->orWhere('paymentStatus', 'like', '%Direct to Seller%')
+                                  ->orWhere('paymentStatus', 'like', '%Seller Direct%');
+                            })
+                            ->whereNotIn('paymentStatus', ['Payment Rejected', 'Rejected']);
+                        })
+                        // 2. Verified platform e-wallet orders
+                        ->orWhere(function ($platform) {
+                            $platform->whereIn('paymentStatus', [
+                                'Paid',
+                                'Verified',
+                                'Paid (Verified)',
+                                'Paid (Direct to Seller)',
+                                'Paid (Seller Direct)',
+                                'Direct to Seller',
+                            ])
+                            ->whereNotIn('paymentStatus', [
+                                'Payment Rejected',
+                                'Rejected',
+                                'Pending Verification',
+                                'Pending Verification (Overpayment)',
+                            ]);
+                        });
+                    });
             });
         });
     }
