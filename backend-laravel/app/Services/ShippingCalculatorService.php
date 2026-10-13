@@ -245,8 +245,10 @@ class ShippingCalculatorService
         }
 
         // 3. STANDARD DELIVERY (Couriers: J&T, LBC, Flash, etc.)
-        // Standard delivery only shows for destinations OUTSIDE of Laguna (or when a specific courier ID is explicitly requested).
-        $allowStandardDelivery = !$isDestLaguna || !empty($specificProviderId);
+        // Standard delivery shows for destinations OUTSIDE of Laguna, when a specific courier ID is requested,
+        // or as the fallback whenever Special Delivery is NOT available for the destination.
+        $hasSpecialDeliveryQuote = collect($quotes)->contains(fn($q) => ($q['provider_code'] ?? '') === 'seller_direct');
+        $allowStandardDelivery = !$isDestLaguna || !empty($specificProviderId) || !$hasSpecialDeliveryQuote;
 
         if ($allowStandardDelivery) {
             $courierProviders = $providers->filter(fn($p) => !in_array($p->code, ['store_pickup', 'seller_direct']));
