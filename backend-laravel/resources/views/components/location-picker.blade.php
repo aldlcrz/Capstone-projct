@@ -39,6 +39,12 @@
             </template>
         </button>
     </div>
+
+    <!-- Non-blocking Location Helper Notice -->
+    <div x-show="searchNotFoundMsg" x-cloak class="p-3 rounded-2xl text-[11px] font-semibold leading-relaxed flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800">
+        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+        <span x-text="searchNotFoundMsg"></span>
+    </div>
     @endif
 
     <!-- Map Area -->
@@ -86,6 +92,7 @@ function locationPicker(config) {
         readOnly: config.readOnly,
         searchQuery: '',
         searching: false,
+        searchNotFoundMsg: '',
         addressDetails: '',
         initMap() {
             this.$nextTick(() => {
@@ -112,11 +119,13 @@ function locationPicker(config) {
 
                 if (!this.readOnly) {
                     this.map.on('click', (e) => {
+                        this.searchNotFoundMsg = '';
                         this.updateLocation(e.latlng.lat, e.latlng.lng);
                     });
 
                     this.marker.on('dragend', (e) => {
                         const pos = e.target.getLatLng();
+                        this.searchNotFoundMsg = '';
                         this.updateLocation(pos.lat, pos.lng);
                     });
                 }
@@ -160,19 +169,55 @@ function locationPicker(config) {
             this.searching = false;
         },
         async searchLocation() {
-            if (!this.searchQuery.trim()) return;
+            const rawQuery = (this.searchQuery || '').trim();
+            if (!rawQuery) return;
             this.searching = true;
-            try {
-                const query = encodeURIComponent(this.searchQuery + ", Philippines");
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const loc = data[0];
-                    this.updateLocation(parseFloat(loc.lat), parseFloat(loc.lon));
-                } else {
-                    alert("Location not found.");
+            this.searchNotFoundMsg = '';
+
+            const candidates = [];
+            candidates.push(rawQuery + ', Philippines');
+
+            const cleaned = rawQuery
+                .replace(/\b(blk|block|lot|lt|purok|prk|phase|ph|unit|bldg|building|floor|flr|no\.?|#)\s*[\w\d\-]+/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (cleaned && cleaned !== rawQuery) {
+                candidates.push(cleaned + ', Philippines');
+            }
+
+            const parts = rawQuery.split(',').map(p => p.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                candidates.push(parts.slice(1).join(', ') + ', Philippines');
+                if (parts.length > 2) {
+                    candidates.push(parts.slice(-2).join(', ') + ', Philippines');
                 }
-            } catch (e) { console.error(e); }
+            }
+
+            const uniqueCandidates = [...new Set(candidates)];
+            let foundLoc = null;
+
+            for (const q of uniqueCandidates) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            foundLoc = data[0];
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Geocoding candidate failed:', q, e);
+                }
+            }
+
+            if (foundLoc) {
+                this.updateLocation(parseFloat(foundLoc.lat), parseFloat(foundLoc.lon));
+                this.searchNotFoundMsg = '';
+            } else {
+                this.searchNotFoundMsg = 'Specific street landmark not found on map service. You can tap or drag the pin directly on the map to set your coordinates.';
+            }
             this.searching = false;
         }
     }

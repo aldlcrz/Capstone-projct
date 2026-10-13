@@ -310,18 +310,18 @@
                                 <div class="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#ECE3D2] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="space-y-1 min-w-0 flex-1">
                                         <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="font-bold text-xs sm:text-sm text-[#1E1915]" x-text="shippingQuote?.shop_name || '{{ addslashes($seller->shopName ?? ($seller->name ?? "Artisan Workshop")) }}'"></span>
-                                            <template x-if="shippingQuote?.shop_phone || '{{ $seller->mobileNumber ?? '' }}'">
-                                                <span class="text-[11px] text-stone-500 font-medium" x-text="'• ' + (shippingQuote?.shop_phone || '{{ addslashes($seller->mobileNumber ?? '') }}')"></span>
+                                            <span class="font-bold text-xs sm:text-sm text-[#1E1915]" x-text="shippingQuote?.shop_name || sellerDefaults.shopName || 'Artisan Workshop'"></span>
+                                            <template x-if="shippingQuote?.shop_phone || sellerDefaults.shopPhone">
+                                                <span class="text-[11px] text-stone-500 font-medium" x-text="'• ' + (shippingQuote?.shop_phone || sellerDefaults.shopPhone)"></span>
                                             </template>
                                         </div>
-                                        <p class="text-xs text-stone-600 font-medium leading-relaxed wrap-break-word" x-text="shippingQuote?.shop_address || '{{ addslashes(trim(($seller->shopHouseNo ? $seller->shopHouseNo . " " : "") . ($seller->shopStreet ? $seller->shopStreet . ", " : "") . ($seller->shopBarangay ? $seller->shopBarangay . ", " : "") . ($seller->shopCity ?: "Lumban") . ", " . ($seller->shopProvince ?: "Laguna"))) }}'"></p>
+                                        <p class="text-xs text-stone-600 font-medium leading-relaxed wrap-break-word" x-text="shippingQuote?.shop_address || sellerDefaults.shopAddress || ''"></p>
                                         <p class="text-[10px] text-[#996515] font-semibold mt-1">
                                             <span class="inline-flex items-center gap-1"><x-lucide name="map-pin" class="w-3 h-3 text-[#996515] shrink-0" /> Present your Order Reference Number when picking up your crafted item at the workshop.</span>
                                         </p>
                                     </div>
 
-                                    <a :href="'https://www.google.com/maps/dir/?api=1&destination=' + (shippingQuote?.shop_latitude || {{ $seller->shopLatitude ?? 14.2952 }}) + ',' + (shippingQuote?.shop_longitude || {{ $seller->shopLongitude ?? 121.4647 }})"
+                                    <a :href="'https://www.google.com/maps/dir/?api=1&destination=' + (shippingQuote?.shop_latitude || sellerDefaults.shopLatitude || 14.2952) + ',' + (shippingQuote?.shop_longitude || sellerDefaults.shopLongitude || 121.4647)"
                                        target="_blank"
                                        rel="noopener noreferrer"
                                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#1E1915] text-[#DFC97A] hover:bg-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs shrink-0 no-underline cursor-pointer">
@@ -1191,6 +1191,12 @@
                     </button>
                 </div>
 
+                {{-- Non-blocking Location Helper Notice --}}
+                <div x-show="searchNotFoundMsg" x-cloak class="p-2 rounded-xl text-[10.5px] leading-relaxed flex items-start gap-1.5" style="background:#FFFBEB; border:1px solid #FDE68A; color:#92400E;">
+                    <x-lucide name="info" class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                    <span x-text="searchNotFoundMsg"></span>
+                </div>
+
                 {{-- Leaflet Map Container --}}
                 <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
                      x-ref="addressMapContainer"></div>
@@ -1445,6 +1451,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
     const baseSubtotalAmount = Number(initialSubtotal || 0);
 
     return {
+        sellerDefaults: sellerDefaults,
         baseSubtotal: baseSubtotalAmount,
         step: 1,
         paymentMethod: defaultPaymentMethod || 'GCash',
@@ -1475,6 +1482,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         map: null,
         marker: null,
         mapSearchQuery: '',
+        searchNotFoundMsg: '',
         pinSearching: false,
         isLocatingGps: false,
         detectedLocationName: '',
@@ -2182,6 +2190,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.locationSearch = '';
             this.addressError = '';
             this.mapSearchQuery = '';
+            this.searchNotFoundMsg = '';
             this.detectedLocationName = '';
             this.showEditAddressModal = true;
             this.initAddressMap(14.2952, 121.4647);
@@ -2212,6 +2221,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.locationSearch = '';
             this.addressError = '';
             this.mapSearchQuery = '';
+            this.searchNotFoundMsg = '';
             this.detectedLocationName = '';
             this.showEditAddressModal = true;
 
@@ -2269,11 +2279,13 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 }).addTo(this.map);
 
                 this.map.on('click', (e) => {
+                    this.searchNotFoundMsg = '';
                     this.updatePinLocation(e.latlng.lat, e.latlng.lng);
                 });
 
                 this.marker.on('dragend', (e) => {
                     const pos = e.target.getLatLng();
+                    this.searchNotFoundMsg = '';
                     this.updatePinLocation(pos.lat, pos.lng);
                 });
 
@@ -2299,10 +2311,11 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
 
         async locateUserGps() {
             if (!navigator.geolocation) {
-                alert('Geolocation is not supported by your browser.');
+                this.searchNotFoundMsg = 'Geolocation is not supported by your browser.';
                 return;
             }
             this.isLocatingGps = true;
+            this.searchNotFoundMsg = '';
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     this.isLocatingGps = false;
@@ -2312,35 +2325,80 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     if (this.map) {
                         this.map.setView([lat, lng], 16);
                     }
+                    this.searchNotFoundMsg = '';
                 },
                 (err) => {
                     this.isLocatingGps = false;
-                    alert('Unable to retrieve your location. Please check browser GPS permissions.');
+                    this.searchNotFoundMsg = 'Unable to access device GPS. You can tap or drag the pin on the map to set your location.';
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         },
 
         async searchMapLocation() {
-            if (!this.mapSearchQuery.trim()) return;
+            const rawQuery = (this.mapSearchQuery || '').trim();
+            if (!rawQuery) return;
             this.pinSearching = true;
-            try {
-                const query = encodeURIComponent(this.mapSearchQuery.trim() + ', Philippines');
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const loc = data[0];
-                    const lat = parseFloat(loc.lat);
-                    const lng = parseFloat(loc.lon);
-                    this.updatePinLocation(lat, lng);
-                    if (this.map) {
-                        this.map.setView([lat, lng], 16);
-                    }
-                } else {
-                    alert('Location not found. Please try a different landmark or street.');
+            this.searchNotFoundMsg = '';
+
+            // Progressive query cascade for Philippine addresses:
+            // 1. Full raw query with Philippines
+            // 2. Cleaned query without block/lot/purok/unit/floor numbers
+            // 3. Comma-separated parts (dropping specific numbers/sitios)
+            // 4. City + Province from editForm if selected
+            const candidates = [];
+            candidates.push(rawQuery + ', Philippines');
+
+            const cleaned = rawQuery
+                .replace(/\b(blk|block|lot|lt|purok|prk|phase|ph|unit|bldg|building|floor|flr|no\.?|#)\s*[\w\d\-]+/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (cleaned && cleaned !== rawQuery) {
+                candidates.push(cleaned + ', Philippines');
+            }
+
+            const parts = rawQuery.split(',').map(p => p.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                candidates.push(parts.slice(1).join(', ') + ', Philippines');
+                if (parts.length > 2) {
+                    candidates.push(parts.slice(-2).join(', ') + ', Philippines');
                 }
-            } catch(e) {
-                console.error(e);
+            }
+
+            const formLocation = [this.editForm?.barangay, this.editForm?.city, this.editForm?.province].filter(Boolean).join(', ');
+            if (formLocation) {
+                candidates.push(formLocation + ', Philippines');
+            }
+
+            const uniqueCandidates = [...new Set(candidates)];
+            let foundLoc = null;
+
+            for (const q of uniqueCandidates) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            foundLoc = data[0];
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Geocoding candidate failed:', q, e);
+                }
+            }
+
+            if (foundLoc) {
+                const lat = parseFloat(foundLoc.lat);
+                const lng = parseFloat(foundLoc.lon);
+                this.updatePinLocation(lat, lng);
+                if (this.map) {
+                    this.map.setView([lat, lng], 16);
+                }
+                this.searchNotFoundMsg = '';
+            } else {
+                this.searchNotFoundMsg = 'Specific street landmark not found on map service. You can tap or drag the pin directly on the map, and enter your address details below.';
             }
             this.pinSearching = false;
         },

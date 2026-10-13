@@ -18,6 +18,154 @@ window.sellerProducts = function() {
         deletingProductId: null,
         deletingProductName: '',
         isDeletingDraft: false,
+
+        // Restock state & methods
+        showRestockModal: false,
+        restockProductData: null,
+        restockQty: '',
+        restockSizeQtys: {},
+        isRestocking: false,
+        restockError: '',
+        productStocks: {},
+        toastMessage: '',
+        toastType: 'success',
+        toastVisible: false,
+        toastTimer: null,
+        showNotification(msg, type = 'success') {
+            this.toastMessage = msg;
+            this.toastType = type;
+            this.toastVisible = true;
+            if (this.toastTimer) clearTimeout(this.toastTimer);
+            this.toastTimer = setTimeout(() => {
+                this.toastVisible = false;
+            }, 5000);
+        },
+        getProductStock(id, fallback) {
+            return this.productStocks[id] !== undefined ? this.productStocks[id] : fallback;
+        },
+        isLowStock(id, fallback) {
+            return Number(this.getProductStock(id, fallback)) <= 5;
+        },
+        openRestockModal(productOrId) {
+            let product = typeof productOrId === 'object' && productOrId !== null ? productOrId : null;
+            if (!product) {
+                product = (this.productsData || []).find(p => String(p.id) === String(productOrId));
+            }
+            if (!product) return;
+            this.restockProductData = product;
+            this.restockQty = '';
+            this.restockError = '';
+            this.restockSizeQtys = {};
+            const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+            sizes.forEach(s => {
+                this.restockSizeQtys[s] = '';
+            });
+            this.showRestockModal = true;
+        },
+        getTotalRestockUnits() {
+            if (!this.restockProductData) return 0;
+            const sizes = Array.isArray(this.restockProductData.sizes) ? this.restockProductData.sizes : [];
+            if (sizes.length > 0) {
+                return Object.values(this.restockSizeQtys).reduce((acc, val) => {
+                    const parsed = parseInt(val, 10);
+                    return acc + (!isNaN(parsed) && parsed > 0 ? parsed : 0);
+                }, 0);
+            }
+            const single = parseInt(this.restockQty, 10);
+            return !isNaN(single) && single > 0 ? single : 0;
+        },
+        async submitRestock() {
+            if (!this.restockProductData || this.isRestocking) return;
+            this.restockError = '';
+
+            const sizes = Array.isArray(this.restockProductData.sizes) ? this.restockProductData.sizes : [];
+            let payload = {};
+
+            if (sizes.length > 0) {
+                let sizeQtys = {};
+                let total = 0;
+                let hasInvalid = false;
+
+                for (const s of sizes) {
+                    const rawVal = String(this.restockSizeQtys[s] || '').trim();
+                    if (rawVal === '') continue;
+                    if (!/^\d+$/.test(rawVal)) {
+                        hasInvalid = true;
+                        break;
+                    }
+                    const num = parseInt(rawVal, 10);
+                    if (num < 0) {
+                        hasInvalid = true;
+                        break;
+                    }
+                    if (num > 0) {
+                        sizeQtys[s] = num;
+                        total += num;
+                    }
+                }
+
+                if (hasInvalid) {
+                    this.restockError = 'Please enter valid positive whole numbers for size quantities.';
+                    return;
+                }
+
+                if (total <= 0) {
+                    this.restockError = 'Please enter at least 1 unit to restock for one of the sizes.';
+                    return;
+                }
+
+                payload = { size_quantities: sizeQtys };
+            } else {
+                const rawVal = String(this.restockQty || '').trim();
+                if (!/^[1-9]\d*$/.test(rawVal)) {
+                    this.restockError = 'Please enter a positive whole number (e.g. 1, 5, 10).';
+                    return;
+                }
+                const num = parseInt(rawVal, 10);
+                if (num <= 0) {
+                    this.restockError = 'Please enter at least 1 unit to restock.';
+                    return;
+                }
+                payload = { quantity: num };
+            }
+
+            this.isRestocking = true;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const res = await fetch(`/seller/products/${this.restockProductData.id}/restock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const newStock = Number(data.new_stock);
+                    this.productStocks[this.restockProductData.id] = newStock;
+                    
+                    const prodInList = (this.productsData || []).find(p => String(p.id) === String(this.restockProductData.id));
+                    if (prodInList) {
+                        prodInList.stock = newStock;
+                        if (data.size_stocks) prodInList.size_stocks = data.size_stocks;
+                    }
+
+                    this.showRestockModal = false;
+                    this.showNotification(data.message || 'Product restocked successfully!', 'success');
+                } else {
+                    this.restockError = data.message || 'Failed to restock product. Please try again.';
+                    this.showNotification(this.restockError, 'error');
+                }
+            } catch(e) {
+                console.error(e);
+                this.restockError = 'A network error occurred. Please try again.';
+                this.showNotification(this.restockError, 'error');
+            } finally {
+                this.isRestocking = false;
+            }
+        },
         selectedProduct: null,
         lightboxImage: null,
         productsData: (() => {
@@ -44,6 +192,21 @@ window.sellerProducts = function() {
             this.deletingProductName = name;
             this.isDeletingDraft = !!isDraft;
             this.showDeleteModal = true;
+        },
+        matchesProduct(productId) {
+            const prod = (this.productsData || []).find(p => String(p.id) === String(productId));
+            const name = prod?.name || '';
+            const desc = prod?.description || '';
+            const status = prod?.status || '';
+            const query = (this.search || '').toLowerCase().trim();
+            const matchesSearch = !query || name.toLowerCase().includes(query) || desc.toLowerCase().includes(query);
+            const statusLower = status.toLowerCase();
+            const tabLower = this.activeTab.toLowerCase();
+            const matchesTab = this.activeTab === 'all' 
+                || statusLower === tabLower 
+                || (this.activeTab === 'drafts' && statusLower === 'draft')
+                || (this.activeTab === 'rejected' && statusLower === 'rejected');
+            return matchesSearch && matchesTab;
         },
         matches(productName, productDesc, productStatus) {
             const query = (this.search || '').toLowerCase().trim();
@@ -105,11 +268,13 @@ window.sellerProducts = function() {
         }
     };
 };
-// Alpine is loaded with defer — alpine:init fires before Alpine initializes components.
-// Register via alpine:init (always fires, even if script runs before Alpine loads).
-document.addEventListener('alpine:init', () => {
-    Alpine.data('sellerProducts', window.sellerProducts);
-});
+function initSellerProductsAlpine() {
+    if (window.Alpine) {
+        window.Alpine.data('sellerProducts', window.sellerProducts);
+    }
+}
+initSellerProductsAlpine();
+document.addEventListener('alpine:init', initSellerProductsAlpine);
 </script>
 
 <div class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
@@ -236,7 +401,7 @@ document.addEventListener('alpine:init', () => {
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                 @foreach($draftProducts as $product)
-                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                    <div x-show="matchesProduct('{{ $product->id }}')"
                         class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
                         style="background: #FFFCF7; border: 1px dashed #CBD5E1;"
                         onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
@@ -290,7 +455,7 @@ document.addEventListener('alpine:init', () => {
                                     <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
                                         @if($product->is_on_sale && (float)$product->discount_percentage > 0)
-                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
+                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)($product->price, 2) }}</span>
                                             <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
                                         @endif
                                     </div>
@@ -300,10 +465,24 @@ document.addEventListener('alpine:init', () => {
                                     @if($product->isPreorder())
                                         <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                     @else
-                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #475569;">{{ $product->stock }}</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ (int)$product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ (int)$product->stock }})">{{ $product->stock }}</div>
                                     @endif
                                 </div>
                             </div>
+
+                            @if(!$product->isPreorder())
+                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
+                                    <button type="button" 
+                                            @click.stop="openRestockModal('{{ $product->id }}')"
+                                            class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                            style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                            onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                            onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                        <span>Restock</span>
+                                    </button>
+                                </div>
+                            @endif
 
                             <!-- Action Buttons for Draft: Resume Editing + Discard Draft -->
                             <div class="pt-2 border-t grid grid-cols-2 gap-2" style="border-color: #E8DECB;">
@@ -431,10 +610,24 @@ document.addEventListener('alpine:init', () => {
                                     @if($product->isPreorder())
                                         <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                     @else
-                                        <div class="text-xs sm:text-sm font-black font-sans" style="color: #A16D19;">{{ $product->stock }}</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
                                     @endif
                                 </div>
                             </div>
+
+                            @if(!$product->isPreorder())
+                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                    <button type="button" 
+                                            @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                            class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                            style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                            onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                            onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                        <span>Restock</span>
+                                    </button>
+                                </div>
+                            @endif
 
                             <!-- Mobile Quick Edit & Delete Buttons -->
                             <div class="sm:hidden grid grid-cols-2 gap-2 pt-2 border-t" style="border-color: #E8DECB;">
@@ -559,10 +752,24 @@ document.addEventListener('alpine:init', () => {
                                     @if($product->isPreorder())
                                         <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                     @else
-                                        <div class="text-xs sm:text-sm font-black font-sans {{ $product->stock < 5 ? 'text-red-500' : 'text-stone-800' }}">{{ $product->stock }}</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
                                     @endif
                                 </div>
                             </div>
+
+                            @if(!$product->isPreorder())
+                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                    <button type="button" 
+                                            @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                            class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                            style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                            onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                            onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                        <span>Restock</span>
+                                    </button>
+                                </div>
+                            @endif
 
                             <!-- Mobile Quick Edit & Delete Buttons -->
                             <div class="sm:hidden grid grid-cols-2 gap-2 pt-2 border-t" style="border-color: #E8DECB;">
@@ -681,10 +888,24 @@ document.addEventListener('alpine:init', () => {
                                         @if($product->isPreorder())
                                             <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                         @else
-                                            <div class="text-xs sm:text-sm font-black font-sans text-stone-800">{{ $product->stock }}</div>
+                                            <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
                                         @endif
                                     </div>
                                 </div>
+
+                                @if(!$product->isPreorder())
+                                    <div class="pt-2 border-t" style="border-color: #FECACA;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                        <button type="button" 
+                                                @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                                class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                                style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                                onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
+                                                onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'; this.style.borderColor='#FECACA';">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                            <span>Restock</span>
+                                        </button>
+                                    </div>
+                                @endif
 
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <a href="/seller/products/{{ $product->id }}/edit" class="py-2 px-2 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-center flex items-center justify-center gap-1 text-white shadow-xs transition-all" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
@@ -1069,6 +1290,168 @@ document.addEventListener('alpine:init', () => {
                 </button>
             </form>
         </div>
+    </div>
+
+    {{-- RESTOCK MODAL --}}
+    <div x-show="showRestockModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+         style="display: none;"
+         x-cloak
+         @click.self="showRestockModal = false"
+         @keydown.escape.window="showRestockModal = false">
+        
+        <div class="rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl relative"
+             style="background: #FFFCF7; border: 1px solid #E8DECB;">
+            
+            {{-- Header --}}
+            <div class="flex items-start justify-between gap-3 pb-3.5 border-b" style="border-color: #E8DECB;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
+                         style="background: #FAF5E6; border: 1px solid #D4AF37; color: #8C6D1F;">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-extrabold uppercase tracking-widest" style="color: #C49520;">Inventory Replenishment</div>
+                        <h3 class="font-serif text-base sm:text-lg font-bold" style="color: #1E1915;">Restock Product</h3>
+                        <p class="text-xs line-clamp-1 font-medium mt-0.5" style="color: #766C60;" x-text="restockProductData?.name"></p>
+                    </div>
+                </div>
+                <button type="button" @click="showRestockModal = false" class="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer transition-colors" style="background: #FDF8EE; border: 1px solid #E8DECB; color: #766C60;">
+                    <x-lucide name="x" class="w-4 h-4" />
+                </button>
+            </div>
+
+            {{-- Current Stock Badge --}}
+            <div class="p-3 rounded-2xl flex items-center justify-between" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                <div class="text-xs font-semibold" style="color: #766C60;">Current Inventory</div>
+                <div class="text-xs font-black font-sans px-2.5 py-1 rounded-lg"
+                     :class="Number(getProductStock(restockProductData?.id, restockProductData?.stock)) <= 5 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-800'">
+                    <span x-text="getProductStock(restockProductData?.id, restockProductData?.stock) + ' units'"></span>
+                </div>
+            </div>
+
+            {{-- Restock Inputs --}}
+            <div class="space-y-4">
+                {{-- If Product has sizes --}}
+                <template x-if="restockProductData && Array.isArray(restockProductData.sizes) && restockProductData.sizes.length > 0">
+                    <div class="space-y-2.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider block" style="color: #1E1915;">
+                            Units to Add by Heritage Size:
+                        </label>
+                        <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                            <template x-for="sz in restockProductData.sizes" :key="sz">
+                                <div class="flex items-center justify-between gap-3 p-2.5 rounded-xl border" style="background: #FFFFFF; border-color: #E8DECB;">
+                                    <div class="min-w-16">
+                                        <span class="text-xs font-black px-2 py-0.5 rounded-md" style="background: #1E1915; color: #FFFCF7;" x-text="sz"></span>
+                                        <div class="text-[9px] mt-0.5" style="color: #766C60;">
+                                            Current: <span class="font-bold" x-text="(restockProductData.size_stocks && restockProductData.size_stocks[sz]) ? restockProductData.size_stocks[sz] : 0"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-stone-400">+</span>
+                                        <input type="number" 
+                                               min="0" 
+                                               step="1"
+                                               x-model="restockSizeQtys[sz]"
+                                               placeholder="0"
+                                               class="w-20 px-3 py-1.5 text-xs font-bold rounded-xl outline-none text-right transition-all"
+                                               style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                                               onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                                               onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+                                        <span class="text-[10px] font-semibold" style="color: #766C60;">pcs</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- If Product does NOT have sizes --}}
+                <template x-if="restockProductData && (!Array.isArray(restockProductData.sizes) || restockProductData.sizes.length === 0)">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider block" style="color: #1E1915;">
+                            Quantity to Add:
+                        </label>
+                        <div class="relative">
+                            <input type="number" 
+                                   min="1" 
+                                   step="1"
+                                   x-model="restockQty"
+                                   placeholder="e.g. 10"
+                                   class="w-full px-4 py-2.5 text-sm font-bold rounded-xl outline-none transition-all"
+                                   style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;"
+                                   onfocus="this.style.borderColor='#C49520'; this.style.background='#FFF';"
+                                   onblur="this.style.borderColor='#E8DECB'; this.style.background='#FDF8EE';">
+                            <span class="absolute right-3.5 top-3 text-xs font-bold uppercase tracking-wider" style="color: #766C60;">Units</span>
+                        </div>
+                        <p class="text-[10px] font-medium" style="color: #766C60;">Enter only positive whole numbers (1 or greater).</p>
+                    </div>
+                </template>
+
+                {{-- Total to Add Summary --}}
+                <div class="p-3 rounded-2xl flex items-center justify-between text-xs" style="background: #FAF5E6; border: 1px dashed #D4AF37;">
+                    <span class="font-bold text-[#8C6D1F]">Total Additional Stock:</span>
+                    <span class="font-black text-sm text-[#1E1915]" x-text="'+' + getTotalRestockUnits() + ' units'"></span>
+                </div>
+
+                {{-- Error Message --}}
+                <div x-show="restockError" x-cloak class="p-3 rounded-xl text-xs font-semibold flex items-center gap-2" style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;">
+                    <x-lucide name="alert-circle" class="w-4 h-4 shrink-0 text-red-600" />
+                    <span x-text="restockError"></span>
+                </div>
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex items-center gap-3 pt-2 border-t" style="border-color: #E8DECB;">
+                <button type="button" 
+                        @click="showRestockModal = false"
+                        :disabled="isRestocking"
+                        class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                        style="background: #FDF8EE; border: 1px solid #E8DECB; color: #1E1915;">
+                    Cancel
+                </button>
+                <button type="button" 
+                        @click="submitRestock()"
+                        :disabled="isRestocking || getTotalRestockUnits() <= 0"
+                        class="flex-1 py-2.5 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        style="background: #1E1915;"
+                        onmouseover="this.style.background='#C49520';"
+                        onmouseout="this.style.background='#1E1915';">
+                    <span x-text="isRestocking ? 'Restocking...' : 'Confirm Restock'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Toast Notification --}}
+    <div x-show="toastVisible"
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-3"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-3"
+         class="fixed bottom-6 right-6 z-100 max-w-sm rounded-2xl p-4 shadow-2xl flex items-center gap-3 border"
+         :style="toastType === 'success' ? 'background: #F0FDF4; border-color: #BBF7D0; color: #166534;' : 'background: #FEF2F2; border-color: #FECACA; color: #991B1B;'">
+        <template x-if="toastType === 'success'">
+            <x-lucide name="check-circle" class="w-5 h-5 shrink-0 text-emerald-600" />
+        </template>
+        <template x-if="toastType !== 'success'">
+            <x-lucide name="alert-circle" class="w-5 h-5 shrink-0 text-red-600" />
+        </template>
+        <div class="text-xs font-bold flex-1" x-text="toastMessage"></div>
+        <button type="button" @click="toastVisible = false" class="text-xs opacity-60 hover:opacity-100 cursor-pointer">
+            <x-lucide name="x" class="w-4 h-4" />
+        </button>
     </div>
 
 </div>{{-- end x-data="sellerProducts()" --}}

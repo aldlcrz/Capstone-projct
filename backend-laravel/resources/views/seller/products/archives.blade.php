@@ -119,13 +119,32 @@
                     }
 
                     $rawImg = $meta['image'] ?? null;
+                    while (is_string($rawImg)) {
+                        $trimmed = trim($rawImg);
+                        if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                            $decoded = json_decode($trimmed, true);
+                            if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                                $rawImg = $decoded;
+                                continue;
+                            }
+                        }
+                        break;
+                    }
                     if (is_array($rawImg)) {
                         $image = !empty($rawImg) ? reset($rawImg) : null;
-                    } elseif (is_string($rawImg)) {
-                        $decoded = json_decode($rawImg, true);
-                        $image = is_array($decoded) ? (!empty($decoded) ? reset($decoded) : null) : $rawImg;
                     } else {
-                        $image = null;
+                        $image = $rawImg;
+                    }
+                    while (is_string($image)) {
+                        $trimmed = trim($image);
+                        if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                            $dec = json_decode($trimmed, true);
+                            if (json_last_error() === JSON_ERROR_NONE && !is_null($dec)) {
+                                $image = is_array($dec) ? (!empty($dec) ? reset($dec) : null) : $dec;
+                                continue;
+                            }
+                        }
+                        break;
                     }
 
                     // If image is missing, default, or points to removed deleted files, attempt variation fallback

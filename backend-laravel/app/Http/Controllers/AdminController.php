@@ -1405,9 +1405,87 @@ class AdminController extends Controller
             $meta = is_array($record->metadata) ? $record->metadata : (json_decode($record->metadata ?? '[]', true) ?? []);
 
             if ($type === 'product') {
-                $existingProduct = Product::find($record->item_id);
+                $normArray = function($val, $default = null) {
+                    if (is_null($val)) return $default;
+                    while (is_string($val)) {
+                        $trimmed = trim($val);
+                        if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                            $decoded = json_decode($trimmed, true);
+                            if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                                $val = $decoded;
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+                    return is_array($val) ? $val : $default;
+                };
+
+                $normVariations = $normArray($meta['variations'] ?? null, []);
+                
+                // Normalize images
+                $rawImg = $meta['image'] ?? null;
+                while (is_string($rawImg)) {
+                    $trimmed = trim($rawImg);
+                    if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                        $dec = json_decode($trimmed, true);
+                        if (json_last_error() === JSON_ERROR_NONE && !is_null($dec)) {
+                            $rawImg = $dec;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                $normImages = [];
+                if (is_array($rawImg)) {
+                    foreach ($rawImg as $im) {
+                        while (is_string($im)) {
+                            $tr = trim($im);
+                            if ((str_starts_with($tr, '[') && str_ends_with($tr, ']')) || (str_starts_with($tr, '"') && str_ends_with($tr, '"'))) {
+                                $dec = json_decode($tr, true);
+                                if (json_last_error() === JSON_ERROR_NONE && !is_null($dec)) {
+                                    $im = is_array($dec) ? ($dec[0] ?? null) : $dec;
+                                    continue;
+                                }
+                            }
+                            break;
+                        }
+                        if (is_string($im) && !empty($im) && !in_array($im, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                            $normImages[] = trim($im, "\"' ");
+                        }
+                    }
+                } elseif (is_string($rawImg) && !empty($rawImg) && !in_array($rawImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                    $normImages[] = trim($rawImg, "\"' ");
+                }
+
+                if (empty($normImages) && !empty($normVariations)) {
+                    foreach ($normVariations as $v) {
+                        if (is_array($v)) {
+                            $vImg = !empty($v['image']) ? $v['image'] : (!empty($v['images'][0]) ? $v['images'][0] : null);
+                            if (!empty($vImg) && is_string($vImg) && !in_array($vImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                                $normImages[] = trim($vImg, "\"' ");
+                            }
+                        }
+                    }
+                }
+                $normImages = !empty($normImages) ? array_values(array_unique($normImages)) : ['products/default.jpg'];
+                $normSizes = $normArray($meta['sizes'] ?? null, ['S', 'M', 'L', 'XL', 'XXL']);
+                $normCategories = $normArray($meta['categories'] ?? null, null);
+                $normSizeStocks = $normArray($meta['size_stocks'] ?? null, null);
+
+                $existingProduct = !empty($record->item_id) ? Product::find($record->item_id) : null;
                 if ($existingProduct) {
-                    $existingProduct->update(['status' => 'pending']);
+                    $existingProduct->update([
+                        'status'      => 'pending',
+                        'name'        => $meta['name'] ?? $existingProduct->name,
+                        'price'       => $meta['price'] ?? $existingProduct->price,
+                        'stock'       => $meta['stock'] ?? $existingProduct->stock,
+                        'image'       => !empty($normImages) ? $normImages : $existingProduct->image,
+                        'variations'  => !empty($normVariations) ? $normVariations : $existingProduct->variations,
+                        'sizes'       => !empty($normSizes) ? $normSizes : $existingProduct->sizes,
+                        'categories'  => !empty($normCategories) ? $normCategories : $existingProduct->categories,
+                        'size_stocks' => !empty($normSizeStocks) ? $normSizeStocks : $existingProduct->size_stocks,
+                    ]);
                 } else {
                     Product::create([
                         'id'                  => $record->item_id ?: (string) Str::uuid(),
@@ -1416,9 +1494,9 @@ class AdminController extends Controller
                         'price'               => $meta['price'] ?? 0,
                         'costPerPiece'        => $meta['costPerPiece'] ?? 0,
                         'stock'               => $meta['stock'] ?? 0,
-                        'sizes'               => $meta['sizes'] ?? null,
-                        'categories'          => $meta['categories'] ?? null,
-                        'image'               => $meta['image'] ?? null,
+                        'sizes'               => $normSizes,
+                        'categories'          => $normCategories,
+                        'image'               => $normImages,
                         'sellerId'            => $meta['sellerId'] ?? null,
                         'status'              => 'pending',
                         'sku'                 => $meta['sku'] ?? null,
@@ -1427,9 +1505,9 @@ class AdminController extends Controller
                         'artisan_region'      => $meta['artisan_region'] ?? null,
                         'CategoryId'          => $meta['CategoryId'] ?? null,
                         'target_group'        => $meta['target_group'] ?? null,
-                        'size_stocks'         => $meta['size_stocks'] ?? null,
-                        'has_variants'        => $meta['has_variants'] ?? false,
-                        'variations'          => $meta['variations'] ?? null,
+                        'size_stocks'         => $normSizeStocks,
+                        'has_variants'        => !empty($normVariations) && count($normVariations) > 1,
+                        'variations'          => $normVariations,
                         'is_on_sale'          => $meta['is_on_sale'] ?? false,
                         'discount_percentage' => $meta['discount_percentage'] ?? 0,
                         'is_gcash_available'  => $meta['is_gcash_available'] ?? false,

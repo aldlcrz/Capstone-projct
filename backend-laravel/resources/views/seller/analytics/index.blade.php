@@ -295,7 +295,7 @@
         {{-- Order Status Breakdown --}}
         <div id="tour-analytics-order-distribution" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Order Status Distribution</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <div class="p-4 rounded-2xl" style="background: #FEF9EE; border: 1px solid #F6E6C2;">
                     <div class="text-[10px] font-bold uppercase tracking-widest" style="color: #A16D19;">Pending Orders</div>
                     <div class="text-xl font-bold font-sans mt-1" style="color: #5C3D0E;">{{ number_format($orderAnalytics['stats']['pending']) }}</div>
@@ -314,6 +314,11 @@
                 <div class="p-4 rounded-2xl" style="background: #FEF2F2; border: 1px solid #FEE2E2;">
                     <div class="text-[10px] font-bold uppercase tracking-widest text-rose-700">Cancelled</div>
                     <div class="text-xl font-bold font-sans text-rose-950 mt-1">{{ number_format($orderAnalytics['stats']['cancelled']) }}</div>
+                </div>
+
+                <div class="p-4 rounded-2xl col-span-2 sm:col-span-1" style="background: #FAF5FF; border: 1px solid #E9D5FF;">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-purple-700">Return & Refund</div>
+                    <div class="text-xl font-bold font-sans text-purple-950 mt-1">{{ number_format($orderAnalytics['stats']['returned'] ?? 0) }}</div>
                 </div>
             </div>
         </div>

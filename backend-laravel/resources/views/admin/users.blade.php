@@ -194,7 +194,7 @@
                                             @endif
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-xs font-bold text-gray-900 truncate leading-snug">{{ $user->name }}</div>
+                                            <div class="text-xs font-bold text-gray-900 truncate leading-snug lowercase">{{ strtolower($user->name) }}</div>
                                             <div class="text-[10px] text-gray-400 font-medium truncate leading-tight mt-1">{{ $user->email }}</div>
                                             <div class="text-[10px] text-gray-500 font-semibold lg:hidden mt-0.5">
                                                 {{ $orderCount }} {{ $orderCount === 1 ? 'order' : 'orders' }}
@@ -267,7 +267,7 @@
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
             <h3 class="text-lg font-bold text-gray-900">Ban Customer Account</h3>
             <p class="text-xs text-gray-500 leading-relaxed">
-                Are you sure you want to ban customer <strong x-text="banUserName" class="text-black"></strong>? Please provide a reason below for record keeping and user notification.
+                Are you sure you want to ban customer <strong x-text="(banUserName || '').toLowerCase()" class="text-black lowercase"></strong>? Please provide a reason below for record keeping and user notification.
             </p>
             <form :action="'/admin/users/' + banUserId + '/ban'" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
@@ -316,7 +316,7 @@
                 <div class="min-w-0">
                     <h3 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Delete Customer Account</h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Permanently purge <strong x-text="deleteUserName" class="text-black"></strong> and all associated customer account records.
+                        Permanently purge <strong x-text="(deleteUserName || '').toLowerCase()" class="text-black lowercase"></strong> and all associated customer account records.
                     </p>
                 </div>
             </div>

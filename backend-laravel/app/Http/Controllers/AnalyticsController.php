@@ -27,8 +27,8 @@ class AnalyticsController extends Controller
         $to         = $dateFilter['to'];
 
         // Retrieve all seller orders
-        $allOrdersQuery = Order::where('sellerId', $sellerId)->with(['items.product', 'customer']);
-        $ordersQuery    = Order::where('sellerId', $sellerId)->with(['items.product', 'customer']);
+        $allOrdersQuery = Order::where('sellerId', $sellerId)->with(['items.product', 'customer', 'returnRequests']);
+        $ordersQuery    = Order::where('sellerId', $sellerId)->with(['items.product', 'customer', 'returnRequests']);
 
         if ($from) {
             $ordersQuery->where('createdAt', '>=', $from);
@@ -138,6 +138,7 @@ class AnalyticsController extends Controller
             'toShip'    => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['processing', 'to ship', 'confirmed', 'packed']))->count(),
             'delivered' => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['delivered', 'completed']))->count(),
             'cancelled' => $orders->filter(fn ($o) => $this->isCancelledOrder($o->status))->count(),
+            'returned'  => $orders->filter(fn ($o) => in_array(strtolower($o->status), ['returned', 'refunded', 'return requested', 'return approved', 'return_requested', 'return_approved'], true) || ($o->relationLoaded('returnRequests') && $o->returnRequests->isNotEmpty()))->count(),
         ];
 
         $completionRate = $orderStats['total'] > 0

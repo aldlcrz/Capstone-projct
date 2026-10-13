@@ -850,6 +850,12 @@
                         </button>
                     </div>
 
+                    {{-- Non-blocking Location Helper Notice --}}
+                    <div x-show="searchNotFoundMsg" x-cloak class="p-2 rounded-xl text-[10.5px] leading-relaxed flex items-start gap-1.5" style="background:#FFFBEB; border:1px solid #FDE68A; color:#92400E;">
+                        <x-lucide name="info" class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <span x-text="searchNotFoundMsg"></span>
+                    </div>
+
                     {{-- Leaflet Map Container --}}
                     <div style="height:190px;border-radius:14px;overflow:hidden;border:1px solid #ECE3D2;position:relative;z-index:10;box-shadow:inset 0 1px 4px rgba(0,0,0,0.06);"
                          x-ref="addressMapContainer"></div>
@@ -1462,6 +1468,7 @@ function profileApp() {
         pinSearching: false,
         isLocatingGps: false,
         detectedLocationName: '',
+        searchNotFoundMsg: '',
 
         // Location picker variables
         locationDropdownOpen: false,
@@ -2098,10 +2105,11 @@ function profileApp() {
 
         async locateUserGps() {
             if (!navigator.geolocation) {
-                alert('Geolocation is not supported by your browser.');
+                this.searchNotFoundMsg = 'Geolocation is not supported by your browser.';
                 return;
             }
             this.isLocatingGps = true;
+            this.searchNotFoundMsg = '';
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     this.isLocatingGps = false;
@@ -2111,35 +2119,80 @@ function profileApp() {
                     if (this.map) {
                         this.map.setView([lat, lng], 16);
                     }
+                    this.searchNotFoundMsg = '';
                 },
                 (err) => {
                     this.isLocatingGps = false;
-                    alert('Unable to retrieve your location. Please check browser GPS permissions.');
+                    this.searchNotFoundMsg = 'Unable to access device GPS. You can tap or drag the pin on the map to set your location.';
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         },
 
         async searchMapLocation() {
-            if (!this.mapSearchQuery.trim()) return;
+            const rawQuery = (this.mapSearchQuery || '').trim();
+            if (!rawQuery) return;
             this.pinSearching = true;
-            try {
-                const query = encodeURIComponent(this.mapSearchQuery.trim() + ', Philippines');
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const loc = data[0];
-                    const lat = parseFloat(loc.lat);
-                    const lng = parseFloat(loc.lon);
-                    this.updatePinLocation(lat, lng);
-                    if (this.map) {
-                        this.map.setView([lat, lng], 16);
-                    }
-                } else {
-                    alert('Location not found. Please try a different landmark or street.');
+            this.searchNotFoundMsg = '';
+
+            // Progressive query cascade for Philippine addresses:
+            // 1. Full raw query with Philippines
+            // 2. Cleaned query without block/lot/purok/unit/floor numbers
+            // 3. Comma-separated parts (dropping specific numbers/sitios)
+            // 4. City + Province from addressForm if selected
+            const candidates = [];
+            candidates.push(rawQuery + ', Philippines');
+
+            const cleaned = rawQuery
+                .replace(/\b(blk|block|lot|lt|purok|prk|phase|ph|unit|bldg|building|floor|flr|no\.?|#)\s*[\w\d\-]+/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (cleaned && cleaned !== rawQuery) {
+                candidates.push(cleaned + ', Philippines');
+            }
+
+            const parts = rawQuery.split(',').map(p => p.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                candidates.push(parts.slice(1).join(', ') + ', Philippines');
+                if (parts.length > 2) {
+                    candidates.push(parts.slice(-2).join(', ') + ', Philippines');
                 }
-            } catch(e) {
-                console.error(e);
+            }
+
+            const formLocation = [this.addressForm?.barangay, this.addressForm?.city, this.addressForm?.province].filter(Boolean).join(', ');
+            if (formLocation) {
+                candidates.push(formLocation + ', Philippines');
+            }
+
+            const uniqueCandidates = [...new Set(candidates)];
+            let foundLoc = null;
+
+            for (const q of uniqueCandidates) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            foundLoc = data[0];
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Geocoding candidate failed:', q, e);
+                }
+            }
+
+            if (foundLoc) {
+                const lat = parseFloat(foundLoc.lat);
+                const lng = parseFloat(foundLoc.lon);
+                this.updatePinLocation(lat, lng);
+                if (this.map) {
+                    this.map.setView([lat, lng], 16);
+                }
+                this.searchNotFoundMsg = '';
+            } else {
+                this.searchNotFoundMsg = 'Specific street landmark not found on map service. You can tap or drag the pin directly on the map, and enter your address details below.';
             }
             this.pinSearching = false;
         },

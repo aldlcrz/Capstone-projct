@@ -1054,6 +1054,84 @@ class ProductManagementController extends Controller
     }
 
     /**
+     * Recursively normalize product images from metadata or variations.
+     */
+    protected function normalizeProductImages($rawImage, $variations = null): array
+    {
+        $val = $rawImage;
+        while (is_string($val)) {
+            $trimmed = trim($val);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                    $val = $decoded;
+                    continue;
+                }
+            }
+            break;
+        }
+
+        $images = [];
+        if (is_array($val)) {
+            foreach ($val as $item) {
+                while (is_string($item)) {
+                    $trimmed = trim($item);
+                    if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                        $dec = json_decode($trimmed, true);
+                        if (json_last_error() === JSON_ERROR_NONE && !is_null($dec)) {
+                            $item = is_array($dec) ? ($dec[0] ?? null) : $dec;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                if (is_string($item) && !empty($item) && !in_array($item, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                    $images[] = trim($item, "\"' ");
+                }
+            }
+        } elseif (is_string($val) && !empty($val) && !in_array($val, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+            $images[] = trim($val, "\"' ");
+        }
+
+        // If no primary image found, look into variations
+        if (empty($images) && !empty($variations)) {
+            $vars = is_array($variations) ? $variations : json_decode($variations, true);
+            if (is_array($vars)) {
+                foreach ($vars as $v) {
+                    if (is_array($v)) {
+                        $vImg = !empty($v['image']) ? $v['image'] : (!empty($v['images'][0]) ? $v['images'][0] : null);
+                        if (!empty($vImg) && is_string($vImg) && !in_array($vImg, ['products/default.jpg', 'default.jpg', 'uploads/products/default.jpg', 'Array', '[]', '['], true)) {
+                            $images[] = trim($vImg, "\"' ");
+                        }
+                    }
+                }
+            }
+        }
+
+        return !empty($images) ? array_values(array_unique($images)) : ['products/default.jpg'];
+    }
+
+    /**
+     * Normalize an array field from metadata, unrolling JSON encoding if needed.
+     */
+    protected function normalizeProductArrayField($val, $default = null): ?array
+    {
+        if (is_null($val)) return $default;
+        while (is_string($val)) {
+            $trimmed = trim($val);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                    $val = $decoded;
+                    continue;
+                }
+            }
+            break;
+        }
+        return is_array($val) ? $val : $default;
+    }
+
+    /**
      * Restore a seller-archived product back to the active catalogue as "pending" review.
      */
     public function restoreProduct(string $id)
@@ -1074,13 +1152,24 @@ class ProductManagementController extends Controller
         }
 
         try {
+            $normVariations = $this->normalizeProductArrayField($meta['variations'] ?? null, []);
+            $normImages = $this->normalizeProductImages($meta['image'] ?? null, $normVariations);
+            $normSizes = $this->normalizeProductArrayField($meta['sizes'] ?? null, ['S', 'M', 'L', 'XL', 'XXL']);
+            $normCategories = $this->normalizeProductArrayField($meta['categories'] ?? null, null);
+            $normSizeStocks = $this->normalizeProductArrayField($meta['size_stocks'] ?? null, null);
+
             $existingProduct = !empty($record->item_id) ? Product::find($record->item_id) : null;
             if ($existingProduct) {
                 $existingProduct->update([
-                    'status' => 'pending',
-                    'name'   => $meta['name'] ?? $existingProduct->name,
-                    'price'  => $meta['price'] ?? $existingProduct->price,
-                    'stock'  => $meta['stock'] ?? $existingProduct->stock,
+                    'status'      => 'pending',
+                    'name'        => $meta['name'] ?? $existingProduct->name,
+                    'price'       => $meta['price'] ?? $existingProduct->price,
+                    'stock'       => $meta['stock'] ?? $existingProduct->stock,
+                    'image'       => !empty($normImages) ? $normImages : $existingProduct->image,
+                    'variations'  => !empty($normVariations) ? $normVariations : $existingProduct->variations,
+                    'sizes'       => !empty($normSizes) ? $normSizes : $existingProduct->sizes,
+                    'categories'  => !empty($normCategories) ? $normCategories : $existingProduct->categories,
+                    'size_stocks' => !empty($normSizeStocks) ? $normSizeStocks : $existingProduct->size_stocks,
                 ]);
             } else {
                 Product::create([
@@ -1090,9 +1179,9 @@ class ProductManagementController extends Controller
                     'price'               => $meta['price'] ?? 0,
                     'costPerPiece'        => $meta['costPerPiece'] ?? 0,
                     'stock'               => $meta['stock'] ?? 0,
-                    'sizes'               => $meta['sizes'] ?? null,
-                    'categories'          => $meta['categories'] ?? null,
-                    'image'               => $meta['image'] ?? null,
+                    'sizes'               => $normSizes,
+                    'categories'          => $normCategories,
+                    'image'               => $normImages,
                     'shippingFee'         => $meta['shippingFee'] ?? 0,
                     'shippingDays'        => $meta['shippingDays'] ?? null,
                     'sellerId'            => $sellerId,
@@ -1103,9 +1192,9 @@ class ProductManagementController extends Controller
                     'artisan_region'      => $meta['artisan_region'] ?? null,
                     'CategoryId'          => $meta['CategoryId'] ?? null,
                     'target_group'        => $meta['target_group'] ?? null,
-                    'size_stocks'         => $meta['size_stocks'] ?? null,
-                    'has_variants'        => $meta['has_variants'] ?? false,
-                    'variations'          => $meta['variations'] ?? null,
+                    'size_stocks'         => $normSizeStocks,
+                    'has_variants'        => !empty($normVariations) && count($normVariations) > 1,
+                    'variations'          => $normVariations,
                     'is_on_sale'          => $meta['is_on_sale'] ?? false,
                     'discount_percentage' => $meta['discount_percentage'] ?? 0,
                     'is_gcash_available'  => $meta['is_gcash_available'] ?? false,
@@ -1125,6 +1214,97 @@ class ProductManagementController extends Controller
             return redirect()->route('seller.products.archives')
                 ->with('error', 'Failed to restore product: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Restock a product in the seller's catalogue.
+     */
+    public function restock(Request $request, string $id)
+    {
+        $sellerId = Auth::id();
+        $product = Product::where('id', $id)->where('sellerId', $sellerId)->firstOrFail();
+
+        $request->validate([
+            'quantity'            => 'nullable|integer|min:1',
+            'size_quantities'     => 'nullable|array',
+            'size_quantities.*'   => 'nullable|integer|min:0',
+        ], [
+            'quantity.integer' => 'Restock quantity must be a positive whole number.',
+            'quantity.min'     => 'Restock quantity must be at least 1.',
+            'size_quantities.*.integer' => 'Restock size quantity must be a whole number.',
+            'size_quantities.*.min'     => 'Restock size quantity cannot be negative.',
+        ]);
+
+        $oldSizeStocks = $product->size_stocks;
+        $oldTotalStock = (int) $product->stock;
+
+        $hasSizes = !empty($product->sizes) && is_array($product->sizes) && count($product->sizes) > 0;
+        $sizeQuantities = $request->input('size_quantities', []);
+
+        if ($hasSizes && !empty($sizeQuantities) && is_array($sizeQuantities)) {
+            $totalAdded = 0;
+            $currentSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : (json_decode($product->size_stocks ?? '[]', true) ?? []);
+
+            foreach ($sizeQuantities as $sz => $qty) {
+                $q = (int) $qty;
+                if ($q > 0) {
+                    $currentSizeStocks[$sz] = ((int) ($currentSizeStocks[$sz] ?? 0)) + $q;
+                    $totalAdded += $q;
+                }
+            }
+
+            if ($totalAdded <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please enter a positive whole number quantity of at least 1 unit to restock.',
+                ], 422);
+            }
+
+            $product->size_stocks = $currentSizeStocks;
+            $product->stock = array_sum($currentSizeStocks);
+        } else {
+            $qtyToAdd = (int) $request->input('quantity', 0);
+            if ($qtyToAdd <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please enter a positive whole number quantity of at least 1 unit to restock.',
+                ], 422);
+            }
+
+            $product->stock = ((int) $product->stock) + $qtyToAdd;
+
+            if ($hasSizes) {
+                $currentSizeStocks = is_array($product->size_stocks) ? $product->size_stocks : [];
+                $sizeCount = count($product->sizes);
+                if ($sizeCount > 0) {
+                    $perSize = (int) floor($qtyToAdd / $sizeCount);
+                    $remainder = $qtyToAdd % $sizeCount;
+                    foreach ($product->sizes as $idx => $sz) {
+                        $add = $perSize + ($idx < $remainder ? 1 : 0);
+                        $currentSizeStocks[$sz] = ((int) ($currentSizeStocks[$sz] ?? 0)) + $add;
+                    }
+                    $product->size_stocks = $currentSizeStocks;
+                    $product->stock = array_sum($currentSizeStocks);
+                }
+            }
+        }
+
+        $product->save();
+
+        if ($product->status === 'approved' && ($product->inventory_mode ?? 'available_stock') !== 'preorder') {
+            try {
+                \App\Services\WishlistService::handleProductRestocked($product, $oldSizeStocks, $oldTotalStock);
+            } catch (\Throwable $we) {
+                \Illuminate\Support\Facades\Log::warning('Wishlist restock handling error on product restock: ' . $we->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success'     => true,
+            'message'     => "Successfully restocked \"{$product->name}\". Total stock is now {$product->stock} units.",
+            'new_stock'   => $product->stock,
+            'size_stocks' => $product->size_stocks,
+        ]);
     }
 
     /**

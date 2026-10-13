@@ -178,17 +178,40 @@ class Product extends Model
             return ['uploads/products/default.jpg'];
         }
 
-        $decoded = is_string($value) ? json_decode($value, true) : $value;
-        if (!is_array($decoded)) {
-            $decoded = [$value];
+        $val = $value;
+        while (is_string($val)) {
+            $trimmed = trim($val);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                    $val = $decoded;
+                    continue;
+                }
+            }
+            break;
+        }
+
+        if (!is_array($val)) {
+            $val = [$val];
         }
 
         $validImages = [];
-        foreach ($decoded as $img) {
-            if (!$img || $img === 'Array' || $img === '[]' || $img === '[') {
+        foreach ($val as $img) {
+            while (is_string($img)) {
+                $trimmed = trim($img);
+                if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                    $dec = json_decode($trimmed, true);
+                    if (json_last_error() === JSON_ERROR_NONE && !is_null($dec)) {
+                        $img = is_array($dec) ? ($dec[0] ?? null) : $dec;
+                        continue;
+                    }
+                }
+                break;
+            }
+            if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === '""') {
                 continue;
             }
-            $validImages[] = $img;
+            $validImages[] = is_string($img) ? trim($img, "\"' ") : $img;
         }
 
         return !empty($validImages) ? $validImages : ['uploads/products/default.jpg'];
@@ -299,15 +322,21 @@ class Product extends Model
 
         if (is_null($img)) {
             $raw = $this->getAttributes()['image'] ?? null;
-            if (is_array($raw)) {
-                $img = $raw[0] ?? null;
-            } elseif (is_string($raw)) {
-                $decoded = json_decode($raw, true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    $img = $decoded[0];
-                } else {
-                    $img = $raw;
+            while (is_string($raw)) {
+                $trimmed = trim($raw);
+                if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                    $decoded = json_decode($trimmed, true);
+                    if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                        $raw = $decoded;
+                        continue;
+                    }
                 }
+                break;
+            }
+            if (is_array($raw)) {
+                $img = !empty($raw) ? reset($raw) : null;
+            } else {
+                $img = $raw;
             }
             if (is_null($img)) {
                 $imgArray = $this->image;
@@ -315,8 +344,20 @@ class Product extends Model
             }
         }
 
+        while (is_string($img)) {
+            $trimmed = trim($img);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) || (str_starts_with($trimmed, '"') && str_ends_with($trimmed, '"'))) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && !is_null($decoded)) {
+                    $img = is_array($decoded) ? ($decoded[0] ?? null) : $decoded;
+                    continue;
+                }
+            }
+            break;
+        }
+
         if (is_array($img)) {
-            $img = $img[0] ?? null;
+            $img = !empty($img) ? reset($img) : null;
         }
 
         if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg' || str_contains((string)$img, '451e9610-2077-437e-a314-670d576e233c')) {

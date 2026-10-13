@@ -88,6 +88,13 @@ class AddressController extends Controller
                 Address::where('userId', $userId)->update(['isDefault' => false]);
             }
 
+            $lat = (is_numeric($request->latitude) && (float)$request->latitude != 0)
+                ? (float)$request->latitude
+                : 14.2988;
+            $lng = (is_numeric($request->longitude) && (float)$request->longitude != 0)
+                ? (float)$request->longitude
+                : 121.4552;
+
             return Address::create([
                 'userId' => $userId,
                 'recipientName' => trim($request->recipientName),
@@ -99,8 +106,8 @@ class AddressController extends Controller
                 'province' => trim($request->province),
                 'region' => trim($request->region ?? ''),
                 'postalCode' => trim($request->postalCode ?? ''),
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+                'latitude' => $lat,
+                'longitude' => $lng,
                 'isDefault' => $isDefault,
             ]);
         });
@@ -163,12 +170,19 @@ class AddressController extends Controller
                 }
             }
 
+            $lat = (is_numeric($request->latitude) && (float)$request->latitude != 0)
+                ? (float)$request->latitude
+                : ($address->latitude ?? 14.2988);
+            $lng = (is_numeric($request->longitude) && (float)$request->longitude != 0)
+                ? (float)$request->longitude
+                : ($address->longitude ?? 121.4552);
+
             $validated['street'] = trim($request->street ?? '');
             $validated['barangay'] = trim($request->barangay ?? '');
             $validated['region'] = trim($request->region ?? '');
             $validated['postalCode'] = trim($request->postalCode ?? '');
-            $validated['latitude'] = $request->latitude;
-            $validated['longitude'] = $request->longitude;
+            $validated['latitude'] = $lat;
+            $validated['longitude'] = $lng;
             $validated['isDefault'] = $isDefault;
 
             $address->update($validated);

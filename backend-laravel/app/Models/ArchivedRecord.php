@@ -60,6 +60,15 @@ class ArchivedRecord extends Model
         if ($entity instanceof Model) {
             $itemId = (string) $entity->getKey();
             $metadata = $entity->getAttributes();
+            // Ensure array/json cast fields are stored as decoded arrays, not raw JSON strings
+            foreach (['image', 'variations', 'sizes', 'categories', 'size_stocks', 'size_guide_measurements'] as $castField) {
+                if (isset($metadata[$castField]) && is_string($metadata[$castField])) {
+                    $decoded = json_decode($metadata[$castField], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $metadata[$castField] = $decoded;
+                    }
+                }
+            }
         } elseif (is_array($entity)) {
             $itemId = $entity['id'] ?? null;
             $metadata = $entity;

@@ -346,16 +346,6 @@
                                             <div class="text-[10px] text-gray-400 truncate mt-0.5">
                                                 {{ $order->customer?->email ?? 'No email' }}
                                             </div>
-                                            @php
-                                                $custPhone = $order->customer?->phone ?? $order->customer?->contactNumber ?? $order->customer?->mobileNumber;
-                                            @endphp
-                                            @if(!empty($custPhone))
-                                                <div class="text-[10px] text-gray-500 font-mono mt-0.5">
-                                                    {{ $custPhone }}
-                                                </div>
-                                            @else
-                                                <div class="text-[9px] text-gray-400 italic">No phone</div>
-                                            @endif
                                         </div>
                                     </div>
                                 </td>
