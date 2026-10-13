@@ -433,14 +433,99 @@ class CheckoutController extends Controller
                     return redirect()->back()->withInput()->with('error', 'Payment receipt screenshot is required for online payments.');
                 }
 
-                // Calculate authoritative expected total from database products for screening context
+                // Calculate authoritative expected total (products subtotal + shipping fee)
                 $authoritativeSubtotal = 0.0;
+                $sellerItemsForShipping = [];
+                $sellerUser = null;
+
                 foreach ($cart as $cItem) {
-                    $p = Product::find($cItem['id'] ?? null);
+                    $pId = $cItem['productId'] ?? ($cItem['id'] ?? null);
+                    $p = $pId ? Product::find($pId) : null;
                     if ($p) {
-                        $authoritativeSubtotal += ((float)$p->sale_price) * (int)($cItem['quantity'] ?? 1);
+                        $qty = max(1, (int) ($cItem['quantity'] ?? 1));
+                        $itemPrice = (float) $p->sale_price;
+                        $authoritativeSubtotal += round($itemPrice * $qty, 2);
+
+                        if (!$sellerUser && $p->sellerId) {
+                            $sellerUser = User::find($p->sellerId);
+                        }
+
+                        $sellerItemsForShipping[] = [
+                            'id'                  => $p->id,
+                            'productId'           => $p->id,
+                            'quantity'            => $qty,
+                            'price'               => $itemPrice,
+                            'weight'              => $p->weight ?? null,
+                            'length'              => $p->length ?? null,
+                            'width'               => $p->width ?? null,
+                            'height'              => $p->height ?? null,
+                            'package_weight_grams'=> $p->package_weight_grams ?? null,
+                            'package_length_cm'   => $p->package_length_cm ?? null,
+                            'package_width_cm'    => $p->package_width_cm ?? null,
+                            'package_height_cm'   => $p->package_height_cm ?? null,
+                        ];
                     }
                 }
+                $authoritativeSubtotal = round($authoritativeSubtotal, 2);
+
+                // Authoritative shipping fee resolution
+                $authoritativeShippingFee = 0.0;
+                $addressData = null;
+                if ($request->filled('address_id')) {
+                    $addrModel = Address::where('id', $request->address_id)->first();
+                    if ($addrModel) {
+                        $addressData = $addrModel->toArray();
+                    }
+                } elseif ($request->filled('shippingAddress')) {
+                    $rawAddr = $request->input('shippingAddress');
+                    $addressData = is_array($rawAddr) ? $rawAddr : json_decode($rawAddr, true);
+                }
+
+                if ($sellerUser && $addressData) {
+                    try {
+                        $storePickupProvider = \App\Models\ShippingProvider::where('code', 'store_pickup')->first();
+                        $specialDeliveryProvider = \App\Models\ShippingProvider::where('code', 'seller_direct')->first();
+
+                        $isExplicitStorePickup = in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true)
+                            || ($shippingProviderId && $storePickupProvider && $shippingProviderId === $storePickupProvider->id);
+
+                        $isExplicitSpecialDelivery = in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)
+                            || ($shippingProviderId && $specialDeliveryProvider && $shippingProviderId === $specialDeliveryProvider->id);
+
+                        if ($isExplicitStorePickup && $storePickupProvider) {
+                            $calcProviderId = $storePickupProvider->id;
+                        } elseif ($isExplicitSpecialDelivery && $specialDeliveryProvider) {
+                            $calcProviderId = $specialDeliveryProvider->id;
+                        } else {
+                            $preferredProvider = $this->shippingCalculator->getSellerPreferredProvider($sellerUser);
+                            $calcProviderId = $shippingProviderId ?: ($preferredProvider?->id);
+                        }
+
+                        $quotes = $this->shippingCalculator->calculateQuotes($sellerUser, $addressData, $sellerItemsForShipping, $calcProviderId);
+
+                        if ($isExplicitStorePickup) {
+                            $chosenQuote = collect($quotes)->firstWhere('provider_code', 'store_pickup') ?: ($quotes[0] ?? null);
+                        } elseif ($isExplicitSpecialDelivery) {
+                            $chosenQuote = collect($quotes)->firstWhere('provider_code', 'seller_direct') ?: ($quotes[0] ?? null);
+                        } else {
+                            $chosenQuote = ($shippingProviderId ? collect($quotes)->firstWhere('provider_id', $shippingProviderId) : null) ?: ($quotes[0] ?? null);
+                        }
+
+                        if ($chosenQuote) {
+                            $authoritativeShippingFee = round((float) $chosenQuote['shipping_fee'], 2);
+                        }
+                    } catch (\Throwable $e) {
+                        $authoritativeShippingFee = round((float) ($request->input('shipping_fee') ?: $request->input('shippingFee', 0.0)), 2);
+                    }
+                } elseif ($request->filled('shipping_fee') || $request->filled('shippingFee')) {
+                    $authoritativeShippingFee = round((float) ($request->input('shipping_fee') ?: $request->input('shippingFee')), 2);
+                }
+
+                if ($authoritativeShippingFee <= 0 && ($request->filled('shipping_fee') || $request->filled('shippingFee'))) {
+                    $authoritativeShippingFee = round((float) ($request->input('shipping_fee') ?: $request->input('shippingFee')), 2);
+                }
+
+                $authoritativeExpectedTotal = round($authoritativeSubtotal + $authoritativeShippingFee, 2);
 
                 $submittedRefs = (array) $request->input('paymentReferences', []);
                 if (empty($submittedRefs) && $request->filled('paymentReference')) {
@@ -461,7 +546,7 @@ class CheckoutController extends Controller
                         $tempPath,
                         (string) $expectedRef,
                         $paymentMethod,
-                        $authoritativeSubtotal,
+                        $authoritativeExpectedTotal,
                         $origName
                     );
 
@@ -473,7 +558,7 @@ class CheckoutController extends Controller
                         return redirect()->back()->withInput()->with('error', $errorMessage);
                     }
 
-                    if (($screening['reason_code'] ?? '') === 'OVERPAYMENT_DETECTED' || ($screening['reason_code'] ?? '') === 'AMOUNT_OVERPAY' || ($screening['sukli_amount'] ?? 0) > 0) {
+                    if (($screening['reason_code'] ?? '') === 'OVERPAYMENT_DETECTED' || ($screening['reason_code'] ?? '') === 'AMOUNT_OVERPAY' || ($screening['sukli_amount'] ?? 0) > 0.05) {
                         $errorMessage = 'Payment amount exceeds the required order total. The system does not support change or sukli. Please pay the exact amount.';
                         if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
                             return response()->json(['success' => false, 'message' => $errorMessage], 422);

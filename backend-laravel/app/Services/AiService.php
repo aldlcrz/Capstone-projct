@@ -1617,7 +1617,7 @@ STRICT DOMAIN LIMITS & SECURITY:
                 $remaining = round($expectedAmount, 2);
             } else {
                 $diff = round($detectedAmount - $expectedAmount, 2);
-                if (abs($diff) < 0.01) {
+                if (abs($diff) <= 0.05) {
                     $amountStatus = 'MATCH';
                     $remaining = 0.0;
                     $sukli = 0.0;

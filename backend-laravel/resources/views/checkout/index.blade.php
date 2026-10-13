@@ -88,6 +88,8 @@
         <input type="hidden" name="address_id" :value="address?.id || ''">
         <input type="hidden" name="shipping_quote_token" :value="shippingQuoteToken">
         <input type="hidden" name="shipping_provider_id" :value="selectedProviderId">
+        <input type="hidden" name="shipping_fee" :value="currentShippingFee">
+        <input type="hidden" name="total_amount" :value="payableAmount">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-24 lg:pb-10">
             <!-- Left Column: Checkout Steps & Forms -->
@@ -2078,7 +2080,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     return;
                 }
 
-                if (data.reason_code === 'OVERPAYMENT_DETECTED' || (data.detected_amount && Number(data.detected_amount) > Number(this.payableAmount))) {
+                if (data.reason_code === 'OVERPAYMENT_DETECTED' || (data.detected_amount && (Number(data.detected_amount) - Number(this.payableAmount)) > 0.05)) {
                     const overAmt = Number(data.detected_amount) || Number(this.payableAmount);
                     this.screenshotError = `Payment amount (₱${overAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) exceeds the required total of ₱${Number(this.payableAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. The system does not support change or sukli. Please pay the exact amount.`;
                     return;

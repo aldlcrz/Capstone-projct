@@ -446,4 +446,51 @@ class GcashOrderingAndAiTest extends TestCase
         $this->assertEquals('To Ship', $order->status);
         $this->assertEquals('Verified', $order->paymentStatus);
     }
+
+    public function test_checkout_with_shipping_fee_accepts_exact_total_payment_receipt(): void
+    {
+        $shippingCalc = app(ShippingCalculatorService::class);
+        $sellerItems = [
+            [
+                'id' => $this->product->id,
+                'productId' => $this->product->id,
+                'product' => $this->product,
+                'quantity' => 1,
+                'subtotal' => 2500.00,
+            ]
+        ];
+
+        $quotes = $shippingCalc->calculateQuotes($this->seller, $this->address->toArray(), $sellerItems, $this->jntProvider->id);
+        $this->assertNotEmpty($quotes);
+        $this->assertEquals(120.00, (float) $quotes[0]['shipping_fee']);
+
+        $quoteToken = $shippingCalc->generateQuoteToken([$this->seller->id], $this->address->id, $sellerItems);
+        // Receipt image file name with amount_2620 to trigger test OCR amount extraction of 2620.00
+        $receiptFile = UploadedFile::fake()->image('gcash_receipt_ref_1009998887771_amount_2620.jpg', 600, 1200);
+
+        $response = $this->actingAs($this->customer)->post('/checkout', [
+            'address_id' => $this->address->id,
+            'paymentMethod' => 'GCash',
+            'paymentReference' => '1009998887771',
+            'paymentScreenshot' => $receiptFile,
+            'shipping_quote_token' => $quoteToken,
+            'selected_provider_id' => $this->jntProvider->id,
+            'shipping_fee' => 120.00,
+            'items' => [
+                [
+                    'productId' => $this->product->id,
+                    'quantity' => 1,
+                    'size' => 'L',
+                ]
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertFalse(session()->has('error'));
+
+        $order = Order::where('customerId', $this->customer->id)->where('paymentReference', '1009998887771')->first();
+        $this->assertNotNull($order);
+        $this->assertEquals(2620.00, (float) $order->totalAmount);
+        $this->assertEquals(120.00, (float) $order->shippingFee);
+    }
 }
