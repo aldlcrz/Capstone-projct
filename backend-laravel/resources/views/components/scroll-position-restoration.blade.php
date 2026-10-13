@@ -149,7 +149,7 @@
             isRestoring = false;
         }
     }
-    ['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown'].forEach(function(evt) {
+    ['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown', 'click', 'pointerdown'].forEach(function(evt) {
         window.addEventListener(evt, function(e) {
             if (evt === 'keydown') {
                 var keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
@@ -221,11 +221,14 @@
         return state;
     }
 
+    var alpineStateRestored = false;
     function restoreAlpineState(saved) {
-        if (!saved || (!saved.tabs && !saved.progress)) return false;
+        if (alpineStateRestored || !saved || (!saved.tabs && !saved.progress)) return false;
         var didRestore = false;
         try {
             var components = getAlpineComponents();
+            if (components.length === 0) return false;
+            alpineStateRestored = true;
             components.forEach(function(comp) {
                 var data = comp.data;
                 var prefix = comp.id + ':';
@@ -386,9 +389,6 @@
 
                     function applyScroll() {
                         if (userInteracted) return;
-
-                        // Ensure tabs and steps are aligned with saved state
-                        restoreAlpineState(saved);
 
                         // Check if form validation errors were surfaced and scrolled
                         var hasValidationErrors = document.querySelector('.is-invalid, [aria-invalid="true"], .border-red-500, .ring-red-400');

@@ -31,6 +31,18 @@ window.sellerProducts = function() {
         toastType: 'success',
         toastVisible: false,
         toastTimer: null,
+        productsData: [],
+        init() {
+            try {
+                const el = document.getElementById('seller-products-data');
+                if (el && el.textContent) {
+                    const parsed = JSON.parse(el.textContent.trim());
+                    this.productsData = Array.isArray(parsed) ? parsed : (parsed.data || []);
+                }
+            } catch(e) {
+                this.productsData = [];
+            }
+        },
         showNotification(msg, type = 'success') {
             this.toastMessage = msg;
             this.toastType = type;
@@ -48,8 +60,15 @@ window.sellerProducts = function() {
         },
         openRestockModal(productOrId) {
             let product = typeof productOrId === 'object' && productOrId !== null ? productOrId : null;
+            if (!product && typeof productOrId === 'string') {
+                try {
+                    const parsed = JSON.parse(productOrId);
+                    if (parsed && typeof parsed === 'object') product = parsed;
+                } catch(e) {}
+            }
             if (!product) {
-                product = (this.productsData || []).find(p => String(p.id) === String(productOrId));
+                const searchId = typeof productOrId === 'string' ? productOrId : '';
+                product = (this.productsData || []).find(p => String(p.id) === String(searchId));
             }
             if (!product) return;
             this.restockProductData = product;
@@ -455,7 +474,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                                     <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="text-xs sm:text-sm font-black font-sans" style="color: #1E1915;">₱{{ number_format((float)($product->is_on_sale && (float)$product->discount_percentage > 0 ? $product->sale_price : $product->price), 2) }}</span>
                                         @if($product->is_on_sale && (float)$product->discount_percentage > 0)
-                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)($product->price, 2) }}</span>
+                                            <span class="text-[10px] line-through font-sans" style="color: #A09585;">₱{{ number_format((float)$product->price, 2) }}</span>
                                             <span class="text-[8px] font-black px-1 py-0.2 rounded shadow-2xs" style="background: #1E1915; color: #FFFCF7; border: 1px solid #C49520;">-{{ round($product->discount_percentage) }}%</span>
                                         @endif
                                     </div>
@@ -473,7 +492,8 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
-                                            @click.stop="openRestockModal('{{ $product->id }}')"
+                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
+                                            @click.stop="openRestockModal($el.dataset.product)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -618,7 +638,8 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
                                     <button type="button" 
-                                            @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
+                                            @click.stop="openRestockModal($el.dataset.product)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -760,7 +781,8 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
                                     <button type="button" 
-                                            @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
+                                            @click.stop="openRestockModal($el.dataset.product)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -896,7 +918,8 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                                 @if(!$product->isPreorder())
                                     <div class="pt-2 border-t" style="border-color: #FECACA;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
                                         <button type="button" 
-                                                @click.stop="openRestockModal(@js(['id' => $product->id, 'name' => $product->name, 'stock' => $product->stock, 'sizes' => $product->sizes, 'size_stocks' => $product->size_stocks]))"
+                                                data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
+                                                @click.stop="openRestockModal($el.dataset.product)"
                                                 class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                                 style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                                 onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -998,7 +1021,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
     </div>{{-- end #tour-products-grid --}}
 
     {{-- Size Guide Management Modal (Artisan Luxury Theme) --}}
-    <div x-show="showSizeGuideModal" style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" x-transition>
+    <div x-show="showSizeGuideModal" x-cloak style="display: none;" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" x-transition>
         <div @click.away="showSizeGuideModal = false" class="w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" style="background: #FFFCF7; border: 1px solid #E8DECB;">
             {{-- Modal Header --}}
             <div class="px-6 py-5 border-b flex items-center justify-between shrink-0" style="background: #FDF8EE; border-color: #E8DECB;">

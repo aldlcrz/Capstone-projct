@@ -16,11 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
-    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="{{ asset('vendor/alpine/collapse.min.js') }}" onerror="this.onerror=null;this.src='https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js'"></script>
+    <script defer src="{{ asset('vendor/alpine/alpine.min.js') }}" onerror="this.onerror=null;this.src='https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js'"></script>
+    <script defer src="{{ asset('vendor/lucide/lucide.min.js') }}" onerror="this.onerror=null;this.src='https://unpkg.com/lucide@latest'"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) { window.lucide.createIcons(); }

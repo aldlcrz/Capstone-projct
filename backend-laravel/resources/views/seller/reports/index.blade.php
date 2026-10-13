@@ -1,6 +1,119 @@
 @extends('layouts.seller')
 
 @section('content')
+<script>
+window.sellerReportsHub = function() {
+    return {
+        typeFilter: 'all',
+        statusFilter: 'all',
+        searchQuery: '',
+        showNoticeDetails: false,
+        showCaseModal: false,
+        showLightbox: false,
+        lightboxUrl: '',
+        activeCase: {},
+        sellerResponseText: '',
+        sellerEvidenceFiles: [],
+        isSubmittingResponse: false,
+
+        async openCaseModal(reportId) {
+            try {
+                const res = await fetch(`/api/v1/seller/reports/${reportId}`);
+                if (res.ok) {
+                    this.activeCase = await res.json();
+                    this.sellerResponseText = '';
+                    this.sellerEvidenceFiles = [];
+                    this.showCaseModal = true;
+                } else {
+                    alert('Could not load case details. Please try again.');
+                }
+            } catch (e) {
+                alert('Network error while loading case details.');
+            }
+        },
+
+        async uploadSellerEvidence(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB limit.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                || document.querySelector('input[name="_token"]')?.value 
+                || '';
+
+            try {
+                const res = await fetch('/api/v1/upload', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.url) this.sellerEvidenceFiles.push(data.url);
+                } else {
+                    alert('Failed to upload evidence image.');
+                }
+            } catch (e) {
+                alert('Network error during upload.');
+            } finally {
+                event.target.value = '';
+            }
+        },
+
+        async submitResponse(reportId) {
+            if (this.sellerResponseText.trim().length < 5) return;
+            this.isSubmittingResponse = true;
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                || document.querySelector('input[name="_token"]')?.value 
+                || '';
+
+            try {
+                const res = await fetch(`/api/v1/reports/${reportId}/response`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        response: this.sellerResponseText,
+                        evidence: this.sellerEvidenceFiles
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    await this.openCaseModal(reportId);
+                    alert('Your response has been successfully recorded in the case file.');
+                } else {
+                    alert(data.message || 'Failed to submit response.');
+                }
+            } catch (e) {
+                alert('Network error while submitting response.');
+            } finally {
+                this.isSubmittingResponse = false;
+            }
+        }
+    };
+};
+window.initSellerReportsAlpine = function() {
+    if (window.Alpine) {
+        window.Alpine.data('sellerReportsHub', window.sellerReportsHub);
+    }
+};
+window.initSellerReportsAlpine();
+document.addEventListener('alpine:init', window.initSellerReportsAlpine);
+</script>
+
 <div class="space-y-5 sm:space-y-6 max-w-7xl pb-28 lg:pb-12" x-data="sellerReportsHub()">
 
     {{-- ══ HEADER ══════════════════════════════════════════════════════════ --}}
@@ -54,7 +167,7 @@
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #766C60;">Total Reports</span>
                 <x-lucide name="clipboard-list" class="w-4 h-4 text-gray-600" />
             </div>
-            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $counts['total'] }}</div>
+            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1E1915;">{{ $counts['total'] ?? 0 }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">All lifetime cases</div>
         </div>
 
@@ -65,7 +178,7 @@
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #1D4ED8;">In Review</span>
                 <x-lucide name="search" class="w-4 h-4 text-sky-600" />
             </div>
-            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1D4ED8;">{{ $counts['under_review'] }}</div>
+            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #1D4ED8;">{{ $counts['under_review'] ?? 0 }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Active investigation</div>
         </div>
 
@@ -76,7 +189,7 @@
                 <span class="text-[9px] font-black uppercase tracking-widest" style="color: #4A6741;">Resolved</span>
                 <x-lucide name="check-circle" class="w-4 h-4 text-emerald-600" />
             </div>
-            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #4A6741;">{{ $counts['resolved'] }}</div>
+            <div class="text-xl sm:text-2xl font-black font-sans" style="color: #4A6741;">{{ $counts['resolved'] ?? 0 }}</div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Closed cases</div>
         </div>
 
@@ -84,11 +197,11 @@
         <div class="p-3.5 sm:p-4 rounded-2xl transition-all" 
              style="background: #FFFFFF; border: 1px solid #ECE3D2; box-shadow: 0 1px 4px rgba(30,25,21,0.03);">
             <div class="flex items-center justify-between gap-1 mb-1">
-                <span class="text-[9px] font-black uppercase tracking-widest {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#766C60]' }}">Violations</span>
+                <span class="text-[9px] font-black uppercase tracking-widest {{ ($counts['confirmed_violations'] ?? 0) > 0 ? 'text-red-600' : 'text-[#766C60]' }}">Violations</span>
                 <x-lucide name="shield" class="w-4 h-4 text-purple-600" />
             </div>
-            <div class="text-xl sm:text-2xl font-black font-sans {{ $counts['confirmed_violations'] > 0 ? 'text-red-600' : 'text-[#4A6741]' }}">
-                {{ $counts['confirmed_violations'] }}
+            <div class="text-xl sm:text-2xl font-black font-sans {{ ($counts['confirmed_violations'] ?? 0) > 0 ? 'text-red-600' : 'text-[#4A6741]' }}">
+                {{ $counts['confirmed_violations'] ?? 0 }}
             </div>
             <div class="text-[10px] font-medium mt-0.5" style="color: #9E9182;">Confirmed strikes</div>
         </div>
@@ -173,14 +286,14 @@
                     :style="typeFilter === 'account' 
                         ? 'background: #1E1915; color: #FFFCF7; border-color: #1E1915;' 
                         : 'background: #FFFFFF; color: #766C60; border-color: #ECE3D2;'">
-                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Account Reports ({{ $counts['account_reports'] }})
+                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Account Reports ({{ $counts['account_reports'] ?? 0 }})
             </button>
             <button type="button" @click="typeFilter = 'product'"
                     class="px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all shrink-0 cursor-pointer border"
                     :style="typeFilter === 'product' 
                         ? 'background: #1E1915; color: #FFFCF7; border-color: #1E1915;' 
                         : 'background: #FFFFFF; color: #766C60; border-color: #ECE3D2;'">
-                <x-lucide name="package" class="w-3.5 h-3.5 inline mr-1" /> Product Reports ({{ $counts['product_reports'] }})
+                <x-lucide name="package" class="w-3.5 h-3.5 inline mr-1" /> Product Reports ({{ $counts['product_reports'] ?? 0 }})
             </button>
         </div>
     </div>
@@ -558,112 +671,6 @@
     </div>
 
 </div>
-
-<script>
-function sellerReportsHub() {
-    return {
-        typeFilter: 'all',
-        statusFilter: 'all',
-        searchQuery: '',
-        showNoticeDetails: false,
-        showCaseModal: false,
-        showLightbox: false,
-        lightboxUrl: '',
-        activeCase: {},
-        sellerResponseText: '',
-        sellerEvidenceFiles: [],
-        isSubmittingResponse: false,
-
-        async openCaseModal(reportId) {
-            try {
-                const res = await fetch(`/api/v1/seller/reports/${reportId}`);
-                if (res.ok) {
-                    this.activeCase = await res.json();
-                    this.sellerResponseText = '';
-                    this.sellerEvidenceFiles = [];
-                    this.showCaseModal = true;
-                } else {
-                    alert('Could not load case details. Please try again.');
-                }
-            } catch (e) {
-                alert('Network error while loading case details.');
-            }
-        },
-
-        async uploadSellerEvidence(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File size exceeds 10MB limit.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
-                || document.querySelector('input[name="_token"]')?.value 
-                || '';
-
-            try {
-                const res = await fetch('/api/v1/upload', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    body: formData
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.url) this.sellerEvidenceFiles.push(data.url);
-                } else {
-                    alert('Failed to upload evidence image.');
-                }
-            } catch (e) {
-                alert('Network error during upload.');
-            } finally {
-                event.target.value = '';
-            }
-        },
-
-        async submitResponse(reportId) {
-            if (this.sellerResponseText.trim().length < 5) return;
-            this.isSubmittingResponse = true;
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
-                || document.querySelector('input[name="_token"]')?.value 
-                || '';
-
-            try {
-                const res = await fetch(`/api/v1/reports/${reportId}/response`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        response: this.sellerResponseText,
-                        evidence: this.sellerEvidenceFiles
-                    })
-                });
-
-                const data = await res.json();
-                if (res.ok && data.status === 'success') {
-                    await this.openCaseModal(reportId);
-                    alert('Your response has been successfully recorded in the case file.');
-                } else {
-                    alert(data.message || 'Failed to submit response.');
-                }
-            } catch (e) {
-                alert('Network error while submitting response.');
-            } finally {
-                this.isSubmittingResponse = false;
-            }
-        }
-    };
-}
-</script>
 
     @php
         $reportsTourSteps = [
