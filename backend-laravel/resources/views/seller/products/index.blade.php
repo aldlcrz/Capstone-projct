@@ -9,6 +9,27 @@
 </script>
 <script>
 window.sellerProducts = function() {
+    let initialProducts = [];
+    try {
+        const el = document.getElementById('seller-products-data');
+        if (el && el.textContent) {
+            const parsed = JSON.parse(el.textContent.trim());
+            initialProducts = Array.isArray(parsed) ? parsed : (parsed?.data || []);
+        }
+    } catch(e) {
+        initialProducts = [];
+    }
+
+    let initialSizeGuides = {};
+    try {
+        const sgEl = document.getElementById('seller-sizeguides-data');
+        if (sgEl && sgEl.textContent) {
+            initialSizeGuides = JSON.parse(sgEl.textContent.trim()) || {};
+        }
+    } catch(e) {
+        initialSizeGuides = {};
+    }
+
     return {
         search: '',
         activeTab: 'all',
@@ -31,16 +52,36 @@ window.sellerProducts = function() {
         toastType: 'success',
         toastVisible: false,
         toastTimer: null,
-        productsData: [],
+        productsData: initialProducts,
+        sizeGuides: initialSizeGuides,
+        selectedProduct: null,
+        lightboxImage: null,
+        replyingToRevId: null,
+        replyText: '',
+        isSubmittingReply: false,
+        activeSGTab: 'Men',
+
         init() {
-            try {
-                const el = document.getElementById('seller-products-data');
-                if (el && el.textContent) {
-                    const parsed = JSON.parse(el.textContent.trim());
-                    this.productsData = Array.isArray(parsed) ? parsed : (parsed.data || []);
+            if (!this.productsData || this.productsData.length === 0) {
+                try {
+                    const el = document.getElementById('seller-products-data');
+                    if (el && el.textContent) {
+                        const parsed = JSON.parse(el.textContent.trim());
+                        this.productsData = Array.isArray(parsed) ? parsed : (parsed?.data || []);
+                    }
+                } catch(e) {
+                    this.productsData = [];
                 }
-            } catch(e) {
-                this.productsData = [];
+            }
+            if (!this.sizeGuides || (typeof this.sizeGuides === 'object' && Object.keys(this.sizeGuides).length === 0)) {
+                try {
+                    const sgEl = document.getElementById('seller-sizeguides-data');
+                    if (sgEl && sgEl.textContent) {
+                        this.sizeGuides = JSON.parse(sgEl.textContent.trim()) || {};
+                    }
+                } catch(e) {
+                    this.sizeGuides = {};
+                }
             }
         },
         showNotification(msg, type = 'success') {
@@ -185,57 +226,35 @@ window.sellerProducts = function() {
                 this.isRestocking = false;
             }
         },
-        selectedProduct: null,
-        lightboxImage: null,
-        productsData: (() => {
-            try {
-                const raw = JSON.parse(document.getElementById('seller-products-data')?.textContent || '[]');
-                return Array.isArray(raw) ? raw : (raw?.data || []);
-            } catch (e) {
-                return [];
-            }
-        })(),
-        replyingToRevId: null,
-        replyText: '',
-        isSubmittingReply: false,
-        activeSGTab: 'Men',
-        sizeGuides: (() => {
-            try {
-                return JSON.parse(document.getElementById('seller-sizeguides-data')?.textContent || '[]');
-            } catch (e) {
-                return [];
-            }
-        })(),
         openDeleteModal(id, name, isDraft = false) {
             this.deletingProductId = id;
             this.deletingProductName = name;
             this.isDeletingDraft = !!isDraft;
             this.showDeleteModal = true;
         },
-        matchesProduct(productId) {
+        matchesProduct(productId, fallbackStatus = '') {
             const prod = (this.productsData || []).find(p => String(p.id) === String(productId));
             const name = prod?.name || '';
             const desc = prod?.description || '';
-            const status = prod?.status || '';
+            const status = (prod?.status || fallbackStatus || '').toLowerCase();
             const query = (this.search || '').toLowerCase().trim();
             const matchesSearch = !query || name.toLowerCase().includes(query) || desc.toLowerCase().includes(query);
-            const statusLower = status.toLowerCase();
-            const tabLower = this.activeTab.toLowerCase();
-            const matchesTab = this.activeTab === 'all' 
-                || statusLower === tabLower 
-                || (this.activeTab === 'drafts' && statusLower === 'draft')
-                || (this.activeTab === 'rejected' && statusLower === 'rejected');
+            const tabLower = (this.activeTab || 'all').toLowerCase();
+            const matchesTab = tabLower === 'all' 
+                || status === tabLower 
+                || (tabLower === 'drafts' && status === 'draft')
+                || (tabLower === 'rejected' && status === 'rejected');
             return matchesSearch && matchesTab;
         },
         matches(productName, productDesc, productStatus) {
             const query = (this.search || '').toLowerCase().trim();
             const matchesSearch = !query || (productName || '').toLowerCase().includes(query) || (productDesc || '').toLowerCase().includes(query);
             const statusLower = (productStatus || '').toLowerCase();
-            const tabLower = this.activeTab.toLowerCase();
-            const matchesTab = this.activeTab === 'all' 
+            const tabLower = (this.activeTab || 'all').toLowerCase();
+            const matchesTab = tabLower === 'all' 
                 || statusLower === tabLower 
-                || (this.activeTab === 'drafts' && statusLower === 'draft')
-                || (this.activeTab === 'rejected' && statusLower === 'rejected');
+                || (tabLower === 'drafts' && statusLower === 'draft')
+                || (tabLower === 'rejected' && statusLower === 'rejected');
             return matchesSearch && matchesTab;
         },
         openReviewsModal(productId) {
@@ -294,6 +313,7 @@ function initSellerProductsAlpine() {
 }
 initSellerProductsAlpine();
 document.addEventListener('alpine:init', initSellerProductsAlpine);
+document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
 </script>
 
 <div class="space-y-6 sm:space-y-8" x-data="sellerProducts()">
@@ -356,34 +376,34 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
             <button @click="activeTab = 'all'"
                 :style="activeTab === 'all' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'all'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
+                <span x-show="activeTab === 'all'" x-cloak class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span>All Creations ({{ $totalCount ?? $products->total() }})</span>
             </button>
             <button @click="activeTab = 'approved'"
                 :style="activeTab === 'approved' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'approved'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
+                <span x-show="activeTab === 'approved'" x-cloak class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#4A6741;"></span>
                 <span>Approved ({{ $approvedCount ?? $approvedProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'pending'"
                 :style="activeTab === 'pending' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'pending'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
+                <span x-show="activeTab === 'pending'" x-cloak class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#C49520;"></span>
                 <span>Pending Review ({{ $pendingCount ?? $pendingProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'drafts'"
                 :style="activeTab === 'drafts' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #C49520;' : 'background:#FDF8EE; color:#1E1915; border:1px solid #E8DECB;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'drafts'" class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
+                <span x-show="activeTab === 'drafts'" x-cloak class="inline-flex items-center text-[#C49520]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#64748B;"></span>
                 <span>Drafts ({{ $draftCount ?? $draftProducts->count() }})</span>
             </button>
             <button @click="activeTab = 'rejected'"
                 :style="activeTab === 'rejected' ? 'background:#1E1915; color:#FFFCF7; border:1px solid #DC2626;' : 'background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;'"
                 class="px-4 py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <span x-show="activeTab === 'rejected'" class="inline-flex items-center text-[#DC2626]"><x-lucide name="check" class="w-3 h-3" /></span>
+                <span x-show="activeTab === 'rejected'" x-cloak class="inline-flex items-center text-[#DC2626]"><x-lucide name="check" class="w-3 h-3" /></span>
                 <span class="w-1.5 h-1.5 rounded-full" style="background:#DC2626;"></span>
                 <span>Needs Revision ({{ $rejectedCount ?? $rejectedProducts->count() }})</span>
             </button>
@@ -401,14 +421,14 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
             <svg class="w-4 h-4 absolute left-3 top-2.5" style="color: #766C60;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            <button x-show="search" @click="search = ''" class="absolute right-2.5 top-2 text-xs font-bold transition-colors flex items-center justify-center text-[#766C60] hover:text-[#C49520]"><x-lucide name="x" class="w-3.5 h-3.5" /></button>
+            <button x-show="search" x-cloak @click="search = ''" class="absolute right-2.5 top-2 text-xs font-bold transition-colors flex items-center justify-center text-[#766C60] hover:text-[#C49520]"><x-lucide name="x" class="w-3.5 h-3.5" /></button>
         </div>
     </div>
 
     {{-- Creation Listings Area --}}
     <div id="tour-products-grid" class="space-y-6 sm:space-y-8">
     {{-- SECTION 1: DRAFTS --}}
-    <div x-show="activeTab === 'all' || activeTab === 'drafts'" class="space-y-5">
+    <div x-show="@if($draftProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'drafts' @else activeTab === 'drafts' @endif" x-cloak class="space-y-5">
         @if($draftProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
                 <span class="w-2 h-2 rounded-full" style="background: #64748B;"></span>
@@ -420,7 +440,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                 @foreach($draftProducts as $product)
-                    <div x-show="matchesProduct('{{ $product->id }}')"
+                    <div x-show="matchesProduct('{{ $product->id }}', 'draft')"
                         class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
                         style="background: #FFFCF7; border: 1px dashed #CBD5E1;"
                         onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
@@ -528,7 +548,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                 @endforeach
             </div>
         @else
-            <div x-show="activeTab === 'drafts'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+            <div x-show="activeTab === 'drafts'" x-cloak class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #766C60; border: 1px solid #E8DECB;"><x-lucide name="file-text" class="w-6 h-6 text-[#766C60]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No saved drafts found</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">When you choose "Save as Draft" during product creation, it will appear here.</p>
@@ -540,7 +560,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
     </div>
 
     {{-- SECTION 2: PENDING PRODUCTS --}}
-    <div x-show="activeTab === 'all' || activeTab === 'pending'" class="space-y-5">
+    <div x-show="@if($pendingProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'pending' @else activeTab === 'pending' @endif" x-cloak class="space-y-5">
         @if($pendingProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
                 <span class="w-2 h-2 rounded-full animate-pulse" style="background: #C49520;"></span>
@@ -552,7 +572,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                 @foreach($pendingProducts as $product)
-                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                    <div x-show="matchesProduct('{{ $product->id }}', 'pending')"
                         class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
                         style="background: #FFFCF7; border: 1px solid #E8DECB;"
                         onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
@@ -671,7 +691,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                 @endforeach
             </div>
         @else
-            <div x-show="activeTab === 'pending'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+            <div x-show="activeTab === 'pending'" x-cloak class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #C49520; border: 1px solid #E8DECB;"><x-lucide name="clock" class="w-6 h-6 text-[#C49520]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations awaiting review</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">All your published creations have been reviewed or are active in your catalogue.</p>
@@ -683,7 +703,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
     </div>
 
     {{-- SECTION 3: APPROVED PRODUCTS --}}
-    <div x-show="activeTab === 'all' || activeTab === 'approved'" class="space-y-5">
+    <div x-show="@if($approvedProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'approved' @else activeTab === 'approved' @endif" x-cloak class="space-y-5">
         @if($approvedProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
                 <span class="w-2 h-2 rounded-full" style="background: #4A6741;"></span>
@@ -695,7 +715,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                 @foreach($approvedProducts as $product)
-                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                    <div x-show="matchesProduct('{{ $product->id }}', 'approved')"
                         class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
                         style="background: #FFFCF7; border: 1px solid #E8DECB;"
                         onmouseover="this.style.borderColor='#C49520'; this.style.boxShadow='0 8px 24px rgba(30,25,21,0.06)';"
@@ -773,13 +793,13 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                                     @if($product->isPreorder())
                                         <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                     @else
-                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
+                                        <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ (int)$product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ (int)$product->stock }})">{{ $product->stock }}</div>
                                     @endif
                                 </div>
                             </div>
 
                             @if(!$product->isPreorder())
-                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
                                             data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
                                             @click.stop="openRestockModal($el.dataset.product)"
@@ -814,7 +834,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                 @endforeach
             </div>
         @else
-            <div x-show="activeTab === 'approved'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+            <div x-show="activeTab === 'approved'" x-cloak class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FDF8EE; color: #4A6741; border: 1px solid #E8DECB;"><x-lucide name="check-circle" class="w-6 h-6 text-[#4A6741]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No approved creations yet</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">Creations approved by administrators will appear here and in the marketplace.</p>
@@ -826,7 +846,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
     </div>
 
     {{-- SECTION 4: REJECTED CREATIONS (NEEDS REVISION) --}}
-    <div x-show="activeTab === 'all' || activeTab === 'rejected'" class="space-y-5">
+    <div x-show="@if($rejectedProducts->isNotEmpty()) activeTab === 'all' || activeTab === 'rejected' @else activeTab === 'rejected' @endif" x-cloak class="space-y-5">
         @if($rejectedProducts->isNotEmpty())
             <div class="flex items-center gap-2 pb-2.5 border-b" style="border-color: #E8DECB;">
                 <span class="w-2 h-2 rounded-full" style="background: #DC2626;"></span>
@@ -838,7 +858,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                 @foreach($rejectedProducts as $product)
-                    <div x-show="matches('{{ addslashes($product->name) }}', '{{ addslashes($product->description ?? '') }}', '{{ $product->status }}')"
+                    <div x-show="matchesProduct('{{ $product->id }}', 'rejected')"
                         class="group rounded-2xl sm:rounded-3xl shadow-xs transition-all duration-300 overflow-hidden flex flex-col"
                         style="background: #FFFBFB; border: 1px solid #FECACA;"
                         onmouseover="this.style.borderColor='#DC2626'; this.style.boxShadow='0 8px 24px rgba(220,38,38,0.08)';"
@@ -910,13 +930,13 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                                         @if($product->isPreorder())
                                             <div class="text-[10px] sm:text-xs font-black font-sans text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Preorder</div>
                                         @else
-                                            <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ $product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ $product->stock }})">{{ $product->stock }}</div>
+                                            <div class="text-xs sm:text-sm font-black font-sans" :class="isLowStock('{{ $product->id }}', {{ (int)$product->stock }}) ? 'text-red-500' : 'text-stone-800'" x-text="getProductStock('{{ $product->id }}', {{ (int)$product->stock }})">{{ $product->stock }}</div>
                                         @endif
                                     </div>
                                 </div>
 
                                 @if(!$product->isPreorder())
-                                    <div class="pt-2 border-t" style="border-color: #FECACA;" x-show="isLowStock('{{ $product->id }}', {{ $product->stock }})">
+                                    <div class="pt-2 border-t" style="border-color: #FECACA;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                         <button type="button" 
                                                 data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
                                                 @click.stop="openRestockModal($el.dataset.product)"
@@ -951,7 +971,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
                 @endforeach
             </div>
         @else
-            <div x-show="activeTab === 'rejected'" class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
+            <div x-show="activeTab === 'rejected'" x-cloak class="py-16 text-center rounded-3xl" style="background: #FFFCF7; border: 2px dashed #E8DECB;">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-lg" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"><x-lucide name="check-circle" class="w-6 h-6 text-[#DC2626]" /></div>
                 <h3 class="font-serif text-base font-bold mb-1" style="color: #1E1915;">No creations requiring revision</h3>
                 <p class="text-xs max-w-xs mx-auto mb-4" style="color: #766C60;">None of your submitted creations have been rejected. Keep up the authentic craftsmanship!</p>
@@ -1102,6 +1122,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
     {{-- CUSTOMER REVIEWS MODAL --}}
     <div x-show="showReviewsModal" 
+         x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -1243,6 +1264,7 @@ document.addEventListener('alpine:init', initSellerProductsAlpine);
 
     {{-- LIGHTBOX IMAGE PREVIEW MODAL --}}
     <div x-show="lightboxImage" 
+         x-cloak
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
