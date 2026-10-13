@@ -60,6 +60,11 @@ window.sellerProducts = function() {
         replyText: '',
         isSubmittingReply: false,
         activeSGTab: 'Men',
+        defaultSizeGuides: {
+            'Men': '{{ asset("uploads/size-guides/size_guide_men.png") }}',
+            'Women': '{{ asset("uploads/size-guides/size_guide_women.png") }}',
+            'Kids': '{{ asset("uploads/size-guides/size_guide_kids.png") }}',
+        },
 
         init() {
             if (!this.productsData || this.productsData.length === 0) {
@@ -1067,32 +1072,54 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
 
                 {{-- Display for activeSGTab --}}
                 <div>
-                    {{-- IF NO SIZE GUIDE YET --}}
-                    <div x-show="!sizeGuides || !sizeGuides[activeSGTab]">
+                    {{-- IF NO SIZE GUIDE YET: SHOW DEFAULT SIZE GUIDE IMAGE & UPLOAD OPTION --}}
+                    <div x-show="!sizeGuides || !sizeGuides[activeSGTab]" class="space-y-4">
+                        <div class="rounded-2xl p-4 shadow-xs text-center relative group" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                                    <x-lucide name="info" class="w-3.5 h-3.5 inline text-amber-700" />
+                                    Default Standard Size Guide Active
+                                </span>
+                                <span class="text-[10px] text-stone-500 font-medium">Currently visible to buyers in shop</span>
+                            </div>
+                            <div class="rounded-xl overflow-hidden bg-white border border-[#E8DECB] p-2 shadow-xs">
+                                <img :src="defaultSizeGuides[activeSGTab]"
+                                     :alt="activeSGTab + ' Standard Size Guide'"
+                                     class="w-full max-h-80 object-contain rounded-lg mx-auto shadow-xs">
+                            </div>
+                            <p class="text-[11px] text-stone-500 font-medium mt-2">
+                                Standard LumBarong <span class="font-bold text-stone-800" x-text="activeSGTab"></span> size guide chart is active. Upload a custom chart below to replace and hide this default.
+                            </p>
+                        </div>
+
                         <form action="{{ route('seller.sizeguides.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="target_group" :value="activeSGTab">
-                            <label class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-8 transition-all text-center group" style="border-color: #E8DECB; background: #FDF8EE;" onmouseover="this.style.borderColor='#C49520';" onmouseout="this.style.borderColor='#E8DECB';">
-                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-3 shadow-xs" style="background: #FFFCF7; border: 1px solid #E8DECB; color: #C49520;"><x-lucide name="ruler" class="w-6 h-6 text-[#C49520]" /></div>
-                                <div class="text-sm font-serif font-bold mb-1" style="color: #1E1915;">
-                                    No size guide chart uploaded yet
-                                </div>
-                                <div class="text-xs font-extrabold uppercase tracking-wider mb-2" style="color: #C49520;">
-                                    Click to upload Size Guide
-                                </div>
-                                <div class="text-[10px] font-medium" style="color: #766C60;">
-                                    Upload size measurement image for <span class="font-bold text-stone-900" x-text="activeSGTab"></span> (PNG, JPG, WEBP • Max 5MB)
-                                </div>
+                            <label class="w-full py-3 px-4 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
+                                <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003-3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                <span>Upload Custom Size Guide to Replace Default</span>
                                 <input type="file" name="size_guide_image" accept="image/*" class="hidden" onchange="this.form.submit()">
                             </label>
                         </form>
                     </div>
 
-                    {{-- IF THERE IS A SIZE GUIDE --}}
+                    {{-- IF THERE IS A SIZE GUIDE: SHOW UPLOADED SIZE GUIDE & HIDE DEFAULT --}}
                     <div x-show="sizeGuides && sizeGuides[activeSGTab]" class="space-y-4">
                         <div class="rounded-2xl p-4 shadow-xs text-center relative group" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                            <img :src="sizeGuides && sizeGuides[activeSGTab] && (sizeGuides[activeSGTab].startsWith('http') ? sizeGuides[activeSGTab] : ('/' + sizeGuides[activeSGTab].replace(/^\/+/, '')))"
-                                 class="w-full max-h-80 object-contain rounded-xl mx-auto shadow-xs">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                                    <x-lucide name="check-circle" class="w-3.5 h-3.5 inline text-emerald-600" />
+                                    Custom Artisan Size Guide Active
+                                </span>
+                                <span class="text-[10px] text-stone-500 font-medium">Default size guide is hidden in shop</span>
+                            </div>
+                            <div class="rounded-xl overflow-hidden bg-white border border-[#E8DECB] p-2 shadow-xs">
+                                <img :src="sizeGuides && sizeGuides[activeSGTab] && (sizeGuides[activeSGTab].startsWith('http') ? sizeGuides[activeSGTab] : ('/' + sizeGuides[activeSGTab].replace(/^\/+/, '')))"
+                                     class="w-full max-h-80 object-contain rounded-lg mx-auto shadow-xs">
+                            </div>
+                            <p class="text-[11px] text-stone-500 font-medium mt-2">
+                                Your custom size guide chart is active. Buyers in your shop see this chart instead of the default.
+                            </p>
                         </div>
 
                         <div class="flex items-center gap-3 pt-2">
@@ -1101,16 +1128,16 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                                 <input type="hidden" name="target_group" :value="activeSGTab">
                                 <label class="w-full py-2.5 px-4 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs" style="background: #1E1915;" onmouseover="this.style.background='#C49520';" onmouseout="this.style.background='#1E1915';">
                                     <svg class="w-4 h-4" style="color: #C49520;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003-3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                    Update Size Guide
+                                    Update Custom Size Guide
                                     <input type="file" name="size_guide_image" accept="image/*" class="hidden" onchange="this.form.submit()">
                                 </label>
                             </form>
 
-                            <form :action="'/seller/size-guides/' + activeSGTab" method="POST" onsubmit="return confirm('Are you sure you want to remove this size guide?');">
+                            <form :action="'/seller/size-guides/' + activeSGTab" method="POST" onsubmit="return confirm('Are you sure you want to remove your custom size guide and revert to the default size guide?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="py-2.5 px-4 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest transition-all" style="background: #FEF2F2; border: 1px solid #FECACA;">
-                                    Delete
+                                <button type="submit" class="py-2.5 px-4 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer" style="background: #FEF2F2; border: 1px solid #FECACA;">
+                                    Delete & Revert to Default
                                 </button>
                             </form>
                         </div>

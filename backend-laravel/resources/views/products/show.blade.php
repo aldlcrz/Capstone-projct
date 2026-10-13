@@ -2337,18 +2337,56 @@
             </div>
 
             <!-- Content -->
-            <div class="px-8 py-6 space-y-6" x-data="{ sizeTab: 'men' }">
+            @php
+                $customProductGuide = $product->getSizeGuideUrl();
+                $sellerSizeGuides = $product->seller?->size_guides ?? [];
+
+                $resolveSgUrl = function($targetGroup, $defaultPath) use ($sellerSizeGuides) {
+                    if (!empty($sellerSizeGuides[$targetGroup])) {
+                        $path = $sellerSizeGuides[$targetGroup];
+                        return str_starts_with($path, 'http') ? $path : asset(ltrim($path, '/'));
+                    }
+                    return asset($defaultPath);
+                };
+                $menGuideUrl   = $resolveSgUrl('Men', 'uploads/size-guides/size_guide_men.png');
+                $womenGuideUrl = $resolveSgUrl('Women', 'uploads/size-guides/size_guide_women.png');
+                $kidsGuideUrl  = $resolveSgUrl('Kids', 'uploads/size-guides/size_guide_kids.png');
+
+                $isCustomMen   = !empty($sellerSizeGuides['Men']);
+                $isCustomWomen = !empty($sellerSizeGuides['Women']);
+                $isCustomKids  = !empty($sellerSizeGuides['Kids']);
+
+                $rawGroup = strtolower(trim((string)($product->target_group ?? 'men')));
+                $initTab = 'men';
+                if (in_array($rawGroup, ['women', 'woman', 'female', 'ladies', 'filipiniana'])) {
+                    $initTab = 'women';
+                } elseif (in_array($rawGroup, ['kids', 'kid', 'children', 'boy', 'girl'])) {
+                    $initTab = 'kids';
+                }
+
+                $hasProductGuide = !empty($customProductGuide);
+            @endphp
+            <div class="px-8 py-6 space-y-6" x-data="{ sizeTab: '{{ $initTab }}' }">
 
                 <!-- Seller's Custom Size Guide Image (if uploaded) -->
-                @if($product->getSizeGuideUrl())
+                @if($hasProductGuide)
                     <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-5 space-y-3">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#C0422A]"><x-lucide name="ruler" class="w-3.5 h-3.5 inline" /> Seller's Custom Size Chart</span>
-                            <span class="text-[9px] bg-[#C0422A]/10 text-[#C0422A] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Artisan Size Guide</span>
+                            <span class="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#C0422A]">
+                                <x-lucide name="ruler" class="w-3.5 h-3.5 inline" /> Artisan's Custom Size Chart
+                            </span>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                Custom Artisan Guide
+                            </span>
                         </div>
                         <div class="rounded-xl overflow-hidden bg-white border border-gray-200 p-2 shadow-xs">
-                            <img src="{{ $product->getSizeGuideUrl() }}" class="w-full max-h-96 object-contain mx-auto rounded-lg" alt="{{ $product->name }} Size Guide">
+                            <a href="{{ $customProductGuide }}" target="_blank" title="Click to view full size image">
+                                <img src="{{ $customProductGuide }}" class="w-full max-h-[70vh] object-contain mx-auto rounded-lg hover:scale-[1.02] transition-transform" alt="{{ $product->name }} Size Guide">
+                            </a>
                         </div>
+                        <p class="text-xs text-gray-500 font-semibold text-center">
+                            Artisan's Custom Size Guide Chart for {{ $product->name }} • Click image to open high-resolution view
+                        </p>
                     </div>
                 @endif
 
@@ -2388,25 +2426,8 @@
                     </div>
                 @endif
 
-                <!-- Size Guide Reference with Men / Women / Kids Tabs -->
-                @php
-                    $sellerSizeGuides = $product->seller?->size_guides ?? [];
-                    $resolveSgUrl = function($targetGroup, $defaultPath) use ($sellerSizeGuides) {
-                        if (!empty($sellerSizeGuides[$targetGroup])) {
-                            $path = $sellerSizeGuides[$targetGroup];
-                            return str_starts_with($path, 'http') ? $path : asset(ltrim($path, '/'));
-                        }
-                        return asset($defaultPath);
-                    };
-                    $menGuideUrl   = $resolveSgUrl('Men', 'uploads/size-guides/size_guide_men.png');
-                    $womenGuideUrl = $resolveSgUrl('Women', 'uploads/size-guides/size_guide_women.png');
-                    $kidsGuideUrl  = $resolveSgUrl('Kids', 'uploads/size-guides/size_guide_kids.png');
-
-                    $isCustomMen   = !empty($sellerSizeGuides['Men']);
-                    $isCustomWomen = !empty($sellerSizeGuides['Women']);
-                    $isCustomKids  = !empty($sellerSizeGuides['Kids']);
-                @endphp
-
+                <!-- When Seller has NOT uploaded a custom product size guide, show Standard/Default Reference tabs -->
+                @if(!$hasProductGuide)
                 <div class="space-y-4">
                     <div class="flex items-center gap-2 py-1">
                         <div class="w-5 h-[1.5px] bg-gray-300"></div>
@@ -2419,55 +2440,62 @@
                     <!-- Tab Buttons: Men / Women / Kids -->
                     <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl w-full">
                         <button type="button" id="size-tab-btn-men" @click="sizeTab = 'men'" onclick="switchSizeGuideTab('men')"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all">
+                            :class="sizeTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                            class="{{ $initTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
                             <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Men
+                            @if($isCustomMen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
                         </button>
                         <button type="button" id="size-tab-btn-women" @click="sizeTab = 'women'" onclick="switchSizeGuideTab('women')"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
+                            :class="sizeTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                            class="{{ $initTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
                             <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Women
+                            @if($isCustomWomen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
                         </button>
                         <button type="button" id="size-tab-btn-kids" @click="sizeTab = 'kids'" onclick="switchSizeGuideTab('kids')"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all">
+                            :class="sizeTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                            class="{{ $initTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
                             <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Kids
+                            @if($isCustomKids)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
                         </button>
                     </div>
 
                     <!-- MEN's SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: block;">
+                    <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: {{ $initTab === 'men' ? 'block' : 'none' }};">
                         <div class="rounded-3xl border border-[#E5DDD5] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
                             <a href="{{ $menGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $menGuideUrl }}" alt="Men's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            {{ $isCustomMen ? "Artisan's Shop Men's Size Guide Chart" : "Men's Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomMen ? "Artisan's Shop Men's Size Guide Chart" : "Men's Barong Tagalog Standard Size Guide Chart (Default)" }} • Click image to open high-resolution view
                         </p>
                     </div>
 
                     <!-- WOMEN's SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center" style="display: none;">
+                    <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center" style="display: {{ $initTab === 'women' ? 'block' : 'none' }};">
                         <div class="rounded-3xl border border-[#F5EAD9] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
                             <a href="{{ $womenGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $womenGuideUrl }}" alt="Women's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            {{ $isCustomWomen ? "Artisan's Shop Women's Size Guide Chart" : "Women's Baro't Saya / Filipiniana Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomWomen ? "Artisan's Shop Women's Size Guide Chart" : "Women's Baro't Saya / Filipiniana Standard Size Guide Chart (Default)" }} • Click image to open high-resolution view
                         </p>
                     </div>
 
                     <!-- KIDS' SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center" style="display: none;">
+                    <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center" style="display: {{ $initTab === 'kids' ? 'block' : 'none' }};">
                         <div class="rounded-3xl border border-gray-200 overflow-hidden bg-[#F4F8F3] p-4 shadow-sm">
                             <a href="{{ $kidsGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $kidsGuideUrl }}" alt="Kids' Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
                             </a>
                         </div>
                         <p class="text-xs text-gray-500 font-semibold">
-                            {{ $isCustomKids ? "Artisan's Shop Kids' Size Guide Chart" : "Kids' Barong Tagalog Standard Size Guide Chart" }} • Click image to open high-resolution view
+                            {{ $isCustomKids ? "Artisan's Shop Kids' Size Guide Chart" : "Kids' Barong Tagalog Standard Size Guide Chart (Default)" }} • Click image to open high-resolution view
                         </p>
                     </div>
                 </div>
+                @endif
 
                 <!-- How to Measure tip -->
                 <div class="bg-[#FDF9F4] border border-[#F5EAD9] rounded-2xl p-4 flex gap-4">
@@ -2934,6 +2962,9 @@
         var root = document.querySelector('[x-data*="productDetail"]');
         if (root && window.Alpine) {
             try { Alpine.$data(root).showSizeGuide = true; } catch(e) {}
+        }
+        if (typeof switchSizeGuideTab === 'function') {
+            switchSizeGuideTab('{{ $initTab }}');
         }
     }
 
