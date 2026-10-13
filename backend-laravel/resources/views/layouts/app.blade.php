@@ -115,10 +115,10 @@
                             <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                             @auth
                                 <template x-if="unreadCount > 0">
-                                    <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;" x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
+                                    <span class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;" x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
                                 </template>
                                 @if($unreadNotifications > 0)
-                                    <span x-show="unreadCount <= 0" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;">
+                                    <span x-show="unreadCount <= 0" class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none" style="background: #C0422A;">
                                         {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
                                     </span>
                                 @endif
@@ -817,7 +817,7 @@
 
     <x-confirmation-modal />
     <x-modal-scroll-lock />
-    <x-scroll-position-restoration />
+    {{-- DISABLED (reload freeze diagnosis): <x-scroll-position-restoration /> --}}
     <x-order-process-demo />
     @stack('scripts')
 

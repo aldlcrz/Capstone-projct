@@ -677,7 +677,7 @@
     
     <x-confirmation-modal />
     <x-modal-scroll-lock />
-    <x-scroll-position-restoration />
+    {{-- DISABLED (reload freeze diagnosis): <x-scroll-position-restoration /> --}}
 
     @if($isMaintenanceActive)
     <meta id="sa-keepalive-url" content="{{ route('superadmin.session.keep_alive') }}">
