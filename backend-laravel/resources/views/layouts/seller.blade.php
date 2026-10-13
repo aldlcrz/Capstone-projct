@@ -66,6 +66,22 @@
     </script>
     <script defer src="{{ asset('vendor/alpine/collapse.min.js') }}" onerror="this.onerror=null;this.src='https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js'"></script>
     <script defer src="{{ asset('vendor/alpine/alpine.min.js') }}" onerror="this.onerror=null;this.src='https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js'"></script>
+    <script>
+        // Fallback: onerror only covers network failures. If the local Alpine file loaded
+        // but never executed (blocked, stale/blank response), x-cloak content stays hidden.
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (window.Alpine) return;
+                ['https://unpkg.com/@alpinejs/collapse@3.14.8/dist/cdn.min.js',
+                 'https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js'].forEach(function (src) {
+                    var s = document.createElement('script');
+                    s.src = src;
+                    s.async = false;
+                    document.head.appendChild(s);
+                });
+            }, 1500);
+        });
+    </script>
     <style>
         [x-cloak] { display: none !important; }
         :root {

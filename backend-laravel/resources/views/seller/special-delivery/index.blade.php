@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    @if($errors->any())
+    @if(isset($errors) && $errors instanceof \Illuminate\Support\ViewErrorBag && $errors->any())
         <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold space-y-1 shadow-2xs">
             <div class="font-bold uppercase tracking-wider text-[10px]">Please correct the following errors:</div>
             <ul class="list-disc list-inside space-y-0.5">
@@ -326,7 +326,8 @@
 
 <script>
 function specialDeliverySettings() {
-    const rawMunicipalities = @json($municipalitiesData);
+    const serverData = JSON.parse('{!! addslashes(json_encode(["municipalities" => $municipalitiesData, "isEnabled" => $isEnabled, "baseFee" => $baseFee])) !!}');
+    const rawMunicipalities = serverData.municipalities;
 
     // Build initial state
     const selectedMunis = {};
@@ -343,8 +344,8 @@ function specialDeliverySettings() {
     });
 
     return {
-        isEnabled: @json($isEnabled),
-        baseFee: @json($baseFee),
+        isEnabled: serverData.isEnabled,
+        baseFee: serverData.baseFee,
         searchQuery: '',
         allMunicipalities: allList,
         selectedMunis: selectedMunis,
