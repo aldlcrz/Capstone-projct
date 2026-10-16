@@ -85,14 +85,18 @@ class WebController extends Controller
 
             if ($request->filled('price_range')) {
                 $range = $request->price_range;
-                if ($range === 'under_1500') {
+                if ($range === 'under_500') {
+                    $query->where('price', '<', 500);
+                } elseif ($range === '500_1499' || $range === '500_1500') {
+                    $query->where('price', '>=', 500)->where('price', '<', 1500);
+                } elseif ($range === '1500_3499' || $range === '1500_3500') {
+                    $query->where('price', '>=', 1500)->where('price', '<', 3500);
+                } elseif ($range === '3500_5999' || $range === '3500_6000') {
+                    $query->where('price', '>=', 3500)->where('price', '<', 6000);
+                } elseif ($range === 'above_6000' || $range === '6000_plus') {
+                    $query->where('price', '>=', 6000);
+                } elseif ($range === 'under_1500') {
                     $query->where('price', '<', 1500);
-                } elseif ($range === '1500_3500') {
-                    $query->whereBetween('price', [1500, 3500]);
-                } elseif ($range === '3500_6000') {
-                    $query->whereBetween('price', [3500, 6000]);
-                } elseif ($range === 'above_6000') {
-                    $query->where('price', '>', 6000);
                 }
             }
 

@@ -40,6 +40,10 @@ class ProductSearchService
         'lady'         => 'women',
         'males'        => 'men',
         'females'      => 'women',
+        'man'          => 'men',
+        'woman'        => 'women',
+        'gentleman'    => 'men',
+        'gentlemen'    => 'men',
         'kids'         => 'kid',
         'children'     => 'kid',
         'childrens'    => 'kid',
@@ -47,6 +51,158 @@ class ProductSearchService
         'boys'         => 'boy',
         'girls'        => 'girl',
     ];
+
+    /**
+     * Bounded canonical terms representing LumBarong domain vocabulary.
+     */
+    protected const CANONICAL_TERMS = [
+        'barong', 'polo', 'jusi', 'jusilyn', 'organza', 'filipiniana', 'mestiza',
+        'bolero', 'terno', 'calado', 'embroidery', 'embroidered', 'lumban',
+        'monochrome', 'mandarin', 'cocoon', 'linen', 'cotton', 'silk',
+        'dress', 'gown', 'blouse', 'suit', 'coat', 'jacket', 'tagalog'
+    ];
+
+    /**
+     * Curated typo dictionary for common marketplace search misspellings.
+     */
+    protected const TYPO_DICTIONARY = [
+        // Barong typos
+        'barng'       => 'barong',
+        'brong'       => 'barong',
+        'baron'       => 'barong',
+        'borang'      => 'barong',
+        'barongg'     => 'barong',
+        'varong'      => 'barong',
+        // Polo typos
+        'poloo'       => 'polo',
+        'ploo'        => 'polo',
+        'pulo'        => 'polo',
+        // Fabric typos (jusi, jusilyn, organza, pina, cocoon, linen)
+        'jusli'       => 'jusi',
+        'jusly'       => 'jusi',
+        'jussi'       => 'jusi',
+        'jusee'       => 'jusi',
+        'juzi'        => 'jusi',
+        'juslin'      => 'jusilyn',
+        'juslyin'     => 'jusilyn',
+        'jussilyn'    => 'jusilyn',
+        'organz'      => 'organza',
+        'orgnza'      => 'organza',
+        'organzza'    => 'organza',
+        'organzah'    => 'organza',
+        'pnya'        => 'pina',
+        'pnyaa'       => 'pina',
+        'pinna'       => 'pina',
+        'cocun'       => 'cocoon',
+        'kocoon'      => 'cocoon',
+        'linnen'      => 'linen',
+        'coton'       => 'cotton',
+        'cotten'      => 'cotton',
+        'silkk'       => 'silk',
+        // Style and garment typos
+        'filipina'    => 'filipiniana',
+        'filipinana'  => 'filipiniana',
+        'flipiniana'  => 'filipiniana',
+        'filipinyana' => 'filipiniana',
+        'philipiniana'=> 'filipiniana',
+        'mestisa'     => 'mestiza',
+        'mestizaa'    => 'mestiza',
+        'bolro'       => 'bolero',
+        'bleror'      => 'bolero',
+        'bollero'     => 'bolero',
+        'ternoo'      => 'terno',
+        'treno'       => 'terno',
+        'dres'        => 'dress',
+        'dresse'      => 'dress',
+        'gowne'       => 'gown',
+        'gwon'        => 'gown',
+        'blowse'      => 'blouse',
+        'suitt'       => 'suit',
+        'coatt'       => 'coat',
+        // Craftsmanship & Collar typos
+        'kalado'      => 'calado',
+        'callado'     => 'calado',
+        'caldo'       => 'calado',
+        'embroidry'   => 'embroidery',
+        'embroydery'  => 'embroidery',
+        'embroideri'  => 'embroidery',
+        'embroidred'  => 'embroidered',
+        'embroiderd'  => 'embroidered',
+        'lumbang'     => 'lumban',
+        'lumbann'     => 'lumban',
+        'monocrome'   => 'monochrome',
+        'monochome'   => 'monochrome',
+        'manderin'    => 'mandarin',
+        'chinesse'    => 'chinese',
+        'artezan'     => 'artisan',
+        // Demographic typos
+        'mne'         => 'men',
+        'wmen'        => 'women',
+        'womn'        => 'women',
+        'kds'         => 'kids',
+        'kidds'       => 'kids',
+        'byo'         => 'boy',
+        'byos'        => 'boys',
+        'gril'        => 'girl',
+        'grils'       => 'girls',
+    ];
+
+    /**
+     * Relevant generic apparel terms and their domain expansions.
+     */
+    protected const APPAREL_SYNONYMS = [
+        'clothing'    => ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+        'clothes'     => ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+        'apparel'     => ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+        'attire'      => ['formal', 'barong', 'filipiniana', 'wear'],
+        'wear'        => ['formal', 'barong', 'filipiniana', 'attire'],
+        'garment'     => ['formal', 'barong', 'filipiniana', 'attire'],
+        'garments'    => ['formal', 'barong', 'filipiniana', 'attire'],
+        'outfit'      => ['formal', 'barong', 'filipiniana', 'attire'],
+        'outfits'     => ['formal', 'barong', 'filipiniana', 'attire'],
+        'filipino'    => ['filipino', 'filipiniana', 'barong', 'tagalog', 'lumban'],
+        'philippine'  => ['filipino', 'filipiniana', 'barong', 'tagalog', 'lumban'],
+        'pinoy'       => ['filipino', 'filipiniana', 'barong', 'tagalog'],
+        'traditional' => ['traditional', 'classic', 'tagalog', 'barong', 'filipiniana'],
+        'national'    => ['national', 'barong', 'filipiniana', 'tagalog'],
+    ];
+
+    /**
+     * Resolve typos against bounded dictionary and domain vocabulary.
+     * Only attempts correction when token does not already match a valid word.
+     */
+    public static function resolveTypo(string $word): ?string
+    {
+        // If word is already a known stem, canonical term, or short token, do not modify
+        if (in_array($word, self::CANONICAL_TERMS, true) || isset(self::STEM_MAPPINGS[$word]) || mb_strlen($word) < 4) {
+            return null;
+        }
+
+        // 1. Direct match in curated typo dictionary
+        if (isset(self::TYPO_DICTIONARY[$word])) {
+            return self::TYPO_DICTIONARY[$word];
+        }
+
+        // 2. Bounded Levenshtein fuzzy match against canonical vocabulary
+        $bestMatch = null;
+        $minDist = 999;
+        $wordLen = mb_strlen($word);
+
+        foreach (self::CANONICAL_TERMS as $canonical) {
+            $dist = levenshtein($word, $canonical);
+            $maxAllowedDist = ($wordLen >= 7) ? 2 : 1;
+
+            if ($dist <= $maxAllowedDist && $dist < $minDist) {
+                $minDist = $dist;
+                $bestMatch = $canonical;
+            } elseif ($dist === $minDist && $bestMatch !== null) {
+                // Ambiguity between multiple candidates: avoid guessing incorrectly
+                $bestMatch = null;
+            }
+        }
+
+        return $bestMatch;
+    }
 
     /**
      * Normalize raw search string:
@@ -59,6 +215,11 @@ class ProductSearchService
         $clean = mb_strtolower(trim($query), 'UTF-8');
         // Normalize possessive 's (men's -> men, women's -> women, kid's -> kid, boy's -> boy, girl's -> girl)
         $clean = preg_replace("/['’]s\b/u", '', $clean);
+        // Normalize split syllables / accidental spaces in domain keywords (e.g. 'organ z' / 'organ za' -> 'organza')
+        $clean = preg_replace('/\borgan\s+z(?:a)?\b/u', 'organza', $clean);
+        $clean = preg_replace('/\bbar\s+ong\b/u', 'barong', $clean);
+        $clean = preg_replace('/\bpo\s+lo\b/u', 'polo', $clean);
+        $clean = preg_replace('/\bju\s+si\b/u', 'jusi', $clean);
         // Replace non-alphanumeric (except accented letters) with spaces
         $clean = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $clean);
         return trim((string) preg_replace('/\s+/', ' ', $clean));
@@ -72,19 +233,19 @@ class ProductSearchService
     {
         $words = preg_split('/\s+/', $normalized);
         foreach ($words as $w) {
-            if (in_array($w, ['boy', 'boys'], true)) {
+            if (in_array($w, ['boy', 'boys', 'byo', 'byos'], true)) {
                 return 'Boys';
             }
-            if (in_array($w, ['girl', 'girls'], true)) {
+            if (in_array($w, ['girl', 'girls', 'gril', 'grils'], true)) {
                 return 'Girls';
             }
-            if (in_array($w, ['kid', 'kids', 'child', 'children'], true)) {
+            if (in_array($w, ['kid', 'kids', 'child', 'children', 'kds', 'kidds'], true)) {
                 return 'Kids';
             }
-            if (in_array($w, ['men', 'male', 'gentleman', 'gentlemen'], true)) {
+            if (in_array($w, ['men', 'male', 'man', 'gentleman', 'gentlemen', 'mne'], true)) {
                 return 'Men';
             }
-            if (in_array($w, ['women', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
+            if (in_array($w, ['women', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno', 'wmen', 'womn'], true)) {
                 return 'Women';
             }
         }
@@ -92,12 +253,12 @@ class ProductSearchService
     }
 
     /**
-     * Extract clean searchable tokens, stripping stop words and stemming plurals.
-     * Returns array of token variants (singular and plural where applicable).
+     * Extract clean searchable tokens, stripping stop words, resolving typos, and stemming plurals.
+     * Returns array of token variants (singular, plural, typos, and synonyms where applicable).
      *
-     * @return array<int, array{original: string, variants: array<string>}>
+     * @return array<int, array{original: string, resolved: string, variants: array<string>}>
      */
-    public static function extractTokens(string $normalized): array
+    public static function extractTokens(string $normalized, ?string $detectedAudience = null): array
     {
         $words = preg_split('/\s+/', $normalized);
         $tokens = [];
@@ -115,33 +276,80 @@ class ProductSearchService
 
             $variants = [$w];
 
-            // Stem mapping
-            if (isset(self::STEM_MAPPINGS[$w])) {
-                $stemmed = self::STEM_MAPPINGS[$w];
+            // 1. Check Typo Correction (if token is misspelled)
+            $resolvedTypo = self::resolveTypo($w);
+            if ($resolvedTypo && !in_array($resolvedTypo, $variants, true)) {
+                $variants[] = $resolvedTypo;
+                $effectiveWord = $resolvedTypo;
+            } else {
+                $effectiveWord = $w;
+            }
+
+            // 2. Stem mapping
+            if (isset(self::STEM_MAPPINGS[$effectiveWord])) {
+                $stemmed = self::STEM_MAPPINGS[$effectiveWord];
                 if (!in_array($stemmed, $variants, true)) {
                     $variants[] = $stemmed;
                 }
-            } elseif (str_ends_with($w, 's') && strlen($w) > 3) {
-                $singular = substr($w, 0, -1);
+            } elseif (str_ends_with($effectiveWord, 's') && strlen($effectiveWord) > 3) {
+                $singular = substr($effectiveWord, 0, -1);
                 if (!in_array($singular, $variants, true)) {
                     $variants[] = $singular;
                 }
             } else {
                 // Plural variant
-                $plural = $w . 's';
+                $plural = $effectiveWord . 's';
                 if (!in_array($plural, $variants, true)) {
                     $variants[] = $plural;
                 }
             }
 
-            // Piña / Pina accent variant
-            if (str_contains($w, 'pina') || str_contains($w, 'piña')) {
-                $variants[] = 'piña';
-                $variants[] = 'pina';
+            // 3. Jusi / Jusilyn bidirectional relationship
+            if ($effectiveWord === 'jusi' || in_array('jusi', $variants, true)) {
+                if (!in_array('jusilyn', $variants, true)) {
+                    $variants[] = 'jusilyn';
+                }
+            } elseif ($effectiveWord === 'jusilyn' || in_array('jusilyn', $variants, true)) {
+                if (!in_array('jusi', $variants, true)) {
+                    $variants[] = 'jusi';
+                }
+            }
+
+            // 4. Piña / Pina accent variant
+            if (str_contains($effectiveWord, 'pina') || str_contains($effectiveWord, 'piña')) {
+                if (!in_array('piña', $variants, true)) $variants[] = 'piña';
+                if (!in_array('pina', $variants, true)) $variants[] = 'pina';
+            }
+
+            // 5. Generic apparel & culture synonyms respecting target audience
+            if (isset(self::APPAREL_SYNONYMS[$effectiveWord])) {
+                $synonyms = self::APPAREL_SYNONYMS[$effectiveWord];
+                
+                // Audience contextual filtering for generic apparel terms
+                if (in_array($effectiveWord, ['clothing', 'clothes', 'apparel', 'attire', 'wear', 'garment', 'garments', 'outfit', 'outfits'], true)) {
+                    if (in_array($detectedAudience, ['Men', 'Boys'], true)) {
+                        // For Men/Boys: expand to formalwear/barong, exclude women's dresses
+                        $synonyms = array_diff($synonyms, ['filipiniana', 'dress', 'gown', 'bolero', 'mestiza']);
+                    } elseif (in_array($detectedAudience, ['Women', 'Girls'], true)) {
+                        // For Women/Girls: expand to filipiniana/dress/gown/formal, exclude men's pure barongs
+                        $synonyms = array_diff($synonyms, ['polo']);
+                        if (!in_array('dress', $synonyms, true)) {
+                            $synonyms[] = 'dress';
+                            $synonyms[] = 'gown';
+                        }
+                    }
+                }
+
+                foreach ($synonyms as $syn) {
+                    if (!in_array($syn, $variants, true)) {
+                        $variants[] = $syn;
+                    }
+                }
             }
 
             $tokens[] = [
                 'original' => $w,
+                'resolved' => $effectiveWord,
                 'variants' => array_values(array_unique($variants))
             ];
         }
@@ -167,7 +375,7 @@ class ProductSearchService
         }
 
         $detectedAudience = self::detectTargetAudience($normalized);
-        $tokens = self::extractTokens($normalized);
+        $tokens = self::extractTokens($normalized, $detectedAudience);
 
         if (empty($tokens)) {
             return $query->where('name', 'like', '%' . $rawSearch . '%');
@@ -191,10 +399,11 @@ class ProductSearchService
             $mainQuery->orWhere(function (Builder $tokenQuery) use ($tokens, $detectedAudience) {
                 foreach ($tokens as $tokenData) {
                     $orig = $tokenData['original'];
+                    $resolved = $tokenData['resolved'] ?? $orig;
                     $variants = $tokenData['variants'];
 
                     // Men token
-                    if (in_array($orig, ['men', 'mens', 'male', 'gentleman', 'gentlemen'], true)) {
+                    if (in_array($resolved, ['men', 'mens', 'male', 'man', 'gentleman', 'gentlemen'], true)) {
                         $tokenQuery->where(function (Builder $aq) {
                             $aq->where(function ($sq) {
                                 // Safe Men check: contains 'men' but NOT 'women'
@@ -207,11 +416,16 @@ class ProductSearchService
                                      ->where('name', 'not like', '%women%');
                               });
                         });
+                        // Filter out women's garments
+                        $tokenQuery->where(function (Builder $nq) {
+                            $nq->where('target_group', 'not like', '%women%')
+                               ->orWhereNull('target_group');
+                        });
                         continue;
                     }
 
                     // Women token
-                    if (in_array($orig, ['women', 'womens', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
+                    if (in_array($resolved, ['women', 'womens', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%women%')
@@ -222,14 +436,14 @@ class ProductSearchService
                                    ->orWhere('description', 'like', '%' . $v . '%')
                                    ->orWhereHas('category', function ($cq) use ($v) {
                                        $cq->where('name', 'like', '%' . $v . '%');
-                                   });
+                                    });
                             }
                         });
                         continue;
                     }
 
                     // Boy token: primary Kids/Boys, related male attire (Barongs), excludes women's apparel
-                    if (in_array($orig, ['boy', 'boys'], true)) {
+                    if (in_array($resolved, ['boy', 'boys'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%kid%')
@@ -255,7 +469,7 @@ class ProductSearchService
                     }
 
                     // Girl token: primary Kids/Girls, related female formal wear (Filipiniana / Lady Barong), excludes men's barongs
-                    if (in_array($orig, ['girl', 'girls'], true)) {
+                    if (in_array($resolved, ['girl', 'girls'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%kid%')
@@ -292,7 +506,7 @@ class ProductSearchService
                     }
 
                     // Kid / Child token
-                    if (in_array($orig, ['kid', 'kids', 'child', 'children'], true)) {
+                    if (in_array($resolved, ['kid', 'kids', 'child', 'children'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%kid%')
@@ -318,7 +532,7 @@ class ProductSearchService
                     $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
 
                     // General attribute matching for non-audience keywords
-                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $isFemaleSearch) {
+                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isFemaleSearch) {
                         foreach ($variants as $v) {
                             $subQuery->orWhere('name', 'like', '%' . $v . '%')
                                      ->orWhere('description', 'like', '%' . $v . '%')
@@ -338,7 +552,7 @@ class ProductSearchService
 
                             // If 'barong' is searched in female context (e.g. 'barong for girl' or 'barong for women'),
                             // also match Filipiniana / Lady Barong attire
-                            if ($v === 'barong' && $isFemaleSearch) {
+                            if (($v === 'barong' || $resolved === 'barong') && $isFemaleSearch) {
                                 $subQuery->orWhere('name', 'like', '%filipiniana%')
                                          ->orWhere('name', 'like', '%lady%')
                                          ->orWhere('name', 'like', '%bolero%')
@@ -355,7 +569,7 @@ class ProductSearchService
             });
         });
 
-        // Apply Relevance Ranking when no explicit sort (like price or newest) is requested
+        // Apply Relevance Ranking when no explicit sort (like price, newest, or rating) is requested
         self::applyRelevanceOrder($query, $rawSearch, $normalized, $tokens, $detectedAudience, $sort);
 
         return $query;
@@ -372,8 +586,8 @@ class ProductSearchService
         ?string $detectedAudience,
         ?string $sort
     ): void {
-        // If customer explicitly requested a standard sort (e.g. Price Low->High), honor that order first
-        if ($sort && in_array($sort, ['price_asc', 'price_desc', 'newest', 'price_low', 'price_high', 'cheapest', 'expensive'])) {
+        // If customer explicitly requested a standard sort (e.g. Price Low->High, Newest, or Rated), honor that order first
+        if ($sort && in_array($sort, ['price_asc', 'price_desc', 'newest', 'price_low', 'price_high', 'cheapest', 'expensive', 'rated', 'highest_rated'])) {
             return;
         }
 
@@ -423,14 +637,33 @@ class ProductSearchService
         // 4. Per-token name match (+40 points per token) and fabric match (+30 points)
         foreach ($tokens as $tokenData) {
             $orig = $tokenData['original'];
-            if (in_array($orig, ['men', 'women', 'kids', 'boy', 'boys', 'girl', 'girls', 'for', 'the'], true)) {
+            $resolved = $tokenData['resolved'] ?? $orig;
+
+            if (in_array($resolved, ['men', 'women', 'kids', 'boy', 'boys', 'girl', 'girls', 'for', 'the'], true)) {
                 continue;
             }
-            $relevanceCases[] = "CASE WHEN LOWER(products.name) LIKE ? THEN 40 ELSE 0 END";
-            $bindings[] = '%' . $orig . '%';
 
-            $relevanceCases[] = "CASE WHEN LOWER(COALESCE(products.fabric_type, '')) LIKE ? THEN 30 ELSE 0 END";
+            // Name match (checks original token and resolved typo/canonical word)
+            $nameChecks = ["LOWER(products.name) LIKE ?"];
             $bindings[] = '%' . $orig . '%';
+            if ($resolved !== $orig) {
+                $nameChecks[] = "LOWER(products.name) LIKE ?";
+                $bindings[] = '%' . $resolved . '%';
+            }
+            $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $nameChecks) . ") THEN 40 ELSE 0 END";
+
+            // Fabric type match (+30 points)
+            $fabricChecks = ["LOWER(COALESCE(products.fabric_type, '')) LIKE ?"];
+            $bindings[] = '%' . $orig . '%';
+            if ($resolved !== $orig) {
+                $fabricChecks[] = "LOWER(COALESCE(products.fabric_type, '')) LIKE ?";
+                $bindings[] = '%' . $resolved . '%';
+            }
+            if ($resolved === 'jusi') {
+                $fabricChecks[] = "LOWER(COALESCE(products.fabric_type, '')) LIKE ?";
+                $bindings[] = '%jusilyn%';
+            }
+            $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $fabricChecks) . ") THEN 30 ELSE 0 END";
         }
 
         if (!empty($relevanceCases)) {

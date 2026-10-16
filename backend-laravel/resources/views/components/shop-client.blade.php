@@ -104,7 +104,7 @@
                 <input
                     type="text"
                     placeholder="Search in this shop..."
-                    x-model="searchQuery"
+                    x-model.debounce.300ms="searchQuery"
                     class="w-full bg-white border border-stone-200 rounded-full py-2.5 pl-11 pr-4 text-sm font-medium text-stone-700 outline-none focus:border-[#C0420A] transition-colors shadow-sm"
                 />
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -353,12 +353,16 @@ function shopClient(config) {
         seller: null,
         showPolicyModal: false,
         products: [],
+        allProducts: [],
         loading: true,
         activeTab: 'all',
         sortOrder: 'recommended',
         searchQuery: '',
+        searchSeq: 0,
         init() {
             this.fetchData();
+            this.$watch('searchQuery', () => this.syncSearch());
+            this.$watch('sortOrder', () => this.syncSearch());
         },
         async fetchData() {
             this.loading = true;
@@ -369,9 +373,35 @@ function shopClient(config) {
                     fetch(`/api/v1/products?seller=${this.sellerId}&t=${ts}`, { cache: 'no-store' })
                 ]);
                 if (sRes.ok) this.seller = await sRes.json();
-                if (pRes.ok) this.products = await pRes.json();
+                if (pRes.ok) {
+                    const data = await pRes.json();
+                    this.allProducts = [...data];
+                    this.products = data;
+                }
             } catch (e) { console.error(e); }
             this.loading = false;
+        },
+        async syncSearch() {
+            const seq = ++this.searchSeq;
+            const trimmed = this.searchQuery.trim();
+            if (!trimmed && (this.sortOrder === 'recommended' || !this.sortOrder)) {
+                if (this.allProducts && this.allProducts.length) {
+                    this.products = [...this.allProducts];
+                    return;
+                }
+            }
+            try {
+                const searchParam = trimmed ? `&search=${encodeURIComponent(trimmed)}` : '';
+                const sortParam = (this.sortOrder && this.sortOrder !== 'recommended') ? `&sort=${encodeURIComponent(this.sortOrder)}` : '';
+                const res = await fetch(`/api/v1/products?seller=${this.sellerId}${searchParam}${sortParam}&t=${Date.now()}`);
+                if (res.ok && seq === this.searchSeq) {
+                    this.products = await res.json();
+                }
+            } catch (e) {
+                if (seq === this.searchSeq) {
+                    console.error('Artisan search sync error:', e);
+                }
+            }
         },
         getProductImage(img) {
             if (!img) return '/uploads/products/default.jpg';
@@ -439,10 +469,27 @@ function shopClient(config) {
                     const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an', 'at', 'by', 'on', 'all', 'any'];
                     const stems = { 
                         'barongs': 'barong', 'polos': 'polo', 'dresses': 'dress', 'filipinianas': 'filipiniana', 
-                        'mens': 'men', 'womens': 'women', 'kids': 'kid', 'boys': 'boy', 'girls': 'girl', 'children': 'kid' 
+                        'mens': 'men', 'womens': 'women', 'kids': 'kid', 'boys': 'boy', 'girls': 'girl', 'children': 'kid',
+                        'man': 'men', 'woman': 'women', 'lady': 'women', 'ladies': 'women'
                     };
+                    const typos = {
+                        'barng': 'barong', 'brong': 'barong', 'poloo': 'polo', 'ploo': 'polo',
+                        'jusli': 'jusi', 'jusly': 'jusi', 'organz': 'organza', 'filipina': 'filipiniana',
+                        'mestisa': 'mestiza', 'bolro': 'bolero', 'mne': 'men', 'wmen': 'women'
+                    };
+                    const genericSynonyms = {
+                        'clothing': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+                        'clothes': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+                        'apparel': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
+                        'attire': ['formal', 'barong', 'filipiniana', 'wear'],
+                        'wear': ['formal', 'barong', 'filipiniana', 'attire'],
+                        'traditional': ['traditional', 'classic', 'tagalog', 'barong', 'filipiniana'],
+                        'filipino': ['filipino', 'filipiniana', 'barong', 'tagalog']
+                    };
+
                     const rawTokens = cleanQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
                     const isFemaleContext = cleanQ.includes('girl') || cleanQ.includes('women') || cleanQ.includes('lady') || cleanQ.includes('female');
+                    const isMaleContext = cleanQ.includes('boy') || cleanQ.includes('men') || cleanQ.includes('male');
                     
                     p = p.filter(item => {
                         const name = (item.name || '').toLowerCase();
@@ -454,31 +501,42 @@ function shopClient(config) {
                         if (name.includes(cleanQ) || desc.includes(cleanQ)) return true;
 
                         return rawTokens.every(token => {
-                            const variants = [token];
-                            if (stems[token]) variants.push(stems[token]);
-                            if (token.endsWith('s') && token.length > 3) variants.push(token.slice(0, -1));
+                            let effective = typos[token] || token;
+                            const variants = [token, effective];
+                            if (stems[effective]) variants.push(stems[effective]);
+                            if (effective.endsWith('s') && effective.length > 3) variants.push(effective.slice(0, -1));
+                            if (effective === 'jusi') variants.push('jusilyn');
+                            if (effective === 'jusilyn') variants.push('jusi');
+
+                            // Synonym expansion
+                            if (genericSynonyms[effective]) {
+                                let syns = genericSynonyms[effective];
+                                if (isMaleContext) syns = syns.filter(s => !['filipiniana', 'dress', 'gown', 'bolero'].includes(s));
+                                if (isFemaleContext) syns = syns.filter(s => s !== 'polo');
+                                variants.push(...syns);
+                            }
                             
                             // Safe audience matching
-                            if (token === 'men' || token === 'male') {
+                            if (effective === 'men' || effective === 'male') {
                                 return (tg === 'men' || (tg.includes('men') && !tg.includes('women'))) ||
                                        (name.includes('men') && !name.includes('women'));
                             }
-                            if (token === 'women' || token === 'female' || token === 'ladies' || token === 'lady') {
+                            if (effective === 'women' || effective === 'female' || effective === 'ladies' || effective === 'lady') {
                                 return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('filipiniana') || name.includes('lady');
                             }
-                            if (token === 'boy' || token === 'boys') {
+                            if (effective === 'boy' || effective === 'boys') {
                                 return (!tg.includes('women')) && (tg.includes('kid') || tg.includes('boy') || tg.includes('men') || name.includes('boy') || name.includes('barong'));
                             }
-                            if (token === 'girl' || token === 'girls') {
+                            if (effective === 'girl' || effective === 'girls') {
                                 return (!tg.includes('men') || name.includes('lady') || name.includes('filipiniana')) && 
                                        (tg.includes('kid') || tg.includes('girl') || tg.includes('women') || name.includes('girl') || name.includes('filipiniana') || name.includes('dress') || name.includes('bolero') || name.includes('lady'));
                             }
-                            if (token === 'kid' || token === 'kids' || token === 'child' || token === 'children') {
+                            if (effective === 'kid' || effective === 'kids' || effective === 'child' || effective === 'children') {
                                 return tg.includes('kid') || tg.includes('child') || name.includes('kid') || desc.includes('kid') || tg.includes('men') || tg.includes('women');
                             }
 
                             // Female barong matching (barong for girl / women)
-                            if (token === 'barong' && isFemaleContext) {
+                            if (effective === 'barong' && isFemaleContext) {
                                 return name.includes('barong') || desc.includes('barong') || name.includes('filipiniana') || name.includes('lady') || desc.includes('filipiniana');
                             }
 
