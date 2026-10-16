@@ -2185,8 +2185,14 @@ if (window.Alpine) {
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                 </div>
-             {{-- Order Detail Modal (LumBarong Artisan Premium Theme) --}}
+            </div>
+        </template>
+    </div>
+
+    {{-- Order Detail Modal (LumBarong Artisan Premium Theme) --}}
     <div x-show="detailsModal" 
+         x-cloak
+         @keydown.escape.window="detailsModal = false"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -2313,7 +2319,7 @@ if (window.Alpine) {
                     </template>
 
                     {{-- Close Icon --}}
-                    <button type="button" @click="detailsModal = false" 
+                    <button type="button" @click.stop="detailsModal = false" 
                             style="border: 1px solid #E8DECB; background: #FFFFFF; color: #766C60;"
                             class="hover:text-[#1E1915] hover:border-[#C49520] hover:bg-[#FDF8EE] transition-all p-1.5 rounded-full cursor-pointer shadow-2xs" title="Close Modal">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2897,7 +2903,7 @@ if (window.Alpine) {
             {{-- Modal Footer Actions (LumBarong Artisan Brand Button Bar) --}}
             <div class="p-4 sm:p-5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0"
                  style="background: #FFFCF7; border-color: #E8DECB;">
-                <button type="button" @click="detailsModal = false"
+                <button type="button" @click.stop="detailsModal = false"
                     style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
                     class="px-6 py-2.5 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
                     Close
