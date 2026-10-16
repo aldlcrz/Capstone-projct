@@ -80,49 +80,7 @@ class WebController extends Controller
             }
 
             if ($request->filled('search')) {
-                $rawSearch = trim((string) $request->search);
-                if (strlen($rawSearch) <= 2) {
-                    // For short 1-2 character inputs (e.g. "j"), strictly match product name so that
-                    // background seller names or descriptions containing "j" do not trigger false positives
-                    $query->where('name', 'like', '%' . $rawSearch . '%');
-                } else {
-                    // Tokenize words, filtering out common noise words
-                    $stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an'];
-                    $words = array_values(array_filter(
-                        preg_split('/\s+/', strtolower($rawSearch)),
-                        fn($w) => strlen($w) > 0 && !in_array($w, $stopwords, true)
-                    ));
-
-                    $query->where(function($q) use ($rawSearch, $words) {
-                        // 1. Direct full substring match on name, description, or category
-                        $q->where('name', 'like', '%' . $rawSearch . '%')
-                          ->orWhere('description', 'like', '%' . $rawSearch . '%')
-                          ->orWhereHas('category', function($cq) use ($rawSearch) {
-                              $cq->where('name', 'like', '%' . $rawSearch . '%');
-                          });
-
-                        // 2. Token-based matching: match products matching keywords across attributes
-                        if (!empty($words)) {
-                            $q->orWhere(function($tokenQ) use ($words) {
-                                foreach ($words as $word) {
-                                    $tokenQ->where(function($subQ) use ($word) {
-                                        $subQ->where('name', 'like', '%' . $word . '%')
-                                             ->orWhere('description', 'like', '%' . $word . '%')
-                                             ->orWhere('target_group', 'like', '%' . $word . '%')
-                                             ->orWhere('fabric_type', 'like', '%' . $word . '%')
-                                             ->orWhereHas('category', function($cq) use ($word) {
-                                                 $cq->where('name', 'like', '%' . $word . '%');
-                                             })
-                                             ->orWhereHas('seller', function($sq) use ($word) {
-                                                 $sq->where('shopName', 'like', '%' . $word . '%')
-                                                    ->orWhere('name', 'like', '%' . $word . '%');
-                                             });
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                \App\Services\ProductSearchService::apply($query, $request->search, $request->sort);
             }
 
             if ($request->filled('price_range')) {

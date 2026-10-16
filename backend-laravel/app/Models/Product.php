@@ -570,4 +570,13 @@ class Product extends Model
                     });
             });
     }
+
+    /**
+     * Scope query to search products flexibly by name, description, category, tags, and audience.
+     */
+    public function scopeSearch($query, ?string $search, ?string $sort = null)
+    {
+        return \App\Services\ProductSearchService::apply($query, $search, $sort);
+    }
 }
+

@@ -428,18 +428,48 @@ function shopClient(config) {
             
             // Smart search filtering
             if (this.searchQuery.trim()) {
-                const rawQ = this.searchQuery.trim().toLowerCase();
-                if (rawQ.length <= 2) {
-                    p = p.filter(item => (item.name || '').toLowerCase().includes(rawQ));
+                const cleanQ = this.searchQuery.trim().toLowerCase()
+                    .replace(/['’]s\b/g, '')
+                    .replace(/[^\w\s]+/g, ' ')
+                    .trim();
+
+                if (cleanQ.length <= 2) {
+                    p = p.filter(item => (item.name || '').toLowerCase().includes(cleanQ));
                 } else {
-                    const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an'];
-                    const tokens = rawQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
+                    const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an', 'at', 'by', 'on', 'all', 'any'];
+                    const stems = { 'barongs': 'barong', 'polos': 'polo', 'dresses': 'dress', 'filipinianas': 'filipiniana', 'mens': 'men', 'womens': 'women', 'kids': 'kid' };
+                    const rawTokens = cleanQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
+                    
                     p = p.filter(item => {
                         const name = (item.name || '').toLowerCase();
                         const desc = (item.description || '').toLowerCase();
                         const tg = (item.target_group || '').toLowerCase();
-                        if (name.includes(rawQ) || desc.includes(rawQ)) return true;
-                        return tokens.every(t => name.includes(t) || desc.includes(t) || tg.includes(t));
+                        const fabric = (item.fabric_type || '').toLowerCase();
+                        const collar = (item.collar_type || '').toLowerCase();
+                        
+                        if (name.includes(cleanQ) || desc.includes(cleanQ)) return true;
+
+                        return rawTokens.every(token => {
+                            const variants = [token];
+                            if (stems[token]) variants.push(stems[token]);
+                            if (token.endsWith('s') && token.length > 3) variants.push(token.slice(0, -1));
+                            
+                            // Safe audience matching
+                            if (token === 'men' || token === 'male') {
+                                return (tg === 'men' || (tg.includes('men') && !tg.includes('women'))) ||
+                                       (name.includes('men') && !name.includes('women'));
+                            }
+                            if (token === 'women' || token === 'female' || token === 'ladies') {
+                                return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('filipiniana');
+                            }
+                            if (token === 'kid' || token === 'kids') {
+                                return tg.includes('kid') || tg.includes('child') || name.includes('kid');
+                            }
+
+                            return variants.some(v => 
+                                name.includes(v) || desc.includes(v) || tg.includes(v) || fabric.includes(v) || collar.includes(v)
+                            );
+                        });
                     });
                 }
             }
