@@ -114,4 +114,9 @@ class OrderShipping extends Model
     {
         return $this->belongsTo(ShippingRate::class, 'shipping_rate_id');
     }
+
+    public function trackingEvents()
+    {
+        return $this->hasMany(ShipmentTrackingEvent::class, 'order_shipping_id')->orderBy('occurred_at', 'asc');
+    }
 }

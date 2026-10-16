@@ -635,6 +635,11 @@ class Order extends Model
         return $this->hasOne(OrderShipping::class, 'order_id');
     }
 
+    public function trackingEvents()
+    {
+        return $this->hasMany(ShipmentTrackingEvent::class, 'order_id')->orderBy('occurred_at', 'asc');
+    }
+
     public function getShippingFeeAttribute(): float
     {
         if ($this->relationLoaded('shipping')) {

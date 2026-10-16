@@ -842,7 +842,7 @@
             </div>
 
             {{-- Hairline Divider --}}
-            <div class="h-[1px] w-full bg-[#EFECE5]"></div>
+            <div class="h-px w-full bg-[#EFECE5]"></div>
 
             {{-- ROW 2: PRICE CATEGORY & CUSTOM RANGE --}}
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
