@@ -79,16 +79,70 @@ class WebController extends Controller
                 }
             }
 
-            if ($request->has('search')) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%')
-                      ->orWhere('description', 'like', '%' . $search . '%')
-                      ->orWhereHas('seller', function($sq) use ($search) {
-                          $sq->where('name', 'like', '%' . $search . '%')
-                             ->orWhere('shopName', 'like', '%' . $search . '%');
-                      });
-                });
+            if ($request->filled('search')) {
+                $rawSearch = trim((string) $request->search);
+                if (strlen($rawSearch) <= 2) {
+                    // For short 1-2 character inputs (e.g. "j"), strictly match product name so that
+                    // background seller names or descriptions containing "j" do not trigger false positives
+                    $query->where('name', 'like', '%' . $rawSearch . '%');
+                } else {
+                    // Tokenize words, filtering out common noise words
+                    $stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an'];
+                    $words = array_values(array_filter(
+                        preg_split('/\s+/', strtolower($rawSearch)),
+                        fn($w) => strlen($w) > 0 && !in_array($w, $stopwords, true)
+                    ));
+
+                    $query->where(function($q) use ($rawSearch, $words) {
+                        // 1. Direct full substring match on name, description, or category
+                        $q->where('name', 'like', '%' . $rawSearch . '%')
+                          ->orWhere('description', 'like', '%' . $rawSearch . '%')
+                          ->orWhereHas('category', function($cq) use ($rawSearch) {
+                              $cq->where('name', 'like', '%' . $rawSearch . '%');
+                          });
+
+                        // 2. Token-based matching: match products matching keywords across attributes
+                        if (!empty($words)) {
+                            $q->orWhere(function($tokenQ) use ($words) {
+                                foreach ($words as $word) {
+                                    $tokenQ->where(function($subQ) use ($word) {
+                                        $subQ->where('name', 'like', '%' . $word . '%')
+                                             ->orWhere('description', 'like', '%' . $word . '%')
+                                             ->orWhere('target_group', 'like', '%' . $word . '%')
+                                             ->orWhere('fabric_type', 'like', '%' . $word . '%')
+                                             ->orWhereHas('category', function($cq) use ($word) {
+                                                 $cq->where('name', 'like', '%' . $word . '%');
+                                             })
+                                             ->orWhereHas('seller', function($sq) use ($word) {
+                                                 $sq->where('shopName', 'like', '%' . $word . '%')
+                                                    ->orWhere('name', 'like', '%' . $word . '%');
+                                             });
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+
+            if ($request->filled('price_range')) {
+                $range = $request->price_range;
+                if ($range === 'under_1500') {
+                    $query->where('price', '<', 1500);
+                } elseif ($range === '1500_3500') {
+                    $query->whereBetween('price', [1500, 3500]);
+                } elseif ($range === '3500_6000') {
+                    $query->whereBetween('price', [3500, 6000]);
+                } elseif ($range === 'above_6000') {
+                    $query->where('price', '>', 6000);
+                }
+            }
+
+            if ($request->filled('min_price')) {
+                $query->where('price', '>=', (float) $request->min_price);
+            }
+            if ($request->filled('max_price')) {
+                $query->where('price', '<=', (float) $request->max_price);
             }
 
             if ($request->has('lumban_special') || $request->sort === 'lumban_special') {
@@ -111,15 +165,23 @@ class WebController extends Controller
                     ->orderBy('createdAt', 'desc');
                 } elseif ($request->sort === 'newest') {
                     $query->orderBy('createdAt', 'desc');
-                } elseif ($request->sort === 'price_asc' || $request->sort === 'price_low') {
+                } elseif (in_array($request->sort, ['price_asc', 'price_low', 'cheapest'])) {
                     $query->orderBy('price', 'asc');
-                } elseif ($request->sort === 'price_desc' || $request->sort === 'price_high') {
+                } elseif (in_array($request->sort, ['price_desc', 'price_high', 'expensive'])) {
                     $query->orderBy('price', 'desc');
                 } else {
-                    $query->inRandomOrder();
+                    // Deterministic display basis: consistent across reloads
+                    $query->orderBy('sold_count', 'desc')
+                          ->orderBy('views', 'desc')
+                          ->orderBy('createdAt', 'desc')
+                          ->orderBy('id', 'desc');
                 }
             } else {
-                $query->inRandomOrder();
+                // Deterministic display basis: consistent across reloads
+                $query->orderBy('sold_count', 'desc')
+                      ->orderBy('views', 'desc')
+                      ->orderBy('createdAt', 'desc')
+                      ->orderBy('id', 'desc');
             }
 
             $products = $query->paginate(100);

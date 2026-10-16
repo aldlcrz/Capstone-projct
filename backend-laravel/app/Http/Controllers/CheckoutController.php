@@ -137,12 +137,23 @@ class CheckoutController extends Controller
                         $seller = $cartProduct->seller;
                     }
 
-                    // Build a resolved payment object with GCash and Maya available for all barong purchases
+                    // Check if seller enabled GCash / Maya in this product when uploaded
+                    $productGcashAvailable = $cartProduct->is_gcash_available;
+                    $isGcashAvailable = ($productGcashAvailable !== null) 
+                        ? (bool)$productGcashAvailable 
+                        : (bool)($seller->isGcashAvailable ?? true);
+
+                    $productMayaAvailable = $cartProduct->is_maya_available;
+                    $isMayaAvailable = ($productMayaAvailable !== null) 
+                        ? (bool)$productMayaAvailable 
+                        : (bool)($seller->isMayaAvailable ?? false);
+
+                    // Build a resolved payment object based on seller's product upload settings
                     $resolvedPayment = (object) [
-                        'isGcashAvailable' => true,
+                        'isGcashAvailable' => $isGcashAvailable,
                         'gcashNumber'      => $cartProduct->gcash_number ?: ($seller->gcashNumber ?? null),
                         'gcashQrCode'      => $cartProduct->gcash_qr_code ?: ($seller->gcashQrCode ?? null),
-                        'isMayaAvailable'  => true,
+                        'isMayaAvailable'  => $isMayaAvailable,
                         'mayaNumber'       => $cartProduct->maya_number ?: ($seller->mayaNumber ?? null),
                         'mayaQrCode'       => $cartProduct->maya_qr_code ?: ($seller->mayaQrCode ?? null),
                         'shopName'         => ($seller->shopName ?? null) ?: (($seller->name ?? null) ?: 'LumBarong Artisan Shop'),

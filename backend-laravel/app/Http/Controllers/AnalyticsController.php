@@ -250,6 +250,28 @@ class AnalyticsController extends Controller
 
             $rating = (float) DB::table('reviews')->where('productId', $product->id)->avg('rating') ?: 5.0;
 
+            $sizeBreakdown = DB::table('order_items')
+                ->join('orders', 'order_items.orderId', '=', 'orders.id')
+                ->where('order_items.productId', $product->id)
+                ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
+                ->when($from, fn ($q) => $q->where('orders.createdAt', '>=', $from))
+                ->when($to, fn ($q) => $q->where('orders.createdAt', '<=', $to))
+                ->select(
+                    DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard') as size_name"),
+                    DB::raw('SUM(order_items.quantity) as units_sold'),
+                    DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+                )
+                ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard')"))
+                ->orderByDesc('units_sold')
+                ->get()
+                ->map(fn ($row) => [
+                    'size'      => $row->size_name,
+                    'unitsSold' => (int) $row->units_sold,
+                    'revenue'   => (float) $row->revenue,
+                ])
+                ->values()
+                ->toArray();
+
             return [
                 'id'             => $product->id,
                 'name'           => $product->name,
@@ -265,6 +287,7 @@ class AnalyticsController extends Controller
                 'wishlist'       => $wishlistCount,
                 'conversionRate' => $conversionRate,
                 'rating'         => round($rating, 1),
+                'sizeBreakdown'  => $sizeBreakdown,
             ];
         });
 
@@ -273,12 +296,36 @@ class AnalyticsController extends Controller
         $mostViewed     = $productStats->sortByDesc('views')->take(5)->values();
         $highestRevenue = $productStats->sortByDesc('revenue')->take(5)->values();
 
+        $overallSizeBreakdown = DB::table('order_items')
+            ->join('orders', 'order_items.orderId', '=', 'orders.id')
+            ->join('products', 'order_items.productId', '=', 'products.id')
+            ->where('products.sellerId', $sellerId)
+            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
+            ->when($from, fn ($q) => $q->where('orders.createdAt', '>=', $from))
+            ->when($to, fn ($q) => $q->where('orders.createdAt', '<=', $to))
+            ->select(
+                DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard') as size_name"),
+                DB::raw('SUM(order_items.quantity) as units_sold'),
+                DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+            )
+            ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard')"))
+            ->orderByDesc('units_sold')
+            ->get()
+            ->map(fn ($row) => [
+                'size'      => $row->size_name,
+                'unitsSold' => (int) $row->units_sold,
+                'revenue'   => (float) $row->revenue,
+            ])
+            ->values()
+            ->toArray();
+
         return [
-            'all'            => $productStats->sortByDesc('revenue')->values(),
-            'bestSelling'    => $bestSelling,
-            'worstSelling'   => $worstSelling,
-            'mostViewed'     => $mostViewed,
-            'highestRevenue' => $highestRevenue,
+            'all'                  => $productStats->sortByDesc('revenue')->values(),
+            'bestSelling'          => $bestSelling,
+            'worstSelling'         => $worstSelling,
+            'mostViewed'           => $mostViewed,
+            'highestRevenue'       => $highestRevenue,
+            'overallSizeBreakdown' => $overallSizeBreakdown,
         ];
     }
 

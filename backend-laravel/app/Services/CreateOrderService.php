@@ -322,7 +322,8 @@ class CreateOrderService
 
             // Validate COD locality
             if ($isCod) {
-                if (!$this->shippingCalculator->isLocalCluster($sellerUser, $addressData)) {
+                $isSpecialDeliveryRequested = in_array(strtolower((string)($selectedProviderId ?? '')), ['seller_direct', 'special_delivery'], true);
+                if (!$isSpecialDeliveryRequested && !$this->shippingCalculator->isLocalCluster($sellerUser, $addressData)) {
                     throw ValidationException::withMessages([
                         'paymentMethod' => ['Cash on Delivery (COD) is available only for nearby local deliveries. Please choose GCash or Maya.'],
                     ]);
@@ -451,26 +452,57 @@ class CreateOrderService
 
             // Determine Fulfillment and Direct Seller Payment Arrangement
             $chosenProviderCode = strtolower((string)($chosenQuote['provider_code'] ?? ''));
-            $isStorePickup = ($chosenProviderCode === 'store_pickup' && !$isCod) 
-                || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true);
-            $isSpecialDelivery = (in_array($chosenProviderCode, ['seller_direct', 'special_delivery'], true) && !$isCod)
-                || in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true);
+            $isStorePickup = ($chosenProviderCode === 'store_pickup') 
+                || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay in shop', 'in-shop'], true);
+            $isSpecialDelivery = in_array($chosenProviderCode, ['seller_direct', 'special_delivery'], true);
 
-            if ($isStorePickup) {
-                $paymentMethod = 'Store Pickup';
-            } elseif ($isSpecialDelivery) {
-                $paymentMethod = 'Special Delivery';
+            $rawPaymentMethod = !empty($params['paymentMethod']) ? trim((string)$params['paymentMethod']) : null;
+            $hasExplicitOnlinePayment = $rawPaymentMethod && in_array(strtoupper($rawPaymentMethod), ['GCASH', 'MAYA']);
+            $isDirectSellerPayment = $isStorePickup || $isSpecialDelivery;
+
+            if ($isDirectSellerPayment && !$hasExplicitOnlinePayment) {
+                // Direct-to-seller non-online payments
+                if ($isStorePickup) {
+                    $paymentMethod = ($rawPaymentMethod && strcasecmp($rawPaymentMethod, 'Pay on Store') === 0) ? 'Pay on Store' : 'Store Pickup';
+                    $isCod = false;
+                    $isGcash = false;
+                    $isMaya = false;
+                    $requiresOnlineReceipt = false;
+                    $initialPaymentStatus = 'Pending Payment (Store Pickup)';
+                    $verificationTier = 'STORE_PICKUP';
+                } else {
+                    $paymentMethod = ($rawPaymentMethod && (strcasecmp($rawPaymentMethod, 'COD') === 0 || strcasecmp($rawPaymentMethod, 'Cash on Delivery') === 0)) ? 'COD' : 'Special Delivery';
+                    $isCod = true;
+                    $isGcash = false;
+                    $isMaya = false;
+                    $requiresOnlineReceipt = false;
+                    $initialPaymentStatus = 'Pending Payment (Special Delivery)';
+                    $verificationTier = 'SPECIAL_DELIVERY_COD';
+                }
+            } else {
+                if ($isStorePickup && in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay in shop', 'in-shop'], true)) {
+                    $paymentMethod = 'Pay on Store';
+                } elseif ($isSpecialDelivery && in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)) {
+                    $paymentMethod = 'COD';
+                }
+                $isCod = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0;
+                $isPayOnStore = strcasecmp($paymentMethod, 'Pay on Store') === 0 || strcasecmp($paymentMethod, 'Store Pickup') === 0;
+                $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
+                $isMaya = strcasecmp($paymentMethod, 'Maya') === 0;
+                $requiresOnlineReceipt = ($isGcash || $isMaya);
+                $initialPaymentStatus = $isCod 
+                    ? ($isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Pending Payment (COD)') 
+                    : ($isPayOnStore ? 'Pending Payment (Store Pickup)' : ($isDirectSellerPayment ? 'Paid (Direct to Seller)' : 'Paid (Platform Escrow)'));
+                $verificationTier = $isCod ? ($isSpecialDelivery ? 'SPECIAL_DELIVERY_COD' : 'COD') : ($isPayOnStore ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'DIRECT'));
             }
 
-            $isDirectSellerPayment = $isStorePickup || $isSpecialDelivery;
-            $requiresOnlineReceipt = !$isDirectSellerPayment && !$isCod;
+            $isPayOnStore = strcasecmp($paymentMethod, 'Pay on Store') === 0 || strcasecmp($paymentMethod, 'Store Pickup') === 0;
+            $isCod = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0 || ($isSpecialDelivery && strcasecmp($paymentMethod, 'Special Delivery') === 0);
 
             // Process Payment Validation / Reference Claiming & Accounting
             $paymentReference = null;
             $paymentProofPath = null;
-            $initialPaymentStatus = $isCod ? 'Pending Payment (COD)' : ($isStorePickup ? 'Pending Payment (Store Pickup)' : ($isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Paid (Direct to Seller)'));
             $transactionStatus = 'COMPLETED';
-            $verificationTier = $isCod ? 'COD' : ($isStorePickup ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'DIRECT'));
             $validatedReceipts = [];
             $totalVerifiedPayments = 0.0;
             $overpaymentAmount = 0.00;
@@ -601,9 +633,17 @@ class CreateOrderService
                 $totalVerifiedPayments = 0.0;
                 $overpaymentAmount = 0.00;
                 $refundMobileNumber = null;
-                $initialPaymentStatus = 'Pending Payment (COD)';
+                $initialPaymentStatus = $isSpecialDelivery ? 'Pending Payment (Special Delivery)' : 'Pending Payment (COD)';
                 $transactionStatus = 'UNVERIFIED';
-                $verificationTier = 'COD';
+                $verificationTier = $isSpecialDelivery ? 'SPECIAL_DELIVERY_COD' : 'COD';
+            } elseif ($isPayOnStore) {
+                $paymentReference = null;
+                $totalVerifiedPayments = 0.0;
+                $overpaymentAmount = 0.00;
+                $refundMobileNumber = null;
+                $initialPaymentStatus = 'Pending Payment (Store Pickup)';
+                $transactionStatus = 'UNVERIFIED';
+                $verificationTier = 'STORE_PICKUP';
             }
 
             // Create Order

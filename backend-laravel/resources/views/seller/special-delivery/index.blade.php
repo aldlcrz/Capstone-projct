@@ -148,7 +148,11 @@
                                            class="w-4 h-4 rounded text-[#2E7D32] focus:ring-[#2E7D32] border-[#E8DECB] cursor-pointer">
                                     <div class="min-w-0">
                                         <div class="text-xs font-bold text-[#1E1915] truncate" x-text="muni.name"></div>
-                                        <div class="text-[10px] text-[#A09585] font-mono" x-text="'Postal: ' + muni.postal_code"></div>
+                                        <div class="text-[10px] text-[#A09585] flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-mono" x-text="'Postal: ' + muni.postal_code"></span>
+                                            <span>•</span>
+                                            <span class="font-medium text-[#C49520]" x-text="getHopsDescription(muni.key)"></span>
+                                        </div>
                                     </div>
                                 </label>
 
@@ -177,14 +181,21 @@
 
                 {{-- Base Delivery Fee Card --}}
                 <div class="rounded-3xl p-5 sm:p-7 bg-[#FFFCF7] border border-[#E8DECB] shadow-xs space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-bold text-base shrink-0">
-                            ₱
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-bold text-base shrink-0">
+                                ₱
+                            </div>
+                            <div>
+                                <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-[#1E1915]">Base Delivery Fee</h3>
+                                <p class="text-[11px] sm:text-xs text-[#766C60]">The starting flat delivery fee charged from Lumban Hub.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-[#1E1915]">Base Delivery Fee</h3>
-                            <p class="text-[11px] sm:text-xs text-[#766C60]">The starting flat delivery fee charged before municipal surcharges.</p>
-                        </div>
+                        <button type="button" @click="autoComputeFromLumban()"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E1915] text-[#DFC97A] hover:bg-[#322A23] text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
+                            <x-lucide name="sparkles" class="w-3.5 h-3.5 text-[#DFC97A]" />
+                            Auto-Compute from Lumban
+                        </button>
                     </div>
 
                     <div class="space-y-1.5">
@@ -198,8 +209,23 @@
                                    class="w-full py-2 pr-3 text-base font-black outline-none bg-white text-[#1E1915] font-mono"
                                    placeholder="50.00">
                         </div>
-                        <p class="text-[10px] text-[#A09585]">
-                            Formula: <strong>Final Delivery Fee = Base Delivery Fee + Municipality Surcharge</strong>
+                        <div class="flex items-center justify-between text-[10px] text-[#A09585] pt-1">
+                            <span>Formula: <strong>Final Delivery Fee = Base Delivery Fee + Surcharge</strong></span>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-[#766C60] select-none">
+                                <input type="checkbox" x-model="autoCalculateEnabled" @change="if(autoCalculateEnabled) autoComputeFromLumban()" class="rounded text-[#2E7D32] focus:ring-[#2E7D32] border-[#E8DECB]">
+                                <span>Auto-update towns on base fee change</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Lumban Distance Explanation Callout --}}
+                    <div class="p-3.5 rounded-2xl bg-[#FDF8EE] border border-[#E6D8BA] text-xs space-y-1.5">
+                        <div class="font-bold text-[#8C6D1F] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                            <x-lucide name="navigation" class="w-3.5 h-3.5 text-[#8C6D1F]" />
+                            Distance Calculation based on Hops from Lumban Hub:
+                        </div>
+                        <p class="text-[11px] text-[#766C60] leading-relaxed">
+                            Entering <strong>₱50</strong> automatically sets Lumban to <strong>₱50</strong>, adjacent Pagsanjan to <strong>₱100</strong> (+1 hop), Santa Cruz to <strong>₱150</strong> (+2 hops), Pila to <strong>₱200</strong> (+3 hops), etc., according to road transit from Lumban.
                         </p>
                     </div>
                 </div>
@@ -354,10 +380,59 @@ function specialDeliverySettings() {
     return {
         isEnabled: serverData.isEnabled,
         baseFee: serverData.baseFee,
+        autoCalculateEnabled: true,
         searchQuery: '',
         allMunicipalities: allList,
         selectedMunis: selectedMunis,
         muniSurcharges: muniSurcharges,
+
+        // Road transit distance tiers (hops) originating from Lumban Artisan Hub
+        lumbanHops: {
+            'lumban': 0,
+            'pagsanjan': 1,
+            'kalayaan': 1,
+            'cavinti': 1,
+            'santa_cruz': 2,
+            'paete': 2,
+            'magdalena': 2,
+            'pakil': 2,
+            'pila': 3,
+            'pangil': 3,
+            'majayjay': 3,
+            'liliw': 3,
+            'luisiana': 3,
+            'victoria': 3,
+            'siniloan': 4,
+            'famy': 4,
+            'nagcarlan': 4,
+            'bay': 4,
+            'calauan': 4,
+            'rizal': 4,
+            'mabitac': 5,
+            'santa_maria': 5,
+            'los_banos': 5,
+            'san_pablo': 5,
+            'calamba': 6,
+            'alaminos': 6,
+            'cabuyao': 6,
+            'santa_rosa': 7,
+            'binan': 7,
+            'san_pedro': 7
+        },
+
+        getHopsDescription(key) {
+            const hops = this.lumbanHops[key] !== undefined ? this.lumbanHops[key] : 1;
+            if (hops === 0) return 'Lumban Origin Hub';
+            return `${hops} hop${hops > 1 ? 's' : ''} from Lumban (+₱${this.formatMoney(hops * (parseFloat(this.baseFee) || 0))})`;
+        },
+
+        autoComputeFromLumban() {
+            const base = parseFloat(this.baseFee) || 0.00;
+            this.allMunicipalities.forEach(m => {
+                const hops = this.lumbanHops[m.key] !== undefined ? this.lumbanHops[m.key] : 1;
+                this.muniSurcharges[m.key] = Math.round((hops * base) * 100) / 100;
+            });
+        },
 
         get totalCount() {
             return this.allMunicipalities.length;
@@ -395,7 +470,9 @@ function specialDeliverySettings() {
             } else {
                 this.selectedMunis[key] = true;
                 if (this.muniSurcharges[key] === undefined) {
-                    this.muniSurcharges[key] = 0.00;
+                    const hops = this.lumbanHops[key] !== undefined ? this.lumbanHops[key] : 1;
+                    const base = parseFloat(this.baseFee) || 0.00;
+                    this.muniSurcharges[key] = Math.round((hops * base) * 100) / 100;
                 }
             }
         },
@@ -404,7 +481,9 @@ function specialDeliverySettings() {
             this.allMunicipalities.forEach(m => {
                 this.selectedMunis[m.key] = true;
                 if (this.muniSurcharges[m.key] === undefined) {
-                    this.muniSurcharges[m.key] = 0.00;
+                    const hops = this.lumbanHops[m.key] !== undefined ? this.lumbanHops[m.key] : 1;
+                    const base = parseFloat(this.baseFee) || 0.00;
+                    this.muniSurcharges[m.key] = Math.round((hops * base) * 100) / 100;
                 }
             });
         },
@@ -429,7 +508,9 @@ function specialDeliverySettings() {
         },
 
         recalculateAll() {
-            // Triggers reactivity
+            if (this.autoCalculateEnabled) {
+                this.autoComputeFromLumban();
+            }
         },
 
         formatMoney(amount) {

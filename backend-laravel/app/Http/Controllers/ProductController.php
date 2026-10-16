@@ -124,13 +124,42 @@ class ProductController extends Controller
             $query->where('CategoryId', $request->category);
         }
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
-            });
+        if ($request->filled('search')) {
+            $rawSearch = trim((string) $request->search);
+            if (strlen($rawSearch) <= 2) {
+                $query->where('name', 'like', "%{$rawSearch}%");
+            } else {
+                $stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an'];
+                $words = array_values(array_filter(
+                    preg_split('/\s+/', strtolower($rawSearch)),
+                    fn($w) => strlen($w) > 0 && !in_array($w, $stopwords, true)
+                ));
+
+                $query->where(function ($q) use ($rawSearch, $words) {
+                    $q->where('name', 'like', "%{$rawSearch}%")
+                      ->orWhere('description', 'like', "%{$rawSearch}%")
+                      ->orWhere('sku', 'like', "%{$rawSearch}%")
+                      ->orWhereHas('category', function($cq) use ($rawSearch) {
+                          $cq->where('name', 'like', "%{$rawSearch}%");
+                      });
+
+                    if (!empty($words)) {
+                        $q->orWhere(function($tokenQ) use ($words) {
+                            foreach ($words as $word) {
+                                $tokenQ->where(function($subQ) use ($word) {
+                                    $subQ->where('name', 'like', "%{$word}%")
+                                         ->orWhere('description', 'like', "%{$word}%")
+                                         ->orWhere('target_group', 'like', "%{$word}%")
+                                         ->orWhere('fabric_type', 'like', "%{$word}%")
+                                         ->orWhereHas('category', function($cq) use ($word) {
+                                             $cq->where('name', 'like', "%{$word}%");
+                                         });
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         if ($request->has('seller')) {
@@ -139,12 +168,14 @@ class ProductController extends Controller
 
         if ($request->has('sort') && $request->sort === 'newest') {
             $query->orderBy('createdAt', 'desc');
-        } elseif ($request->has('sort') && in_array($request->sort, ['price_asc', 'price_low'])) {
+        } elseif ($request->has('sort') && in_array($request->sort, ['price_asc', 'price_low', 'cheapest'])) {
             $query->orderBy('price', 'asc');
-        } elseif ($request->has('sort') && in_array($request->sort, ['price_desc', 'price_high'])) {
+        } elseif ($request->has('sort') && in_array($request->sort, ['price_desc', 'price_high', 'expensive'])) {
             $query->orderBy('price', 'desc');
+        } elseif ($request->has('sort') && in_array($request->sort, ['best_sellers', 'trending', 'most_sold'])) {
+            $query->orderBy('soldCount', 'desc')->orderBy('views', 'desc')->orderBy('createdAt', 'desc');
         } else {
-            $query->inRandomOrder();
+            $query->orderBy('soldCount', 'desc')->orderBy('views', 'desc')->orderBy('createdAt', 'desc')->orderBy('id', 'desc');
         }
 
         $products = $query->get();

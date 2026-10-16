@@ -720,7 +720,89 @@
                     {{ $headerTitle }}
                 </span>
             </div>
-            <span class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
+        @php
+            $currentCatParam = request('category', '');
+            $currentSortParam = request('sort', '');
+            $currentPriceRange = request('price_range', '');
+            $currentSearchParam = request('search', '');
+
+            $buildCatalogueUrl = function($overrides = []) use ($currentCatParam, $currentSortParam, $currentPriceRange, $currentSearchParam) {
+                $params = [
+                    'category'    => $currentCatParam,
+                    'sort'        => $currentSortParam,
+                    'price_range' => $currentPriceRange,
+                    'search'      => $currentSearchParam,
+                ];
+                foreach ($overrides as $k => $v) {
+                    if ($v === null || $v === '' || $v === '__all__') {
+                        unset($params[$k]);
+                    } else {
+                        $params[$k] = $v;
+                    }
+                }
+                $params = array_filter($params, fn($val) => $val !== '' && $val !== null);
+                $query = http_build_query($params);
+                return '/?' . ($query ? $query . '#' : '#') . 'catalogue-section';
+            };
+
+            $classifications = [
+                ['label' => 'All Pieces', 'param' => ['category' => null, 'sort' => $currentSortParam === 'lumban_special' ? null : $currentSortParam], 'active' => empty($currentCatParam) && $currentSortParam !== 'lumban_special'],
+                ['label' => 'Men', 'param' => ['category' => 'Men'], 'active' => strtolower($currentCatParam) === 'men' || strtolower($currentCatParam) === 'male'],
+                ['label' => 'Women', 'param' => ['category' => 'Women'], 'active' => strtolower($currentCatParam) === 'women' || strtolower($currentCatParam) === 'female'],
+                ['label' => 'Kids', 'param' => ['category' => 'Kids'], 'active' => strtolower($currentCatParam) === 'kids'],
+                ['label' => 'Special Sale', 'param' => ['sort' => 'lumban_special'], 'active' => $currentSortParam === 'lumban_special' || request('lumban_special')],
+            ];
+
+            $priceTiers = [
+                ['label' => 'All Prices', 'val' => ''],
+                ['label' => 'Under ₱1,500', 'val' => 'under_1500'],
+                ['label' => '₱1,500 – ₱3,500', 'val' => '1500_3500'],
+                ['label' => '₱3,500 – ₱6,000', 'val' => '3500_6000'],
+                ['label' => '₱6,000+', 'val' => 'above_6000'],
+            ];
+        @endphp
+
+        {{-- Filter & Sorting Toolbar --}}
+        <div class="bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#ECE3D2] shadow-xs space-y-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {{-- Demographic / Classification Tabs --}}
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-stone-400 mr-1 shrink-0 hidden sm:inline">Classification:</span>
+                    @foreach($classifications as $cTab)
+                        <a href="{{ $buildCatalogueUrl($cTab['param']) }}"
+                           class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer {{ $cTab['active'] ? 'bg-[#1E1915] text-[#DFC97A] shadow-xs' : 'bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-black' }}">
+                            {{ $cTab['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+
+                {{-- Price & Sort Controls --}}
+                <div class="flex items-center gap-2.5 shrink-0 self-end md:self-auto w-full md:w-auto justify-between md:justify-end">
+                    {{-- Price Sort Dropdown --}}
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[9px] font-black uppercase tracking-widest text-stone-400 shrink-0">Sort:</span>
+                        <select onchange="window.location.href = this.value"
+                                class="bg-stone-50 border border-stone-200 hover:border-stone-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-800 outline-none cursor-pointer transition-all shadow-2xs">
+                            <option value="{{ $buildCatalogueUrl(['sort' => null]) }}" {{ empty($currentSortParam) || !in_array($currentSortParam, ['price_asc', 'price_desc', 'newest', 'best_sellers', 'lumban_special']) ? 'selected' : '' }}>Recommended</option>
+                            <option value="{{ $buildCatalogueUrl(['sort' => 'price_asc']) }}" {{ in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest']) ? 'selected' : '' }}>Price: Low to High (Cheapest)</option>
+                            <option value="{{ $buildCatalogueUrl(['sort' => 'price_desc']) }}" {{ in_array($currentSortParam, ['price_desc', 'price_high', 'expensive']) ? 'selected' : '' }}>Price: High to Low (Most Expensive)</option>
+                            <option value="{{ $buildCatalogueUrl(['sort' => 'newest']) }}" {{ $currentSortParam === 'newest' ? 'selected' : '' }}>Newest Arrivals</option>
+                            <option value="{{ $buildCatalogueUrl(['sort' => 'best_sellers']) }}" {{ in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold']) ? 'selected' : '' }}>Best Sellers</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Price Range Filter Tiers --}}
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#F2ECE1] overflow-x-auto no-scrollbar">
+                <span class="text-[9px] font-black uppercase tracking-widest text-stone-400 mr-1 shrink-0">Price Category:</span>
+                @foreach($priceTiers as $pt)
+                    <a href="{{ $buildCatalogueUrl(['price_range' => $pt['val']]) }}"
+                       class="ajax-filter-link px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all shrink-0 cursor-pointer {{ (string)$currentPriceRange === (string)$pt['val'] ? 'bg-[#996515] text-white shadow-2xs' : 'bg-stone-50 hover:bg-stone-100 text-stone-600 border border-stone-200/80' }}">
+                        {{ $pt['label'] }}
+                    </a>
+                @endforeach
+            </div>
         </div>
 
         <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">

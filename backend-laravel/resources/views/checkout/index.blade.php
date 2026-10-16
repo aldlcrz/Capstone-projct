@@ -372,50 +372,111 @@
                     @endphp
 
                     <div class="space-y-3">
-                        {{-- Direct Payment Arrangement for Store Pickup & Special Delivery --}}
-                        <div x-show="shippingQuote?.provider_code === 'store_pickup' || shippingQuote?.provider_code === 'seller_direct'" x-cloak class="space-y-3">
-                            <!-- Store Pickup Direct Settlement Card -->
-                            <div x-show="shippingQuote?.provider_code === 'store_pickup'" class="rounded-2xl border-2 border-[#1E1915] bg-[#FAF6EE] p-4 sm:p-5 shadow-xs space-y-3">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="landmark" class="w-5 h-5 text-[#DFC97A]" /></div>
-                                    <div>
-                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Store Pickup — Direct Payment at Workshop</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay directly to the artisan upon claiming and inspecting your item</div>
+                        {{-- 1. Store Pickup Payment Channels --}}
+                        <div x-show="shippingQuote?.provider_code === 'store_pickup'" x-cloak class="space-y-3">
+                            <!-- Pay on Store Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'Pay on Store' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="landmark" class="w-5 h-5 text-[#DFC97A]" /></div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Pay on Store</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Pay in person upon claiming and inspecting your item at the workshop</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
-                                    <div class="flex items-start gap-2 text-[#996515] font-bold">
-                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
-                                        <span>Seller will set an appointment for you, please wait.</span>
-                                    </div>
-                                    <p class="text-gray-700">
-                                        This is a direct transaction between customer and seller. The artisan will coordinate your pickup schedule and record your payment upon collection at the workshop.
-                                    </p>
-                                </div>
+                                    <input type="radio" name="paymentMethodRadio" value="Pay on Store" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
                             </div>
 
-                            <!-- Special Delivery Direct Settlement Card -->
-                            <div x-show="shippingQuote?.provider_code === 'seller_direct'" class="rounded-2xl border-2 border-[#1E1915] bg-[#FAF6EE] p-4 sm:p-5 shadow-xs space-y-3">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="bike" class="w-5 h-5 text-[#DFC97A]" /></div>
-                                    <div>
-                                        <div class="font-bold text-gray-900 text-sm lg:text-base">Special Delivery — Direct Payment to Artisan Rider</div>
-                                        <div class="text-[10px] lg:text-xs text-gray-500">Pay directly upon handover by the local artisan rider</div>
+                            @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
+                            <!-- Store Pickup GCash Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'GCash' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">GC</div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="bg-white p-3.5 rounded-xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
-                                    <div class="flex items-start gap-2 text-[#996515] font-bold">
-                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
-                                        <span>Seller will set an appointment for you, please wait.</span>
-                                    </div>
-                                    <p class="text-gray-700">
-                                        This is a direct transaction between customer and seller. The artisan rider will coordinate your delivery schedule and record your payment upon handover.
-                                    </p>
-                                </div>
+                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
                             </div>
+                            @endif
+
+                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
+                            <!-- Store Pickup Maya Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'Maya' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">MY</div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
+                                        </div>
+                                    </div>
+                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
+                            </div>
+                            @endif
                         </div>
 
-                        {{-- Courier Payment Channels (Only for Standard Courier Deliveries) --}}
+                        {{-- 2. Special Delivery Payment Channels --}}
+                        <div x-show="shippingQuote?.provider_code === 'seller_direct'" x-cloak class="space-y-3">
+                            <!-- Special Delivery COD Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'COD' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black shadow-xs shrink-0"><x-lucide name="banknote" class="w-5 h-5 text-[#DFC97A]" /></div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Cash on Delivery (COD)</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Pay cash upon delivery by the local artisan rider</div>
+                                        </div>
+                                    </div>
+                                    <input type="radio" name="paymentMethodRadio" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
+                            </div>
+
+                            @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
+                            <!-- Special Delivery GCash Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'GCash' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">GC</div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">GCash e-Wallet</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
+                                        </div>
+                                    </div>
+                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
+                            </div>
+                            @endif
+
+                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
+                            <!-- Special Delivery Maya Option -->
+                            <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
+                                 :class="paymentMethod === 'Maya' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                <label class="flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">MY</div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Maya e-Wallet</div>
+                                            <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
+                                        </div>
+                                    </div>
+                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                </label>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- 3. Courier Payment Channels (Only for Standard Courier Deliveries) --}}
                         <div x-show="shippingQuote?.provider_code !== 'store_pickup' && shippingQuote?.provider_code !== 'seller_direct'" class="space-y-3">
                             {{-- Courier Cash on Delivery Option --}}
                             <div x-show="isLocalCluster || (availablePaymentMethods && availablePaymentMethods.includes('COD'))" x-cloak
@@ -429,15 +490,8 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay cash upon courier delivery</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethod" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
-                                
-                                <div x-show="paymentMethod === 'COD'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
-                                    <div class="bg-[#FAF5EA] p-3 rounded-xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
-                                        <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
-                                        <span>You can pay directly with cash upon courier delivery. No online receipt screenshot required.</span>
-                                    </div>
-                                </div>
                             </div>
 
                             @if(!$paymentSource || ($paymentSource->isGcashAvailable ?? true))
@@ -451,39 +505,12 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethod" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
-                                
-                                <div x-show="paymentMethod === 'GCash'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
-                                    <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
-                                        <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
-                                             @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
-                                             @if($gcashQrUrl)
-                                                <img src="{{ $gcashQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
-                                                <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                                    Tap to Zoom QR
-                                                </span>
-                                            @else
-                                                <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
-                                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                                                </div>
-                                                <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
-                                            @endif
-                                        </div>
-                                        <div class="text-center sm:text-left space-y-1 flex-1">
-                                            <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
-                                            <div class="text-sm font-bold text-gray-900">Scan QR Code using GCash</div>
-                                            <p class="text-xs text-gray-600 leading-relaxed">
-                                                Tap the QR code to zoom in, then scan or save it using your GCash app. After completing your payment, upload the screenshot receipt below.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             @endif
 
-                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? true))
+                            @if(!$paymentSource || ($paymentSource->isMayaAvailable ?? false))
                             <!-- Maya Option -->
                             <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200" :class="paymentMethod === 'Maya' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                                 <label class="flex items-center justify-between cursor-pointer">
@@ -494,47 +521,96 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethod" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
-
-                                <div x-show="paymentMethod === 'Maya'" class="mt-3 pt-3 border-t border-[#ECE3D2]" x-transition>
-                                    <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
-                                        <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
-                                             @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
-                                             @if($mayaQrUrl)
-                                                <img src="{{ $mayaQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
-                                                <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                                    Tap to Zoom QR
-                                                </span>
-                                            @else
-                                                <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
-                                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                                                </div>
-                                                <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
-                                            @endif
-                                        </div>
-                                        <div class="text-center sm:text-left space-y-1 flex-1">
-                                            <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
-                                            <div class="text-sm font-bold text-gray-900">Scan QR Code using Maya</div>
-                                            <p class="text-xs text-gray-600 leading-relaxed">
-                                                Tap the QR code to zoom in, then scan or save it using your Maya app. After completing your payment, upload the screenshot receipt below.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             @endif
                         </div>
+
+                        {{-- Payment Method Context Details --}}
+                        {{-- Pay on Store Information Banner --}}
+                        <div x-show="paymentMethod === 'Pay on Store'" class="mt-3" x-transition>
+                            <div class="bg-white p-4 rounded-2xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
+                                <div class="flex items-start gap-2 text-[#996515] font-bold">
+                                    <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
+                                    <span>Pay directly upon claiming at the artisan workshop</span>
+                                </div>
+                                <p class="text-gray-700">
+                                    Inspect your handcrafted Barong in person at the workshop before settling payment. No receipt upload required.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Cash on Delivery Information Banner --}}
+                        <div x-show="paymentMethod === 'COD'" class="mt-3" x-transition>
+                            <div class="bg-[#FAF5EA] p-3.5 rounded-2xl border border-[#E6D8BA] text-xs text-[#996515] font-medium flex items-start gap-2">
+                                <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
+                                <span>You can pay directly with cash upon handover. No online receipt screenshot required.</span>
+                            </div>
+                        </div>
+
+                        {{-- GCash QR Code Presentation --}}
+                        <div x-show="paymentMethod === 'GCash'" class="mt-3" x-transition>
+                            <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                                <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($gcashQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
+                                     @if($gcashQrUrl) @click="zoomImage = '{{ $gcashQrUrl }}'; showZoomModal = true" @endif>
+                                     @if($gcashQrUrl)
+                                        <img src="{{ $gcashQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="GCash QR">
+                                        <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                            Tap to Zoom QR
+                                        </span>
+                                    @else
+                                        <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        </div>
+                                        <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
+                                    @endif
+                                </div>
+                                <div class="text-center sm:text-left space-y-1 flex-1">
+                                    <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
+                                    <div class="text-sm font-bold text-gray-900">Scan QR Code using GCash</div>
+                                    <p class="text-xs text-gray-600 leading-relaxed">
+                                        Tap the QR code to zoom in, then scan or save it using your GCash app. After completing your payment, upload the screenshot receipt below.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Maya QR Code Presentation --}}
+                        <div x-show="paymentMethod === 'Maya'" class="mt-3" x-transition>
+                            <div class="bg-[#FAF6EE] border border-[#E2D9C8] rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                                <div class="bg-white border border-[#ECE3D2] rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs shrink-0 @if($mayaQrUrl) cursor-zoom-in hover:border-[#D4AF37] transition-all group/qr @endif"
+                                     @if($mayaQrUrl) @click="zoomImage = '{{ $mayaQrUrl }}'; showZoomModal = true" @endif>
+                                     @if($mayaQrUrl)
+                                        <img src="{{ $mayaQrUrl }}" class="w-28 h-28 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain rounded-xl bg-white border border-gray-100 shadow-xs" alt="Maya QR">
+                                        <span class="text-[8px] lg:text-[9px] font-extrabold uppercase text-[#996515] tracking-wider mt-1.5 flex items-center gap-1 group-hover/qr:text-[#7A4F0B]">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                            Tap to Zoom QR
+                                        </span>
+                                    @else
+                                        <div class="w-24 h-24 bg-gray-50 rounded-xl mb-1 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        </div>
+                                        <span class="text-[9px] font-bold text-gray-400 mt-1">No QR Available</span>
+                                    @endif
+                                </div>
+                                <div class="text-center sm:text-left space-y-1 flex-1">
+                                    <div class="text-[9px] lg:text-[10px] font-extrabold text-[#996515] uppercase tracking-widest">Official Shop QR Code</div>
+                                    <div class="text-sm font-bold text-gray-900">Scan QR Code using Maya</div>
+                                    <p class="text-xs text-gray-600 leading-relaxed">
+                                        Tap the QR code to zoom in, then scan or save it using your Maya app. After completing your payment, upload the screenshot receipt below.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Direct Payment Form Inputs -->
-                    <template x-if="isDirectPaymentOrder()">
-                        <input type="hidden" name="paymentMethod" :value="paymentMethod">
-                    </template>
+                    <!-- Selected Payment Method Input for Checkout Form -->
+                    <input type="hidden" name="paymentMethod" :value="paymentMethod">
 
                     <!-- Payment Proof Upload & Automated Extraction (Only for GCash / Maya) -->
-                    <div x-show="paymentMethod !== 'COD' && !isDirectPaymentOrder()" x-cloak x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
+                    <div x-show="paymentMethod === 'GCash' || paymentMethod === 'Maya'" x-cloak x-transition class="bg-white border border-[#ECE3D2] rounded-2xl p-4 sm:p-5 mt-4 shadow-xs space-y-3.5">
                         <div class="flex items-center justify-between border-b border-[#ECE3D2] pb-2.5">
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-[#C49520]"></div>
@@ -1531,19 +1607,23 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         get isOverpaid() {
             return (this.totalVerifiedPayments - this.payableAmount) >= 0.01;
         },
+        get isCashPayment() {
+            return this.paymentMethod === 'COD' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
+        },
+        get requiresProofUpload() {
+            return this.paymentMethod === 'GCash' || this.paymentMethod === 'Maya';
+        },
         isDirectPaymentOrder() {
-            const code = this.shippingQuote?.provider_code;
-            return code === 'store_pickup' || code === 'seller_direct' || this.paymentMethod === 'Store Pickup' || this.paymentMethod === 'Special Delivery';
+            return this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
         },
         get paymentMethodDisplayName() {
-            if (this.isDirectPaymentOrder()) {
-                if (this.shippingQuote?.provider_code === 'store_pickup') {
-                    return 'Store Pickup (Direct Settlement with Artisan)';
-                }
-                return 'Special Delivery (Direct Settlement with Artisan)';
+            if (this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
+                return 'Pay on Store (Workshop Pickup)';
             }
             if (this.paymentMethod === 'COD') {
-                return 'Cash on Delivery';
+                return this.shippingQuote?.provider_code === 'seller_direct'
+                    ? 'Cash on Delivery (Direct to Artisan Rider)'
+                    : 'Cash on Delivery (Courier Handover)';
             }
             if (this.paymentMethod === 'GCash') {
                 return 'GCash e-Wallet';
@@ -1577,7 +1657,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             });
 
             this.$watch('paymentMethod', () => {
-                if (this.paymentMethod !== 'COD' && this.paymentRef) {
+                if (this.paymentMethod !== 'COD' && this.paymentMethod !== 'Pay on Store' && this.paymentRef) {
                     this.validateRef();
                     this.checkServerReference();
                 } else {
@@ -1600,12 +1680,18 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.selectedProviderId = q.provider_id;
             this.currentShippingFee = Number(q.shipping_fee) || 0;
             if (q.provider_code === 'store_pickup') {
-                this.paymentMethod = 'Store Pickup';
+                if (this.paymentMethod !== 'GCash' && this.paymentMethod !== 'Maya') {
+                    this.paymentMethod = 'Pay on Store';
+                }
                 this.initStorePickupMap();
             } else if (q.provider_code === 'seller_direct') {
-                this.paymentMethod = 'Special Delivery';
-            } else if (this.paymentMethod === 'Store Pickup' || this.paymentMethod === 'Special Delivery') {
-                this.paymentMethod = 'GCash';
+                if (this.paymentMethod !== 'GCash' && this.paymentMethod !== 'Maya') {
+                    this.paymentMethod = 'COD';
+                }
+            } else {
+                if (this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
+                    this.paymentMethod = 'COD';
+                }
             }
         },
 

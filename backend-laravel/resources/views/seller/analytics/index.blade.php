@@ -382,11 +382,49 @@
             </div>
         </div>
 
+        {{-- Overall Garment Size Demand Breakdown --}}
+        <div id="tour-analytics-size-breakdown" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">
+                        <x-lucide name="scissors" class="w-4 h-4 text-[#A16D19] inline mr-1" /> Garment Size Distribution & Sales Report
+                    </h3>
+                    <p class="text-[10px] text-[#8C827A] font-medium mt-0.5">Aggregate pieces sold and revenue generated per sizing specification across all handcrafted creations.</p>
+                </div>
+                <span class="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FAF7F2] text-[#A16D19] border border-[#E8DECB]">
+                    Per Size Demand
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                @forelse($productAnalytics['overallSizeBreakdown'] ?? [] as $sb)
+                    <div class="p-3.5 rounded-2xl flex flex-col justify-between" style="background: #FAF7F2; border: 1px solid #E8DECB;">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 rounded-md text-xs font-black uppercase tracking-wider bg-white border border-[#E8DECB] text-[#1E1915]">
+                                {{ $sb['size'] }}
+                            </span>
+                            <span class="text-[9px] font-bold text-[#8C827A] uppercase font-sans">
+                                {{ $sb['unitsSold'] }} pcs
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black font-sans text-[#C49520]">₱{{ number_format($sb['revenue'], 2) }}</div>
+                            <div class="text-[9px] text-[#8C827A] font-medium mt-0.5">Total Revenue</div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-full p-4 text-center text-xs italic text-[#8C827A]">
+                        No size-specific sales data recorded yet.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
         {{-- Granular Per-Product Performance Table --}}
         <div id="tour-analytics-product-catalogue" class="p-5 sm:p-6 rounded-3xl shadow-2xs space-y-4" style="background: #FFFFFF; border: 1px solid #ECE3D2;">
             <h3 class="font-serif text-xs sm:text-sm font-bold uppercase tracking-wider" style="color: #1E1915;">Per-Product Performance Catalogue</h3>
             <div class="overflow-x-auto no-scrollbar">
-                <table class="w-full text-left border-collapse min-w-140">
+                <table class="w-full text-left border-collapse min-w-160">
                     <thead>
                         <tr class="border-b text-[9px] font-bold uppercase tracking-wider" style="border-color: #E8DECB; color: #8C827A;">
                             <th class="py-3 px-2">Product</th>
@@ -394,6 +432,7 @@
                             <th class="py-3 px-2">Add to Cart</th>
                             <th class="py-3 px-2">Wishlist</th>
                             <th class="py-3 px-2">Units Sold</th>
+                            <th class="py-3 px-2">Size Breakdown</th>
                             <th class="py-3 px-2">Revenue</th>
                             <th class="py-3 px-2">Conversion</th>
                             <th class="py-3 px-2">Rating</th>
@@ -410,6 +449,20 @@
                                 <td class="py-3 px-2">{{ number_format($p['addToCart']) }}</td>
                                 <td class="py-3 px-2">{{ number_format($p['wishlist']) }}</td>
                                 <td class="py-3 px-2 font-bold">{{ number_format($p['unitsSold']) }}</td>
+                                <td class="py-3 px-2">
+                                    @if(!empty($p['sizeBreakdown']))
+                                        <div class="flex flex-wrap gap-1 max-w-56">
+                                            @foreach($p['sizeBreakdown'] as $sb)
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FAF7F2] border border-[#E8DECB] text-[#1E1915]">
+                                                    <span class="text-[#A16D19] font-black">{{ $sb['size'] }}:</span>
+                                                    <span>{{ $sb['unitsSold'] }} <span class="text-[8px] text-[#8C827A]">({{ number_format(($sb['unitsSold'] / max(1, $p['unitsSold'])) * 100) }}%)</span></span>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-[10px] text-[#8C827A] italic">—</span>
+                                    @endif
+                                </td>
                                 <td class="py-3 px-2 font-bold" style="color: #C49520;">₱{{ number_format($p['revenue']) }}</td>
                                 <td class="py-3 px-2">{{ $p['conversionRate'] }}%</td>
                                 <td class="py-3 px-2 font-bold" style="color: #A16D19;">{{ $p['rating'] }}</td>

@@ -717,7 +717,13 @@ function sellerOrdersManager() {
 
         openCancelOrderModal(order) {
             this.cancelOrderTarget = order || this.detailsOrder;
-            this.sellerCancelReason = 'Out of stock / fabric unavailable';
+            if (this.isSpecialDelivery(this.cancelOrderTarget)) {
+                this.sellerCancelReason = 'Delivery address is too far / beyond rider reachable route';
+            } else if (this.isStorePickup(this.cancelOrderTarget)) {
+                this.sellerCancelReason = 'Customer did not claim within designated pickup window';
+            } else {
+                this.sellerCancelReason = 'Out of stock / fabric unavailable';
+            }
             this.sellerCustomCancelReason = '';
             this.sellerCancelError = '';
             this.sellerCancelLoading = false;
@@ -3553,8 +3559,19 @@ if (window.Alpine) {
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x-circle" class="w-5 h-5 text-red-600" /></div>
                 <div>
-                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Please specify why this order is being cancelled.</p>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-black text-black uppercase tracking-tight">Cancel Order</h3>
+                        <template x-if="isSpecialDelivery(cancelOrderTarget)">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200">Special Delivery</span>
+                        </template>
+                        <template x-if="isStorePickup(cancelOrderTarget)">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-sky-100 text-sky-700 border border-sky-200">Store Pickup</span>
+                        </template>
+                        <template x-if="cancelOrderTarget && !isSpecialDelivery(cancelOrderTarget) && !isStorePickup(cancelOrderTarget)">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-700 border border-amber-200">Courier Delivery</span>
+                        </template>
+                    </div>
+                    <p class="text-[10px] text-gray-500 font-medium">Please select a reason specific to this fulfillment method.</p>
                 </div>
             </div>
 
@@ -3565,14 +3582,46 @@ if (window.Alpine) {
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Cancellation Reason <span class="text-red-500">*</span></label>
-                    <select x-model="sellerCancelReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
-                        <option value="Out of stock / fabric unavailable">Out of stock / fabric unavailable</option>
-                        <option value="Customization cannot be fulfilled">Customization cannot be fulfilled</option>
-                        <option value="Buyer requested cancellation">Buyer requested cancellation</option>
-                        <option value="Unreachable / unresponsive buyer">Unreachable / unresponsive buyer</option>
-                        <option value="Incorrect pricing or listing error">Incorrect pricing or listing error</option>
-                        <option value="Other">Other / Custom reason</option>
-                    </select>
+                    
+                    {{-- Special Delivery Specific Reasons --}}
+                    <template x-if="isSpecialDelivery(cancelOrderTarget)">
+                        <select x-model="sellerCancelReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-purple-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-purple-500 focus:bg-white transition-all">
+                            <option value="Delivery address is too far / beyond rider reachable route">Delivery address is too far / beyond rider reachable route</option>
+                            <option value="Severe weather / impassable roads for local rider">Severe weather / impassable roads for local rider</option>
+                            <option value="Local delivery rider unavailable or fully booked">Local delivery rider unavailable or fully booked</option>
+                            <option value="Buyer unreachable for delivery schedule / appointment">Buyer unreachable for delivery schedule / appointment</option>
+                            <option value="Out of stock / artisan fabric unavailable">Out of stock / artisan fabric unavailable</option>
+                            <option value="Incorrect delivery address / outside service municipality">Incorrect delivery address / outside service municipality</option>
+                            <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
+
+                    {{-- Store Pickup Specific Reasons --}}
+                    <template x-if="isStorePickup(cancelOrderTarget)">
+                        <select x-model="sellerCancelReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-sky-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-sky-500 focus:bg-white transition-all">
+                            <option value="Customer did not claim within designated pickup window">Customer did not claim within designated pickup window</option>
+                            <option value="Unable to coordinate pickup schedule / appointment with buyer">Unable to coordinate pickup schedule / appointment with buyer</option>
+                            <option value="Workshop temporarily closed / artisan unavailable for handover">Workshop temporarily closed / artisan unavailable for handover</option>
+                            <option value="Out of stock / garment piece unavailable">Out of stock / garment piece unavailable</option>
+                            <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
+
+                    {{-- Standard Courier Delivery Specific Reasons --}}
+                    <template x-if="cancelOrderTarget && !isSpecialDelivery(cancelOrderTarget) && !isStorePickup(cancelOrderTarget)">
+                        <select x-model="sellerCancelReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                            <option value="Out of stock / fabric unavailable">Out of stock / fabric unavailable</option>
+                            <option value="Delivery address is outside courier serviceable area">Delivery address is outside courier serviceable area</option>
+                            <option value="Customization cannot be fulfilled">Customization cannot be fulfilled</option>
+                            <option value="Garment package exceeds courier weight/dimension limits">Garment package exceeds courier weight/dimension limits</option>
+                            <option value="Unreachable / unresponsive buyer">Unreachable / unresponsive buyer</option>
+                            <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            <option value="Incorrect pricing or listing error">Incorrect pricing or listing error</option>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
                 </div>
 
                 <template x-if="sellerCancelReason === 'Other'">

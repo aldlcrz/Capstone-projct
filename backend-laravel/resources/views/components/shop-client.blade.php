@@ -110,36 +110,66 @@
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
-            <div class="no-scrollbar flex w-full max-w-xl gap-2 overflow-x-auto pb-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest justify-start sm:justify-center -mx-4 px-4 sm:mx-0 sm:px-0">
-                <button
-                    @click="activeTab = 'all'"
-                    :class="activeTab === 'all' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A]'"
-                    class="shrink-0 rounded-full px-5 py-2.5 transition-colors cursor-pointer"
-                >
-                    All Pieces
-                </button>
-                <button
-                    @click="activeTab = 'sale'"
-                    :class="activeTab === 'sale' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A]'"
-                    class="shrink-0 rounded-full px-5 py-2.5 transition-colors cursor-pointer"
-                >
-                    On Sale
-                </button>
-                <button
-                    @click="activeTab = 'rated'"
-                    :class="activeTab === 'rated' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A]'"
-                    class="shrink-0 rounded-full px-5 py-2.5 transition-colors cursor-pointer"
-                >
-                    Highest Rated
-                </button>
-                <button
-                    @click="activeTab = 'policies'"
-                    :class="activeTab === 'policies' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A]'"
-                    class="shrink-0 rounded-full px-5 py-2.5 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>Shop Policies</span>
-                </button>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full max-w-4xl pb-1">
+                {{-- Classification / Filter Tabs --}}
+                <div class="no-scrollbar flex w-full sm:w-auto gap-1.5 overflow-x-auto pb-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest justify-start">
+                    <button
+                        @click="activeTab = 'all'"
+                        :class="activeTab === 'all' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer"
+                    >
+                        All Pieces
+                    </button>
+                    <button
+                        @click="activeTab = 'men'"
+                        :class="activeTab === 'men' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer"
+                    >
+                        Men
+                    </button>
+                    <button
+                        @click="activeTab = 'women'"
+                        :class="activeTab === 'women' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer"
+                    >
+                        Women
+                    </button>
+                    <button
+                        @click="activeTab = 'kids'"
+                        :class="activeTab === 'kids' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer"
+                    >
+                        Kids
+                    </button>
+                    <button
+                        @click="activeTab = 'sale'"
+                        :class="activeTab === 'sale' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer"
+                    >
+                        On Sale
+                    </button>
+                    <button
+                        @click="activeTab = 'policies'"
+                        :class="activeTab === 'policies' ? 'bg-[#C0420A] text-white shadow-md' : 'bg-white text-stone-500 hover:text-[#C0420A] border border-stone-200'"
+                        class="shrink-0 rounded-full px-4 py-2 transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Shop Policies</span>
+                    </button>
+                </div>
+
+                {{-- Price & General Sort Control --}}
+                <div x-show="activeTab !== 'policies'" class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-stone-400">Sort:</span>
+                    <select x-model="sortOrder"
+                            class="bg-white border border-stone-200 hover:border-stone-300 rounded-full px-3 py-1.5 text-xs font-bold text-stone-800 outline-none cursor-pointer transition-all shadow-2xs">
+                        <option value="recommended">Recommended</option>
+                        <option value="price_asc">Price: Low to High (Cheapest)</option>
+                        <option value="price_desc">Price: High to Low (Most Expensive)</option>
+                        <option value="rated">Highest Rated</option>
+                        <option value="newest">Newest</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -325,6 +355,7 @@ function shopClient(config) {
         products: [],
         loading: true,
         activeTab: 'all',
+        sortOrder: 'recommended',
         searchQuery: '',
         init() {
             this.fetchData();
@@ -371,16 +402,67 @@ function shopClient(config) {
         },
         get displayedProducts() {
             let p = [...this.products];
-            if (this.activeTab === 'rated') {
-                p.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-            } else if (this.activeTab === 'sale') {
-                p = p.filter(item => item.is_on_sale); // Reference actual database property name
+            
+            // Classification filtering
+            if (this.activeTab === 'sale') {
+                p = p.filter(item => item.is_on_sale);
+            } else if (this.activeTab === 'men') {
+                p = p.filter(item => {
+                    const tg = (item.target_group || '').toLowerCase();
+                    const name = (item.name || '').toLowerCase();
+                    return tg.includes('men') || tg.includes('male') || (name.includes('men') && !name.includes('women'));
+                });
+            } else if (this.activeTab === 'women') {
+                p = p.filter(item => {
+                    const tg = (item.target_group || '').toLowerCase();
+                    const name = (item.name || '').toLowerCase();
+                    return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('lady') || name.includes('filipiniana') || name.includes('terno');
+                });
+            } else if (this.activeTab === 'kids') {
+                p = p.filter(item => {
+                    const tg = (item.target_group || '').toLowerCase();
+                    const name = (item.name || '').toLowerCase();
+                    return tg.includes('kid') || tg.includes('boy') || tg.includes('girl') || name.includes('kid') || name.includes('boy') || name.includes('girl');
+                });
             }
             
+            // Smart search filtering
             if (this.searchQuery.trim()) {
-                const q = this.searchQuery.toLowerCase();
-                p = p.filter(item => (item.name || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q));
+                const rawQ = this.searchQuery.trim().toLowerCase();
+                if (rawQ.length <= 2) {
+                    p = p.filter(item => (item.name || '').toLowerCase().includes(rawQ));
+                } else {
+                    const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an'];
+                    const tokens = rawQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
+                    p = p.filter(item => {
+                        const name = (item.name || '').toLowerCase();
+                        const desc = (item.description || '').toLowerCase();
+                        const tg = (item.target_group || '').toLowerCase();
+                        if (name.includes(rawQ) || desc.includes(rawQ)) return true;
+                        return tokens.every(t => name.includes(t) || desc.includes(t) || tg.includes(t));
+                    });
+                }
             }
+
+            // Sorting
+            if (this.sortOrder === 'price_asc') {
+                p.sort((a, b) => {
+                    const priceA = a.is_on_sale ? Number(a.price * (1 - (a.discount_percentage || 0) / 100)) : Number(a.price || 0);
+                    const priceB = b.is_on_sale ? Number(b.price * (1 - (b.discount_percentage || 0) / 100)) : Number(b.price || 0);
+                    return priceA - priceB;
+                });
+            } else if (this.sortOrder === 'price_desc') {
+                p.sort((a, b) => {
+                    const priceA = a.is_on_sale ? Number(a.price * (1 - (a.discount_percentage || 0) / 100)) : Number(a.price || 0);
+                    const priceB = b.is_on_sale ? Number(b.price * (1 - (b.discount_percentage || 0) / 100)) : Number(b.price || 0);
+                    return priceB - priceA;
+                });
+            } else if (this.sortOrder === 'rated') {
+                p.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+            } else if (this.sortOrder === 'newest') {
+                p.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            }
+            
             return p;
         },
         messageSeller() {

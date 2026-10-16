@@ -122,6 +122,26 @@ class Notification extends Model
     }
 
     /**
+     * Get the resolved target URL for this notification.
+     */
+    public function getTargetUrlAttribute(): string
+    {
+        $candidate = $this->attributes['link'] ?? null;
+        if (!empty($candidate) && $candidate !== '#') {
+            return $candidate;
+        }
+
+        // Contextual fallback: If notification is order-related, redirect to customer orders
+        if (in_array($this->type, ['order', 'order_status', 'delivery', 'special_delivery', 'pickup', 'return']) ||
+            str_contains(strtolower($this->title ?? ''), 'order') ||
+            str_contains(strtolower($this->message ?? ''), 'order')) {
+            return route('profile.orders');
+        }
+
+        return route('profile.orders');
+    }
+
+    /**
      * Send a notification to a specific user.
      */
     public static function send($userId, string $title, string $message, string $type = 'system', ?string $link = null, string $targetRole = 'customer')

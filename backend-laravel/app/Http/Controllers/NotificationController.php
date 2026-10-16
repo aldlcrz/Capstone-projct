@@ -126,12 +126,12 @@ class NotificationController extends Controller
             $notification->isRead = true;
             $notification->save();
 
-            $targetUrl = $notification->link ?: ($notification->redirectUrl ?: null);
-            if ($targetUrl) {
+            $targetUrl = $notification->target_url;
+            if (!empty($targetUrl) && $targetUrl !== '#') {
                 return redirect($targetUrl);
             }
         }
 
-        return redirect()->back();
+        return redirect()->route('profile.orders');
     }
 }

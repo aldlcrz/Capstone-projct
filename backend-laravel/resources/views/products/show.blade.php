@@ -2437,27 +2437,51 @@
                         <div class="flex-1 h-px bg-gray-100"></div>
                     </div>
 
-                    <!-- Tab Buttons: Men / Women / Kids -->
-                    <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl w-full">
-                        <button type="button" id="size-tab-btn-men" @click="sizeTab = 'men'" onclick="switchSizeGuideTab('men')"
-                            :class="sizeTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
-                            class="{{ $initTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
-                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Men
-                            @if($isCustomMen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
-                        </button>
-                        <button type="button" id="size-tab-btn-women" @click="sizeTab = 'women'" onclick="switchSizeGuideTab('women')"
-                            :class="sizeTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
-                            class="{{ $initTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
-                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Women
-                            @if($isCustomWomen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
-                        </button>
-                        <button type="button" id="size-tab-btn-kids" @click="sizeTab = 'kids'" onclick="switchSizeGuideTab('kids')"
-                            :class="sizeTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
-                            class="{{ $initTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
-                            <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Kids
-                            @if($isCustomKids)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
-                        </button>
-                    </div>
+                    @php
+                        $isSpecificTarget = in_array($rawGroup, ['men', 'male', 'women', 'woman', 'female', 'ladies', 'filipiniana', 'kids', 'kid', 'children', 'boy', 'girl']);
+                    @endphp
+
+                    @if($isSpecificTarget)
+                        {{-- Target-Specific Sizing Indicator Banner --}}
+                        <div class="flex items-center justify-between p-3 bg-[#FAF6EE] rounded-2xl border border-[#E6D8BA]">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-xl bg-[#1E1915] text-[#DFC97A] flex items-center justify-center text-xs font-bold shrink-0">
+                                    <x-lucide name="check" class="w-4 h-4 text-[#DFC97A]" />
+                                </div>
+                                <div>
+                                    <span class="text-xs font-black uppercase tracking-wider text-[#1E1915] block">
+                                        {{ $initTab === 'men' ? "Men's Barong Tagalog Sizing" : ($initTab === 'women' ? "Women's Filipiniana Sizing" : "Kids' Barong Sizing") }}
+                                    </span>
+                                    <span class="text-[10px] text-[#78716C]">Measurements tailored for this {{ $product->target_group }} garment</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#8C6D1F] bg-white px-2.5 py-1 rounded-lg border border-[#E6D8BA]">
+                                {{ $product->target_group }}
+                            </span>
+                        </div>
+                    @else
+                        <!-- Tab Buttons: Men / Women / Kids for Unisex/General Garments -->
+                        <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl w-full">
+                            <button type="button" id="size-tab-btn-men" @click="sizeTab = 'men'" onclick="switchSizeGuideTab('men')"
+                                :class="sizeTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                                class="{{ $initTab === 'men' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
+                                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Men
+                                @if($isCustomMen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
+                            </button>
+                            <button type="button" id="size-tab-btn-women" @click="sizeTab = 'women'" onclick="switchSizeGuideTab('women')"
+                                :class="sizeTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                                class="{{ $initTab === 'women' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
+                                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Women
+                                @if($isCustomWomen)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
+                            </button>
+                            <button type="button" id="size-tab-btn-kids" @click="sizeTab = 'kids'" onclick="switchSizeGuideTab('kids')"
+                                :class="sizeTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all'"
+                                class="{{ $initTab === 'kids' ? 'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-white shadow-md text-black border border-gray-200 transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-all' }}">
+                                <x-lucide name="user" class="w-3.5 h-3.5 inline mr-1" /> Kids
+                                @if($isCustomKids)<span class="ml-1 text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded-full font-bold">Custom</span>@endif
+                            </button>
+                        </div>
+                    @endif
 
                     <!-- MEN's SIZE DIAGRAM PICTURE -->
                     <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: {{ $initTab === 'men' ? 'block' : 'none' }};">
