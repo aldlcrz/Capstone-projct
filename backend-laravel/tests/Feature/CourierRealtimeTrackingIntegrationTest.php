@@ -87,27 +87,48 @@ class CourierRealtimeTrackingIntegrationTest extends TestCase
         $this->assertNull($service->getCarrierCode('Special Delivery (Local Artisan Rider)'));
     }
 
-    public function test_courier_tracking_registration_sends_http_request_when_api_key_configured()
+    public function test_direct_jt_express_tracking_resolver_parses_live_checkpoints()
     {
-        config(['services.trackingmore.api_key' => 'test_api_key_12345']);
-
         Http::fake([
-            'https://api.trackingmore.com/v4/trackings/create' => Http::response([
-                'meta' => ['code' => 200, 'message' => 'Success'],
-                'data' => ['tracking_number' => '781234567890', 'courier_code' => 'jtexpress-ph']
+            'https://www.jtexpress.ph/index/router/index.html' => Http::response([
+                'code' => 1,
+                'data' => [
+                    [
+                        'billcode' => '781234567890',
+                        'details' => [
+                            [
+                                'scantype' => 'Departure',
+                                'desc'     => 'Departure from Manila Sorting Center to Laguna Hub',
+                                'scantime' => '2026-10-17 06:00:00'
+                            ]
+                        ]
+                    ]
+                ]
             ], 200),
         ]);
 
         $service = new CourierTrackingService();
-        $result = $service->registerTracking('J&T Express', '781234567890', 'order-uuid-1');
+        $tracking = $service->fetchTracking('J&T Express', '781234567890');
 
-        $this->assertTrue($result['success']);
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://api.trackingmore.com/v4/trackings/create'
-                && $request['tracking_number'] === '781234567890'
-                && $request['courier_code'] === 'jtexpress-ph'
-                && $request->hasHeader('Tracking-Api-Key', 'test_api_key_12345');
-        });
+        $this->assertNotNull($tracking);
+        $this->assertEquals('transit', $tracking['delivery_status']);
+        $this->assertStringContainsString('Laguna Hub', $tracking['latest_event']);
+    }
+
+    public function test_direct_flash_express_tracking_resolver_parses_delivery_status()
+    {
+        Http::fake([
+            'https://www.flashexpress.ph/tools/tracking/' => Http::response(
+                '<html><body><div>In Transit - Arrived at Regional Hub</div></body></html>',
+                200
+            ),
+        ]);
+
+        $service = new CourierTrackingService();
+        $tracking = $service->fetchTracking('Flash Express', 'FL123456789');
+
+        $this->assertNotNull($tracking);
+        $this->assertEquals('transit', $tracking['delivery_status']);
     }
 
     public function test_courier_webhook_updates_order_to_in_transit_and_notifies_customer()
@@ -126,14 +147,10 @@ class CourierRealtimeTrackingIntegrationTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/webhooks/courier-tracking', [
-            'event' => 'tracking_update',
-            'data' => [
-                'tracking_number'        => '781999888111',
-                'courier_code'           => 'jtexpress-ph',
-                'delivery_status'        => 'transit',
-                'latest_event'           => 'Parcel departure from Manila Hub to Southern Luzon Hub',
-                'latest_checkpoint_time' => '2026-10-17 08:30:00',
-            ]
+            'tracking_number' => '781999888111',
+            'delivery_status' => 'transit',
+            'description'     => 'Parcel departure from Manila Hub to Southern Luzon Hub',
+            'timestamp'       => '2026-10-17 08:30:00',
         ]);
 
         $response->assertStatus(200);
