@@ -160,9 +160,14 @@
 
                 {{-- Price & General Sort Control --}}
                 <div x-show="activeTab !== 'policies'" class="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                    <span class="text-[9px] font-black uppercase tracking-widest text-stone-400">Sort:</span>
+                    <div class="w-6 h-6 rounded-md bg-[#FAF5EE] border border-[#EADBCA] flex items-center justify-center text-[#946328] shrink-0">
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M6 12h12M10 18h4"></path>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-[0.18em] text-stone-500">Sort:</span>
                     <select x-model="sortOrder"
-                            class="bg-white border border-stone-200 hover:border-stone-300 rounded-full px-3 py-1.5 text-xs font-bold text-stone-800 outline-none cursor-pointer transition-all shadow-2xs">
+                            class="bg-white border border-[#EADBCA] hover:border-[#946328] rounded-xl px-3 py-1.5 text-xs font-bold text-stone-800 outline-none cursor-pointer transition-all shadow-2xs focus:ring-1 focus:ring-[#946328]/30">
                         <option value="recommended">Recommended</option>
                         <option value="price_asc">Price: Low to High (Cheapest)</option>
                         <option value="price_desc">Price: High to Low (Most Expensive)</option>
