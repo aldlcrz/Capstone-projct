@@ -785,7 +785,8 @@
                 <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 mr-1.5 shrink-0 hidden sm:inline">Collection</span>
                 @foreach($classifications as $cTab)
                     <a href="{{ $buildCatalogueUrl($cTab['param']) }}"
-                       class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $cTab['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100' }}">
+                       class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $cTab['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100' }}"
+                       @if($cTab['active']) style="background-color: #1c1917 !important; color: #DFC97A !important;" @endif>
                         {{ $cTab['label'] }}
                     </a>
                 @endforeach
@@ -820,7 +821,8 @@
                     @endphp
                     @foreach($sortOptions as $sOpt)
                         <a href="{{ $buildCatalogueUrl(['sort' => $sOpt['val']]) }}"
-                           class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $sOpt['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}">
+                           class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $sOpt['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}"
+                           @if($sOpt['active']) style="background-color: #1c1917 !important; color: #DFC97A !important;" @endif>
                             {{ $sOpt['label'] }}
                         </a>
                     @endforeach
@@ -856,8 +858,9 @@
                                 $isActive = ($pt['val'] === '' && $isAllPrices) || (!empty($pt['val']) && (string)$currentPriceRange === (string)$pt['val']);
                             @endphp
                             <a href="{{ $buildCatalogueUrl(['price_range' => $pt['val']]) }}"
-                               class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $isActive ? 'bg-[#946328] text-white font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}">
-                                {!! $pt['html'] !!}
+                               class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $isActive ? 'bg-[#946328] text-white font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}"
+                               @if($isActive) style="background-color: #946328 !important; color: #ffffff !important;" @endif>
+                                <span style="color: inherit;">{!! $pt['html'] !!}</span>
                             </a>
                         @endforeach
                     </div>
