@@ -43,6 +43,9 @@ class ProductSearchService
         'kids'         => 'kid',
         'children'     => 'kid',
         'childrens'    => 'kid',
+        'child'        => 'kid',
+        'boys'         => 'boy',
+        'girls'        => 'girl',
     ];
 
     /**
@@ -54,7 +57,7 @@ class ProductSearchService
     public static function normalize(string $query): string
     {
         $clean = mb_strtolower(trim($query), 'UTF-8');
-        // Normalize possessive 's (men's -> men, women's -> women, kid's -> kid)
+        // Normalize possessive 's (men's -> men, women's -> women, kid's -> kid, boy's -> boy, girl's -> girl)
         $clean = preg_replace("/['’]s\b/u", '', $clean);
         // Replace non-alphanumeric (except accented letters) with spaces
         $clean = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $clean);
@@ -63,20 +66,26 @@ class ProductSearchService
 
     /**
      * Detect intended target audience from search string.
-     * Returns: 'Men', 'Women', 'Kids', or null.
+     * Returns: 'Men', 'Women', 'Boys', 'Girls', 'Kids', or null.
      */
     public static function detectTargetAudience(string $normalized): ?string
     {
         $words = preg_split('/\s+/', $normalized);
         foreach ($words as $w) {
+            if (in_array($w, ['boy', 'boys'], true)) {
+                return 'Boys';
+            }
+            if (in_array($w, ['girl', 'girls'], true)) {
+                return 'Girls';
+            }
+            if (in_array($w, ['kid', 'kids', 'child', 'children'], true)) {
+                return 'Kids';
+            }
             if (in_array($w, ['men', 'male', 'gentleman', 'gentlemen'], true)) {
                 return 'Men';
             }
             if (in_array($w, ['women', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
                 return 'Women';
-            }
-            if (in_array($w, ['kid', 'kids', 'child', 'children', 'boy', 'girl'], true)) {
-                return 'Kids';
             }
         }
         return null;
@@ -181,12 +190,11 @@ class ProductSearchService
             // Each meaningful token must match AT LEAST ONE searchable field
             $mainQuery->orWhere(function (Builder $tokenQuery) use ($tokens, $detectedAudience) {
                 foreach ($tokens as $tokenData) {
+                    $orig = $tokenData['original'];
                     $variants = $tokenData['variants'];
-                    $isAudienceToken = false;
 
-                    // If token relates to audience, verify with audience-safe check
-                    if (in_array($tokenData['original'], ['men', 'mens', 'male', 'gentleman', 'gentlemen'], true)) {
-                        $isAudienceToken = true;
+                    // Men token
+                    if (in_array($orig, ['men', 'mens', 'male', 'gentleman', 'gentlemen'], true)) {
                         $tokenQuery->where(function (Builder $aq) {
                             $aq->where(function ($sq) {
                                 // Safe Men check: contains 'men' but NOT 'women'
@@ -202,8 +210,8 @@ class ProductSearchService
                         continue;
                     }
 
-                    if (in_array($tokenData['original'], ['women', 'womens', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
-                        $isAudienceToken = true;
+                    // Women token
+                    if (in_array($orig, ['women', 'womens', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%women%')
@@ -220,8 +228,71 @@ class ProductSearchService
                         continue;
                     }
 
-                    if (in_array($tokenData['original'], ['kid', 'kids', 'child', 'children', 'boy', 'girl'], true)) {
-                        $isAudienceToken = true;
+                    // Boy token: primary Kids/Boys, related male attire (Barongs), excludes women's apparel
+                    if (in_array($orig, ['boy', 'boys'], true)) {
+                        $tokenQuery->where(function (Builder $aq) use ($variants) {
+                            $aq->where(function ($sq) {
+                                $sq->where('target_group', 'like', '%kid%')
+                                   ->orWhere('target_group', 'like', '%child%')
+                                   ->orWhere('target_group', 'like', '%men%'); // Related male attire
+                            });
+                            foreach ($variants as $v) {
+                                $aq->orWhere('name', 'like', '%' . $v . '%')
+                                   ->orWhere('description', 'like', '%' . $v . '%')
+                                   ->orWhereHas('category', function ($cq) use ($v) {
+                                       $cq->where('name', 'like', '%' . $v . '%')
+                                          ->orWhere('name', 'like', '%barong%')
+                                          ->orWhere('name', 'like', '%boy%');
+                                   });
+                            }
+                        });
+                        // Filter out women's dresses/apparel
+                        $tokenQuery->where(function (Builder $nq) {
+                            $nq->where('target_group', 'not like', '%women%')
+                               ->orWhereNull('target_group');
+                        });
+                        continue;
+                    }
+
+                    // Girl token: primary Kids/Girls, related female formal wear (Filipiniana / Lady Barong), excludes men's barongs
+                    if (in_array($orig, ['girl', 'girls'], true)) {
+                        $tokenQuery->where(function (Builder $aq) use ($variants) {
+                            $aq->where(function ($sq) {
+                                $sq->where('target_group', 'like', '%kid%')
+                                   ->orWhere('target_group', 'like', '%child%')
+                                   ->orWhere('target_group', 'like', '%women%')
+                                   ->orWhere('target_group', 'like', '%female%');
+                            });
+                            foreach ($variants as $v) {
+                                $aq->orWhere('name', 'like', '%' . $v . '%')
+                                   ->orWhere('description', 'like', '%' . $v . '%')
+                                   ->orWhereHas('category', function ($cq) use ($v) {
+                                       $cq->where('name', 'like', '%' . $v . '%')
+                                          ->orWhere('name', 'like', '%filipiniana%')
+                                          ->orWhere('name', 'like', '%gown%')
+                                          ->orWhere('name', 'like', '%lady%')
+                                          ->orWhere('name', 'like', '%girl%');
+                                   });
+                            }
+                            $aq->orWhere('name', 'like', '%filipiniana%')
+                               ->orWhere('name', 'like', '%dress%')
+                               ->orWhere('name', 'like', '%bolero%')
+                               ->orWhere('name', 'like', '%mestiza%')
+                               ->orWhere('name', 'like', '%lady%');
+                        });
+                        // Filter out pure male barongs unless lady barong
+                        $tokenQuery->where(function (Builder $nq) {
+                            $nq->where(function ($sq) {
+                                $sq->where('target_group', '!=', 'Men')
+                                   ->orWhere('name', 'like', '%lady%')
+                                   ->orWhere('name', 'like', '%filipiniana%');
+                            });
+                        });
+                        continue;
+                    }
+
+                    // Kid / Child token
+                    if (in_array($orig, ['kid', 'kids', 'child', 'children'], true)) {
                         $tokenQuery->where(function (Builder $aq) use ($variants) {
                             $aq->where(function ($sq) {
                                 $sq->where('target_group', 'like', '%kid%')
@@ -231,15 +302,23 @@ class ProductSearchService
                                 $aq->orWhere('name', 'like', '%' . $v . '%')
                                    ->orWhere('description', 'like', '%' . $v . '%')
                                    ->orWhereHas('category', function ($cq) use ($v) {
-                                       $cq->where('name', 'like', '%' . $v . '%');
+                                       $cq->where('name', 'like', '%' . $v . '%')
+                                          ->orWhere('name', 'like', '%kid%')
+                                          ->orWhere('name', 'like', '%boy%')
+                                          ->orWhere('name', 'like', '%girl%');
                                    });
                             }
+                            // Fallback so catalog is not completely empty if store has not yet tagged Kids products
+                            $aq->orWhereIn('target_group', ['Men', 'Women']);
                         });
                         continue;
                     }
 
+                    // Check if query is in a female demographic context (e.g. 'barong for girl' or 'barong for women')
+                    $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
+
                     // General attribute matching for non-audience keywords
-                    $tokenQuery->where(function (Builder $subQuery) use ($variants) {
+                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $isFemaleSearch) {
                         foreach ($variants as $v) {
                             $subQuery->orWhere('name', 'like', '%' . $v . '%')
                                      ->orWhere('description', 'like', '%' . $v . '%')
@@ -256,6 +335,20 @@ class ProductSearchService
                                          $sq->where('shopName', 'like', '%' . $v . '%')
                                             ->orWhere('name', 'like', '%' . $v . '%');
                                      });
+
+                            // If 'barong' is searched in female context (e.g. 'barong for girl' or 'barong for women'),
+                            // also match Filipiniana / Lady Barong attire
+                            if ($v === 'barong' && $isFemaleSearch) {
+                                $subQuery->orWhere('name', 'like', '%filipiniana%')
+                                         ->orWhere('name', 'like', '%lady%')
+                                         ->orWhere('name', 'like', '%bolero%')
+                                         ->orWhere('name', 'like', '%mestiza%')
+                                         ->orWhereHas('category', function ($cq) {
+                                             $cq->where('name', 'like', '%filipiniana%')
+                                                ->orWhere('name', 'like', '%lady%')
+                                                ->orWhere('name', 'like', '%gown%');
+                                         });
+                            }
                         }
                     });
                 }
@@ -295,8 +388,27 @@ class ProductSearchService
         $relevanceCases[] = "CASE WHEN LOWER(products.name) LIKE ? THEN 150 ELSE 0 END";
         $bindings[] = '%' . $normalized . '%';
 
-        // 3. Target Audience Alignment (+100 for match, -150 penalty for conflict)
-        if ($detectedAudience === 'Men') {
+        // 3. Demographic & Target Audience Alignment (+300 for Kids top boost, -300 for gender conflict)
+        if ($detectedAudience === 'Boys') {
+            $relevanceCases[] = "CASE 
+                WHEN (LOWER(products.target_group) = 'kids' OR LOWER(products.target_group) LIKE '%kid%') THEN 300 
+                WHEN LOWER(products.name) LIKE '%boy%' THEN 150
+                WHEN (LOWER(products.target_group) = 'men' OR (LOWER(products.target_group) LIKE '%men%' AND LOWER(products.target_group) NOT LIKE '%women%')) THEN 50
+                WHEN (LOWER(products.target_group) = 'women' OR LOWER(products.target_group) LIKE '%women%') THEN -300
+                ELSE 0 END";
+        } elseif ($detectedAudience === 'Girls') {
+            $relevanceCases[] = "CASE 
+                WHEN (LOWER(products.target_group) = 'kids' OR LOWER(products.target_group) LIKE '%kid%') THEN 300 
+                WHEN LOWER(products.name) LIKE '%girl%' THEN 150
+                WHEN (LOWER(products.target_group) = 'women' OR LOWER(products.target_group) LIKE '%women%' OR LOWER(products.target_group) LIKE '%female%') THEN 80 
+                WHEN (LOWER(products.target_group) = 'men' AND LOWER(products.target_group) NOT LIKE '%women%') THEN -300
+                ELSE 0 END";
+        } elseif ($detectedAudience === 'Kids') {
+            $relevanceCases[] = "CASE 
+                WHEN (LOWER(products.target_group) = 'kids' OR LOWER(products.target_group) LIKE '%kid%' OR LOWER(products.target_group) LIKE '%child%') THEN 300 
+                WHEN (LOWER(products.name) LIKE '%kid%' OR LOWER(products.description) LIKE '%kid%') THEN 150
+                ELSE 0 END";
+        } elseif ($detectedAudience === 'Men') {
             $relevanceCases[] = "CASE 
                 WHEN (LOWER(products.target_group) = 'men' OR (LOWER(products.target_group) LIKE '%men%' AND LOWER(products.target_group) NOT LIKE '%women%')) THEN 100 
                 WHEN (LOWER(products.target_group) = 'women' OR LOWER(products.target_group) LIKE '%women%') THEN -150
@@ -306,17 +418,12 @@ class ProductSearchService
                 WHEN (LOWER(products.target_group) = 'women' OR LOWER(products.target_group) LIKE '%women%' OR LOWER(products.target_group) LIKE '%female%') THEN 100 
                 WHEN (LOWER(products.target_group) = 'men' AND LOWER(products.target_group) NOT LIKE '%women%') THEN -150
                 ELSE 0 END";
-        } elseif ($detectedAudience === 'Kids') {
-            $relevanceCases[] = "CASE 
-                WHEN (LOWER(products.target_group) = 'kids' OR LOWER(products.target_group) LIKE '%kid%' OR LOWER(products.target_group) LIKE '%child%') THEN 100 
-                WHEN (LOWER(products.target_group) = 'men' OR LOWER(products.target_group) = 'women') THEN -80
-                ELSE 0 END";
         }
 
         // 4. Per-token name match (+40 points per token) and fabric match (+30 points)
         foreach ($tokens as $tokenData) {
             $orig = $tokenData['original'];
-            if (in_array($orig, ['men', 'women', 'kids', 'for', 'the'], true)) {
+            if (in_array($orig, ['men', 'women', 'kids', 'boy', 'boys', 'girl', 'girls', 'for', 'the'], true)) {
                 continue;
             }
             $relevanceCases[] = "CASE WHEN LOWER(products.name) LIKE ? THEN 40 ELSE 0 END";

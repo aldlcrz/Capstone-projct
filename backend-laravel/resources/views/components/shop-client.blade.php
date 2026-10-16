@@ -437,8 +437,12 @@ function shopClient(config) {
                     p = p.filter(item => (item.name || '').toLowerCase().includes(cleanQ));
                 } else {
                     const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an', 'at', 'by', 'on', 'all', 'any'];
-                    const stems = { 'barongs': 'barong', 'polos': 'polo', 'dresses': 'dress', 'filipinianas': 'filipiniana', 'mens': 'men', 'womens': 'women', 'kids': 'kid' };
+                    const stems = { 
+                        'barongs': 'barong', 'polos': 'polo', 'dresses': 'dress', 'filipinianas': 'filipiniana', 
+                        'mens': 'men', 'womens': 'women', 'kids': 'kid', 'boys': 'boy', 'girls': 'girl', 'children': 'kid' 
+                    };
                     const rawTokens = cleanQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
+                    const isFemaleContext = cleanQ.includes('girl') || cleanQ.includes('women') || cleanQ.includes('lady') || cleanQ.includes('female');
                     
                     p = p.filter(item => {
                         const name = (item.name || '').toLowerCase();
@@ -459,11 +463,23 @@ function shopClient(config) {
                                 return (tg === 'men' || (tg.includes('men') && !tg.includes('women'))) ||
                                        (name.includes('men') && !name.includes('women'));
                             }
-                            if (token === 'women' || token === 'female' || token === 'ladies') {
-                                return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('filipiniana');
+                            if (token === 'women' || token === 'female' || token === 'ladies' || token === 'lady') {
+                                return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('filipiniana') || name.includes('lady');
                             }
-                            if (token === 'kid' || token === 'kids') {
-                                return tg.includes('kid') || tg.includes('child') || name.includes('kid');
+                            if (token === 'boy' || token === 'boys') {
+                                return (!tg.includes('women')) && (tg.includes('kid') || tg.includes('boy') || tg.includes('men') || name.includes('boy') || name.includes('barong'));
+                            }
+                            if (token === 'girl' || token === 'girls') {
+                                return (!tg.includes('men') || name.includes('lady') || name.includes('filipiniana')) && 
+                                       (tg.includes('kid') || tg.includes('girl') || tg.includes('women') || name.includes('girl') || name.includes('filipiniana') || name.includes('dress') || name.includes('bolero') || name.includes('lady'));
+                            }
+                            if (token === 'kid' || token === 'kids' || token === 'child' || token === 'children') {
+                                return tg.includes('kid') || tg.includes('child') || name.includes('kid') || desc.includes('kid') || tg.includes('men') || tg.includes('women');
+                            }
+
+                            // Female barong matching (barong for girl / women)
+                            if (token === 'barong' && isFemaleContext) {
+                                return name.includes('barong') || desc.includes('barong') || name.includes('filipiniana') || name.includes('lady') || desc.includes('filipiniana');
                             }
 
                             return variants.some(v => 

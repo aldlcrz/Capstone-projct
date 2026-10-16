@@ -247,5 +247,121 @@ class ProductSearchEngineTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('No Products Found');
     }
+
+    public function test_target_audience_detection_for_boys_girls_kids(): void
+    {
+        $this->assertEquals('Boys', ProductSearchService::detectTargetAudience('barong for boy'));
+        $this->assertEquals('Boys', ProductSearchService::detectTargetAudience('boys barong'));
+        $this->assertEquals('Girls', ProductSearchService::detectTargetAudience('barong for girl'));
+        $this->assertEquals('Girls', ProductSearchService::detectTargetAudience('girls filipiniana'));
+        $this->assertEquals('Kids', ProductSearchService::detectTargetAudience('barong for kid'));
+        $this->assertEquals('Kids', ProductSearchService::detectTargetAudience('kids collection'));
+    }
+
+    public function test_search_boy_and_barong_for_boy_prioritizes_kids_and_excludes_womens_dresses(): void
+    {
+        $kidsCategory = Category::create([
+            'name' => "Boys' Barong",
+            'target_group' => ['Kids'],
+        ]);
+
+        $boyBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Boys Traditional Mini Barong',
+            'description' => 'Tailored for young boys ceremonies',
+            'price' => 900,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Kids',
+            'CategoryId' => $kidsCategory->id,
+        ]);
+
+        $menBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Adult Classic Barong Tagalog',
+            'description' => 'Finest Lumban embroidery for men',
+            'price' => 2000,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+        ]);
+
+        $womenDress = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Duchess Filipiniana Gown',
+            'description' => 'Women formal evening dress',
+            'price' => 3000,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+        ]);
+
+        // Search 'boy'
+        $results = Product::query()->where('status', 'approved')->search('boy')->get();
+        $this->assertTrue($results->contains('id', $boyBarong->id), 'Boys Barong should match');
+        $this->assertEquals($boyBarong->id, $results->first()->id, 'Kids boy product should rank at top');
+        $this->assertFalse($results->contains('id', $womenDress->id), 'Women gown should not match boy');
+
+        // Search 'barong for boy'
+        $results2 = Product::query()->where('status', 'approved')->search('barong for boy')->get();
+        $this->assertTrue($results2->contains('id', $boyBarong->id));
+        $this->assertEquals($boyBarong->id, $results2->first()->id, 'Kids boy product should rank #1 for barong for boy');
+        $this->assertFalse($results2->contains('id', $womenDress->id), 'Women gown should not match barong for boy');
+    }
+
+    public function test_search_girl_and_barong_for_girl_surfaces_girls_and_filipiniana_attire(): void
+    {
+        $girlsCategory = Category::create([
+            'name' => "Girls' Filipiniana",
+            'target_group' => ['Kids'],
+        ]);
+
+        $girlDress = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Girls Mini Filipiniana Dress',
+            'description' => 'Traditional dress for young girls and school events',
+            'price' => 1100,
+            'stock' => 8,
+            'status' => 'approved',
+            'target_group' => 'Kids',
+            'CategoryId' => $girlsCategory->id,
+        ]);
+
+        $ladyBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Modern Lady Barong Blouse',
+            'description' => 'Embroidered barong blouse for women and ladies',
+            'price' => 1800,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+        ]);
+
+        $menBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Formal Men Barong Tagalog',
+            'description' => 'Classic gentleman attire',
+            'price' => 2200,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+        ]);
+
+        // Search 'girl'
+        $results = Product::query()->where('status', 'approved')->search('girl')->get();
+        $this->assertTrue($results->contains('id', $girlDress->id));
+        $this->assertEquals($girlDress->id, $results->first()->id, 'Kids girl dress should rank #1');
+        $this->assertFalse($results->contains('id', $menBarong->id), 'Men barong should not match girl');
+
+        // Search 'barong for girl'
+        $results2 = Product::query()->where('status', 'approved')->search('barong for girl')->get();
+        $this->assertTrue($results2->contains('id', $girlDress->id));
+        $this->assertTrue($results2->contains('id', $ladyBarong->id), 'Lady barong should match barong for girl');
+        $this->assertFalse($results2->contains('id', $menBarong->id), 'Pure men barong should not match barong for girl');
+    }
 }
 
