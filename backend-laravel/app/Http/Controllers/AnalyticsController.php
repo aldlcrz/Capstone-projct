@@ -27,8 +27,13 @@ class AnalyticsController extends Controller
         $to         = $dateFilter['to'];
 
         // Retrieve all seller orders
-        $allOrdersQuery = Order::where('sellerId', $sellerId)->with(['items.product', 'customer', 'returnRequests']);
-        $ordersQuery    = Order::where('sellerId', $sellerId)->with(['items.product', 'customer', 'returnRequests']);
+        $withRelations = ['items.product', 'customer'];
+        if (Schema::hasTable('returnrequests')) {
+            $withRelations[] = 'returnRequests';
+        }
+
+        $allOrdersQuery = Order::where('sellerId', $sellerId)->with($withRelations);
+        $ordersQuery    = Order::where('sellerId', $sellerId)->with($withRelations);
 
         if ($from) {
             $ordersQuery->where('createdAt', '>=', $from);
@@ -41,18 +46,15 @@ class AnalyticsController extends Controller
         $orders       = $ordersQuery->orderBy('createdAt', 'desc')->get();
         $activeOrders = $orders->reject(fn ($o) => $this->isCancelledOrder($o->status));
 
-        $products = Product::where('sellerId', $sellerId)->get();
+        // Flatten all active order items for in-memory calculations (safe from collation mismatches and N+1 query limits)
+        $allSoldItems = $activeOrders->flatMap(function ($order) {
+            return $order->items ?? collect();
+        });
 
         // 1. SALES ANALYTICS & TIME COMPARISONS
-        $totalSales  = (float) $activeOrders->sum('totalAmount');
-        $orderCount  = $activeOrders->count();
-        $totalItemsSold = (int) DB::table('order_items')
-            ->join('orders', 'order_items.orderId', '=', 'orders.id')
-            ->where('orders.sellerId', $sellerId)
-            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
-            ->when($from, fn ($q) => $q->where('orders.createdAt', '>=', $from))
-            ->when($to, fn ($q) => $q->where('orders.createdAt', '<=', $to))
-            ->sum('order_items.quantity');
+        $totalSales     = (float) $activeOrders->sum('totalAmount');
+        $orderCount     = $activeOrders->count();
+        $totalItemsSold = (int) $allSoldItems->sum('quantity');
 
         $averageOrderValue = $orderCount > 0 ? $totalSales / $orderCount : 0;
 
@@ -148,16 +150,16 @@ class AnalyticsController extends Controller
         $avgProcessingTimeHours = 12; // Average order processing estimation
 
         // 3. PRODUCT ANALYTICS
-        $productMetrics = $this->buildProductAnalytics($sellerId, $from, $to);
+        $productMetrics = $this->buildProductAnalytics($sellerId, $allSoldItems);
 
         // 4. CUSTOMER ANALYTICS & RETENTION
         $customerMetrics = $this->buildCustomerAnalytics($sellerId, $allOrders);
 
         // 5. SALES BY CATEGORY
-        $categorySales = $this->buildCategorySales($sellerId, $from, $to);
+        $categorySales = $this->buildCategorySales($sellerId, $from, $to, $allSoldItems);
 
         // 6. MARKETING & PROMOTIONS ANALYTICS
-        $marketingMetrics = $this->buildMarketingMetrics($sellerId, $from, $to);
+        $marketingMetrics = $this->buildMarketingMetrics($sellerId, $allSoldItems);
 
         // 7. CHARTS & TREND DATA
         $salesTrendChart = $this->buildSalesTrendChart($activeOrders, $from, $to);
@@ -210,65 +212,72 @@ class AnalyticsController extends Controller
         return view('seller.analytics.index', $data);
     }
 
-    private function buildProductAnalytics(string $sellerId, ?Carbon $from, ?Carbon $to): array
+    private function buildProductAnalytics(string $sellerId, \Illuminate\Support\Collection $allSoldItems): array
     {
         $products = Product::where('sellerId', $sellerId)->get();
 
-        $productStats = $products->map(function ($product) use ($sellerId, $from, $to) {
+        $productStats = $products->map(function ($product) use ($sellerId, $allSoldItems) {
             /** @var Product $product */
-            $itemsQuery = DB::table('order_items')
-                ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                ->where('order_items.productId', $product->id)
-                ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
+            $pIdStr = (string) $product->id;
+            $productSoldItems = $allSoldItems->filter(fn ($item) => (string) ($item->productId ?? '') === $pIdStr);
 
-            if ($from) {
-                $itemsQuery->where('orders.createdAt', '>=', $from);
-            }
-            if ($to) {
-                $itemsQuery->where('orders.createdAt', '<=', $to);
-            }
+            $unitsSold  = (int) $productSoldItems->sum('quantity');
+            $revenue    = (float) $productSoldItems->sum(fn ($item) => (float) ($item->quantity ?? 0) * (float) ($item->price ?? 0));
+            $orderCount = $productSoldItems->pluck('orderId')->filter()->unique()->count();
 
-            $unitsSold = (int) $itemsQuery->sum('order_items.quantity');
-            $revenue   = (float) $itemsQuery->sum(DB::raw('order_items.quantity * order_items.price'));
-            $orderCount = (int) $itemsQuery->count();
-
-            $views = max((int) $product->views, 1);
+            $views = max((int) ($product->views ?? 0), 1);
             if (Schema::hasTable('product_views')) {
-                $pv = ProductView::where('product_id', $product->id)->count();
-                $views = max($views, $pv);
+                try {
+                    $pv = ProductView::where('product_id', $product->id)->count();
+                    $views = max($views, $pv);
+                } catch (\Throwable $e) {}
             }
 
             $addToCartCount = 0;
             if (Schema::hasTable('seller_funnel_events')) {
-                $addToCartCount = SellerFunnelEvent::where('product_id', $product->id)
-                    ->where('event_type', 'add_to_cart')
-                    ->count();
+                try {
+                    $addToCartCount = SellerFunnelEvent::where('product_id', $product->id)
+                        ->where('event_type', 'add_to_cart')
+                        ->count();
+                } catch (\Throwable $e) {}
             }
 
-            $wishlistCount = DB::table('wishlists')->where('product_id', $product->id)->count();
+            $wishlistCount = 0;
+            if (Schema::hasTable('wishlists')) {
+                try {
+                    $wishlistCount = DB::table('wishlists')->where('product_id', $product->id)->count();
+                } catch (\Throwable $e) {}
+            }
+
             $conversionRate = $views > 0 ? min(100.0, round(($orderCount / $views) * 100, 1)) : 0;
 
-            $rating = (float) DB::table('reviews')->where('productId', $product->id)->avg('rating') ?: 5.0;
+            $rating = 5.0;
+            if (Schema::hasTable('reviews')) {
+                try {
+                    $rating = (float) DB::table('reviews')->where('productId', $product->id)->avg('rating') ?: 5.0;
+                } catch (\Throwable $e) {}
+            }
 
-            $sizeBreakdown = DB::table('order_items')
-                ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                ->where('order_items.productId', $product->id)
-                ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
-                ->when($from, fn ($q) => $q->where('orders.createdAt', '>=', $from))
-                ->when($to, fn ($q) => $q->where('orders.createdAt', '<=', $to))
-                ->select(
-                    DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard') as size_name"),
-                    DB::raw('SUM(order_items.quantity) as units_sold'),
-                    DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-                )
-                ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard')"))
-                ->orderByDesc('units_sold')
-                ->get()
-                ->map(fn ($row) => [
-                    'size'      => $row->size_name,
-                    'unitsSold' => (int) $row->units_sold,
-                    'revenue'   => (float) $row->revenue,
-                ])
+            $productSizeMap = [];
+            foreach ($productSoldItems as $item) {
+                $rawSize = trim((string) ($item->size ?? ''));
+                $sizeName = ($rawSize !== '') ? $rawSize : 'Standard';
+                $qty = (int) ($item->quantity ?? 1);
+                $rev = $qty * (float) ($item->price ?? 0);
+
+                if (!isset($productSizeMap[$sizeName])) {
+                    $productSizeMap[$sizeName] = [
+                        'size'      => $sizeName,
+                        'unitsSold' => 0,
+                        'revenue'   => 0.0,
+                    ];
+                }
+                $productSizeMap[$sizeName]['unitsSold'] += $qty;
+                $productSizeMap[$sizeName]['revenue']   += $rev;
+            }
+
+            $sizeBreakdown = collect($productSizeMap)
+                ->sortByDesc('unitsSold')
                 ->values()
                 ->toArray();
 
@@ -296,26 +305,26 @@ class AnalyticsController extends Controller
         $mostViewed     = $productStats->sortByDesc('views')->take(5)->values();
         $highestRevenue = $productStats->sortByDesc('revenue')->take(5)->values();
 
-        $overallSizeBreakdown = DB::table('order_items')
-            ->join('orders', 'order_items.orderId', '=', 'orders.id')
-            ->join('products', 'order_items.productId', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested'])
-            ->when($from, fn ($q) => $q->where('orders.createdAt', '>=', $from))
-            ->when($to, fn ($q) => $q->where('orders.createdAt', '<=', $to))
-            ->select(
-                DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard') as size_name"),
-                DB::raw('SUM(order_items.quantity) as units_sold'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-            )
-            ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(order_items.size), ''), 'Standard')"))
-            ->orderByDesc('units_sold')
-            ->get()
-            ->map(fn ($row) => [
-                'size'      => $row->size_name,
-                'unitsSold' => (int) $row->units_sold,
-                'revenue'   => (float) $row->revenue,
-            ])
+        $overallSizeMap = [];
+        foreach ($allSoldItems as $item) {
+            $rawSize = trim((string) ($item->size ?? ''));
+            $sizeName = ($rawSize !== '') ? $rawSize : 'Standard';
+            $qty = (int) ($item->quantity ?? 1);
+            $rev = $qty * (float) ($item->price ?? 0);
+
+            if (!isset($overallSizeMap[$sizeName])) {
+                $overallSizeMap[$sizeName] = [
+                    'size'      => $sizeName,
+                    'unitsSold' => 0,
+                    'revenue'   => 0.0,
+                ];
+            }
+            $overallSizeMap[$sizeName]['unitsSold'] += $qty;
+            $overallSizeMap[$sizeName]['revenue']   += $rev;
+        }
+
+        $overallSizeBreakdown = collect($overallSizeMap)
+            ->sortByDesc('unitsSold')
             ->values()
             ->toArray();
 
@@ -368,21 +377,36 @@ class AnalyticsController extends Controller
         ->values();
 
         // Customer Behavior Funnel
-        $totalViews = (int) DB::table('products')->where('sellerId', $sellerId)->sum('views');
-        $totalCarts = Schema::hasTable('seller_funnel_events')
-            ? DB::table('seller_funnel_events')->where('seller_id', $sellerId)->where('event_type', 'add_to_cart')->count()
-            : (int) ($totalViews * 0.25);
+        $totalViews = 0;
+        try {
+            $totalViews = (int) DB::table('products')->where('sellerId', $sellerId)->sum('views');
+        } catch (\Throwable $e) {}
 
-        $newReviewsCount = DB::table('reviews')
-            ->join('products', 'reviews.productId', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->where('reviews.createdAt', '>=', Carbon::now()->subDays(7))
-            ->count();
+        $totalCarts = 0;
+        if (Schema::hasTable('seller_funnel_events')) {
+            try {
+                $totalCarts = DB::table('seller_funnel_events')
+                    ->where('seller_id', $sellerId)
+                    ->where('event_type', 'add_to_cart')
+                    ->count();
+            } catch (\Throwable $e) {
+                $totalCarts = (int) ($totalViews * 0.25);
+            }
+        } else {
+            $totalCarts = (int) ($totalViews * 0.25);
+        }
 
-        $totalWishlists = DB::table('wishlists')
-            ->join('products', 'wishlists.product_id', '=', 'products.id')
-            ->where('products.sellerId', $sellerId)
-            ->count();
+        $totalWishlists = 0;
+        if (Schema::hasTable('wishlists')) {
+            try {
+                $totalWishlists = DB::table('wishlists')
+                    ->join('products', 'wishlists.product_id', '=', 'products.id')
+                    ->where('products.sellerId', $sellerId)
+                    ->count();
+            } catch (\Throwable $e) {
+                $totalWishlists = 0;
+            }
+        }
 
         $totalCheckouts = (int) ($activeOrders->count() * 1.2);
         $completedPurchases = $activeOrders->count();
@@ -405,50 +429,14 @@ class AnalyticsController extends Controller
         ];
     }
 
-    private function buildCategorySales(string $sellerId, ?Carbon $from, ?Carbon $to): array
+    private function buildCategorySales(string $sellerId, ?Carbon $from, ?Carbon $to, \Illuminate\Support\Collection $allSoldItems): array
     {
-        $query = DB::table('order_items')
-            ->join('orders', 'order_items.orderId', '=', 'orders.id')
-            ->join('products', 'order_items.productId', '=', 'products.id')
-            ->leftJoin('categories', 'products.CategoryId', '=', 'categories.id')
-            ->where('orders.sellerId', $sellerId)
-            ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
-
-        if ($from) {
-            $query->where('orders.createdAt', '>=', $from);
-        }
-        if ($to) {
-            $query->where('orders.createdAt', '<=', $to);
-        }
-
-        $results = $query->select(
-            DB::raw("COALESCE(categories.name, 'Uncategorized') as category_name"),
-            DB::raw('SUM(order_items.quantity) as units_sold'),
-            DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-        )
-        ->groupBy('category_name')
-        ->orderByDesc('revenue')
-        ->get();
-
-        $totalCatRevenue = $results->sum('revenue') ?: 1;
-
-        return $results->map(function ($cat) use ($totalCatRevenue) {
-            $cat->percentage = round(($cat->revenue / $totalCatRevenue) * 100, 1);
-            return $cat;
-        })->toArray();
-    }
-
-    private function buildMarketingMetrics(string $sellerId, ?Carbon $from, ?Carbon $to): array
-    {
-        $discountedProducts = Product::where('sellerId', $sellerId)->where('is_on_sale', true)->get();
-        $saleItemsSold = 0;
-        $saleRevenue   = 0;
-
-        if ($discountedProducts->isNotEmpty()) {
-            $pIds = $discountedProducts->pluck('id')->toArray();
+        try {
             $query = DB::table('order_items')
                 ->join('orders', 'order_items.orderId', '=', 'orders.id')
-                ->whereIn('order_items.productId', $pIds)
+                ->join('products', 'order_items.productId', '=', 'products.id')
+                ->leftJoin('categories', 'products.CategoryId', '=', 'categories.id')
+                ->where('orders.sellerId', $sellerId)
                 ->whereRaw('LOWER(orders.status) NOT IN (?, ?, ?)', ['cancelled', 'cancellation pending', 'cancellation requested']);
 
             if ($from) {
@@ -458,15 +446,75 @@ class AnalyticsController extends Controller
                 $query->where('orders.createdAt', '<=', $to);
             }
 
-            $saleItemsSold = (int) $query->sum('order_items.quantity');
-            $saleRevenue   = (float) $query->sum(DB::raw('order_items.quantity * order_items.price'));
-        }
+            $rawResults = $query->select(
+                DB::raw("COALESCE(categories.name, 'Uncategorized') as category_name"),
+                DB::raw('SUM(order_items.quantity) as units_sold'),
+                DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+            )
+            ->groupBy(DB::raw("COALESCE(categories.name, 'Uncategorized')"))
+            ->get();
 
-        return [
-            'discountedProductsCount' => $discountedProducts->count(),
-            'saleItemsSold'           => $saleItemsSold,
-            'saleRevenue'             => $saleRevenue,
-        ];
+            $totalCatRevenue = $rawResults->sum('revenue') ?: 1;
+
+            return $rawResults->map(function ($cat) use ($totalCatRevenue) {
+                $cat->percentage = round(($cat->revenue / $totalCatRevenue) * 100, 1);
+                return $cat;
+            })->sortByDesc('revenue')->values()->toArray();
+        } catch (\Throwable $e) {
+            // Defensive in-memory calculation from eager-loaded sold items
+            $catMap = [];
+            foreach ($allSoldItems as $item) {
+                $catName = optional($item->product)->category_name ?? 'Uncategorized';
+                $qty = (int) ($item->quantity ?? 1);
+                $rev = $qty * (float) ($item->price ?? 0);
+
+                if (!isset($catMap[$catName])) {
+                    $catMap[$catName] = (object) [
+                        'category_name' => $catName,
+                        'units_sold'    => 0,
+                        'revenue'       => 0.0,
+                        'percentage'    => 0.0,
+                    ];
+                }
+                $catMap[$catName]->units_sold += $qty;
+                $catMap[$catName]->revenue    += $rev;
+            }
+
+            $totalRev = array_sum(array_column($catMap, 'revenue')) ?: 1;
+            foreach ($catMap as $cat) {
+                $cat->percentage = round(($cat->revenue / $totalRev) * 100, 1);
+            }
+
+            return collect($catMap)->sortByDesc('revenue')->values()->toArray();
+        }
+    }
+
+    private function buildMarketingMetrics(string $sellerId, \Illuminate\Support\Collection $allSoldItems): array
+    {
+        try {
+            $discountedProducts = Product::where('sellerId', $sellerId)->where('is_on_sale', true)->get();
+            $saleItemsSold = 0;
+            $saleRevenue   = 0;
+
+            if ($discountedProducts->isNotEmpty()) {
+                $pIds = $discountedProducts->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+                $discountedSoldItems = $allSoldItems->filter(fn ($item) => in_array((string) $item->productId, $pIds, true));
+                $saleItemsSold = (int) $discountedSoldItems->sum('quantity');
+                $saleRevenue   = (float) $discountedSoldItems->sum(fn ($item) => (float) ($item->quantity ?? 0) * (float) ($item->price ?? 0));
+            }
+
+            return [
+                'discountedProductsCount' => $discountedProducts->count(),
+                'saleItemsSold'           => $saleItemsSold,
+                'saleRevenue'             => $saleRevenue,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'discountedProductsCount' => 0,
+                'saleItemsSold'           => 0,
+                'saleRevenue'             => 0.0,
+            ];
+        }
     }
 
     /**

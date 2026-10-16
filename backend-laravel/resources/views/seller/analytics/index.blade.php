@@ -439,7 +439,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y text-xs font-medium font-sans" style="border-color: #F0EAE1; color: #1E1915;">
-                        @foreach($productAnalytics['all'] as $p)
+                        @forelse($productAnalytics['all'] ?? [] as $p)
                             <tr class="hover:bg-[#FAF7F2]">
                                 <td class="py-3 px-2 flex items-center gap-2">
                                     <img src="{{ $p['image'] }}" class="w-8 h-8 rounded-lg object-cover border shrink-0" style="border-color: #E8DECB;">
@@ -467,7 +467,13 @@
                                 <td class="py-3 px-2">{{ $p['conversionRate'] }}%</td>
                                 <td class="py-3 px-2 font-bold" style="color: #A16D19;">{{ $p['rating'] }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="9" class="py-6 text-center text-xs italic text-[#8C827A]">
+                                    No products uploaded to catalog yet.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
