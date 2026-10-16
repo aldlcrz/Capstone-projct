@@ -779,16 +779,13 @@
             ];
         @endphp
 
-        {{-- Demographic / Classification Tabs --}}
-        <div class="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar pb-1">
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mr-1 shrink-0 hidden sm:inline">Collection:</span>
+        {{-- Clean Minimalist Collection & Curation Header --}}
+        <div class="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar pb-0.5">
+            <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 mr-1.5 shrink-0 hidden sm:inline">Collection</span>
                 @foreach($classifications as $cTab)
                     <a href="{{ $buildCatalogueUrl($cTab['param']) }}"
-                       class="ajax-filter-link px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 {{ $cTab['active'] ? 'bg-[#1E1915] text-[#DFC97A] shadow-xs ring-1 ring-[#DFC97A]/40' : 'bg-white hover:bg-stone-100 text-stone-700 hover:text-black border border-stone-200/90 shadow-2xs' }}">
-                        @if($cTab['active'])
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#DFC97A] inline-block"></span>
-                        @endif
+                       class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $cTab['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100' }}">
                         {{ $cTab['label'] }}
                     </a>
                 @endforeach
@@ -796,146 +793,114 @@
 
             @if(!empty($currentPriceRange) || !empty($currentMinPrice) || !empty($currentMaxPrice) || (!empty($currentSortParam) && $currentSortParam !== 'recommended'))
                 <a href="{{ $buildCatalogueUrl(['price_range' => '', 'sort' => null]) }}"
-                   class="ajax-filter-link text-[11px] font-bold text-[#8C5921] hover:text-[#5E3B13] underline shrink-0 flex items-center gap-1 cursor-pointer">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    <span>Reset Filters</span>
+                   class="ajax-filter-link text-xs font-semibold text-stone-500 hover:text-stone-900 flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors">
+                    <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Reset</span>
                 </a>
             @endif
         </div>
 
-        {{-- Premium 2-Tier Master Control Deck --}}
-        <div class="w-full bg-[#FCFBF8] rounded-2xl border border-[#EADBCA] shadow-[0_4px_24px_-4px_rgba(40,30,20,0.06)] overflow-hidden transition-all duration-300">
-            {{-- Top Accent Gold Line --}}
-            <div class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#C5A059] to-transparent opacity-90"></div>
+        {{-- Clean Minimalist Filter Deck --}}
+        <div class="w-full bg-[#FAF9F5] rounded-2xl border border-[#ECE7DE] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] p-3.5 sm:p-4 space-y-3">
+            
+            {{-- ROW 1: SORT --}}
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-14 shrink-0">Sort</span>
 
-            <div class="p-4 sm:p-5 space-y-4">
+                {{-- Sort Pills (Clean & Left-Aligned) --}}
+                <div class="hidden sm:flex items-center gap-1 overflow-x-auto no-scrollbar flex-wrap">
+                    @php
+                        $sortOptions = [
+                            ['label' => 'Recommended', 'val' => null, 'active' => empty($currentSortParam) || $currentSortParam === 'recommended'],
+                            ['label' => 'Price: Low to High', 'val' => 'price_asc', 'active' => in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest'])],
+                            ['label' => 'Price: High to Low', 'val' => 'price_desc', 'active' => in_array($currentSortParam, ['price_desc', 'price_high', 'expensive'])],
+                            ['label' => 'Newest', 'val' => 'newest', 'active' => $currentSortParam === 'newest'],
+                            ['label' => 'Best Sellers', 'val' => 'best_sellers', 'active' => in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold'])],
+                        ];
+                    @endphp
+                    @foreach($sortOptions as $sOpt)
+                        <a href="{{ $buildCatalogueUrl(['sort' => $sOpt['val']]) }}"
+                           class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $sOpt['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}">
+                            {{ $sOpt['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+
+                {{-- Mobile Select Fallback --}}
+                <div class="sm:hidden relative w-full">
+                    <select onchange="window.location.href = this.value"
+                            class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 outline-none cursor-pointer">
+                        <option value="{{ $buildCatalogueUrl(['sort' => null]) }}" {{ empty($currentSortParam) || !in_array($currentSortParam, ['price_asc', 'price_desc', 'newest', 'best_sellers', 'lumban_special']) ? 'selected' : '' }}>Recommended</option>
+                        <option value="{{ $buildCatalogueUrl(['sort' => 'price_asc']) }}" {{ in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest']) ? 'selected' : '' }}>Price: Low to High</option>
+                        <option value="{{ $buildCatalogueUrl(['sort' => 'price_desc']) }}" {{ in_array($currentSortParam, ['price_desc', 'price_high', 'expensive']) ? 'selected' : '' }}>Price: High to Low</option>
+                        <option value="{{ $buildCatalogueUrl(['sort' => 'newest']) }}" {{ $currentSortParam === 'newest' ? 'selected' : '' }}>Newest</option>
+                        <option value="{{ $buildCatalogueUrl(['sort' => 'best_sellers']) }}" {{ in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold']) ? 'selected' : '' }}>Best Sellers</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Hairline Divider --}}
+            <div class="h-[1px] w-full bg-[#EFECE5]"></div>
+
+            {{-- ROW 2: PRICE CATEGORY & CUSTOM RANGE --}}
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 
-                {{-- TIER 1: SORT CONTROL --}}
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 shrink-0">
-                        <div class="w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#EADBCA] flex items-center justify-center text-[#946328] shrink-0">
-                            {{-- Luxury Sort / Curation Icon --}}
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 6h18M6 12h12M10 18h4"></path>
-                            </svg>
-                        </div>
-                        <span class="text-[10px] font-black uppercase tracking-[0.18em] text-stone-500">Sort:</span>
-                    </div>
+                {{-- Price Category Pills --}}
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-14 shrink-0">Price</span>
 
-                    {{-- Sort Pills (Desktop / Tablet) --}}
-                    <div class="hidden sm:flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-wrap">
-                        @php
-                            $sortOptions = [
-                                ['label' => 'Recommended', 'val' => null, 'active' => empty($currentSortParam) || $currentSortParam === 'recommended'],
-                                ['label' => 'Price: Low to High (Cheapest)', 'val' => 'price_asc', 'active' => in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest'])],
-                                ['label' => 'Price: High to Low (Most Expensive)', 'val' => 'price_desc', 'active' => in_array($currentSortParam, ['price_desc', 'price_high', 'expensive'])],
-                                ['label' => 'Newest', 'val' => 'newest', 'active' => $currentSortParam === 'newest'],
-                                ['label' => 'Best Sellers', 'val' => 'best_sellers', 'active' => in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold'])],
-                            ];
-                        @endphp
-                        @foreach($sortOptions as $sOpt)
-                            <a href="{{ $buildCatalogueUrl(['sort' => $sOpt['val']]) }}"
-                               class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer flex items-center gap-1.5 {{ $sOpt['active'] ? 'bg-[#1E1915] text-[#DFC97A] font-bold shadow-xs ring-1 ring-[#DFC97A]/40' : 'bg-white hover:bg-stone-100 text-stone-700 hover:text-black font-semibold border border-stone-200/90 shadow-2xs' }}">
-                                @if($sOpt['active'])
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#DFC97A]"></span>
-                                @endif
-                                <span>{{ $sOpt['label'] }}</span>
+                    {{-- Category Pills Row --}}
+                    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 flex-nowrap sm:flex-wrap">
+                        @foreach($priceTiers as $pt)
+                            @php
+                                $isActive = ($pt['val'] === '' && $isAllPrices) || (!empty($pt['val']) && (string)$currentPriceRange === (string)$pt['val']);
+                            @endphp
+                            <a href="{{ $buildCatalogueUrl(['price_range' => $pt['val']]) }}"
+                               class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $isActive ? 'bg-[#946328] text-white font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}">
+                                {!! $pt['html'] !!}
                             </a>
                         @endforeach
                     </div>
-
-                    {{-- Mobile Select Fallback --}}
-                    <div class="sm:hidden relative w-full">
-                        <select onchange="window.location.href = this.value"
-                                class="w-full bg-white border border-stone-200 hover:border-stone-300 rounded-xl px-3 py-2 text-xs font-bold text-stone-800 outline-none cursor-pointer transition-all shadow-2xs pr-8">
-                            <option value="{{ $buildCatalogueUrl(['sort' => null]) }}" {{ empty($currentSortParam) || !in_array($currentSortParam, ['price_asc', 'price_desc', 'newest', 'best_sellers', 'lumban_special']) ? 'selected' : '' }}>Recommended</option>
-                            <option value="{{ $buildCatalogueUrl(['sort' => 'price_asc']) }}" {{ in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest']) ? 'selected' : '' }}>Price: Low to High (Cheapest)</option>
-                            <option value="{{ $buildCatalogueUrl(['sort' => 'price_desc']) }}" {{ in_array($currentSortParam, ['price_desc', 'price_high', 'expensive']) ? 'selected' : '' }}>Price: High to Low (Most Expensive)</option>
-                            <option value="{{ $buildCatalogueUrl(['sort' => 'newest']) }}" {{ $currentSortParam === 'newest' ? 'selected' : '' }}>Newest</option>
-                            <option value="{{ $buildCatalogueUrl(['sort' => 'best_sellers']) }}" {{ in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold']) ? 'selected' : '' }}>Best Sellers</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-stone-500">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
-                    </div>
                 </div>
 
-                {{-- Horizontal Divider --}}
-                <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-[#E8DEC8] to-transparent"></div>
+                {{-- Custom Range Form --}}
+                <div class="flex items-center gap-2 shrink-0 pt-0.5 lg:pt-0 sm:self-end lg:self-center">
+                    <form action="/#catalogue-section" method="GET" class="ajax-search-form flex items-center gap-1.5">
+                        @if($currentCatParam) <input type="hidden" name="category" value="{{ $currentCatParam }}"> @endif
+                        @if($currentSortParam) <input type="hidden" name="sort" value="{{ $currentSortParam }}"> @endif
+                        @if($currentSearchParam) <input type="hidden" name="search" value="{{ $currentSearchParam }}"> @endif
 
-                {{-- TIER 2: PRICE CATEGORY & CUSTOM RANGE --}}
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    
-                    {{-- Price Category Pills --}}
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
-                        <div class="flex items-center gap-2 shrink-0">
-                            <div class="w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#EADBCA] flex items-center justify-center text-[#946328] shrink-0">
-                                {{-- Luxury Price Tag Icon --}}
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.18em] text-stone-500 shrink-0">Price Category:</span>
+                        <div class="relative">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
+                            <input type="number" 
+                                   name="min_price" 
+                                   value="{{ $currentMinPrice }}" 
+                                   placeholder="Min" 
+                                   min="0"
+                                   class="w-18 sm:w-20 pl-5 pr-2 py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-lg text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
-                        {{-- Category Pills Row --}}
-                        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-nowrap sm:flex-wrap">
-                            @foreach($priceTiers as $pt)
-                                @php
-                                    $isActive = ($pt['val'] === '' && $isAllPrices) || (!empty($pt['val']) && (string)$currentPriceRange === (string)$pt['val']);
-                                @endphp
-                                <a href="{{ $buildCatalogueUrl(['price_range' => $pt['val']]) }}"
-                                   class="ajax-filter-link px-3.5 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer {{ $isActive ? 'bg-gradient-to-r from-[#946328] to-[#B37833] text-white font-bold shadow-md shadow-[#946328]/25 ring-1 ring-[#7E511E] scale-[1.02]' : 'bg-white hover:bg-stone-50 text-stone-700 hover:text-black font-semibold border border-stone-200/90 hover:border-[#C5A059]/70 shadow-2xs' }}">
-                                    {!! $pt['html'] !!}
-                                </a>
-                            @endforeach
+                        <span class="text-stone-300 text-xs">—</span>
+
+                        <div class="relative">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
+                            <input type="number" 
+                                   name="max_price" 
+                                   value="{{ $currentMaxPrice }}" 
+                                   placeholder="Max" 
+                                   min="0"
+                                   class="w-18 sm:w-20 pl-5 pr-2 py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-lg text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
-                    </div>
 
-                    {{-- Vertical Separator for Desktop --}}
-                    <div class="hidden lg:block w-[1px] h-9 bg-[#EADBCA] shrink-0 self-center"></div>
-
-                    {{-- Custom Range Form --}}
-                    <div class="flex items-center gap-2 shrink-0 pt-1 lg:pt-0">
-                        <form action="/#catalogue-section" method="GET" class="ajax-search-form flex items-center gap-2">
-                            @if($currentCatParam) <input type="hidden" name="category" value="{{ $currentCatParam }}"> @endif
-                            @if($currentSortParam) <input type="hidden" name="sort" value="{{ $currentSortParam }}"> @endif
-                            @if($currentSearchParam) <input type="hidden" name="search" value="{{ $currentSearchParam }}"> @endif
-
-                            <div class="relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 pointer-events-none">₱</span>
-                                <input type="number" 
-                                       name="min_price" 
-                                       value="{{ $currentMinPrice }}" 
-                                       placeholder="Min" 
-                                       min="0"
-                                       class="w-20 sm:w-22 pl-6 pr-2 py-1.5 bg-white border border-stone-200 hover:border-stone-300 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-xl text-xs font-semibold text-stone-800 outline-none transition-all placeholder:text-stone-400 shadow-2xs">
-                            </div>
-
-                            <span class="text-stone-300 text-xs font-bold">–</span>
-
-                            <div class="relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 pointer-events-none">₱</span>
-                                <input type="number" 
-                                       name="max_price" 
-                                       value="{{ $currentMaxPrice }}" 
-                                       placeholder="Max" 
-                                       min="0"
-                                       class="w-20 sm:w-22 pl-6 pr-2 py-1.5 bg-white border border-stone-200 hover:border-stone-300 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-xl text-xs font-semibold text-stone-800 outline-none transition-all placeholder:text-stone-400 shadow-2xs">
-                            </div>
-
-                            <button type="submit" 
-                                    class="px-4 py-1.5 bg-gradient-to-r from-[#1E1915] to-[#2B231D] hover:from-[#946328] hover:to-[#7E511E] active:scale-95 text-[#DFC97A] hover:text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center gap-1">
-                                <span>Apply</span>
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </button>
-                        </form>
-                    </div>
-
+                        <button type="submit" 
+                                class="px-3 py-1 bg-stone-900 hover:bg-[#946328] active:scale-95 text-[#DFC97A] hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer">
+                            Apply
+                        </button>
+                    </form>
                 </div>
 
             </div>
+
         </div>
 
         <div class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
