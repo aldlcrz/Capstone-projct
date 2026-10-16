@@ -2226,7 +2226,7 @@ if (window.Alpine) {
                         <x-lucide name="package" class="w-6 h-6" style="color: #C49520;" />
                     </div>
                     <div>
-                        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915] tracking-tight">Order Details</h2>
+                        <h2 class="font-sans text-2xl sm:text-3xl font-bold text-[#1E1915] tracking-tight">Order Details</h2>
                         <div class="text-xs font-mono font-bold text-[#766C60] mt-0.5 tracking-tight" x-text="detailsOrder ? formatOrderId(detailsOrder) : ''"></div>
                         <div class="text-[11px] font-medium text-[#766C60] mt-0.5" x-text="(detailsOrder && detailsOrder.createdAt) ? 'Placed ' + new Date(detailsOrder.createdAt).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : ''"></div>
                     </div>
@@ -2465,7 +2465,7 @@ if (window.Alpine) {
                                 <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 border"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
                                     <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Buyer & Delivery Details</h3>
+                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Buyer & Delivery Details</h3>
                                         <span class="text-[10px] font-bold text-[#C49520] uppercase tracking-widest inline-flex items-center gap-1">
                                             <x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> LumBarong
                                         </span>
@@ -2552,18 +2552,18 @@ if (window.Alpine) {
                             {{-- Right Column (5 cols): Order summary & Payment details --}}
                             <div class="md:col-span-5 space-y-4">
                                 {{-- Order Summary Card --}}
-                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border"
+                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border font-sans"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
                                     <div class="pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Order Summary</h3>
+                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Order Summary</h3>
                                     </div>
 
-                                    <div class="flex items-center justify-between text-xs">
+                                    <div class="flex items-center justify-between text-xs font-sans">
                                         <span class="text-[#766C60] font-medium">Items subtotal</span>
                                         <span class="font-bold text-[#1E1915]" x-text="'₱' + (Number(detailsOrder.totalAmount) - Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0))).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                     </div>
 
-                                    <div class="flex items-start justify-between text-xs">
+                                    <div class="flex items-start justify-between text-xs font-sans">
                                         <div>
                                             <div class="text-[#766C60] font-medium">Delivery fee</div>
                                             <div class="text-[11px] text-[#766C60] font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping && detailsOrder.shipping.provider_name && !detailsOrder.shipping.provider_name.toLowerCase().includes('spx') ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight || 0).toFixed(2) + ' kg') : 'Standard Delivery'))"></div>
@@ -2572,18 +2572,18 @@ if (window.Alpine) {
                                     </div>
 
                                     <div class="pt-3 border-t" style="border-color: #E8DECB;">
-                                        <div class="flex items-baseline justify-between">
-                                            <span class="font-serif text-sm sm:text-base font-bold text-[#1E1915]">Total amount</span>
-                                            <span style="color: #C0420A;" class="text-2xl sm:text-3xl font-serif font-black tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                        <div class="flex items-baseline justify-between font-sans">
+                                            <span class="text-sm sm:text-base font-bold text-[#1E1915]">Total amount</span>
+                                            <span style="color: #C0420A;" class="text-xl sm:text-2xl font-bold font-sans tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Payment Details Card --}}
-                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3 border"
+                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3 border font-sans"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
                                     <div class="pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Payment Details</h3>
+                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Payment Details</h3>
                                     </div>
 
                                     <div class="flex items-center justify-between text-xs">
