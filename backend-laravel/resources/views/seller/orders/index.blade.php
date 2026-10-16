@@ -2185,11 +2185,7 @@ if (window.Alpine) {
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                 </div>
-            </div>
-        </template>
-    </div>
-
-    {{-- Order Detail Modal (Redesigned Modern Card UI) --}}
+             {{-- Order Detail Modal (LumBarong Artisan Premium Theme) --}}
     <div x-show="detailsModal" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -2201,19 +2197,22 @@ if (window.Alpine) {
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
          @click.self="detailsModal = false">
         
-        <div class="w-full sm:max-w-3xl lg:max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border"
+             style="background: #FAF8F5; border-color: #E8DECB;">
             
             {{-- Modal Header --}}
-            <div class="bg-white px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-gray-100 flex items-start justify-between gap-4 shrink-0">
-                {{-- Left: Package Icon + Order Title & Date --}}
+            <div class="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b flex items-start justify-between gap-4 shrink-0"
+                 style="background: #FFFCF7; border-color: #E8DECB;">
+                {{-- Left: Gold Package Icon + Serif Title & Subtitle --}}
                 <div class="flex items-start gap-3.5 sm:gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-[#FFF3EB] border border-[#FFE2D1] flex items-center justify-center text-[#D9430D] shrink-0 shadow-2xs">
-                        <x-lucide name="package" class="w-6 h-6 text-[#D9430D]" />
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs"
+                         style="background: #FDF8EE; border: 1.5px solid #E8DECB;">
+                        <x-lucide name="package" class="w-6 h-6" style="color: #C49520;" />
                     </div>
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight font-sans">Order details</h2>
-                        <div class="text-xs sm:text-sm font-bold text-gray-900 mt-0.5 tracking-tight" x-text="detailsOrder ? formatOrderId(detailsOrder) : ''"></div>
-                        <div class="text-[11px] sm:text-xs text-gray-500 font-medium mt-0.5" x-text="(detailsOrder && detailsOrder.createdAt) ? 'Placed ' + new Date(detailsOrder.createdAt).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : ''"></div>
+                        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#1E1915] tracking-tight">Order Details</h2>
+                        <div class="text-xs font-mono font-bold text-[#766C60] mt-0.5 tracking-tight" x-text="detailsOrder ? formatOrderId(detailsOrder) : ''"></div>
+                        <div class="text-[11px] font-medium text-[#766C60] mt-0.5" x-text="(detailsOrder && detailsOrder.createdAt) ? 'Placed ' + new Date(detailsOrder.createdAt).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : ''"></div>
                     </div>
                 </div>
 
@@ -2223,80 +2222,90 @@ if (window.Alpine) {
                         <div>
                             {{-- Special Delivery - Out for special delivery (in transit) --}}
                             <template x-if="isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'in transit'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EBF3FF] text-[#1D4ED8]">
-                                    <x-lucide name="truck" class="w-3.5 h-3.5 text-[#1D4ED8]" />
+                                <span style="background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="truck" class="w-3.5 h-3.5" style="color: #1D4ED8;" />
                                     <span>Out for special delivery</span>
                                 </span>
                             </template>
 
                             {{-- Special Delivery - Processing / Shipped --}}
                             <template x-if="isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EFF6FF] text-[#2563EB]">
-                                    <x-lucide name="bike" class="w-3.5 h-3.5 text-[#2563EB]" />
+                                <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="bike" class="w-3.5 h-3.5" style="color: #C49520;" />
                                     <span>Special Delivery Processing</span>
                                 </span>
                             </template>
 
                             {{-- Store Pickup - Ready for Pickup --}}
                             <template x-if="isStorePickup(detailsOrder) && (normalizeStatus(detailsOrder.status) === 'shipped' || normalizeStatus(detailsOrder.status) === 'in transit')">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">
-                                    <x-lucide name="store" class="w-3.5 h-3.5 text-[#92400E]" />
+                                <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="store" class="w-3.5 h-3.5" style="color: #C49520;" />
                                     <span>Ready for Pickup</span>
                                 </span>
                             </template>
 
                             {{-- To Ship --}}
                             <template x-if="normalizeStatus(detailsOrder.status) === 'to ship'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FFFBEB] text-[#D97706]">
-                                    <x-lucide name="package" class="w-3.5 h-3.5 text-[#D97706]" />
+                                <span style="background: #FFFBEB; border: 1px solid #FDE68A; color: #B45309;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="package" class="w-3.5 h-3.5" style="color: #B45309;" />
                                     <span>To Ship</span>
                                 </span>
                             </template>
 
                             {{-- Standard Courier - In Transit --}}
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'in transit'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EBF3FF] text-[#1D4ED8]">
-                                    <x-lucide name="truck" class="w-3.5 h-3.5 text-[#1D4ED8]" />
+                                <span style="background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="truck" class="w-3.5 h-3.5" style="color: #1D4ED8;" />
                                     <span>In Transit</span>
                                 </span>
                             </template>
 
                             {{-- Standard Courier - Shipped --}}
                             <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'shipped'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EFF6FF] text-[#2563EB]">
-                                    <x-lucide name="truck" class="w-3.5 h-3.5 text-[#2563EB]" />
+                                <span style="background: #EFF6FF; border: 1px solid #BFDBFE; color: #2563EB;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="truck" class="w-3.5 h-3.5" style="color: #2563EB;" />
                                     <span>Shipped</span>
                                 </span>
                             </template>
 
-                            {{-- Pending --}}
+                            {{-- Pending Approval --}}
                             <template x-if="normalizeStatus(detailsOrder.status) === 'pending'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#B45309]">
-                                    <x-lucide name="clock" class="w-3.5 h-3.5 text-[#B45309]" />
+                                <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="clock" class="w-3.5 h-3.5" style="color: #C49520;" />
                                     <span>Pending Approval</span>
                                 </span>
                             </template>
 
                             {{-- Delivered --}}
                             <template x-if="normalizeStatus(detailsOrder.status) === 'delivered'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EBFDF5] text-[#059669]">
-                                    <x-lucide name="check-circle" class="w-3.5 h-3.5 text-[#059669]" />
+                                <span style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="check-circle" class="w-3.5 h-3.5" style="color: #15803D;" />
                                     <span>Delivered</span>
                                 </span>
                             </template>
 
                             {{-- Completed --}}
                             <template x-if="normalizeStatus(detailsOrder.status) === 'completed'">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#EBFDF5] text-[#059669]">
-                                    <x-lucide name="check-circle" class="w-3.5 h-3.5 text-[#059669]" />
+                                <span style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="check-circle" class="w-3.5 h-3.5" style="color: #15803D;" />
                                     <span>Completed</span>
                                 </span>
                             </template>
 
                             {{-- Cancellation / Return / Cancelled --}}
                             <template x-if="normalizeStatus(detailsOrder.status) === 'cancelled' || normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested' || normalizeStatus(detailsOrder.status).includes('return')">
-                                <span class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FEF2F2] text-[#DC2626]">
-                                    <x-lucide name="alert-circle" class="w-3.5 h-3.5 text-[#DC2626]" />
+                                <span style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                                      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-2xs">
+                                    <x-lucide name="alert-circle" class="w-3.5 h-3.5" style="color: #DC2626;" />
                                     <span x-text="detailsOrder.status"></span>
                                 </span>
                             </template>
@@ -2304,14 +2313,16 @@ if (window.Alpine) {
                     </template>
 
                     {{-- Close Icon --}}
-                    <button type="button" @click="detailsModal = false" class="text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100 cursor-pointer" title="Close Modal">
+                    <button type="button" @click="detailsModal = false" 
+                            style="border: 1px solid #E8DECB; background: #FFFFFF; color: #766C60;"
+                            class="hover:text-[#1E1915] hover:border-[#C49520] hover:bg-[#FDF8EE] transition-all p-1.5 rounded-full cursor-pointer shadow-2xs" title="Close Modal">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
             </div>
 
             {{-- Modal Body Content --}}
-            <div class="p-5 sm:p-7 overflow-y-auto flex-1 space-y-5 bg-[#FCFBFA]/50">
+            <div class="p-5 sm:p-7 overflow-y-auto flex-1 space-y-5" style="background: #FAF8F5;">
                 <template x-if="detailsOrder">
                     <div class="space-y-5">
                         
@@ -2421,6 +2432,7 @@ if (window.Alpine) {
                                         <button type="button" 
                                                 @click="openApproveReturnModal(detailsOrder)"
                                                 :disabled="approveReturnLoading || rejectReturnLoading"
+                                                style="background-color: #C49520; color: #ffffff;"
                                                 class="px-4 py-1.5 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
                                             <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Approve Return
                                         </button>
@@ -2429,76 +2441,91 @@ if (window.Alpine) {
                             </div>
                         </template>
 
-                        {{-- Upper Two-Column Layout (Matching Mockup) --}}
+                        {{-- Upper Two-Column Layout (LumBarong Warm Theme) --}}
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                             
                             {{-- Left Column (7 cols): Buyer & delivery details --}}
                             <div class="md:col-span-7 space-y-4">
-                                <div class="border border-gray-200/80 rounded-2xl p-5 bg-white shadow-2xs space-y-4">
-                                    <h3 class="text-sm font-black text-gray-900">Buyer & delivery details</h3>
+                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 border"
+                                     style="background: #FFFCF7; border-color: #E8DECB;">
+                                    <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Buyer & Delivery Details</h3>
+                                        <span class="text-[10px] font-bold text-[#C49520] uppercase tracking-widest inline-flex items-center gap-1">
+                                            <x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> LumBarong
+                                        </span>
+                                    </div>
 
                                     {{-- Customer & Phone Row --}}
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <div class="text-[11px] font-medium text-gray-400 mb-1">Customer</div>
+                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Customer</div>
                                             <div class="flex items-center gap-2">
-                                                <x-lucide name="user" class="w-4 h-4 text-gray-500 shrink-0" />
-                                                <span class="text-xs font-bold text-gray-900 truncate" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></span>
+                                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="user" class="w-3.5 h-3.5 text-[#C49520]" />
+                                                </div>
+                                                <span class="text-xs font-bold text-[#1E1915] truncate" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></span>
                                             </div>
                                         </div>
                                         <div>
-                                            <div class="text-[11px] font-medium text-gray-400 mb-1">Phone number</div>
+                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Phone Number</div>
                                             <div class="flex items-center gap-2">
-                                                <x-lucide name="phone" class="w-4 h-4 text-gray-500 shrink-0" />
-                                                <span class="text-xs font-bold text-gray-900 truncate" x-text="buyerPhone(detailsOrder)"></span>
+                                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="phone" class="w-3.5 h-3.5 text-[#C49520]" />
+                                                </div>
+                                                <span class="text-xs font-bold text-[#1E1915] truncate" x-text="buyerPhone(detailsOrder)"></span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="border-t border-gray-100 pt-3 space-y-3.5">
+                                    <div class="pt-3 space-y-3.5 border-t" style="border-color: #E8DECB;">
                                         {{-- Delivery Method --}}
                                         <div>
-                                            <div class="text-[11px] font-medium text-gray-400 mb-1">Delivery method</div>
+                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Delivery Method</div>
                                             <div class="flex items-start gap-2.5">
-                                                <template x-if="isSpecialDelivery(detailsOrder)">
-                                                    <x-lucide name="bike" class="w-4 h-4 text-[#D9430D] shrink-0 mt-0.5" />
-                                                </template>
-                                                <template x-if="isStorePickup(detailsOrder)">
-                                                    <x-lucide name="store" class="w-4 h-4 text-[#D9430D] shrink-0 mt-0.5" />
-                                                </template>
-                                                <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                                                    <x-lucide name="truck" class="w-4 h-4 text-[#D9430D] shrink-0 mt-0.5" />
-                                                </template>
+                                                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <template x-if="isSpecialDelivery(detailsOrder)">
+                                                        <x-lucide name="bike" class="w-4 h-4 text-[#C49520]" />
+                                                    </template>
+                                                    <template x-if="isStorePickup(detailsOrder)">
+                                                        <x-lucide name="store" class="w-4 h-4 text-[#C49520]" />
+                                                    </template>
+                                                    <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
+                                                        <x-lucide name="truck" class="w-4 h-4 text-[#C49520]" />
+                                                    </template>
+                                                </div>
                                                 <div>
-                                                    <div class="text-xs font-bold text-gray-900" x-text="isSpecialDelivery(detailsOrder) ? 'Special Delivery' : (isStorePickup(detailsOrder) ? 'Store Pickup' : (detailsOrder.shipping?.provider_name || 'Standard Courier'))"></div>
-                                                    <div class="text-[11px] text-gray-500 font-medium" x-text="isSpecialDelivery(detailsOrder) ? 'Local Artisan Rider' : (isStorePickup(detailsOrder) ? 'Local Workshop Pickup' : (detailsOrder.shipping?.provider_name || '3rd Party Logistics'))"></div>
+                                                    <div class="text-xs font-bold text-[#1E1915]" x-text="isSpecialDelivery(detailsOrder) ? 'Special Delivery' : (isStorePickup(detailsOrder) ? 'Store Pickup' : (detailsOrder.shipping?.provider_name || 'Standard Courier'))"></div>
+                                                    <div class="text-[11px] text-[#766C60] font-medium" x-text="isSpecialDelivery(detailsOrder) ? 'Local Artisan Rider (Laguna)' : (isStorePickup(detailsOrder) ? 'Local Workshop Pickup · Lumban, Laguna' : (detailsOrder.shipping?.provider_name || '3rd Party Logistics'))"></div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {{-- Delivery Address --}}
                                         <div>
-                                            <div class="text-[11px] font-medium text-gray-400 mb-1">Delivery address</div>
+                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Delivery Address</div>
                                             <div class="flex items-start gap-2.5">
-                                                <x-lucide name="map-pin" class="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-                                                <div class="text-xs font-bold text-gray-800 leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                                                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="map-pin" class="w-4 h-4 text-[#C49520]" />
+                                                </div>
+                                                <div class="text-xs font-bold text-[#1E1915] leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
                                             </div>
                                         </div>
 
-                                        {{-- Scheduled Delivery Card (Mockup Yellow Card) --}}
+                                        {{-- Scheduled Delivery Card (LumBarong Gold Card) --}}
                                         <template x-if="detailsOrder.appointment_date">
-                                            <div class="bg-[#FFFDF5] border border-[#FEE685] rounded-xl p-3.5 space-y-1 mt-2 shadow-2xs">
+                                            <div class="rounded-2xl p-4 space-y-1.5 mt-2 shadow-2xs border"
+                                                 style="background: #FDF8EE; border-color: #E8DECB;">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center gap-2">
-                                                        <x-lucide name="calendar" class="w-4 h-4 text-[#D97706]" />
-                                                        <span class="text-xs font-bold text-[#C05621]" x-text="isStorePickup(detailsOrder) ? 'Scheduled pickup' : 'Scheduled delivery'"></span>
+                                                        <x-lucide name="calendar" class="w-4 h-4 text-[#C49520]" />
+                                                        <span class="text-xs font-bold text-[#996515]" x-text="isStorePickup(detailsOrder) ? 'Scheduled Pickup' : 'Scheduled Delivery'"></span>
                                                     </div>
-                                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEE685] text-[#92400E]">Scheduled</span>
+                                                    <span style="background: #E8DECB; color: #1E1915;" class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">Scheduled</span>
                                                 </div>
-                                                <div class="text-base font-black text-gray-900 pl-6" x-text="formatAppointmentDate(detailsOrder.appointment_date)"></div>
-                                                <div class="text-xs text-gray-500 font-medium pl-6" x-show="detailsOrder.appointment_time" x-text="formatAppointmentTime(detailsOrder.appointment_time)"></div>
+                                                <div class="font-serif text-lg font-bold text-[#1E1915] pl-6" x-text="formatAppointmentDate(detailsOrder.appointment_date)"></div>
+                                                <div class="text-xs text-[#766C60] font-semibold pl-6" x-show="detailsOrder.appointment_time" x-text="formatAppointmentTime(detailsOrder.appointment_time)"></div>
                                                 <template x-if="detailsOrder.appointment_notes">
-                                                    <div class="text-[10px] text-amber-900 font-medium italic pl-6 pt-1" x-text="'Notes: ' + detailsOrder.appointment_notes"></div>
+                                                    <div class="text-[10px] text-[#996515] font-medium italic pl-6 pt-1" x-text="'Instructions: ' + detailsOrder.appointment_notes"></div>
                                                 </template>
                                             </div>
                                         </template>
@@ -2509,68 +2536,80 @@ if (window.Alpine) {
                             {{-- Right Column (5 cols): Order summary & Payment details --}}
                             <div class="md:col-span-5 space-y-4">
                                 {{-- Order Summary Card --}}
-                                <div class="border border-gray-200/80 rounded-2xl p-5 bg-white shadow-2xs space-y-3.5">
-                                    <h3 class="text-sm font-black text-gray-900">Order summary</h3>
+                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border"
+                                     style="background: #FFFCF7; border-color: #E8DECB;">
+                                    <div class="pb-2 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Order Summary</h3>
+                                    </div>
 
                                     <div class="flex items-center justify-between text-xs">
-                                        <span class="text-gray-500 font-medium">Items subtotal</span>
-                                        <span class="font-bold text-gray-900" x-text="'₱' + (Number(detailsOrder.totalAmount) - Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0))).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                        <span class="text-[#766C60] font-medium">Items subtotal</span>
+                                        <span class="font-bold text-[#1E1915]" x-text="'₱' + (Number(detailsOrder.totalAmount) - Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0))).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                     </div>
 
                                     <div class="flex items-start justify-between text-xs">
                                         <div>
-                                            <div class="text-gray-500 font-medium">Delivery fee</div>
-                                            <div class="text-[11px] text-gray-400 font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : 'Standard Courier'))"></div>
+                                            <div class="text-[#766C60] font-medium">Delivery fee</div>
+                                            <div class="text-[11px] text-[#766C60] font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : 'Standard Courier'))"></div>
                                         </div>
-                                        <span class="font-bold text-gray-900" x-text="isStorePickup(detailsOrder) ? '₱0.00' : ('₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}))"></span>
+                                        <span class="font-bold text-[#1E1915]" x-text="isStorePickup(detailsOrder) ? '₱0.00' : ('₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}))"></span>
                                     </div>
 
-                                    <div class="border-t border-gray-100 pt-3">
+                                    <div class="pt-3 border-t" style="border-color: #E8DECB;">
                                         <div class="flex items-baseline justify-between">
-                                            <span class="text-xs sm:text-sm font-bold text-gray-900">Total amount</span>
-                                            <span class="text-2xl sm:text-3xl font-black text-[#D9430D] tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                            <span class="font-serif text-sm sm:text-base font-bold text-[#1E1915]">Total amount</span>
+                                            <span style="color: #C0420A;" class="text-2xl sm:text-3xl font-serif font-black tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Payment Details Card --}}
-                                <div class="border border-gray-200/80 rounded-2xl p-5 bg-white shadow-2xs space-y-3">
-                                    <h3 class="text-sm font-black text-gray-900">Payment details</h3>
+                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3 border"
+                                     style="background: #FFFCF7; border-color: #E8DECB;">
+                                    <div class="pb-2 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Payment Details</h3>
+                                    </div>
 
                                     <div class="flex items-center justify-between text-xs">
-                                        <span class="text-gray-500 font-medium">Method</span>
-                                        <span class="font-bold text-gray-900" x-text="formatPaymentMethod(detailsOrder)"></span>
+                                        <span class="text-[#766C60] font-medium">Method</span>
+                                        <span class="font-bold text-[#1E1915]" x-text="formatPaymentMethod(detailsOrder)"></span>
                                     </div>
 
                                     <template x-if="['GCASH', 'MAYA'].includes((detailsOrder.paymentMethod || '').toUpperCase()) && detailsOrder.paymentReference && !detailsOrder.paymentReference.startsWith('COD-')">
                                         <div class="flex items-center justify-between text-xs pt-1">
-                                            <span class="text-gray-500 font-medium">Reference</span>
-                                            <span class="font-mono font-bold text-gray-800 text-[11px]" x-text="detailsOrder.paymentReference"></span>
+                                            <span class="text-[#766C60] font-medium">Reference</span>
+                                            <span class="font-mono font-bold text-[#1E1915] text-[11px]" x-text="detailsOrder.paymentReference"></span>
                                         </div>
                                     </template>
 
                                     <template x-if="detailsOrder.paymentProof">
-                                        <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                                            <span class="text-gray-500 font-medium">Receipt file</span>
-                                            <button type="button" @click="receiptUrl = detailsOrder.payment_proof_url || ('/orders/' + detailsOrder.id + '/payment-proof'); receiptModal = true;" class="inline-flex items-center gap-1 text-[11px] font-bold text-[#D9430D] hover:underline cursor-pointer">
-                                                <span>View proof</span>
+                                        <div class="pt-2 border-t flex items-center justify-between text-xs" style="border-color: #E8DECB;">
+                                            <span class="text-[#766C60] font-medium">Receipt file</span>
+                                            <button type="button" @click="receiptUrl = detailsOrder.payment_proof_url || ('/orders/' + detailsOrder.id + '/payment-proof'); receiptModal = true;" 
+                                                    style="color: #C0420A;"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer">
+                                                <span>View Proof</span>
                                                 <x-lucide name="external-link" class="w-3 h-3" />
                                             </button>
                                         </div>
                                     </template>
 
                                     <template x-if="canRecordPayment(detailsOrder) && !isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                                        <div class="pt-2 border-t border-gray-100">
-                                            <button type="button" @click="openRecordPaymentModal(detailsOrder)" class="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
-                                                <x-lucide name="coins" class="w-3.5 h-3.5" /> Record Payment Received
+                                        <div class="pt-2 border-t" style="border-color: #E8DECB;">
+                                            <button type="button" @click="openRecordPaymentModal(detailsOrder)" 
+                                                    style="background-color: #2E7D32; color: #FFFFFF;"
+                                                    class="w-full py-2 px-3 hover:opacity-90 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                                <x-lucide name="coins" class="w-3.5 h-3.5" style="color: #FFFFFF;" /> Record Payment Received
                                             </button>
                                         </div>
                                     </template>
 
                                     <template x-if="canRecordDirectRefund(detailsOrder)">
-                                        <div class="pt-2 border-t border-gray-100">
-                                            <button type="button" @click="openSellerRefundModal(detailsOrder)" class="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
-                                                <x-lucide name="rotate-ccw" class="w-3.5 h-3.5" /> Record Direct Refund
+                                        <div class="pt-2 border-t" style="border-color: #E8DECB;">
+                                            <button type="button" @click="openSellerRefundModal(detailsOrder)" 
+                                                    style="background-color: #C49520; color: #FFFFFF;"
+                                                    class="w-full py-2 px-3 hover:bg-[#A16D19] rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                                <x-lucide name="rotate-ccw" class="w-3.5 h-3.5" style="color: #FFFFFF;" /> Record Direct Refund
                                             </button>
                                         </div>
                                     </template>
@@ -2579,7 +2618,9 @@ if (window.Alpine) {
                         </div>
 
                         {{-- PACKING PROOF UPLOAD CARD — shown only for standard courier To Ship --}}
-                        <div id="packing-proof-card" x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'" x-transition class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 space-y-3 shadow-2xs">
+                        <div id="packing-proof-card" x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'" x-transition 
+                             class="p-4 sm:p-5 rounded-3xl space-y-3 shadow-2xs border"
+                             style="background: #F4FBF4; border-color: #BFE5BF;">
                             <div class="flex items-center gap-2">
                                 <x-lucide name="package" class="w-5 h-5 text-emerald-800 shrink-0" />
                                 <div>
@@ -2647,9 +2688,10 @@ if (window.Alpine) {
                                         <button type="button"
                                             @click="uploadPackingProof()"
                                             :disabled="packingUploading"
-                                            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                            style="background-color: #2E7D32; color: #FFFFFF;"
+                                            class="w-full py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                                             <template x-if="packingUploading">
-                                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                                <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                             </template>
                                             <template x-if="!packingUploading">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
@@ -2662,29 +2704,34 @@ if (window.Alpine) {
                         </div>
 
                         {{-- STANDARD COURIER CARD — only for standard 3rd-party logistics --}}
-                        <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 space-y-3">
+                        <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition 
+                             class="p-4 sm:p-5 rounded-3xl space-y-3 border"
+                             style="background: #FFFCF7; border-color: #E8DECB;">
                             <div class="flex items-center justify-between">
-                                <div class="text-[9px] font-black uppercase tracking-widest text-indigo-900 flex items-center gap-1.5">
-                                    <span class="flex items-center gap-1.5"><x-lucide name="truck" class="w-3.5 h-3.5 text-indigo-700" /> Courier & Shipping Information</span>
+                                <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-1.5">
+                                    <x-lucide name="truck" class="w-4 h-4 text-[#C49520]" />
+                                    <span>Courier & Shipping Information</span>
                                 </div>
                                 <template x-if="isShippingLocked(detailsOrder)">
-                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                                        <x-lucide name="lock" class="w-3 h-3 inline mr-1" /> Read Only / Locked
+                                    <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                          class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-2xs">
+                                        <x-lucide name="lock" class="w-3 h-3 text-[#C49520]" /> Read Only / Locked
                                     </span>
                                 </template>
                             </div>
 
                             <template x-if="isShippingLocked(detailsOrder)">
-                                <p class="text-[10px] text-amber-700 font-medium italic leading-relaxed">
+                                <p class="text-[11px] text-[#766C60] font-medium italic leading-relaxed">
                                     Shipping information is locked and read-only because the order is in transit, delivered, completed, or cancelled.
                                 </p>
                             </template>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
-                                     <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Courier / Shipping Company</label>
+                                     <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block mb-1">Courier / Shipping Company</label>
                                      <select x-model="courierName" @change="onCourierChange()" :disabled="isShippingLocked(detailsOrder)"
-                                         class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500 cursor-pointer">
+                                         style="background: #FFFFFF; border-color: #E8DECB;"
+                                         class="w-full h-9 px-3 border rounded-xl text-xs font-semibold outline-none focus:border-[#C49520] disabled:bg-[#FAF8F5] disabled:text-gray-500 cursor-pointer text-[#1E1915]">
                                          <option value="J&T Express">J&T Express (Default)</option>
                                          <option value="LBC Express">LBC Express</option>
                                          <option value="Flash Express">Flash Express</option>
@@ -2698,8 +2745,8 @@ if (window.Alpine) {
                                 </div>
                                 <div>
                                      <div class="flex items-center justify-between mb-1">
-                                         <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block">Tracking Number <span class="text-red-500">*</span></label>
-                                         <span class="text-[8px] font-mono text-gray-400" x-text="trackingNumber ? (trackingNumber.trim().length + ' chars') : ''"></span>
+                                         <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block">Tracking Number <span class="text-red-500">*</span></label>
+                                         <span class="text-[9px] font-mono text-[#766C60]" x-text="trackingNumber ? (trackingNumber.trim().length + ' chars') : ''"></span>
                                      </div>
                                      <input type="text" 
                                          x-model="trackingNumber" 
@@ -2709,17 +2756,17 @@ if (window.Alpine) {
                                          :class="{
                                              'border-emerald-500 focus:border-emerald-600 bg-emerald-50/20 text-emerald-950': trackingNumber && trackingValidationStatus.valid,
                                              'border-red-400 focus:border-red-500 bg-red-50/20 text-red-950': trackingNumber && !trackingValidationStatus.valid,
-                                             'border-gray-200 focus:border-[#C0420A] bg-white text-gray-900': !trackingNumber
+                                             'border-[#E8DECB] focus:border-[#C49520] bg-white text-[#1E1915]': !trackingNumber
                                          }"
-                                         class="w-full h-9 px-3 border rounded-xl text-xs font-mono font-bold outline-none uppercase transition-colors disabled:bg-gray-100 disabled:text-gray-500">
+                                         class="w-full h-9 px-3 border rounded-xl text-xs font-mono font-bold outline-none uppercase transition-colors disabled:bg-[#FAF8F5] disabled:text-gray-500">
                                 </div>
                             </div>
 
                             <div class="space-y-1.5 pt-0.5">
                                 <div class="flex items-center justify-between flex-wrap gap-1 text-[10px]">
-                                    <div class="text-gray-500 flex items-center gap-1">
-                                        <span class="font-bold text-gray-700">Format Guide:</span>
-                                        <span class="italic text-gray-600" x-text="getCourierConfig(courierName).hint"></span>
+                                    <div class="text-[#766C60] flex items-center gap-1">
+                                        <span class="font-bold text-[#1E1915]">Format Guide:</span>
+                                        <span class="italic text-[#766C60]" x-text="getCourierConfig(courierName).hint"></span>
                                     </div>
                                     <template x-if="trackingNumber">
                                         <span :class="trackingValidationStatus.valid ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'"
@@ -2730,40 +2777,45 @@ if (window.Alpine) {
                             </div>
 
                             <div>
-                                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Official Courier Tracking URL</label>
+                                <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block mb-1">Official Courier Tracking URL</label>
                                 <input type="url" x-model="trackingLink" placeholder="https://www.jtexpress.ph/track" :disabled="isShippingLocked(detailsOrder)"
-                                    class="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:border-[#C0420A] disabled:bg-gray-100 disabled:text-gray-500">
-                                <p class="text-[9px] text-gray-400 mt-1">Automatically updated based on chosen courier, or enter a direct package tracking link.</p>
+                                    style="background: #FFFFFF; border-color: #E8DECB;"
+                                    class="w-full h-9 px-3 border rounded-xl text-xs font-semibold outline-none focus:border-[#C49520] disabled:bg-[#FAF8F5] disabled:text-gray-500 text-[#1E1915]">
+                                <p class="text-[9px] text-[#766C60] mt-1">Automatically updated based on chosen courier, or enter a direct package tracking link.</p>
                             </div>
                         </div>
 
                         {{-- Purchased Product Items (Full Width Card Matching Mockup) --}}
-                        <div class="border border-gray-200/80 rounded-2xl p-5 bg-white shadow-2xs space-y-3.5">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-sm font-black text-gray-900">Purchased items</h3>
-                                <span class="text-xs font-medium text-gray-500"
+                        <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border"
+                             style="background: #FFFCF7; border-color: #E8DECB;">
+                            <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                                <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Purchased Items</h3>
+                                <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                      class="px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-2xs"
                                       x-text="(detailsOrder.items ? detailsOrder.items.length : 0) + ' item' + ((detailsOrder.items && detailsOrder.items.length === 1) ? '' : 's')"></span>
                             </div>
 
                             <div class="space-y-2.5">
                                 <template x-for="item in detailsOrder.items || []" :key="item.id">
-                                    <div class="border border-gray-100 rounded-xl p-3.5 flex items-center justify-between gap-4 bg-white hover:border-gray-200 transition-colors">
+                                    <div class="rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-4 transition-colors border shadow-2xs"
+                                         style="background: #FFFFFF; border-color: #E8DECB;">
                                         <div class="flex items-center gap-3.5 min-w-0">
-                                            <div class="w-14 h-14 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
+                                            <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 border"
+                                                 style="background: #FAF8F5; border-color: #E8DECB;">
                                                 <img :src="item.image_url || productImage(item.product)" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'">
                                             </div>
                                             <div class="min-w-0 space-y-0.5">
-                                                <h4 class="text-xs sm:text-sm font-bold text-gray-900 truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
-                                                <div class="text-xs text-gray-500 font-medium" x-show="item.size" x-text="'Size: ' + item.size"></div>
-                                                <div class="text-[11px] text-gray-500">
+                                                <h4 class="text-xs sm:text-sm font-bold text-[#1E1915] truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
+                                                <div class="text-xs text-[#766C60] font-semibold" x-show="item.size" x-text="'Size: ' + item.size"></div>
+                                                <div class="text-[11px] text-[#766C60]">
                                                     <span x-text="'Quantity: ' + item.quantity"></span>
-                                                    <span class="mx-1 text-gray-300">|</span>
+                                                    <span class="mx-1 text-[#E8DECB]">|</span>
                                                     <span x-text="'Unit price: ₱' + Number(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="text-right shrink-0">
-                                            <div class="text-sm sm:text-base font-bold text-gray-900" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString(undefined, {minimumFractionDigits: 2})"></div>
+                                            <div class="text-sm sm:text-base font-serif font-bold text-[#1E1915]" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString(undefined, {minimumFractionDigits: 2})"></div>
                                         </div>
                                     </div>
                                 </template>
@@ -2772,18 +2824,20 @@ if (window.Alpine) {
 
                         {{-- Customer Rating & Feedback Card --}}
                         <template x-if="detailsOrder.reviews && detailsOrder.reviews.length > 0">
-                            <div class="border border-amber-200/80 bg-amber-50/40 p-4 sm:p-5 rounded-2xl space-y-3 shadow-2xs">
-                                <div class="flex items-center justify-between">
-                                    <div class="text-[10px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-1.5">
+                            <div class="rounded-3xl p-5 space-y-3 shadow-2xs border"
+                                 style="background: #FFFCF7; border-color: #E8DECB;">
+                                <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-1.5">
                                         <x-lucide name="star" class="w-4 h-4 text-amber-500 fill-amber-500" />
                                         <span>Customer Rating & Feedback</span>
                                     </div>
-                                    <span class="text-[10px] font-bold text-amber-800" x-text="detailsOrder.reviews.length + ' Review(s)'"></span>
+                                    <span class="text-[10px] font-bold text-[#996515]" x-text="detailsOrder.reviews.length + ' Review(s)'"></span>
                                 </div>
                                 
                                 <div class="space-y-2.5">
                                     <template x-for="rev in detailsOrder.reviews" :key="rev.id">
-                                        <div class="bg-white p-3.5 rounded-xl border border-amber-100 shadow-2xs space-y-2">
+                                        <div class="p-3.5 rounded-2xl border shadow-2xs space-y-2"
+                                             style="background: #FFFFFF; border-color: #E8DECB;">
                                             <div class="flex items-center justify-between flex-wrap gap-2">
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex items-center text-amber-400 text-sm">
@@ -2791,17 +2845,19 @@ if (window.Alpine) {
                                                              <svg class="w-3.5 h-3.5 inline" :class="star <= rev.rating ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                                         </template>
                                                     </div>
-                                                    <span class="text-xs font-black text-black" x-text="rev.rating + '.0'"></span>
+                                                    <span class="text-xs font-black text-[#1E1915]" x-text="rev.rating + '.0'"></span>
                                                 </div>
-                                                <span class="text-[10px] font-medium text-gray-400" x-text="rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
+                                                <span class="text-[10px] font-medium text-[#766C60]" x-text="rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
                                             </div>
 
-                                            <p class="text-xs text-gray-700 font-medium leading-relaxed" x-text="rev.comment || 'No written comment provided.'"></p>
+                                            <p class="text-xs text-[#1E1915] font-medium leading-relaxed" x-text="rev.comment || 'No written comment provided.'"></p>
 
                                             <template x-if="rev.images">
                                                 <div class="flex flex-wrap gap-2 pt-1">
                                                     <template x-for="(img, idx) in (typeof rev.images === 'string' ? JSON.parse(rev.images || '[]') : (rev.images || []))" :key="idx">
-                                                        <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0 shadow-xs hover:opacity-80 transition-opacity">
+                                                        <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" 
+                                                           class="w-12 h-12 rounded-xl overflow-hidden border shrink-0 shadow-2xs hover:opacity-80 transition-opacity"
+                                                           style="border-color: #E8DECB;">
                                                             <img :src="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" class="w-full h-full object-cover">
                                                         </a>
                                                     </template>
@@ -2815,19 +2871,20 @@ if (window.Alpine) {
 
                         {{-- Order Status History Audit Trail --}}
                         <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">
-                            <div class="border border-gray-200/80 bg-white p-4 sm:p-5 rounded-2xl space-y-3 shadow-2xs">
-                                <div class="text-[10px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between">
+                            <div class="rounded-3xl p-5 space-y-3 shadow-2xs border"
+                                 style="background: #FFFCF7; border-color: #E8DECB;">
+                                <div class="text-[10px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
                                     <span>Status History Audit Trail</span>
-                                    <span class="text-gray-400 text-[10px]" x-text="detailsOrder.status_histories.length + ' entry(ies)'"></span>
+                                    <span class="text-[#766C60] text-[10px]" x-text="detailsOrder.status_histories.length + ' entry(ies)'"></span>
                                 </div>
                                 <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
                                     <template x-for="hist in detailsOrder.status_histories" :key="hist.id">
-                                        <div class="flex items-start justify-between text-xs py-1.5 border-b border-gray-100 last:border-0">
+                                        <div class="flex items-start justify-between text-xs py-1.5 border-b last:border-0" style="border-color: #E8DECB;">
                                             <div>
-                                                <span class="font-bold text-gray-900 text-xs" x-text="hist.newStatus"></span>
-                                                <span class="text-[10px] text-gray-400 block" x-text="'Updated by ' + (hist.userRole || 'system')"></span>
+                                                <span class="font-bold text-[#1E1915] text-xs" x-text="hist.newStatus"></span>
+                                                <span class="text-[10px] text-[#766C60] block" x-text="'Updated by ' + (hist.userRole || 'system')"></span>
                                             </div>
-                                            <div class="text-right text-[10px] font-medium text-gray-500" x-text="hist.createdAt ? new Date(hist.createdAt).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : ''"></div>
+                                            <div class="text-right text-[10px] font-medium text-[#766C60]" x-text="hist.createdAt ? new Date(hist.createdAt).toLocaleString('en-PH', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : ''"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -2837,10 +2894,12 @@ if (window.Alpine) {
                 </template>
             </div>
 
-            {{-- Modal Footer Actions (Clean Pill Button Bar Matching Mockup) --}}
-            <div class="p-4 sm:p-5 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
-                <button @click="detailsModal = false"
-                    class="px-6 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer text-center order-last sm:order-first">
+            {{-- Modal Footer Actions (LumBarong Artisan Brand Button Bar) --}}
+            <div class="p-4 sm:p-5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0"
+                 style="background: #FFFCF7; border-color: #E8DECB;">
+                <button type="button" @click="detailsModal = false"
+                    style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
+                    class="px-6 py-2.5 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
                     Close
                 </button>
 
@@ -2850,13 +2909,15 @@ if (window.Alpine) {
                         <button type="button" 
                             @click="openRejectReturnModal(detailsOrder)"
                             :disabled="approveReturnLoading || rejectReturnLoading"
-                            class="px-5 py-2.5 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                            style="border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626;"
+                            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Return
                         </button>
                         <button type="button" 
                             @click="openApproveReturnModal(detailsOrder)"
                             :disabled="approveReturnLoading || rejectReturnLoading"
-                            class="flex-1 sm:flex-none px-6 py-2.5 bg-[#C49520] hover:bg-[#B38519] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                            style="background-color: #C49520; color: #ffffff;"
+                            class="flex-1 sm:flex-none px-6 py-2.5 hover:bg-[#A16D19] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
                             <x-lucide name="check" class="w-3.5 h-3.5 text-white" />
                             <span>Approve Return</span>
                         </button>
@@ -2869,13 +2930,15 @@ if (window.Alpine) {
                         <button type="button" 
                             @click="openDeclineCancellationModal(detailsOrder)"
                             :disabled="approveCancellationLoading || declineCancellationLoading"
-                            class="px-5 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                            style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
+                            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Cancellation
                         </button>
                         <button type="button" 
                             @click="openApproveCancellationModal(detailsOrder)"
                             :disabled="approveCancellationLoading || declineCancellationLoading"
-                            class="flex-1 sm:flex-none px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                            style="background-color: #DC2626; color: #ffffff;"
+                            class="flex-1 sm:flex-none px-6 py-2.5 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
                             <x-lucide name="check" class="w-3.5 h-3.5 text-white" />
                             <span>Approve Cancellation</span>
                         </button>
@@ -2884,23 +2947,25 @@ if (window.Alpine) {
 
                 {{-- Pending Order Actions: Reject & Cancel OR Verify & Accept Order --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'pending'">
-                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2.5">
                         <button type="button" 
                             @click="openRejectPaymentModal(detailsOrder)"
-                            class="px-5 py-2.5 border border-red-200 hover:bg-red-50 text-red-600 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5">
+                            style="border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626;"
+                            class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Reject & Cancel
                         </button>
                         <button type="button" 
                             @click="openVerifyPaymentModal(detailsOrder)"
                             :disabled="statusUpdating || verifyingPayment"
-                            class="flex-1 sm:flex-none px-6 py-2.5 bg-[#00875A] hover:bg-[#007048] disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
+                            style="background-color: #2E7D32; color: #ffffff;"
+                            class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer shrink-0">
                             <template x-if="statusUpdating || verifyingPayment">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                             </template>
                             <template x-if="!statusUpdating && !verifyingPayment">
-                                <x-lucide name="check" class="w-4 h-4 text-white" />
+                                <x-lucide name="check" class="w-4 h-4 text-white" style="color: #ffffff;" />
                             </template>
-                            <span x-text="(statusUpdating || verifyingPayment) ? 'Processing Acceptance...' : (
+                            <span style="color: #ffffff;" x-text="(statusUpdating || verifyingPayment) ? 'Processing Acceptance...' : (
                                 ['GCASH', 'MAYA'].includes((detailsOrder?.paymentMethod || '').toUpperCase()) ? 'Verify & Accept Order' : (
                                     isStorePickup(detailsOrder) ? 'Accept & Prepare Order' : (
                                         isSpecialDelivery(detailsOrder) ? 'Accept & Prepare Order' : 'Accept Order'
@@ -2917,15 +2982,15 @@ if (window.Alpine) {
                         <button type="button"
                             @click="confirmShipmentWithProof()"
                             :disabled="packingUploading || statusUpdating"
-                            :style="(isStorePickup(detailsOrder) || isSpecialDelivery(detailsOrder) || packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #00875A; color: #ffffff;' : (packingPhotoFile ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #1E1915; color: #ffffff;')"
+                            :style="(isStorePickup(detailsOrder) || isSpecialDelivery(detailsOrder) || packingUploadSuccess || detailsOrder.packingProof) ? 'background-color: #2E7D32; color: #ffffff;' : (packingPhotoFile ? 'background-color: #C0420A; color: #ffffff;' : 'background-color: #1E1915; color: #ffffff;')"
                             class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                             <template x-if="packingUploading || statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                             </template>
                             <template x-if="!packingUploading && !statusUpdating">
-                                <x-lucide name="check" class="w-4 h-4 text-white" />
+                                <x-lucide name="check" class="w-4 h-4 text-white" style="color: #ffffff;" />
                             </template>
-                            <span x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped)' : (packingPhotoFile ? 'Upload & Confirm Shipment' : 'Upload Proof & Confirm Shipment')))))"></span>
+                            <span style="color: #ffffff;" x-text="packingUploading ? 'Uploading Photo...' : (statusUpdating ? 'Updating Status...' : (isStorePickup(detailsOrder) ? 'Mark Ready for In-Shop Pickup' : (isSpecialDelivery(detailsOrder) ? 'Process Special Delivery' : ((packingUploadSuccess || detailsOrder.packingProof) ? 'Confirm Shipment (Mark Shipped)' : (packingPhotoFile ? 'Upload & Confirm Shipment' : 'Upload Proof & Confirm Shipment')))))"></span>
                         </button>
                     </div>
                 </template>
@@ -2937,21 +3002,23 @@ if (window.Alpine) {
                             <div class="flex items-center gap-2">
                                 <button type="button"
                                     @click="printOrderDetails()"
-                                    class="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5">
-                                    <x-lucide name="printer" class="w-3.5 h-3.5 text-gray-600" />
+                                    style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
+                                    class="px-4 py-2.5 hover:bg-[#FDF8EE] hover:border-[#C49520] rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                                    <x-lucide name="printer" class="w-3.5 h-3.5 text-[#C49520]" />
                                     <span>Print Invoice</span>
                                 </button>
                                 <button type="button"
                                     @click="confirmMarkAsDelivered(detailsOrder)"
                                     :disabled="statusUpdating || deliveryConfirmLoading"
-                                    class="flex-1 sm:flex-none px-6 py-2.5 bg-[#00875A] hover:bg-[#007048] disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                                    style="background-color: #2E7D32; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                                     <template x-if="statusUpdating || deliveryConfirmLoading">
-                                        <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                        <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                     </template>
                                     <template x-if="!statusUpdating && !deliveryConfirmLoading">
-                                        <x-lucide name="check" class="w-4 h-4 text-white" />
+                                        <x-lucide name="check" class="w-4 h-4 text-white" style="color: #ffffff;" />
                                     </template>
-                                    <span x-text="(statusUpdating || deliveryConfirmLoading) ? 'Updating...' : 'Confirm customer handover'"></span>
+                                    <span style="color: #ffffff;" x-text="(statusUpdating || deliveryConfirmLoading) ? 'Updating...' : 'Confirm Handover & Claimed'"></span>
                                 </button>
                             </div>
                         </template>
@@ -2959,14 +3026,15 @@ if (window.Alpine) {
                             <button type="button"
                                 @click="requestStatusUpdate(detailsOrder, 'In Transit')"
                                 :disabled="statusUpdating || statusConfirmLoading"
-                                class="flex-1 sm:flex-none px-6 py-2.5 bg-[#1D4ED8] hover:bg-[#1E40AF] disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                                style="background-color: #1D4ED8; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                                 <template x-if="statusUpdating || statusConfirmLoading">
-                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>
                                 <template x-if="!statusUpdating && !statusConfirmLoading">
-                                    <x-lucide name="truck" class="w-4 h-4 text-white" />
+                                    <x-lucide name="truck" class="w-4 h-4 text-white" style="color: #ffffff;" />
                                 </template>
-                                <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for special delivery'"></span>
+                                <span style="color: #ffffff;" x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for special delivery'"></span>
                             </button>
                         </template>
                         <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
@@ -2981,63 +3049,68 @@ if (window.Alpine) {
                                     }
                                 })()"
                                 :disabled="statusUpdating || statusConfirmLoading"
-                                class="flex-1 sm:flex-none px-6 py-2.5 bg-black hover:bg-[#C0420A] disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                                style="background-color: #1E1915; color: #ffffff;"
+                                class="flex-1 sm:flex-none px-6 py-2.5 hover:bg-[#C0420A] disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                                 <template x-if="statusUpdating || statusConfirmLoading">
-                                    <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                    <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                 </template>
                                 <template x-if="!statusUpdating && !statusConfirmLoading">
-                                    <x-lucide name="truck" class="w-4 h-4 text-white" />
+                                    <x-lucide name="truck" class="w-4 h-4 text-white" style="color: #ffffff;" />
                                 </template>
-                                <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Mark In Transit'"></span>
+                                <span style="color: #ffffff;" x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Mark In Transit'"></span>
                             </button>
                         </template>
                     </div>
                 </template>
 
-                {{-- In Transit Status: Confirm customer handover (Matches Mockup exactly) --}}
+                {{-- In Transit Status: Confirm customer handover --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'in transit'">
                     <div class="flex-1 flex justify-end">
                         <button type="button"
                             @click="confirmMarkAsDelivered(detailsOrder)"
                             :disabled="statusUpdating"
-                            class="flex-1 sm:flex-none px-6 py-2.5 bg-[#00875A] hover:bg-[#007048] disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                            style="background-color: #2E7D32; color: #ffffff;"
+                            class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                             <template x-if="statusUpdating">
-                                <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                                <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                             </template>
                             <template x-if="!statusUpdating">
-                                <x-lucide name="check" class="w-4 h-4 text-white" />
+                                <x-lucide name="check" class="w-4 h-4 text-white" style="color: #ffffff;" />
                             </template>
-                            <span x-text="statusUpdating ? 'Marking Delivered...' : (isSpecialDelivery(detailsOrder) ? 'Confirm customer handover' : (isStorePickup(detailsOrder) ? 'Confirm customer handover' : 'Mark as Delivered'))"></span>
+                            <span style="color: #ffffff;" x-text="statusUpdating ? 'Marking Delivered...' : (isSpecialDelivery(detailsOrder) ? 'Confirm customer handover' : (isStorePickup(detailsOrder) ? 'Confirm customer handover' : 'Mark as Delivered'))"></span>
                         </button>
                     </div>
                 </template>
 
                 {{-- Status notice for Delivered status --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'delivered'">
-                    <div class="flex-1 py-2 px-4 bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center">
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D;"
+                         class="flex-1 py-2 px-4 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center shadow-2xs">
                         <template x-if="isStorePickup(detailsOrder)">
-                            <span class="flex items-center gap-1.5"><x-lucide name="store" class="w-3.5 h-3.5 text-teal-800" /> Claimed at Workshop — Order Fulfilled</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="store" class="w-3.5 h-3.5" style="color: #15803D;" /> Claimed at Workshop — Order Fulfilled</span>
                         </template>
                         <template x-if="isSpecialDelivery(detailsOrder)">
-                            <span class="flex items-center gap-1.5"><x-lucide name="bike" class="w-3.5 h-3.5 text-teal-800" /> Delivered by Artisan Rider — Completed</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="bike" class="w-3.5 h-3.5" style="color: #15803D;" /> Delivered by Artisan Rider — Completed</span>
                         </template>
                         <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                            <span class="flex items-center gap-1.5"><x-lucide name="package" class="w-3.5 h-3.5 text-teal-800" /> Delivered — Awaiting Customer Confirmation</span>
+                            <span class="flex items-center gap-1.5"><x-lucide name="package" class="w-3.5 h-3.5" style="color: #15803D;" /> Delivered — Awaiting Customer Confirmation</span>
                         </template>
                     </div>
                 </template>
 
                 {{-- Status notice for Completed status --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'completed'">
-                    <div class="flex-1 py-2 px-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center">
-                        <span class="flex items-center gap-1.5"><x-lucide name="check-circle" class="w-3.5 h-3.5 text-emerald-800" /> Order Completed by Customer</span>
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D;"
+                         class="flex-1 py-2 px-4 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center shadow-2xs">
+                        <span class="flex items-center gap-1.5"><x-lucide name="check-circle" class="w-3.5 h-3.5" style="color: #15803D;" /> Order Completed by Customer</span>
                     </div>
                 </template>
 
                 {{-- Status notice for Cancelled status --}}
                 <template x-if="detailsOrder && normalizeStatus(detailsOrder.status) === 'cancelled'">
-                    <div class="flex-1 py-2 px-4 bg-red-50 border border-red-200 text-red-800 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center">
-                        <span class="flex items-center gap-1.5"><x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-800" /> Order Cancelled</span>
+                    <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
+                         class="flex-1 py-2 px-4 text-xs font-bold rounded-full flex items-center justify-center gap-2 text-center shadow-2xs">
+                        <span class="flex items-center gap-1.5"><x-lucide name="x-circle" class="w-3.5 h-3.5" style="color: #DC2626;" /> Order Cancelled</span>
                         <span class="font-normal text-xs text-red-600 truncate max-w-xs" x-text="detailsOrder.cancellationReason ? '(' + detailsOrder.cancellationReason + ')' : ''"></span>
                     </div>
                 </template>
