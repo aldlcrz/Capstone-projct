@@ -284,6 +284,13 @@ function sellerOrdersManager() {
             return { text: 'Pending Payment', class: 'bg-gray-50 text-gray-600 border-gray-200' };
         },
 
+        formatDeliveryMethodBadge(order) {
+            if (!order) return 'Standard Delivery';
+            if (this.isStorePickup(order)) return 'Store Pickup';
+            if (this.isSpecialDelivery(order)) return 'Special Delivery';
+            return 'Standard Delivery';
+        },
+
         isDirectSettlementOrder(order) {
             if (!order) return false;
             const pm = String(order.paymentMethod || '').toLowerCase();
@@ -1220,7 +1227,7 @@ function sellerOrdersManager() {
                 }
             }
             if (lower.includes('j&t') || lower.includes('jnt')) return this.courierFormats['J&T Express'];
-            if (lower.includes('spx') || lower.includes('shopee')) return this.courierFormats['SPX Express'];
+            if (lower.includes('spx') || lower.includes('shopee')) return this.courierFormats['J&T Express'];
             if (lower.includes('lbc')) return this.courierFormats['LBC Express'];
             if (lower.includes('flash')) return this.courierFormats['Flash Express'];
             if (lower.includes('ninja')) return this.courierFormats['Ninja Van'];
@@ -1371,6 +1378,9 @@ function sellerOrdersManager() {
                 this.trackingLink = '';
             } else {
                 this.courierName = order.shipping?.fulfillment_provider_name || order.courierName || order.shipping?.pricing_provider_name || order.shipping?.provider_name || 'J&T Express';
+                if (String(this.courierName).toLowerCase().includes('spx') || this.courierName === 'Standard Delivery' || this.courierName === 'Standard Courier') {
+                    this.courierName = 'J&T Express';
+                }
                 this.trackingNumber = order.shipping?.tracking_number || order.trackingNumber || '';
                 this.trackingLink = order.trackingLink || (this.courierName ? this.getCourierDefaultLink(this.courierName) : 'https://www.jtexpress.ph/track');
             }
@@ -2127,7 +2137,7 @@ if (window.Alpine) {
                             <template x-if="!isStorePickup(order) && !isSpecialDelivery(order)">
                                 <span class="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs">
                                     <x-lucide name="package" class="w-3 h-3 text-stone-700 shrink-0" />
-                                    <span x-text="order.courierName || order.shipping?.provider_name || 'Standard Courier'"></span>
+                                    <span x-text="formatDeliveryMethodBadge(order)"></span>
                                 </span>
                             </template>
 
@@ -2500,8 +2510,8 @@ if (window.Alpine) {
                                                     </template>
                                                 </div>
                                                 <div>
-                                                    <div class="text-xs font-bold text-[#1E1915]" x-text="isSpecialDelivery(detailsOrder) ? 'Special Delivery' : (isStorePickup(detailsOrder) ? 'Store Pickup' : (detailsOrder.shipping?.provider_name || 'Standard Courier'))"></div>
-                                                    <div class="text-[11px] text-[#766C60] font-medium" x-text="isSpecialDelivery(detailsOrder) ? 'Local Artisan Rider (Laguna)' : (isStorePickup(detailsOrder) ? 'Local Workshop Pickup · Lumban, Laguna' : (detailsOrder.shipping?.provider_name || '3rd Party Logistics'))"></div>
+                                                    <div class="text-xs font-bold text-[#1E1915]" x-text="isSpecialDelivery(detailsOrder) ? 'Special Delivery' : (isStorePickup(detailsOrder) ? 'Store Pickup' : 'Standard Delivery')"></div>
+                                                    <div class="text-[11px] text-[#766C60] font-medium" x-text="isSpecialDelivery(detailsOrder) ? 'Local Artisan Rider (Laguna)' : (isStorePickup(detailsOrder) ? 'Local Workshop Pickup · Lumban, Laguna' : (detailsOrder.shipping?.provider_name && !detailsOrder.shipping.provider_name.toLowerCase().includes('spx') && detailsOrder.shipping.provider_name !== 'Standard Delivery' ? detailsOrder.shipping.provider_name : (detailsOrder.courierName && !detailsOrder.courierName.toLowerCase().includes('spx') && detailsOrder.courierName !== 'Standard Delivery' ? detailsOrder.courierName : 'Commercial Courier (J&T / LBC / Flash)')))"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2556,7 +2566,7 @@ if (window.Alpine) {
                                     <div class="flex items-start justify-between text-xs">
                                         <div>
                                             <div class="text-[#766C60] font-medium">Delivery fee</div>
-                                            <div class="text-[11px] text-[#766C60] font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : 'Standard Courier'))"></div>
+                                            <div class="text-[11px] text-[#766C60] font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping && detailsOrder.shipping.provider_name && !detailsOrder.shipping.provider_name.toLowerCase().includes('spx') ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight || 0).toFixed(2) + ' kg') : 'Standard Delivery'))"></div>
                                         </div>
                                         <span class="font-bold text-[#1E1915]" x-text="isStorePickup(detailsOrder) ? '₱0.00' : ('₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}))"></span>
                                     </div>

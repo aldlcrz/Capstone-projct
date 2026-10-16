@@ -956,4 +956,24 @@ class Order extends Model
             });
         });
     }
+
+    public function getCourierNameAttribute($value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+        if (str_contains(strtolower($value), 'spx') || str_contains(strtolower($value), 'shopee')) {
+            return 'Standard Delivery';
+        }
+        return $value;
+    }
+
+    public function setCourierNameAttribute($value): void
+    {
+        if ($value && (str_contains(strtolower($value), 'spx') || str_contains(strtolower($value), 'shopee'))) {
+            $this->attributes['courierName'] = 'Standard Delivery';
+        } else {
+            $this->attributes['courierName'] = $value;
+        }
+    }
 }

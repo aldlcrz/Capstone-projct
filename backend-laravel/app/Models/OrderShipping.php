@@ -119,4 +119,28 @@ class OrderShipping extends Model
     {
         return $this->hasMany(ShipmentTrackingEvent::class, 'order_shipping_id')->orderBy('occurred_at', 'asc');
     }
+
+    public function getProviderNameAttribute($value): ?string
+    {
+        if ($value && (str_contains(strtolower($value), 'spx') || str_contains(strtolower($value), 'shopee'))) {
+            return 'Standard Delivery';
+        }
+        return $value;
+    }
+
+    public function getPricingProviderNameAttribute($value): ?string
+    {
+        if ($value && (str_contains(strtolower($value), 'spx') || str_contains(strtolower($value), 'shopee'))) {
+            return 'Standard Delivery';
+        }
+        return $value;
+    }
+
+    public function getFulfillmentProviderNameAttribute($value): ?string
+    {
+        if ($value && (str_contains(strtolower($value), 'spx') || str_contains(strtolower($value), 'shopee'))) {
+            return 'Standard Delivery';
+        }
+        return $value;
+    }
 }
