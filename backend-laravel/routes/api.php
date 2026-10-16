@@ -24,7 +24,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Courier Real-Time Tracking Webhook (J&T, LBC, Flash Express, etc.)
+Route::post('/webhooks/courier-tracking', [\App\Http\Controllers\CourierTrackingWebhookController::class, 'handle']);
+
 Route::prefix('v1')->group(function () {
+    Route::post('/webhooks/courier-tracking', [\App\Http\Controllers\CourierTrackingWebhookController::class, 'handle']);
     
     // Auth Routes
     Route::prefix('auth')->group(function () {

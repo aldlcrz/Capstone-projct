@@ -424,6 +424,15 @@ class OrderController extends Controller
             $order->shipping->update($shippingAttrs);
         }
 
+        // Automatically register with real-time courier tracking network (J&T, LBC, Flash, etc.)
+        if (!$isStorePickup && !$isSpecialDelivery && !empty($order->trackingNumber) && !empty($order->courierName)) {
+            try {
+                app(\App\Services\CourierTrackingService::class)->registerTracking($order->courierName, $order->trackingNumber, $order->id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not auto-register courier tracking for order {$order->id}: " . $e->getMessage());
+            }
+        }
+
         if ($canonicalCurrent !== $canonicalTarget || $shippingUpdated) {
             $historyNotes = $request->notes;
             if (!$historyNotes) {

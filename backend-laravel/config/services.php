@@ -46,4 +46,9 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
     ],
 
+    'trackingmore' => [
+        'api_key' => env('TRACKINGMORE_API_KEY'),
+        'webhook_secret' => env('TRACKINGMORE_WEBHOOK_SECRET'),
+    ],
+
 ];
