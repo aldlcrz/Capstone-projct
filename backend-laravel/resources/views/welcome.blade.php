@@ -720,6 +720,8 @@
                     {{ $headerTitle }}
                 </span>
             </div>
+            <span class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
+        </div>
         @php
             $currentCatParam = request('category', '');
             $currentSortParam = request('sort', '');
@@ -763,7 +765,7 @@
         @endphp
 
         {{-- Filter & Sorting Toolbar --}}
-        <div class="bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#ECE3D2] shadow-xs space-y-3">
+        <div class="w-full bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#ECE3D2] shadow-xs space-y-3">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 {{-- Demographic / Classification Tabs --}}
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
@@ -805,7 +807,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
+        <div class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
             @foreach($products as $product)
             @php
                 $pSizes = is_string($product->sizes) ? json_decode($product->sizes, true) : $product->sizes;
