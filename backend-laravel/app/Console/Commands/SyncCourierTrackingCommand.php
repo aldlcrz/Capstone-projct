@@ -45,7 +45,7 @@ class SyncCourierTrackingCommand extends Command
 
         if ($orders->isEmpty()) {
             $this->comment("No active courier parcels found needing synchronization.");
-            return Command::SUCCESS;
+            return self::SUCCESS;
         }
 
         $this->info("Found {$orders->count()} active courier parcel(s) to synchronize.");
@@ -65,6 +65,6 @@ class SyncCourierTrackingCommand extends Command
         }
 
         $this->info("Synchronization complete: {$syncedCount} order(s) updated.");
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }

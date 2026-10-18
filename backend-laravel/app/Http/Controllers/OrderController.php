@@ -429,7 +429,7 @@ class OrderController extends Controller
             try {
                 app(\App\Services\CourierTrackingService::class)->registerTracking($order->courierName, $order->trackingNumber, $order->id);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning("Could not auto-register courier tracking for order {$order->id}: " . $e->getMessage());
+                Log::warning("Could not auto-register courier tracking for order {$order->id}: " . $e->getMessage());
             }
         }
 
