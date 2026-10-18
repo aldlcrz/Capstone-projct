@@ -643,6 +643,12 @@ class WebController extends Controller
         $order = $query->with(['items.product', 'seller', 'reviews', 'statusHistories', 'returnRequests', 'shipping.provider'])
             ->firstOrFail();
 
+        // Safety guard: if the courier tracking table is not yet migrated on this
+        // server, pre-load an empty relation so the order page never 500s.
+        if (!\Illuminate\Support\Facades\Schema::hasTable('shipment_tracking_events')) {
+            $order->setRelation('trackingEvents', new \Illuminate\Database\Eloquent\Collection());
+        }
+
         $recommended = $this->getRecommendedProductsForOrder($order);
 
         return view('orders.show', compact('order', 'recommended'));
