@@ -1269,12 +1269,21 @@
             }
         }
 
-        function loadCatalogue(url, push = true) {
+        function loadCatalogue(url, push = true, shouldScroll = true, isLiveTyping = false) {
             const section = document.getElementById('catalogue-section');
             if (!section) {
                 window.location.href = url;
                 return;
             }
+
+            // Capture state of focused price inputs to preserve focus & typing
+            const activeEl = document.activeElement;
+            const isPriceFocused = activeEl && (activeEl.name === 'min_price' || activeEl.name === 'max_price');
+            const focusedInputName = isPriceFocused ? activeEl.name : null;
+            const liveMinVal = document.querySelector('.ajax-search-form input[name="min_price"]')?.value ?? null;
+            const liveMaxVal = document.querySelector('.ajax-search-form input[name="max_price"]')?.value ?? null;
+            const selStart = isPriceFocused ? activeEl.selectionStart : null;
+            const selEnd = isPriceFocused ? activeEl.selectionEnd : null;
 
             // Sync category highlight immediately from requested URL
             try {
@@ -1283,8 +1292,13 @@
                 updateCategoryHighlight(urlCat);
             } catch(e) {}
 
-            section.style.opacity = '0.4';
-            section.style.pointerEvents = 'none';
+            if (!isLiveTyping) {
+                section.style.opacity = '0.4';
+                section.style.pointerEvents = 'none';
+            } else {
+                const gridEl = section.querySelector('.grid');
+                if (gridEl) gridEl.style.opacity = '0.6';
+            }
 
             const fetchUrl = url.split('#')[0] || '/';
 
@@ -1296,6 +1310,26 @@
                     const newSection = doc.getElementById('catalogue-section');
                     if (newSection && section) {
                         section.innerHTML = newSection.innerHTML;
+
+                        // Restore typing focus & values if user was actively typing in price inputs
+                        if (isPriceFocused && focusedInputName) {
+                            const newForm = section.querySelector('.ajax-search-form');
+                            if (newForm) {
+                                const newMin = newForm.querySelector('input[name="min_price"]');
+                                const newMax = newForm.querySelector('input[name="max_price"]');
+                                if (newMin && liveMinVal !== null) newMin.value = liveMinVal;
+                                if (newMax && liveMaxVal !== null) newMax.value = liveMaxVal;
+                                const targetInput = focusedInputName === 'max_price' ? newMax : newMin;
+                                if (targetInput) {
+                                    targetInput.focus();
+                                    try {
+                                        if (selStart !== null && selEnd !== null) {
+                                            targetInput.setSelectionRange(selStart, selEnd);
+                                        }
+                                    } catch(e) {}
+                                }
+                            }
+                        }
 
                         // Update Shop by Category row highlighting
                         const newCatBar = doc.getElementById('shop-by-category-section');
@@ -1318,8 +1352,15 @@
                             updateCategoryHighlight(urlCat);
                         } catch(e) {}
 
-                        if (push) history.pushState(null, '', url);
-                        scrollToCatalogue();
+                        if (push) {
+                            history.pushState(null, '', url);
+                        } else if (isLiveTyping) {
+                            history.replaceState(null, '', url);
+                        }
+
+                        if (shouldScroll) {
+                            scrollToCatalogue();
+                        }
                     } else {
                         window.location.href = url;
                     }
@@ -1330,13 +1371,20 @@
                 .finally(() => {
                     section.style.opacity = '1';
                     section.style.pointerEvents = 'auto';
+                    const gridEl = section.querySelector('.grid');
+                    if (gridEl) gridEl.style.opacity = '1';
                 });
         }
+
+        let priceDebounceTimer = null;
+        let searchDebounceTimer = null;
 
         document.addEventListener('click', function(e) {
             const link = e.target.closest('.ajax-filter-link, .pagination a');
             if (link && link.href) {
                 e.preventDefault();
+                clearTimeout(priceDebounceTimer);
+                clearTimeout(searchDebounceTimer);
 
                 // If clicking a category button, instantly highlight it on the UI immediately
                 const catBtn = link.closest('.category-pill-btn') || (link.classList.contains('category-pill-btn') ? link : null);
@@ -1386,17 +1434,43 @@
             return baseUrl + (queryString ? '?' + queryString : '') + '#catalogue-section';
         }
 
-        let searchDebounceTimer = null;
         document.addEventListener('input', function(e) {
-            const input = e.target.closest('.ajax-search-form input[name="search"], input[name="search"]');
-            if (input) {
+            // Live Search input in header
+            const searchInput = e.target.closest('.ajax-search-form input[name="search"], input[name="search"]');
+            if (searchInput) {
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
-                    const form = input.closest('form');
+                    const form = searchInput.closest('form');
                     if (form) {
                         loadCatalogue(buildFormCatalogueUrl(form));
                     }
                 }, 200);
+                return;
+            }
+
+            // Live Min and Max Price Filter inputs
+            const priceInput = e.target.closest('.ajax-search-form input[name="min_price"], .ajax-search-form input[name="max_price"]');
+            if (priceInput) {
+                clearTimeout(priceDebounceTimer);
+                priceDebounceTimer = setTimeout(function() {
+                    const form = priceInput.closest('form');
+                    if (form) {
+                        const minEl = form.querySelector('input[name="min_price"]');
+                        const maxEl = form.querySelector('input[name="max_price"]');
+                        const minRaw = minEl ? minEl.value.trim() : '';
+                        const maxRaw = maxEl ? maxEl.value.trim() : '';
+                        const minNum = minRaw !== '' ? parseFloat(minRaw) : null;
+                        const maxNum = maxRaw !== '' ? parseFloat(maxRaw) : null;
+
+                        // If both are entered and min > max, wait for user to finish typing a valid range
+                        if (minNum !== null && maxNum !== null && minNum > maxNum) {
+                            return;
+                        }
+
+                        // Live typing update: no pushState spam, no scroll jump, seamless typing
+                        loadCatalogue(buildFormCatalogueUrl(form), false, false, true);
+                    }
+                }, 500);
             }
         });
 
@@ -1404,7 +1478,9 @@
             const form = e.target.closest('.ajax-search-form');
             if (form) {
                 e.preventDefault();
-                loadCatalogue(buildFormCatalogueUrl(form));
+                clearTimeout(priceDebounceTimer);
+                clearTimeout(searchDebounceTimer);
+                loadCatalogue(buildFormCatalogueUrl(form), true, false);
             }
         });
 
