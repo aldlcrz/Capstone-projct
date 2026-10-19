@@ -841,6 +841,7 @@
                                    value="{{ $currentMinPrice }}" 
                                    placeholder="Min" 
                                    min="0"
+                                   step="any"
                                    class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
@@ -853,6 +854,7 @@
                                    value="{{ $currentMaxPrice }}" 
                                    placeholder="Max" 
                                    min="0"
+                                   step="any"
                                    class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
@@ -950,10 +952,10 @@
                 </div>
                 <div class="flex items-center gap-2 mt-1">
                     <p class="text-base font-extrabold {{ $product->isSaleActive() ? 'text-[#E02424]' : 'text-gray-900' }}">
-                        ₱{{ number_format($product->salePrice) }}
+                        ₱{{ number_format($product->salePrice, fmod($product->salePrice, 1) != 0 ? 2 : 0) }}
                     </p>
                     @if($product->isSaleActive())
-                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price) }}</p>
+                        <p class="text-xs font-bold text-gray-400 line-through">₱{{ number_format($product->price, fmod($product->price, 1) != 0 ? 2 : 0) }}</p>
                     @endif
                 </div>
                 @if($product->artisan)
@@ -1033,7 +1035,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-1">Quick Add</div>
                             <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight mb-1 truncate" x-text="product.name"></h3>
-                            <div class="text-sm font-black text-[#C0422A] mb-2" x-text="'₱' + Number(product.price).toLocaleString()"></div>
+                            <div class="text-sm font-black text-[#C0422A] mb-2" x-text="'₱' + Number(product.price).toLocaleString(undefined, {minimumFractionDigits: Number(product.price) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2})"></div>
                         </div>
                     </div>
 
