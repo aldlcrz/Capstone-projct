@@ -306,6 +306,7 @@ function trustSafetyReportModal() {
         orderItemId: null,
         variant: '',
         selectedReason: '',
+        selectedReasons: [],
         description: '',
         evidenceFiles: [],
         isUploading: false,
