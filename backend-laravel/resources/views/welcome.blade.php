@@ -839,7 +839,7 @@
                                    value="{{ $currentMinPrice }}" 
                                    placeholder="Min" 
                                    min="0"
-                                   class="w-16 sm:w-20 pl-4.5 sm:pl-5 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
+                                   class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
                         <span class="text-stone-300 text-xs">—</span>
@@ -851,7 +851,7 @@
                                    value="{{ $currentMaxPrice }}" 
                                    placeholder="Max" 
                                    min="0"
-                                   class="w-16 sm:w-20 pl-4.5 sm:pl-5 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
+                                   class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
                         <button type="submit" 
