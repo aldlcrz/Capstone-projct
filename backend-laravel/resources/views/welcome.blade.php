@@ -727,8 +727,10 @@
             $currentSortParam = request('sort', '');
             $currentPriceRange = request('price_range', '');
             $currentSearchParam = request('search', '');
-            $currentMinPrice = request('min_price', '');
-            $currentMaxPrice = request('max_price', '');
+            $rawMin = (string) request('min_price', '');
+            $rawMax = (string) request('max_price', '');
+            $currentMinPrice = $rawMin !== '' ? (ltrim($rawMin, '0') !== '' ? ltrim($rawMin, '0') : ($rawMin === '0' ? '0' : '')) : '';
+            $currentMaxPrice = $rawMax !== '' ? (ltrim($rawMax, '0') !== '' ? ltrim($rawMax, '0') : ($rawMax === '0' ? '0' : '')) : '';
 
             $isAllPrices = empty($currentPriceRange) && empty($currentMinPrice) && empty($currentMaxPrice);
 
@@ -1425,7 +1427,10 @@
             const formData = new FormData(form);
             const searchParams = new URLSearchParams();
             for (const [key, value] of formData.entries()) {
-                const trimmed = typeof value === 'string' ? value.trim() : value;
+                let trimmed = typeof value === 'string' ? value.trim() : value;
+                if ((key === 'min_price' || key === 'max_price') && typeof trimmed === 'string') {
+                    trimmed = trimmed.replace(/^0+(?=\d)/, '');
+                }
                 if (trimmed !== '' && trimmed !== null && trimmed !== undefined) {
                     searchParams.append(key, trimmed);
                 }
@@ -1451,6 +1456,13 @@
             // Live Min and Max Price Filter inputs
             const priceInput = e.target.closest('.ajax-search-form input[name="min_price"], .ajax-search-form input[name="max_price"]');
             if (priceInput) {
+                // Auto-strip leading zeros as user types (e.g. '01000' -> '1000', '00' -> '0')
+                if (/^0\d+/.test(priceInput.value)) {
+                    priceInput.value = priceInput.value.replace(/^0+(?=\d)/, '');
+                } else if (/^0+$/.test(priceInput.value) && priceInput.value.length > 1) {
+                    priceInput.value = '0';
+                }
+
                 clearTimeout(priceDebounceTimer);
                 priceDebounceTimer = setTimeout(function() {
                     const form = priceInput.closest('form');
