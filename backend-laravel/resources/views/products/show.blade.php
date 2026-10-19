@@ -1424,7 +1424,7 @@
                             <span class="font-bold text-gray-900">{{ number_format($product->avgRating, 1) }}</span>
                             <div class="flex items-center text-amber-400 text-xs">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <span class="inline-flex">{{ $i <= round($product->avgRating) ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
+                                    <svg class="w-3.5 h-3.5 inline {{ $i <= round($product->avgRating) ? 'fill-current text-amber-400' : 'text-gray-200 fill-gray-200' }}" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 @endfor
                             </div>
                         @else
@@ -1468,7 +1468,7 @@
                                 <div class="flex items-center gap-2 mt-2">
                                     <div class="flex items-center text-amber-400 text-[10px]">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <span class="inline-flex">{{ $i <= (int)$rev->rating ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
+                                            <svg class="w-3.5 h-3.5 inline {{ $i <= (int)$rev->rating ? 'fill-current text-amber-400' : 'text-gray-200 fill-gray-200' }}" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                         @endfor
                                     </div>
                                     <span class="text-[11px] text-gray-500 font-medium">{{ $rev->customer->name ?? 'Verified Buyer' }}</span>
@@ -1514,7 +1514,7 @@
                         <div>
                             <div class="flex items-center gap-0.5 text-amber-400 text-sm">
                                 @for($i = 1; $i <= 5; $i++)
-                                    <span class="inline-flex">{{ $i <= round($product->avgRating) ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
+                                    <svg class="w-3.5 h-3.5 inline {{ $i <= round($product->avgRating) ? 'fill-current text-amber-400' : 'text-gray-200 fill-gray-200' }}" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 @endfor
                             </div>
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 block">
@@ -1562,7 +1562,7 @@
                                             <span class="text-sm font-bold text-black">{{ $review->customer->name ?? 'Customer' }}</span>
                                             <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                 @for($i = 1; $i <= 5; $i++)
-                                                    <span class="inline-flex">{{ $i <= $review->rating ? '<svg class="w-3.5 h-3.5 inline fill-current text-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : '<svg class="w-3.5 h-3.5 inline text-gray-200 fill-gray-200" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }}</span>
+                                                    <svg class="w-3.5 h-3.5 inline {{ $i <= $review->rating ? 'fill-current text-amber-400' : 'text-gray-200 fill-gray-200' }}" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                                 @endfor
                                             </div>
                                         </div>
@@ -2484,7 +2484,7 @@
                     @endif
 
                     <!-- MEN's SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center" style="display: {{ $initTab === 'men' ? 'block' : 'none' }};">
+                    <div id="size-tab-content-men" x-show="sizeTab === 'men'" class="space-y-4 text-center"@if($initTab !== 'men') style="display: none;"@endif>
                         <div class="rounded-3xl border border-[#E5DDD5] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
                             <a href="{{ $menGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $menGuideUrl }}" alt="Men's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
@@ -2496,7 +2496,7 @@
                     </div>
 
                     <!-- WOMEN's SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center" style="display: {{ $initTab === 'women' ? 'block' : 'none' }};">
+                    <div id="size-tab-content-women" x-show="sizeTab === 'women'" class="space-y-4 text-center"@if($initTab !== 'women') style="display: none;"@endif>
                         <div class="rounded-3xl border border-[#F5EAD9] overflow-hidden bg-[#FDF9F4] p-4 shadow-sm">
                             <a href="{{ $womenGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $womenGuideUrl }}" alt="Women's Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">
@@ -2508,7 +2508,7 @@
                     </div>
 
                     <!-- KIDS' SIZE DIAGRAM PICTURE -->
-                    <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center" style="display: {{ $initTab === 'kids' ? 'block' : 'none' }};">
+                    <div id="size-tab-content-kids" x-show="sizeTab === 'kids'" class="space-y-4 text-center"@if($initTab !== 'kids') style="display: none;"@endif>
                         <div class="rounded-3xl border border-gray-200 overflow-hidden bg-[#F4F8F3] p-4 shadow-sm">
                             <a href="{{ $kidsGuideUrl }}" target="_blank" title="Click to view full size image">
                                 <img src="{{ $kidsGuideUrl }}" alt="Kids' Size Guide Chart" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto shadow-xs hover:scale-[1.02] transition-transform">

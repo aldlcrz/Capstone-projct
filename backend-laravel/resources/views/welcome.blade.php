@@ -766,7 +766,6 @@
                 ['label' => 'Men', 'param' => ['category' => 'Men'], 'active' => strtolower($currentCatParam) === 'men' || strtolower($currentCatParam) === 'male'],
                 ['label' => 'Women', 'param' => ['category' => 'Women'], 'active' => strtolower($currentCatParam) === 'women' || strtolower($currentCatParam) === 'female'],
                 ['label' => 'Kids', 'param' => ['category' => 'Kids'], 'active' => strtolower($currentCatParam) === 'kids'],
-                ['label' => 'Special Sale', 'param' => ['sort' => 'lumban_special'], 'active' => $currentSortParam === 'lumban_special' || request('lumban_special')],
             ];
 
             $priceTiers = [
@@ -802,49 +801,9 @@
         </div>
 
         {{-- Clean Minimalist Filter Deck --}}
-        <div class="w-full bg-[#FAF9F5] rounded-2xl border border-[#ECE7DE] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] p-3.5 sm:p-4 space-y-3">
+        <div class="w-full bg-[#FAF9F5] rounded-2xl border border-[#ECE7DE] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] p-3.5 sm:p-4">
             
-            {{-- ROW 1: SORT --}}
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-14 shrink-0">Sort</span>
-
-                {{-- Sort Pills (Clean & Left-Aligned) --}}
-                <div class="hidden sm:flex items-center gap-1 overflow-x-auto no-scrollbar flex-wrap">
-                    @php
-                        $sortOptions = [
-                            ['label' => 'Recommended', 'val' => null, 'active' => empty($currentSortParam) || $currentSortParam === 'recommended'],
-                            ['label' => 'Price: Low to High', 'val' => 'price_asc', 'active' => in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest'])],
-                            ['label' => 'Price: High to Low', 'val' => 'price_desc', 'active' => in_array($currentSortParam, ['price_desc', 'price_high', 'expensive'])],
-                            ['label' => 'Newest', 'val' => 'newest', 'active' => $currentSortParam === 'newest'],
-                            ['label' => 'Best Sellers', 'val' => 'best_sellers', 'active' => in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold'])],
-                        ];
-                    @endphp
-                    @foreach($sortOptions as $sOpt)
-                        <a href="{{ $buildCatalogueUrl(['sort' => $sOpt['val']]) }}"
-                           class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $sOpt['active'] ? 'bg-stone-900 text-[#DFC97A] font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}"
-                           @if($sOpt['active']) style="background-color: #1c1917 !important; color: #DFC97A !important;" @endif>
-                            {{ $sOpt['label'] }}
-                        </a>
-                    @endforeach
-                </div>
-
-                {{-- Mobile Select Fallback --}}
-                <div class="sm:hidden relative w-full">
-                    <select onchange="window.location.href = this.value"
-                            class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-800 outline-none cursor-pointer">
-                        <option value="{{ $buildCatalogueUrl(['sort' => null]) }}" {{ empty($currentSortParam) || !in_array($currentSortParam, ['price_asc', 'price_desc', 'newest', 'best_sellers', 'lumban_special']) ? 'selected' : '' }}>Recommended</option>
-                        <option value="{{ $buildCatalogueUrl(['sort' => 'price_asc']) }}" {{ in_array($currentSortParam, ['price_asc', 'price_low', 'cheapest']) ? 'selected' : '' }}>Price: Low to High</option>
-                        <option value="{{ $buildCatalogueUrl(['sort' => 'price_desc']) }}" {{ in_array($currentSortParam, ['price_desc', 'price_high', 'expensive']) ? 'selected' : '' }}>Price: High to Low</option>
-                        <option value="{{ $buildCatalogueUrl(['sort' => 'newest']) }}" {{ $currentSortParam === 'newest' ? 'selected' : '' }}>Newest</option>
-                        <option value="{{ $buildCatalogueUrl(['sort' => 'best_sellers']) }}" {{ in_array($currentSortParam, ['best_sellers', 'trending', 'most_sold']) ? 'selected' : '' }}>Best Sellers</option>
-                    </select>
-                </div>
-            </div>
-
-            {{-- Hairline Divider --}}
-            <div class="h-px w-full bg-[#EFECE5]"></div>
-
-            {{-- ROW 2: PRICE CATEGORY & CUSTOM RANGE --}}
+            {{-- PRICE CATEGORY & CUSTOM RANGE --}}
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 
                 {{-- Price Category Pills --}}
@@ -868,7 +827,7 @@
 
                 {{-- Custom Range Form --}}
                 <div class="flex items-center gap-2 shrink-0 pt-0.5 lg:pt-0 sm:self-end lg:self-center">
-                    <form action="/#catalogue-section" method="GET" class="ajax-search-form flex items-center gap-1.5">
+                    <form action="/" method="GET" class="ajax-search-form flex items-center gap-1.5">
                         @if($currentCatParam) <input type="hidden" name="category" value="{{ $currentCatParam }}"> @endif
                         @if($currentSortParam) <input type="hidden" name="sort" value="{{ $currentSortParam }}"> @endif
                         @if($currentSearchParam) <input type="hidden" name="search" value="{{ $currentSearchParam }}"> @endif
@@ -1413,6 +1372,21 @@
             setTimeout(scrollToCatalogue, 150);
         }
 
+        function buildFormCatalogueUrl(form) {
+            const rawAction = form.getAttribute('action') || form.action || '/';
+            const baseUrl = rawAction.split('#')[0] || '/';
+            const formData = new FormData(form);
+            const searchParams = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                const trimmed = typeof value === 'string' ? value.trim() : value;
+                if (trimmed !== '' && trimmed !== null && trimmed !== undefined) {
+                    searchParams.append(key, trimmed);
+                }
+            }
+            const queryString = searchParams.toString();
+            return baseUrl + (queryString ? '?' + queryString : '') + '#catalogue-section';
+        }
+
         let searchDebounceTimer = null;
         document.addEventListener('input', function(e) {
             const input = e.target.closest('.ajax-search-form input[name="search"], input[name="search"]');
@@ -1421,10 +1395,7 @@
                 searchDebounceTimer = setTimeout(function() {
                     const form = input.closest('form');
                     if (form) {
-                        const formData = new FormData(form);
-                        const params = new URLSearchParams(formData).toString();
-                        const url = (form.action || '/') + (params ? '?' + params : '');
-                        loadCatalogue(url);
+                        loadCatalogue(buildFormCatalogueUrl(form));
                     }
                 }, 200);
             }
@@ -1434,10 +1405,7 @@
             const form = e.target.closest('.ajax-search-form');
             if (form) {
                 e.preventDefault();
-                const formData = new FormData(form);
-                const params = new URLSearchParams(formData).toString();
-                const url = form.action + (params ? '?' + params : '');
-                loadCatalogue(url);
+                loadCatalogue(buildFormCatalogueUrl(form));
             }
         });
 
