@@ -605,6 +605,23 @@
     </nav>
 
     <!-- Product Detail Main Container Card -->
+    @auth
+        @if((auth()->id() === $product->sellerId || in_array(auth()->user()->role ?? '', ['admin', 'superadmin'])) && $product->hasMissingCoverImage())
+            <div class="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <p class="text-xs sm:text-sm font-bold text-amber-900">Product Photograph Missing</p>
+                        <p class="text-[11px] sm:text-xs text-amber-700">The referenced photo file could not be located in server storage. A neutral placeholder is being displayed to customers.</p>
+                    </div>
+                </div>
+                <a href="{{ route('seller.products.edit', $product->id) }}" class="shrink-0 px-3.5 py-1.5 bg-[#A67C2E] hover:bg-[#8D6824] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Upload Replacement</span>
+                </a>
+            </div>
+        @endif
+    @endauth
     <div class="bg-white rounded-none lg:rounded-3xl border-0 lg:border border-gray-100 shadow-none lg:shadow-sm overflow-hidden p-0 sm:p-4 lg:p-10">
         <div id="overview" class="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-12 items-start scroll-mt-24">
             
@@ -619,7 +636,7 @@
                             class="relative w-14 h-18 sm:w-16 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all shadow-2xs"
                             :class="activeImage === index ? 'border-amber-600 ring-2 ring-amber-500/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'"
                         >
-                            <img :src="imageUrl(img.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                            <img :src="imageUrl(img.url)" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
@@ -635,7 +652,7 @@
                         <img 
                             x-show="activeImage === index"
                             :src="imageUrl(img.url)"
-                            onerror="this.src='/uploads/products/default.jpg'"
+                            onerror="this.onerror=null; this.src='/images/placeholder-product.svg';"
                             class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ease-out p-1"
                             alt="{{ $product->name }}"
                         >
@@ -838,7 +855,7 @@
                                         : 'border-gray-200 text-gray-700 bg-white hover:border-gray-400 font-semibold'"
                                 >
                                     <template x-if="variant.image_url || variant.image">
-                                        <img :src="imageUrl(variant.image_url || variant.image)" onerror="this.src='/uploads/products/default.jpg'" class="w-6 h-6 rounded-lg object-cover">
+                                        <img :src="imageUrl(variant.image_url || variant.image)" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-6 h-6 rounded-lg object-cover">
                                     </template>
                                     <span x-text="variant.name || ('Style ' + (index + 1))"></span>
                                     <span x-show="selectedStyle === variant.id" class="w-3.5 h-3.5 rounded-full bg-[#C0420A] text-white flex items-center justify-center"><x-lucide name="check" class="w-2.5 h-2.5 text-white" /></span>
@@ -1285,7 +1302,7 @@
                 <img 
                     x-show="activeImage === index"
                     :src="imageUrl(img.url)"
-                    onerror="this.src='/uploads/products/default.jpg'"
+                    onerror="this.onerror=null; this.src='/images/placeholder-product.svg';"
                     class="max-h-[82vh] max-w-[94vw] object-contain select-none"
                     alt="{{ $product->name }}"
                 >
@@ -2680,7 +2697,7 @@
             <div class="p-4 sm:p-5 flex items-start gap-3.5 border-b border-gray-100 shrink-0 relative">
                 <!-- Thumbnail -->
                 <div class="w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative shadow-2xs">
-                    <img :src="imageUrl(galleryImages[activeImage]?.url)" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                    <img :src="imageUrl(galleryImages[activeImage]?.url)" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover">
                 </div>
 
                 <!-- Price & Selection Info -->
@@ -2742,7 +2759,7 @@
                                         <!-- Portrait Image (Matching Reference Image 1) -->
                                         <div class="w-full h-24 sm:h-28 bg-gray-50 relative overflow-hidden shrink-0 border-b border-gray-100">
                                             <img :src="imageUrl(card.image_url || card.image_path)" 
-                                                 onerror="this.src='/uploads/products/default.jpg'"
+                                                 onerror="this.onerror=null; this.src='/images/placeholder-product.svg';"
                                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
                                             
                                             <!-- Checkmark Badge on Active Card -->

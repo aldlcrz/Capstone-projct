@@ -219,7 +219,7 @@
                                 <template x-for="item in cartItems.slice(0, 5)" :key="item.id + '_' + (item.size || '') + '_' + (item.variation || '')">
                                     <div class="flex items-center gap-4 p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-all">
                                         <div class="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                            <img :src="window.getAppProductImage ? window.getAppProductImage(item.image) : '/uploads/products/default.jpg'" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'">
+                                            <img :src="window.getAppProductImage ? window.getAppProductImage(item.image) : '/images/placeholder-product.svg'" class="w-full h-full object-cover" x-on:error="$event.target.onerror=null; $event.target.src='/images/placeholder-product.svg'">
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-[11px] font-bold text-black truncate" x-text="item.name"></div>
@@ -733,7 +733,7 @@
 
     <script>
         function getAppProductImage(raw) {
-            if (!raw) return '/uploads/products/default.jpg';
+            if (!raw) return '/images/placeholder-product.svg';
             if (Array.isArray(raw)) {
                 raw = raw[0] ?? '';
             }
@@ -746,9 +746,9 @@
                     } catch(e) {}
                 }
             }
-            if (!raw || typeof raw !== 'string') return '/uploads/products/default.jpg';
+            if (!raw || typeof raw !== 'string') return '/images/placeholder-product.svg';
             raw = raw.trim();
-            if (!raw || raw === 'Array' || raw === '[]' || raw === '[') return '/uploads/products/default.jpg';
+            if (!raw || raw === 'Array' || raw === '[]' || raw === '[' || raw.includes('default.jpg')) return '/images/placeholder-product.svg';
             if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
             if (raw.startsWith('/')) return raw;
             if (raw.startsWith('products/')) return '/storage/' + raw;

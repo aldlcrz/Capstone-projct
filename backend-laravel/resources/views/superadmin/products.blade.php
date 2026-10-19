@@ -44,7 +44,7 @@
         this.rejectReason = '';
     },
     getProductImages(product) {
-        if (!product) return ['/uploads/products/default.jpg'];
+        if (!product) return ['/images/placeholder-product.svg'];
         let imgs = [];
         let raw = product.image;
         if (typeof raw === 'string') {
@@ -77,7 +77,7 @@
                 });
             }
         }
-        return imgs.length > 0 ? imgs : ['/uploads/products/default.jpg'];
+        return imgs.length > 0 ? imgs : ['/images/placeholder-product.svg'];
     },
     getProductSizes(product) {
         if (!product || !product.sizes) return [];
@@ -94,14 +94,14 @@
         return parseFloat(price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     },
     getProductImage(img) {
-        if (!img) return '/uploads/products/default.jpg';
+        if (!img) return '/images/placeholder-product.svg';
         let path = '';
         if (Array.isArray(img)) {
             path = img.length > 0 ? (typeof img[0] === 'object' ? (img[0].url || '') : img[0]) : '';
         } else if (typeof img === 'string') {
             path = img;
         }
-        if (!path) return '/uploads/products/default.jpg';
+        if (!path) return '/images/placeholder-product.svg';
         if (path.startsWith('http') || path.startsWith('data:')) return path;
         if (path.startsWith('/storage/')) return path;
         if (path.startsWith('storage/')) return '/' + path;
@@ -210,13 +210,21 @@
                                         <div class="w-12 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                                              @click="openInspect(@js($product))"
                                              title="Inspect: {{ $product->name }}">
-                                            <img src="{{ $imgUrl }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover">
+                                            <img src="{{ $imgUrl }}" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover">
                                         </div>
                                         <div class="min-w-0 max-w-xs">
                                             <div class="text-xs font-bold text-gray-900 truncate cursor-pointer hover:text-[#C0422A] transition-colors"
                                                  @click="openInspect(@js($product))"
                                                  title="Inspect: {{ $product->name }}">{{ $product->name }}</div>
                                             <div class="text-[10px] text-gray-400 truncate">{{ $product->fabric_type ?: 'Barong Tagalog' }}</div>
+                                            @if($product->hasMissingCoverImage())
+                                                <div class="mt-0.5">
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200" title="Photo file missing on server">
+                                                        <svg class="w-2.5 h-2.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                        Photo Missing
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -366,7 +374,7 @@
                             <div class="relative aspect-4/5 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center">
                                 <img :src="inspectImages[inspectActiveImage] || getProductImage(inspectProduct.image)" 
                                      class="w-full h-full object-cover object-top"
-                                     onerror="this.src='/uploads/products/default.jpg'">
+                                     onerror="this.onerror=null; this.src='/images/placeholder-product.svg';">
                                 
                                 <template x-if="inspectProduct.is_on_sale && inspectProduct.discount_percentage > 0">
                                     <span class="absolute top-3 left-3 px-2.5 py-1 bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -382,7 +390,7 @@
                                         <button type="button" @click="inspectActiveImage = idx"
                                                 class="w-14 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer shadow-2xs"
                                                 :class="inspectActiveImage === idx ? 'border-[#C0422A] ring-2 ring-[#C0422A]/20 opacity-100 scale-98' : 'border-gray-200 opacity-60 hover:opacity-100'">
-                                            <img :src="img" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'">
+                                            <img :src="img" class="w-full h-full object-cover object-top" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';">
                                         </button>
                                     </template>
                                 </div>

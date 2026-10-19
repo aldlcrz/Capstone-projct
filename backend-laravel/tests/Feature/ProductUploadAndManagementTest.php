@@ -273,6 +273,6 @@ class ProductUploadAndManagementTest extends TestCase
 
         // Default placeholder for empty images
         $emptyProduct = new Product();
-        $this->assertEquals('/uploads/products/default.jpg', $emptyProduct->getImageUrl());
+        $this->assertEquals('/images/placeholder-product.svg', $emptyProduct->getImageUrl());
     }
 }

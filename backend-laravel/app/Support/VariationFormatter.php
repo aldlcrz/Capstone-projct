@@ -119,10 +119,10 @@ class VariationFormatter
         }
 
         if (empty($gallery)) {
-            $defaultUrl = $product ? $product->getImageUrl() : '/uploads/products/default.jpg';
+            $defaultUrl = $product ? $product->getImageUrl() : '/images/placeholder-product.svg';
             $gallery[] = [
                 'url'          => $defaultUrl,
-                'path'         => 'products/default.jpg',
+                'path'         => 'images/placeholder-product.svg',
                 'variant_id'   => null,
                 'variant_name' => null,
             ];

@@ -175,7 +175,7 @@ class Product extends Model
     public function getImageAttribute(array|string|null $value = null): array
     {
         if (is_null($value)) {
-            return ['uploads/products/default.jpg'];
+            return [self::getPlaceholderImageUrl()];
         }
 
         $val = $value;
@@ -214,7 +214,7 @@ class Product extends Model
             $validImages[] = is_string($img) ? trim($img, "\"' ") : $img;
         }
 
-        return !empty($validImages) ? $validImages : ['uploads/products/default.jpg'];
+        return !empty($validImages) ? $validImages : [self::getPlaceholderImageUrl()];
     }
 
     /**
@@ -360,7 +360,7 @@ class Product extends Model
             $img = !empty($img) ? reset($img) : null;
         }
 
-        if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg' || str_contains((string)$img, '451e9610-2077-437e-a314-670d576e233c')) {
+        if (!$img || $img === 'Array' || $img === '[]' || $img === '[' || $img === 'products/default.jpg' || $img === 'uploads/products/default.jpg' || $img === 'default.jpg' || str_contains((string)$img, 'placeholder') || str_contains((string)$img, '451e9610-2077-437e-a314-670d576e233c')) {
             // If primary image is missing, default, or references deleted photo, try falling back to the first variation's photo
             if (is_null($image) || str_contains((string)$image, '451e9610-2077-437e-a314-670d576e233c')) {
                 $vars = is_array($this->variations) ? $this->variations : json_decode($this->variations ?? '[]', true);
@@ -374,7 +374,7 @@ class Product extends Model
                     }
                 }
             }
-            return '/uploads/products/default.jpg';
+            return self::getPlaceholderImageUrl();
         }
 
         $img = trim((string)$img, "\"' \t\n\r\0\x0B");
@@ -403,6 +403,87 @@ class Product extends Model
 
         // Fallback for bare legacy filenames
         return '/uploads/products/' . $img;
+    }
+
+    /**
+     * Get the authoritative neutral placeholder image URL for products with missing/unassigned photos.
+     */
+    public static function getPlaceholderImageUrl(): string
+    {
+        return '/images/placeholder-product.svg';
+    }
+
+    /**
+     * Memoized per-instance check for whether the primary cover image is missing on disk.
+     */
+    protected ?bool $cachedCoverMissing = null;
+
+    /**
+     * Determine if the primary cover image file is confirmed missing on storage.
+     * Note: This performs an on-disk check, intended for single-item views (like seller/admin details)
+     * and should NOT be called in large public loops.
+     */
+    public function hasMissingCoverImage(): bool
+    {
+        if ($this->cachedCoverMissing !== null) {
+            return $this->cachedCoverMissing;
+        }
+
+        $raw = $this->getAttributes()['image'] ?? $this->image;
+        if (empty($raw)) {
+            return $this->cachedCoverMissing = true;
+        }
+
+        $first = is_array($raw) ? reset($raw) : $raw;
+        if (is_string($first)) {
+            $trimmed = trim($first);
+            if (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) {
+                $decoded = json_decode($trimmed, true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $first = reset($decoded);
+                }
+            }
+        }
+
+        if (empty($first) || !is_string($first)) {
+            return $this->cachedCoverMissing = true;
+        }
+
+        $first = trim($first, "\"' \t\n\r\0\x0B");
+
+        if (str_starts_with($first, 'http://') || str_starts_with($first, 'https://')) {
+            return $this->cachedCoverMissing = false;
+        }
+
+        if (str_contains($first, 'default.jpg') || str_contains($first, 'placeholder')) {
+            return $this->cachedCoverMissing = true;
+        }
+
+        $clean = ltrim(str_replace('\\', '/', $first), '/');
+
+        // Check 1: public storage disk
+        if (str_starts_with($clean, 'storage/')) {
+            $cleanStorage = substr($clean, 8);
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($cleanStorage)) {
+                return $this->cachedCoverMissing = false;
+            }
+        }
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($clean)) {
+            return $this->cachedCoverMissing = false;
+        }
+
+        // Check 2: direct public_path
+        if (file_exists(public_path($clean))) {
+            return $this->cachedCoverMissing = false;
+        }
+
+        // Check 3: storage_path app/public
+        if (file_exists(storage_path('app/public/' . $clean))) {
+            return $this->cachedCoverMissing = false;
+        }
+
+        return $this->cachedCoverMissing = true;
     }
 
     /**

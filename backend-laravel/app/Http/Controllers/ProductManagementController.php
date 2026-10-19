@@ -537,8 +537,18 @@ class ProductManagementController extends Controller
             $request->merge(['handling_days' => $product->handling_days ?? 2]);
         }
 
+        $extraFileRules = [];
+        foreach ($request->allFiles() as $fileKey => $fileVal) {
+            if (str_starts_with($fileKey, 'variant_image_')) {
+                $extraFileRules[$fileKey] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120';
+            } elseif (str_starts_with($fileKey, 'variant_images_')) {
+                $extraFileRules[$fileKey] = 'nullable|array|max:3';
+                $extraFileRules[$fileKey . '.*'] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120';
+            }
+        }
+
         if ($isDraftAction) {
-            $request->validate([
+            $rules = array_merge([
                 'name'                => 'required|string|max:100',
                 'description'         => 'nullable|string|max:500',
                 'price'               => 'nullable|numeric|min:0|max:10000',
@@ -555,11 +565,13 @@ class ProductManagementController extends Controller
                 'shippingFee'         => 'nullable|numeric|min:0|max:500',
                 'shippingDays'        => 'nullable|integer|min:1|max:30',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
-            ], [
+            ], $extraFileRules);
+
+            $request->validate($rules, [
                 'name.required' => 'Product Name is required to save a draft.',
             ]);
         } else {
-            $request->validate([
+            $rules = array_merge([
                 'name'                => 'required|string|max:100',
                 'description'         => 'required|string|min:10|max:500',
                 'price'               => 'required|numeric|min:1|max:10000',
@@ -581,7 +593,9 @@ class ProductManagementController extends Controller
                 'sizes.*'             => 'string',
                 'size_stocks.*'       => 'nullable|integer|min:0|max:10000',
                 'discount_percentage' => 'nullable|numeric|min:1|max:99',
-            ], [
+            ], $extraFileRules);
+
+            $request->validate($rules, [
                 'CategoryId'          => 'Please select a Product Category.',
                 'category_ids.max'    => 'Only one category can be selected per product.',
                 'target_group'        => 'Please select who this product is for (Men, Women, or Kids).',
@@ -753,30 +767,16 @@ class ProductManagementController extends Controller
             $product->status = 'pending';
         }
 
-        // Handle image removal
+        // Handle image removal (defer physical deletion until after database commit succeeds)
         $currentImages = is_array($product->image)
             ? $product->image
             : (json_decode($product->image ?? '[]', true) ?? []);
 
+        $pendingRemovalImages = [];
         if ($request->has('remove_images')) {
             $toRemove = (array) $request->remove_images;
             $currentImages = array_filter($currentImages, fn($img) => !in_array($img, $toRemove));
-            foreach ($toRemove as $img) {
-                if (!str_starts_with($img, 'http')) {
-                    $cleanImg = preg_replace('/^(storage|uploads)\//', '', $img);
-                    $cleanImg = ltrim(str_replace('\\', '/', $cleanImg), '/');
-                    try {
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete($cleanImg);
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete('products/' . $cleanImg);
-                    } catch (\Throwable $delEx) {}
-                    if (file_exists(public_path('uploads/' . $cleanImg))) {
-                        @unlink(public_path('uploads/' . $cleanImg));
-                    }
-                    if (file_exists(public_path('uploads/products/' . $cleanImg))) {
-                        @unlink(public_path('uploads/products/' . $cleanImg));
-                    }
-                }
-            }
+            $pendingRemovalImages = $toRemove;
         }
 
         // Handle new gallery image uploads (append to preserve index 0 cover thumbnail, skip duplicates)
@@ -881,6 +881,26 @@ class ProductManagementController extends Controller
             \Illuminate\Support\Facades\DB::beginTransaction();
             $product->save();
             \Illuminate\Support\Facades\DB::commit();
+
+            // Defer physical removal until after database commit succeeds
+            if (!empty($pendingRemovalImages)) {
+                foreach ($pendingRemovalImages as $img) {
+                    if (!str_starts_with($img, 'http')) {
+                        $cleanImg = preg_replace('/^(storage|uploads)\//', '', $img);
+                        $cleanImg = ltrim(str_replace('\\', '/', $cleanImg), '/');
+                        try {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($cleanImg);
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete('products/' . $cleanImg);
+                        } catch (\Throwable $delEx) {}
+                        if (file_exists(public_path('uploads/' . $cleanImg))) {
+                            @unlink(public_path('uploads/' . $cleanImg));
+                        }
+                        if (file_exists(public_path('uploads/products/' . $cleanImg))) {
+                            @unlink(public_path('uploads/products/' . $cleanImg));
+                        }
+                    }
+                }
+            }
         } catch (\Throwable $e) {
             if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
                 \Illuminate\Support\Facades\DB::rollBack();

@@ -892,7 +892,7 @@
                  onclick="if(!event.target.closest('button') && !event.target.closest('form') && !event.target.closest('a')) window.location.href='/products/{{ $product->id }}'">
                 <div class="aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative shadow-sm">
                     <img src="{{ $product->getImageUrl() }}"
-                         onerror="this.src='/uploads/products/default.jpg'"
+                         onerror="this.onerror=null; this.src='/images/placeholder-product.svg';"
                          alt="{{ $product->name }}"
                          class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ease-out">
 
@@ -1041,7 +1041,7 @@
                     {{-- Product Summary Header --}}
                     <div class="flex gap-4 items-start mb-6">
                         <div class="w-20 h-24 rounded-2xl bg-gray-50 overflow-hidden border border-gray-100 shrink-0">
-                            <img :src="window.getAppProductImage ? window.getAppProductImage(product.image) : '/uploads/products/default.jpg'" class="w-full h-full object-cover object-top" x-on:error="$event.target.src='/uploads/products/default.jpg'" alt="">
+                            <img :src="window.getAppProductImage ? window.getAppProductImage(product.image) : '/images/placeholder-product.svg'" class="w-full h-full object-cover object-top" x-on:error="$event.target.onerror=null; $event.target.src='/images/placeholder-product.svg'" alt="">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C0422A] mb-1">Quick Add</div>

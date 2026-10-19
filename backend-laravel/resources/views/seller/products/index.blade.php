@@ -459,7 +459,15 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                         
                         <!-- Image Section -->
                         <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
-                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            @if($product->hasMissingCoverImage())
+                                <div class="absolute bottom-2 left-2 right-2 z-10">
+                                    <a href="{{ route('seller.products.edit', $product->id) }}" class="flex items-center justify-center gap-1 px-2 py-1 bg-amber-600/90 hover:bg-amber-700 text-white text-[10px] font-bold rounded-md shadow-xs backdrop-blur-xs transition-colors">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>Photo Missing &bull; Re-upload</span>
+                                    </a>
+                                </div>
+                            @endif
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">
@@ -591,7 +599,15 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                         
                         <!-- Image Section -->
                         <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
-                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            @if($product->hasMissingCoverImage())
+                                <div class="absolute bottom-2 left-2 right-2 z-10">
+                                    <a href="{{ route('seller.products.edit', $product->id) }}" class="flex items-center justify-center gap-1 px-2 py-1 bg-amber-600/90 hover:bg-amber-700 text-white text-[10px] font-bold rounded-md shadow-xs backdrop-blur-xs transition-colors">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>Photo Missing &bull; Re-upload</span>
+                                    </a>
+                                </div>
+                            @endif
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #FDF8EE; color: #A16D19; border: 1px solid #E8DECB;">
@@ -734,7 +750,15 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                         
                         <!-- Image Section -->
                         <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FDF8EE;">
-                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            @if($product->hasMissingCoverImage())
+                                <div class="absolute bottom-2 left-2 right-2 z-10">
+                                    <a href="{{ route('seller.products.edit', $product->id) }}" class="flex items-center justify-center gap-1 px-2 py-1 bg-amber-600/90 hover:bg-amber-700 text-white text-[10px] font-bold rounded-md shadow-xs backdrop-blur-xs transition-colors">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>Photo Missing &bull; Re-upload</span>
+                                    </a>
+                                </div>
+                            @endif
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #F0F4EF; color: #4A6741; border: 1px solid #C5D9B8;">
@@ -877,7 +901,15 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                         
                         <!-- Image Section -->
                         <div class="relative aspect-4/5 sm:aspect-3/4 overflow-hidden" style="background: #FEF2F2;">
-                            <img src="{{ $product->getImageUrl() }}" onerror="this.src='/uploads/products/default.jpg'" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            <img src="{{ $product->getImageUrl() }}" onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                            @if($product->hasMissingCoverImage())
+                                <div class="absolute bottom-2 left-2 right-2 z-10">
+                                    <a href="{{ route('seller.products.edit', $product->id) }}" class="flex items-center justify-center gap-1 px-2 py-1 bg-amber-600/90 hover:bg-amber-700 text-white text-[10px] font-bold rounded-md shadow-xs backdrop-blur-xs transition-colors">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>Photo Missing &bull; Re-upload</span>
+                                    </a>
+                                </div>
+                            @endif
                             
                             <div class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5">
                                 <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-xs" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">
