@@ -842,6 +842,8 @@
                                    placeholder="Min" 
                                    min="0"
                                    step="any"
+                                   aria-label="Minimum price in Philippine Pesos"
+                                   title="Minimum price (₱)"
                                    class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
@@ -855,6 +857,8 @@
                                    placeholder="Max" 
                                    min="0"
                                    step="any"
+                                   aria-label="Maximum price in Philippine Pesos"
+                                   title="Maximum price (₱). Whole amounts automatically include centavos (e.g. 419 includes up to 419.99)"
                                    class="w-18 sm:w-20 pl-5 sm:pl-6 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
@@ -866,6 +870,13 @@
                 </div>
 
             </div>
+
+            @if(!empty($priceFilterError))
+                <div id="price-filter-error-msg" class="mt-2 text-[11px] font-medium text-amber-900 bg-amber-50/90 border border-amber-200/80 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>{{ $priceFilterError }}</span>
+                </div>
+            @endif
         </div>
 
         <div id="catalogue-products-area" class="transition-opacity duration-200">
@@ -1331,6 +1342,18 @@
                             curPills.innerHTML = newPills.innerHTML;
                         }
 
+                        // Sync price filter error message if any
+                        const newErrMsg = doc.getElementById('price-filter-error-msg');
+                        const curErrMsg = document.getElementById('price-filter-error-msg');
+                        if (newErrMsg && curErrMsg) {
+                            curErrMsg.innerHTML = newErrMsg.innerHTML;
+                        } else if (newErrMsg && !curErrMsg) {
+                            const deck = document.querySelector('#price-tier-pills-row')?.closest('.bg-\\[\\#FAF9F5\\]');
+                            if (deck) deck.appendChild(newErrMsg);
+                        } else if (!newErrMsg && curErrMsg) {
+                            curErrMsg.remove();
+                        }
+
                         history.replaceState(null, '', url);
                         return;
                     }
@@ -1483,8 +1506,14 @@
                         const minNum = minRaw !== '' ? parseFloat(minRaw) : null;
                         const maxNum = maxRaw !== '' ? parseFloat(maxRaw) : null;
 
-                        // If both are entered and min > max, wait for user to finish typing a valid range
-                        if (minNum !== null && maxNum !== null && minNum > maxNum) {
+                        // Compute effective maximum (whole-peso inputs like 419 cover up to 419.99)
+                        let effectiveMax = maxNum;
+                        if (maxNum !== null && maxRaw.indexOf('.') === -1) {
+                            effectiveMax = Math.floor(maxNum) + 0.99;
+                        }
+
+                        // If both are entered and min > effectiveMax, wait for user to finish typing a valid range
+                        if (minNum !== null && effectiveMax !== null && minNum > effectiveMax) {
                             return;
                         }
 

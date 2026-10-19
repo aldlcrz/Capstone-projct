@@ -128,29 +128,12 @@ class ProductController extends Controller
             \App\Services\ProductSearchService::apply($query, $request->search, $request->sort);
         }
 
-        if ($request->filled('price_range')) {
-            $range = $request->price_range;
-            if ($range === 'under_500') {
-                $query->where('price', '<', 500);
-            } elseif ($range === '500_1499' || $range === '500_1500') {
-                $query->where('price', '>=', 500)->where('price', '<', 1500);
-            } elseif ($range === '1500_3499' || $range === '1500_3500') {
-                $query->where('price', '>=', 1500)->where('price', '<', 3500);
-            } elseif ($range === '3500_5999' || $range === '3500_6000') {
-                $query->where('price', '>=', 3500)->where('price', '<', 6000);
-            } elseif ($range === 'above_6000' || $range === '6000_plus') {
-                $query->where('price', '>=', 6000);
-            } elseif ($range === 'under_1500') {
-                $query->where('price', '<', 1500);
-            }
-        }
-
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (float) $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (float) $request->max_price);
-        }
+        \App\Services\ProductFilterService::applyPriceFilter(
+            $query,
+            $request->min_price,
+            $request->max_price,
+            $request->price_range
+        );
 
         if ($request->has('seller')) {
             $query->where('sellerId', $request->seller);
