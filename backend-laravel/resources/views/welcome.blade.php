@@ -720,7 +720,7 @@
                     {{ $headerTitle }}
                 </span>
             </div>
-            <span class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
+            <span id="catalogue-piece-count" class="text-[10px] text-gray-400 font-bold">{{ $products->count() }} {{ Str::plural('piece', $products->count()) }}</span>
         </div>
         @php
             $currentCatParam = request('category', '');
@@ -813,7 +813,7 @@
                     <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-auto sm:w-14 shrink-0">Price</span>
 
                     {{-- Category Pills Row --}}
-                    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 flex-nowrap sm:flex-wrap">
+                    <div id="price-tier-pills-row" class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 flex-nowrap sm:flex-wrap">
                         @foreach($priceTiers as $pt)
                             @php
                                 $isActive = ($pt['val'] === '' && $isAllPrices) || (!empty($pt['val']) && (string)$currentPriceRange === (string)$pt['val']);
@@ -866,6 +866,7 @@
             </div>
         </div>
 
+        <div id="catalogue-products-area" class="transition-opacity duration-200">
         <div class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
             @foreach($products as $product)
             @php
@@ -963,23 +964,23 @@
             </div>
             @endforeach
         </div>
-    </div>
 
-
-    @if($products->isEmpty())
-        <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                <svg class="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        @if($products->isEmpty())
+            <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200 mt-4">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <svg class="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">
+                    {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'No Best Sellers Yet' : 'No Products Found' }}
+                </h3>
+                <p class="text-xs text-gray-400 mb-6">
+                    {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'Products will appear here in real-time once sales are completed.' : 'Try a different search term or browse all collections.' }}
+                </p>
+                <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
             </div>
-            <h3 class="text-sm font-bold text-black uppercase tracking-widest mb-1">
-                {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'No Best Sellers Yet' : 'No Products Found' }}
-            </h3>
-            <p class="text-xs text-gray-400 mb-6">
-                {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'Products will appear here in real-time once sales are completed.' : 'Try a different search term or browse all collections.' }}
-            </p>
-            <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
-        </div>
-    @endif
+        @endif
+        </div>{{-- End #catalogue-products-area --}}
+    </div>{{-- End space-y-4 sm:space-y-6 --}}
     </div>{{-- End #catalogue-section --}}
 
     {{-- ====== Quick Add to Cart Modal ====== --}}
@@ -1271,6 +1272,8 @@
             }
         }
 
+        let catalogueRequestSeq = 0;
+
         function loadCatalogue(url, push = true, shouldScroll = true, isLiveTyping = false) {
             const section = document.getElementById('catalogue-section');
             if (!section) {
@@ -1278,14 +1281,7 @@
                 return;
             }
 
-            // Capture state of focused price inputs to preserve focus & typing
-            const activeEl = document.activeElement;
-            const isPriceFocused = activeEl && (activeEl.name === 'min_price' || activeEl.name === 'max_price');
-            const focusedInputName = isPriceFocused ? activeEl.name : null;
-            const liveMinVal = document.querySelector('.ajax-search-form input[name="min_price"]')?.value ?? null;
-            const liveMaxVal = document.querySelector('.ajax-search-form input[name="max_price"]')?.value ?? null;
-            const selStart = isPriceFocused ? activeEl.selectionStart : null;
-            const selEnd = isPriceFocused ? activeEl.selectionEnd : null;
+            const currentSeq = ++catalogueRequestSeq;
 
             // Sync category highlight immediately from requested URL
             try {
@@ -1298,8 +1294,8 @@
                 section.style.opacity = '0.4';
                 section.style.pointerEvents = 'none';
             } else {
-                const gridEl = section.querySelector('.grid');
-                if (gridEl) gridEl.style.opacity = '0.6';
+                const prodArea = document.getElementById('catalogue-products-area');
+                if (prodArea) prodArea.style.opacity = '0.6';
             }
 
             const fetchUrl = url.split('#')[0] || '/';
@@ -1307,31 +1303,40 @@
             fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(res => res.text())
                 .then(html => {
+                    // Ignore stale out-of-order response
+                    if (currentSeq !== catalogueRequestSeq) return;
+
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
+
+                    if (isLiveTyping) {
+                        // Surgical update: update products grid, count, and pills WITHOUT touching active inputs
+                        const newProdArea = doc.getElementById('catalogue-products-area');
+                        const curProdArea = document.getElementById('catalogue-products-area');
+                        if (newProdArea && curProdArea) {
+                            curProdArea.innerHTML = newProdArea.innerHTML;
+                        }
+
+                        const newPieceCount = doc.getElementById('catalogue-piece-count');
+                        const curPieceCount = document.getElementById('catalogue-piece-count');
+                        if (newPieceCount && curPieceCount) {
+                            curPieceCount.innerHTML = newPieceCount.innerHTML;
+                        }
+
+                        const newPills = doc.getElementById('price-tier-pills-row');
+                        const curPills = document.getElementById('price-tier-pills-row');
+                        if (newPills && curPills) {
+                            curPills.innerHTML = newPills.innerHTML;
+                        }
+
+                        history.replaceState(null, '', url);
+                        return;
+                    }
+
+                    // Full section replacement for non-typing actions (links, pills, reset, submit)
                     const newSection = doc.getElementById('catalogue-section');
                     if (newSection && section) {
                         section.innerHTML = newSection.innerHTML;
-
-                        // Restore typing focus & values if user was actively typing in price inputs
-                        if (isPriceFocused && focusedInputName) {
-                            const newForm = section.querySelector('.ajax-search-form');
-                            if (newForm) {
-                                const newMin = newForm.querySelector('input[name="min_price"]');
-                                const newMax = newForm.querySelector('input[name="max_price"]');
-                                if (newMin && liveMinVal !== null) newMin.value = liveMinVal;
-                                if (newMax && liveMaxVal !== null) newMax.value = liveMaxVal;
-                                const targetInput = focusedInputName === 'max_price' ? newMax : newMin;
-                                if (targetInput) {
-                                    targetInput.focus();
-                                    try {
-                                        if (selStart !== null && selEnd !== null) {
-                                            targetInput.setSelectionRange(selStart, selEnd);
-                                        }
-                                    } catch(e) {}
-                                }
-                            }
-                        }
 
                         // Update Shop by Category row highlighting
                         const newCatBar = doc.getElementById('shop-by-category-section');
@@ -1356,8 +1361,6 @@
 
                         if (push) {
                             history.pushState(null, '', url);
-                        } else if (isLiveTyping) {
-                            history.replaceState(null, '', url);
                         }
 
                         if (shouldScroll) {
@@ -1368,13 +1371,17 @@
                     }
                 })
                 .catch(() => {
-                    window.location.href = url;
+                    if (currentSeq === catalogueRequestSeq) {
+                        window.location.href = url;
+                    }
                 })
                 .finally(() => {
-                    section.style.opacity = '1';
-                    section.style.pointerEvents = 'auto';
-                    const gridEl = section.querySelector('.grid');
-                    if (gridEl) gridEl.style.opacity = '1';
+                    if (currentSeq === catalogueRequestSeq) {
+                        section.style.opacity = '1';
+                        section.style.pointerEvents = 'auto';
+                        const prodArea = document.getElementById('catalogue-products-area');
+                        if (prodArea) prodArea.style.opacity = '1';
+                    }
                 });
         }
 
@@ -1479,10 +1486,10 @@
                             return;
                         }
 
-                        // Live typing update: no pushState spam, no scroll jump, seamless typing
+                        // Live typing update: surgical update, no DOM destruction, no scroll jump
                         loadCatalogue(buildFormCatalogueUrl(form), false, false, true);
                     }
-                }, 500);
+                }, 400);
             }
         });
 
