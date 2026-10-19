@@ -678,7 +678,7 @@
         </div>
 
     {{-- ====== Product Catalogue Section ====== --}}
-    <div id="catalogue-section" class="space-y-8 transition-opacity duration-300">
+    <div id="catalogue-section" class="space-y-4 sm:space-y-8 transition-opacity duration-300">
         @if(request('sort') === 'best_sellers' || request('sort') === 'trending')
             <div class="text-xs text-amber-950 font-medium flex items-center justify-between bg-amber-50/90 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-xs">
                 <div class="flex items-center gap-3">
@@ -712,7 +712,7 @@
     @endphp
 
     {{-- ====== Unified Product Catalogue ====== --}}
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-6 h-[1.5px] bg-[#C0422A]"></div>
@@ -801,14 +801,14 @@
         </div>
 
         {{-- Clean Minimalist Filter Deck --}}
-        <div class="w-full bg-[#FAF9F5] rounded-2xl border border-[#ECE7DE] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] p-3.5 sm:p-4">
+        <div class="w-full bg-[#FAF9F5] rounded-xl sm:rounded-2xl border border-[#ECE7DE] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] px-3 py-2 sm:p-4">
             
             {{-- PRICE CATEGORY & CUSTOM RANGE --}}
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-1.5 sm:gap-3">
                 
                 {{-- Price Category Pills --}}
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-14 shrink-0">Price</span>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                    <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 w-auto sm:w-14 shrink-0">Price</span>
 
                     {{-- Category Pills Row --}}
                     <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 flex-nowrap sm:flex-wrap">
@@ -817,7 +817,7 @@
                                 $isActive = ($pt['val'] === '' && $isAllPrices) || (!empty($pt['val']) && (string)$currentPriceRange === (string)$pt['val']);
                             @endphp
                             <a href="{{ $buildCatalogueUrl(['price_range' => $pt['val']]) }}"
-                               class="ajax-filter-link px-3 py-1 rounded-full text-xs transition-all shrink-0 cursor-pointer font-medium {{ $isActive ? 'bg-[#946328] text-white font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}"
+                               class="ajax-filter-link px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs transition-all shrink-0 cursor-pointer font-medium {{ $isActive ? 'bg-[#946328] text-white font-semibold shadow-xs' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50' }}"
                                @if($isActive) style="background-color: #946328 !important; color: #ffffff !important;" @endif>
                                 <span style="color: inherit;">{!! $pt['html'] !!}</span>
                             </a>
@@ -826,43 +826,42 @@
                 </div>
 
                 {{-- Custom Range Form --}}
-                <div class="flex items-center gap-2 shrink-0 pt-0.5 lg:pt-0 sm:self-end lg:self-center">
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 pt-0 sm:pt-0.5 lg:pt-0 sm:self-end lg:self-center">
                     <form action="/" method="GET" class="ajax-search-form flex items-center gap-1.5">
                         @if($currentCatParam) <input type="hidden" name="category" value="{{ $currentCatParam }}"> @endif
                         @if($currentSortParam) <input type="hidden" name="sort" value="{{ $currentSortParam }}"> @endif
                         @if($currentSearchParam) <input type="hidden" name="search" value="{{ $currentSearchParam }}"> @endif
 
                         <div class="relative">
-                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
+                            <span class="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 text-[11px] sm:text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
                             <input type="number" 
                                    name="min_price" 
                                    value="{{ $currentMinPrice }}" 
                                    placeholder="Min" 
                                    min="0"
-                                   class="w-18 sm:w-20 pl-5 pr-2 py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-lg text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
+                                   class="w-16 sm:w-20 pl-4.5 sm:pl-5 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
                         <span class="text-stone-300 text-xs">—</span>
 
                         <div class="relative">
-                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
+                            <span class="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 text-[11px] sm:text-xs font-semibold text-stone-400 pointer-events-none">₱</span>
                             <input type="number" 
                                    name="max_price" 
                                    value="{{ $currentMaxPrice }}" 
                                    placeholder="Max" 
                                    min="0"
-                                   class="w-18 sm:w-20 pl-5 pr-2 py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-lg text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
+                                   class="w-16 sm:w-20 pl-4.5 sm:pl-5 pr-1.5 sm:pr-2 py-0.5 sm:py-1 bg-white border border-stone-200/90 focus:border-[#946328] focus:ring-1 focus:ring-[#946328]/20 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium text-stone-800 outline-none transition-all placeholder:text-stone-400">
                         </div>
 
                         <button type="submit" 
-                                class="px-3 py-1 bg-stone-900 hover:bg-[#946328] active:scale-95 text-[#DFC97A] hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer">
+                                class="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-stone-900 hover:bg-[#946328] active:scale-95 text-[#DFC97A] hover:text-white rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer">
                             Apply
                         </button>
                     </form>
                 </div>
 
             </div>
-
         </div>
 
         <div class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
