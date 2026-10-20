@@ -1778,7 +1778,9 @@
                                                 <span class="text-xs sm:text-sm font-bold text-gray-900" x-text="review.customerName"></span>
                                                 <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                     <template x-for="s in 5" :key="s">
-                                                        <span class="inline-flex" x-html="s <= review.rating ? '<svg class=\"w-3.5 h-3.5 inline fill-current text-amber-400\" viewBox=\"0 0 24 24\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>' : '<svg class=\"w-3.5 h-3.5 inline text-gray-200 fill-gray-200\" viewBox=\"0 0 24 24\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>'"></span>
+                                                        <svg class="w-3.5 h-3.5 inline shrink-0" :class="s <= review.rating ? 'fill-current text-amber-400' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24">
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                        </svg>
                                                     </template>
                                                 </div>
                                             </div>
