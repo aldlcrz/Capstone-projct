@@ -374,18 +374,18 @@
                     <div class="space-y-3">
                         {{-- 1. Store Pickup Payment Channels --}}
                         <div x-show="shippingQuote?.provider_code === 'store_pickup'" x-cloak class="space-y-3">
-                            <!-- Pay on Store Option -->
+                            <!-- Pay at the Store Option -->
                             <div class="rounded-2xl border p-4 sm:p-5 transition-all duration-200"
-                                 :class="paymentMethod === 'Pay on Store' ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
+                                 :class="(paymentMethod === 'Pay at the Store' || paymentMethod === 'Pay on Store') ? 'border-2 border-[#1E1915] bg-[#FAF6EE] shadow-2xs' : 'border-[#ECE3D2] bg-white hover:border-[#D4AF37]/50'">
                                 <label class="flex items-center justify-between cursor-pointer">
                                     <div class="flex items-center gap-3.5">
                                         <div class="w-10 h-10 rounded-xl bg-[#1E1915] text-[#DFC97A] border border-[#D4AF37]/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0"><x-lucide name="landmark" class="w-5 h-5 text-[#DFC97A]" /></div>
                                         <div>
-                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Pay on Store</div>
+                                            <div class="font-bold text-gray-900 text-sm lg:text-base">Pay at the Store</div>
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay in person upon claiming and inspecting your item at the workshop</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="Pay on Store" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio" value="Pay at the Store" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
 
@@ -528,8 +528,8 @@
                         </div>
 
                         {{-- Payment Method Context Details --}}
-                        {{-- Pay on Store Information Banner --}}
-                        <div x-show="paymentMethod === 'Pay on Store'" class="mt-3" x-transition>
+                        {{-- Pay at the Store Information Banner --}}
+                        <div x-show="paymentMethod === 'Pay at the Store' || paymentMethod === 'Pay on Store'" class="mt-3" x-transition>
                             <div class="bg-white p-4 rounded-2xl border border-[#E6D8BA] text-xs text-[#78716C] leading-relaxed space-y-2">
                                 <div class="flex items-start gap-2 text-[#996515] font-bold">
                                     <x-lucide name="info" class="w-4 h-4 text-[#996515] shrink-0 mt-0.5" />
@@ -1088,8 +1088,12 @@
                 </div>
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-black mb-1.5">Confirm Your Order</h3>
                 <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto"
-                   x-text="paymentMethod === 'COD' || isDirectPaymentOrder() ? 'Please ensure that your delivery address and order details are accurate before placing your order.' : 'Please ensure that your delivery address and payment receipt details are accurate before placing your order.'">
-                    Please ensure that your delivery address and order details are accurate before placing your order.
+                   x-text="(isDirectPaymentOrder() || shippingQuote?.provider_code === 'store_pickup')
+                       ? 'Please review your contact and order details. You will pick up your handcrafted item and settle payment in person at the workshop.'
+                       : (paymentMethod === 'COD' 
+                           ? 'Please ensure that your delivery address and order details are accurate before placing your order.' 
+                           : 'Please ensure that your delivery address and payment receipt details are accurate before placing your order.')">
+                    Please ensure that your order details are accurate before placing your order.
                 </p>
             </div>
 
@@ -1583,7 +1587,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
 
         // Online Multi-Receipt & Overpayment Accounting State
         receipts: [],
-        refundMobileNumber: '{{ addslashes(auth()->user()->mobileNumber ?? auth()->user()->phone ?? '') }}',
+        refundMobileNumber: userDefaults.mobileNumber || userDefaults.phone || '',
         refundMobileError: '',
 
         get totalVerifiedPayments() {
@@ -1608,17 +1612,17 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             return (this.totalVerifiedPayments - this.payableAmount) >= 0.01;
         },
         get isCashPayment() {
-            return this.paymentMethod === 'COD' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
+            return this.paymentMethod === 'COD' || this.paymentMethod === 'Pay at the Store' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
         },
         get requiresProofUpload() {
             return this.paymentMethod === 'GCash' || this.paymentMethod === 'Maya';
         },
         isDirectPaymentOrder() {
-            return this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
+            return this.paymentMethod === 'Pay at the Store' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup';
         },
         get paymentMethodDisplayName() {
-            if (this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
-                return 'Pay on Store (Workshop Pickup)';
+            if (this.paymentMethod === 'Pay at the Store' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
+                return 'Pay at the Store (Workshop Pickup)';
             }
             if (this.paymentMethod === 'COD') {
                 return this.shippingQuote?.provider_code === 'seller_direct'
@@ -1657,7 +1661,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             });
 
             this.$watch('paymentMethod', () => {
-                if (this.paymentMethod !== 'COD' && this.paymentMethod !== 'Pay on Store' && this.paymentRef) {
+                if (this.paymentMethod !== 'COD' && this.paymentMethod !== 'Pay at the Store' && this.paymentMethod !== 'Pay on Store' && this.paymentRef) {
                     this.validateRef();
                     this.checkServerReference();
                 } else {
@@ -1681,7 +1685,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.currentShippingFee = Number(q.shipping_fee) || 0;
             if (q.provider_code === 'store_pickup') {
                 if (this.paymentMethod !== 'GCash' && this.paymentMethod !== 'Maya') {
-                    this.paymentMethod = 'Pay on Store';
+                    this.paymentMethod = 'Pay at the Store';
                 }
                 this.initStorePickupMap();
             } else if (q.provider_code === 'seller_direct') {
@@ -1689,7 +1693,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.paymentMethod = 'COD';
                 }
             } else {
-                if (this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
+                if (this.paymentMethod === 'Pay at the Store' || this.paymentMethod === 'Pay on Store' || this.paymentMethod === 'Store Pickup') {
                     this.paymentMethod = 'COD';
                 }
             }

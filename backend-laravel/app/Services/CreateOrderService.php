@@ -409,10 +409,10 @@ class CreateOrderService
             }
 
             // Server-Side Authoritative Shipping Calculation
-            $storePickupProvider = \App\Models\ShippingProvider::where('code', 'store_pickup')->first();
-            $specialDeliveryProvider = \App\Models\ShippingProvider::where('code', 'seller_direct')->first();
+            $storePickupProvider = ShippingProvider::where('code', 'store_pickup')->first();
+            $specialDeliveryProvider = ShippingProvider::where('code', 'seller_direct')->first();
 
-            $isExplicitStorePickup = in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true)
+            $isExplicitStorePickup = in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay at the store', 'pay in shop', 'in-shop'], true)
                 || ($selectedProviderId && $storePickupProvider && $selectedProviderId === $storePickupProvider->id);
 
             $isExplicitSpecialDelivery = in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)
@@ -453,7 +453,7 @@ class CreateOrderService
             // Determine Fulfillment and Direct Seller Payment Arrangement
             $chosenProviderCode = strtolower((string)($chosenQuote['provider_code'] ?? ''));
             $isStorePickup = ($chosenProviderCode === 'store_pickup') 
-                || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay in shop', 'in-shop'], true);
+                || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay at the store', 'pay in shop', 'in-shop'], true);
             $isSpecialDelivery = in_array($chosenProviderCode, ['seller_direct', 'special_delivery'], true);
 
             $rawPaymentMethod = !empty($params['paymentMethod']) ? trim((string)$params['paymentMethod']) : null;
@@ -463,7 +463,7 @@ class CreateOrderService
             if ($isDirectSellerPayment && !$hasExplicitOnlinePayment) {
                 // Direct-to-seller non-online payments
                 if ($isStorePickup) {
-                    $paymentMethod = ($rawPaymentMethod && strcasecmp($rawPaymentMethod, 'Pay on Store') === 0) ? 'Pay on Store' : 'Store Pickup';
+                    $paymentMethod = ($rawPaymentMethod && in_array(strtolower($rawPaymentMethod), ['pay on store', 'pay at store', 'pay at the store'], true)) ? 'Pay at the Store' : 'Store Pickup';
                     $isCod = false;
                     $isGcash = false;
                     $isMaya = false;
@@ -480,13 +480,13 @@ class CreateOrderService
                     $verificationTier = 'SPECIAL_DELIVERY_COD';
                 }
             } else {
-                if ($isStorePickup && in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay in shop', 'in-shop'], true)) {
-                    $paymentMethod = 'Pay on Store';
+                if ($isStorePickup && in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay on store', 'pay at store', 'pay at the store', 'pay in shop', 'in-shop'], true)) {
+                    $paymentMethod = 'Pay at the Store';
                 } elseif ($isSpecialDelivery && in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)) {
                     $paymentMethod = 'COD';
                 }
                 $isCod = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0;
-                $isPayOnStore = strcasecmp($paymentMethod, 'Pay on Store') === 0 || strcasecmp($paymentMethod, 'Store Pickup') === 0;
+                $isPayOnStore = in_array(strtolower($paymentMethod), ['pay on store', 'pay at store', 'pay at the store', 'store pickup', 'store_pickup'], true);
                 $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
                 $isMaya = strcasecmp($paymentMethod, 'Maya') === 0;
                 $requiresOnlineReceipt = ($isGcash || $isMaya);
@@ -496,7 +496,7 @@ class CreateOrderService
                 $verificationTier = $isCod ? ($isSpecialDelivery ? 'SPECIAL_DELIVERY_COD' : 'COD') : ($isPayOnStore ? 'STORE_PICKUP' : ($isSpecialDelivery ? 'SPECIAL_DELIVERY' : 'DIRECT'));
             }
 
-            $isPayOnStore = strcasecmp($paymentMethod, 'Pay on Store') === 0 || strcasecmp($paymentMethod, 'Store Pickup') === 0;
+            $isPayOnStore = in_array(strtolower($paymentMethod), ['pay on store', 'pay at store', 'pay at the store', 'store pickup', 'store_pickup'], true);
             $isCod = strcasecmp($paymentMethod, 'COD') === 0 || strcasecmp($paymentMethod, 'Cash on Delivery') === 0 || ($isSpecialDelivery && strcasecmp($paymentMethod, 'Special Delivery') === 0);
 
             // Process Payment Validation / Reference Claiming & Accounting
