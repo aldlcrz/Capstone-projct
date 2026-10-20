@@ -291,8 +291,8 @@ class OrderController extends Controller
                 $trackingNum = $valResult['cleaned'];
             }
 
-            if (!$trackingLink && $courier === 'J&T Express') {
-                $trackingLink = 'https://www.jtexpress.ph/track';
+            if (empty($trackingLink) || str_contains($trackingLink, 'google.com/search') || ($trackingNum !== '' && $order->trackingNumber !== $trackingNum)) {
+                $trackingLink = ValidationHelper::generateDirectTrackingLink($courier, $trackingNum);
             }
 
             if ($courier && $order->courierName !== $courier) {

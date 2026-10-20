@@ -152,6 +152,42 @@ class ValidationHelper
         return ['valid' => true, 'cleaned' => $tracking];
     }
 
+    public static function generateDirectTrackingLink(?string $courier, ?string $trackingNumber): string
+    {
+        $tracking = trim((string)$trackingNumber);
+        $c = strtolower(trim((string)$courier));
+
+        if ($tracking === '') {
+            if (str_contains($c, 'j&t') || str_contains($c, 'jnt')) return 'https://www.jtexpress.ph/track';
+            if (str_contains($c, 'flash')) return 'https://www.flashexpress.ph/tracking/';
+            if (str_contains($c, 'lbc')) return 'https://www.lbcexpress.com/track';
+            if (str_contains($c, 'ninja')) return 'https://www.ninjavan.co/en-ph/tracking';
+            return 'https://www.google.com/search?q=' . urlencode(($courier ?: 'courier') . ' tracking');
+        }
+
+        $encoded = urlencode($tracking);
+        if (str_contains($c, 'j&t') || str_contains($c, 'jnt')) {
+            return "https://www.jtexpress.ph/index/query/gzquery.html?bills={$encoded}";
+        }
+        if (str_contains($c, 'flash')) {
+            return "https://flashexpress.ph/fle/tracking?se={$encoded}";
+        }
+        if (str_contains($c, 'lbc')) {
+            return "https://www.lbcexpress.com/track/?tracking_no={$encoded}";
+        }
+        if (str_contains($c, 'ninja')) {
+            return "https://www.ninjavan.co/en-ph/tracking?id={$encoded}";
+        }
+        if (str_contains($c, '2go')) {
+            return 'https://supplychain.2go.com.ph/customersupport/etrack.asp';
+        }
+        if (str_contains($c, 'jrs')) {
+            return 'https://www.jrs-express.com/tracking/';
+        }
+
+        return 'https://www.google.com/search?q=' . urlencode(($courier ?: 'courier') . ' tracking ' . $tracking);
+    }
+
     private static function sanitizeByRegex($value, $regex, $maxLength)
     {
         $sanitized = preg_replace($regex, "", (string)$value);
