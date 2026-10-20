@@ -39,7 +39,7 @@ class SellerReturnReviewService
             $isOnlinePayment = in_array(strtolower($order->paymentMethod ?? ''), ['gcash', 'maya'], true);
 
             if ($isAccepted) {
-                $returnStatus = $requiresPhysicalReturn ? 'awaiting_return' : ($isOnlinePayment ? 'admin_review' : 'approved');
+                $returnStatus = $requiresPhysicalReturn ? 'awaiting_return' : 'approved';
                 $physicalStatus = $requiresPhysicalReturn ? 'awaiting_customer' : 'not_required';
                 $legacyStatus = 'Approved';
             } else {
@@ -74,7 +74,7 @@ class SellerReturnReviewService
                 $returnRequest->customer_id ?: $order->customerId,
                 $isAccepted ? 'Return Request Accepted' : 'Return Request Declined',
                 $isAccepted 
-                    ? "The artisan accepted your return request." . ($requiresPhysicalReturn ? " Please ship the item back to the seller." : "")
+                    ? "The artisan accepted your return request." . ($requiresPhysicalReturn ? " Please ship the item back to the seller." : " The artisan will process your refund directly.")
                     : "The artisan declined your return request: " . ($notes ?: 'No specific reason provided.') . " You can dispute this decision if you believe it is in error.",
                 'order',
                 route('orders.show', $order->id),
@@ -115,12 +115,11 @@ class SellerReturnReviewService
         }
 
         $order = $returnRequest->order;
-        $isOnlinePayment = in_array(strtolower($order->paymentMethod ?? ''), ['gcash', 'maya'], true);
 
-        return DB::transaction(function () use ($returnRequest, $seller, $inspectionNotes, $order, $isOnlinePayment) {
+        return DB::transaction(function () use ($returnRequest, $seller, $inspectionNotes, $order) {
             $returnRequest->update([
                 'physical_return_status' => 'received',
-                'return_status'          => $isOnlinePayment ? 'admin_review' : 'return_received',
+                'return_status'          => 'return_received',
                 'seller_notes'           => $inspectionNotes ? ($returnRequest->seller_notes . ' | Item Received: ' . $inspectionNotes) : $returnRequest->seller_notes,
             ]);
 
@@ -128,7 +127,7 @@ class SellerReturnReviewService
             Notification::send(
                 $returnRequest->customer_id ?: $order->customerId,
                 'Returned Item Received',
-                "The artisan confirmed receipt of the returned item for order #LB-" . strtoupper(substr($order->id, -8)) . ($isOnlinePayment ? ". Admin is now processing the platform refund." : "."),
+                "The artisan confirmed receipt of the returned item for order #LB-" . strtoupper(substr($order->id, -8)) . ". The artisan will now process your refund directly.",
                 'order',
                 route('orders.show', $order->id),
                 'customer'

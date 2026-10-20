@@ -502,7 +502,7 @@ class CreateOrderService
             // Process Payment Validation / Reference Claiming & Accounting
             $paymentReference = null;
             $paymentProofPath = null;
-            $transactionStatus = 'COMPLETED';
+            $transactionStatus = 'UNVERIFIED';
             $validatedReceipts = [];
             $totalVerifiedPayments = 0.0;
             $overpaymentAmount = 0.00;
@@ -620,11 +620,11 @@ class CreateOrderService
 
                     $overpaymentAmount = $sukli;
                     $refundMobileNumber = $normMobile;
-                    $initialPaymentStatus = 'Paid (Direct to Seller)';
+                    $initialPaymentStatus = 'Pending Verification (Overpayment)';
                 } else {
                     $overpaymentAmount = 0.00;
                     $refundMobileNumber = null;
-                    $initialPaymentStatus = 'Paid (Direct to Seller)';
+                    $initialPaymentStatus = 'Pending Verification';
                 }
             }
 
@@ -763,7 +763,7 @@ class CreateOrderService
                         'status'               => $transactionStatus,
                         'verification_tier'    => 'DIRECT',
                         'receipt_path'         => $vRec['receipt_path'],
-                        'verified_at'          => now(),
+                        'verified_at'          => null,
                         'notes'                => $notes,
                     ]);
                 }

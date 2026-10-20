@@ -369,7 +369,7 @@ class OrderController extends Controller
                 $order->paymentStatus = 'Pending';
             } else {
                 // If payment was rejected, block transition to To Ship without re-verification
-                if ($order->paymentStatus === 'Rejected') {
+                if (in_array(strtolower($order->paymentStatus ?? ''), ['rejected', 'payment rejected', 'payment_rejected'], true)) {
                     return response()->json(['message' => 'Cannot move order to To Ship because payment proof was rejected. Payment must be re-verified.'], 400);
                 }
                 $order->paymentStatus = 'Verified';
@@ -387,6 +387,30 @@ class OrderController extends Controller
                     }
                 } catch (\Throwable $e) {
                     Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
+                }
+            }
+        } elseif (in_array($canonicalTarget, ['Shipped', 'In Transit'], true)) {
+            // For Store Pickup or Special Delivery prepaid orders accepted directly into fulfillment
+            if (!in_array(strtoupper($order->paymentMethod ?? ''), ['COD', 'CASH ON DELIVERY', 'PAY IN SHOP', 'STORE PICKUP'], true)) {
+                if (in_array(strtolower($order->paymentStatus ?? ''), ['rejected', 'payment rejected', 'payment_rejected'], true)) {
+                    return response()->json(['message' => 'Cannot fulfill order because payment proof was rejected. Payment must be re-verified.'], 400);
+                }
+                if (in_array(strtolower($order->paymentStatus ?? ''), ['pending verification', 'pending verification (overpayment)', 'payment submitted', 'submitted'])) {
+                    $order->paymentStatus = 'Verified';
+                    $order->paymentRejectionReason = null;
+
+                    try {
+                        $tx = $order->latestPaymentTransaction;
+                        if ($tx && $tx->status !== 'VERIFIED') {
+                            $tx->update([
+                                'status' => 'VERIFIED',
+                                'verified_at' => now(),
+                                'notes' => 'Payment verified and accepted by seller.',
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Could not mark PaymentTransaction as VERIFIED for order {$order->id}: " . $e->getMessage());
+                    }
                 }
             }
         } elseif ($canonicalTarget === 'Delivered') {
@@ -1085,7 +1109,10 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            $path = $request->file('paymentScreenshot')->store('payments', 'public');
+            $file = $request->file('paymentScreenshot');
+            $storedFileName = (string) Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+            $storedPath = $file->storeAs('payments', $storedFileName, 'local');
+            $path = 'private/' . $storedPath;
             $order->paymentProof = $path;
         }
 

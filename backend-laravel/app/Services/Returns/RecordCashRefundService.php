@@ -29,7 +29,8 @@ class RecordCashRefundService
         string $resolutionType = 'refund', // 'refund' | 'exchange' | 'replacement'
         ?string $notes = null,
         ?UploadedFile $proofFile = null,
-        ?string $refundDate = null
+        ?string $refundDate = null,
+        ?string $paymentMethod = null
     ): RefundTransaction {
         $order = $returnRequest->order ?: Order::findOrFail($returnRequest->orderId);
 
@@ -39,14 +40,7 @@ class RecordCashRefundService
             ]);
         }
 
-        // Sellers CANNOT process refunds for platform-held online payments (prepaid via LumBarong official platform QR)
-        if ($order->isPlatformHeldPayment()) {
-            throw ValidationException::withMessages([
-                'payment_method' => ['Unauthorized. Sellers cannot process refunds for platform-held online payments (GCash/Maya). Online refunds must be processed by Super Admin.'],
-            ]);
-        }
-
-        return DB::transaction(function () use ($returnRequest, $order, $seller, $refundAmount, $resolutionType, $notes, $proofFile, $refundDate) {
+        return DB::transaction(function () use ($returnRequest, $order, $seller, $refundAmount, $resolutionType, $notes, $proofFile, $refundDate, $paymentMethod) {
             $lockedRequest = ReturnRequest::where('id', $returnRequest->id)->lockForUpdate()->firstOrFail();
             $lockedOrder = Order::where('id', $lockedRequest->orderId)->lockForUpdate()->firstOrFail();
 
@@ -79,18 +73,21 @@ class RecordCashRefundService
                 } catch (\Throwable $e) {}
             }
 
+            $cleanMethod = strtolower(trim((string)($paymentMethod ?: ($lockedOrder->paymentMethod ?: 'cash'))));
+            $prefix = strtoupper(substr($cleanMethod, 0, 5));
+
             // Create refund transaction for platform audit
             $refundTx = RefundTransaction::create([
                 'return_request_id'     => $lockedRequest->id,
                 'order_id'              => $lockedOrder->id,
                 'payment_transaction_id'=> null,
-                'payment_method'        => 'cash',
-                'refund_method'         => $resolutionType === 'refund' ? 'cash' : $resolutionType,
+                'payment_method'        => $cleanMethod,
+                'refund_method'         => $resolutionType === 'refund' ? $cleanMethod : $resolutionType,
                 'refund_amount'         => $refundAmount,
                 'status'                => 'transferred',
-                'transfer_reference'    => 'CASH-' . strtoupper(substr(uniqid(), -6)),
+                'transfer_reference'    => $prefix . '-' . strtoupper(substr(uniqid(), -6)),
                 'transfer_proof_path'   => $proofPath,
-                'notes'                 => $notes ?: "Cash {$resolutionType} completed by artisan",
+                'notes'                 => $notes ?: "Direct {$resolutionType} ({$cleanMethod}) completed by artisan",
                 'processed_by'          => $seller->id,
                 'processed_at'          => $refundDate ? Carbon::parse($refundDate) : now(),
             ]);
@@ -99,11 +96,11 @@ class RecordCashRefundService
             $lockedRequest->update([
                 'return_status'          => 'resolved',
                 'physical_return_status' => 'completed',
-                'refund_status'          => 'not_applicable',
+                'refund_status'          => 'transferred',
                 'resolution_type'        => $resolutionType,
                 'approved_amount'        => $refundAmount,
                 'seller_notes'           => $notes,
-                'adminComment'           => "Cash {$resolutionType} of ₱" . number_format($refundAmount, 2) . " completed by artisan.",
+                'adminComment'           => "Direct {$resolutionType} of ₱" . number_format($refundAmount, 2) . " completed by artisan via " . strtoupper($cleanMethod) . ".",
                 'status'                 => 'Resolved',
                 'resolved_by'            => $seller->id,
                 'resolved_at'            => now(),
@@ -168,10 +165,9 @@ class RecordCashRefundService
             ]);
         }
 
-        // Sellers CANNOT process refunds for platform-held online payments (prepaid via LumBarong official platform QR)
         if ($order->isPlatformHeldPayment()) {
             throw ValidationException::withMessages([
-                'payment_method' => ['Unauthorized. Sellers cannot process refunds for platform-held online payments (GCash/Maya). Online refunds must be processed by Super Admin.'],
+                'payment_method' => ['Unauthorized. Sellers cannot process direct refunds for platform-held online payments. These funds are held in platform escrow.'],
             ]);
         }
 

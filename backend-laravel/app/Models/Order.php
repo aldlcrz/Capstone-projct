@@ -560,7 +560,15 @@ class Order extends Model
             return 'Failed';
         }
 
-        if ($paymentStatus === 'payment submitted' || $paymentStatus === 'submitted' || !empty($this->paymentProof)) {
+        if (in_array($paymentStatus, ['refunded', 'payment refunded', 'payment_refunded'], true)) {
+            return 'Refunded';
+        }
+
+        if (in_array($paymentStatus, ['partially paid', 'partial', 'partially_paid'], true)) {
+            return 'Partially Paid';
+        }
+
+        if ($paymentStatus === 'payment submitted' || $paymentStatus === 'submitted' || str_contains($paymentStatus, 'pending verification') || !empty($this->paymentProof)) {
             return 'Payment Submitted';
         }
 

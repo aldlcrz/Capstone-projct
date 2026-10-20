@@ -98,7 +98,7 @@ class DisputeReturnRequestService
 
             $returnRequest->update([
                 'dispute_status' => 'resolved',
-                'return_status'  => $isApproved ? 'admin_review' : 'rejected',
+                'return_status'  => $isApproved ? 'approved' : 'rejected',
                 'status'         => $isApproved ? 'Approved' : 'Rejected',
                 'admin_decision' => $isApproved ? 'override_approved' : 'rejection_upheld',
                 'admin_notes'    => $notes,

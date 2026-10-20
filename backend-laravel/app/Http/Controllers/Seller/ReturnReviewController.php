@@ -81,6 +81,7 @@ class ReturnReviewController extends Controller
         $request->validate([
             'refund_amount'   => 'required|numeric|min:0',
             'resolution_type' => 'required|in:refund,exchange,replacement,alteration',
+            'payment_method'  => 'nullable|string|max:50',
             'notes'           => 'nullable|string|max:1000',
             'refund_date'     => 'nullable|date',
             'transfer_proof'  => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
@@ -92,6 +93,7 @@ class ReturnReviewController extends Controller
         $notes = $request->input('notes');
         $proof = $request->file('transfer_proof');
         $refundDate = $request->input('refund_date');
+        $paymentMethod = $request->input('payment_method');
 
         $refundTx = $this->cashRefundService->recordCashRefund(
             $returnRequest,
@@ -100,7 +102,8 @@ class ReturnReviewController extends Controller
             $resolution,
             $notes,
             $proof,
-            $refundDate
+            $refundDate,
+            $paymentMethod
         );
 
         if ($request->wantsJson()) {

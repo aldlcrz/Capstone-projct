@@ -9,6 +9,7 @@ use App\Services\Messaging\LumbarongSystemMessageService;
 use App\Services\Financial\FinancialLedgerService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class RecordSellerPaymentService
@@ -71,7 +72,9 @@ class RecordSellerPaymentService
             // Handle optional proof upload
             $proofPath = null;
             if ($proofFile && $proofFile->isValid()) {
-                $proofPath = $proofFile->store('payments', 'public');
+                $storedFileName = (string) Str::uuid() . '.' . ($proofFile->getClientOriginalExtension() ?: 'jpg');
+                $storedPath = $proofFile->storeAs('payments', $storedFileName, 'local');
+                $proofPath = 'private/' . $storedPath;
             }
 
             // Cumulative payment calculation

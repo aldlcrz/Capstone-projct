@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [WebController::class, 'index'])->name('home');
+Route::get('/products', [WebController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [WebController::class, 'productDetails'])->name('products.show');
 Route::post('/products/{product}/shipping-quote', [ProductShippingController::class, 'getQuote'])->name('products.shipping-quote');
 Route::get('/shops', [WebController::class, 'allShops'])->name('shops.index');

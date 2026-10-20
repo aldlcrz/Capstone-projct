@@ -206,7 +206,42 @@ class CentralizedReturnRefundTest extends TestCase
         $returnRequest->refresh();
 
         $this->assertEquals('received', $returnRequest->physical_return_status);
-        $this->assertEquals('admin_review', $returnRequest->return_status);
+        $this->assertEquals('return_received', $returnRequest->return_status);
+    }
+
+    public function test_seller_can_directly_record_refund_for_return_request(): void
+    {
+        [$order, $orderItem, $paymentTx] = $this->createDeliveredGcashOrder(2500.00);
+
+        $returnRequest = ReturnRequest::create([
+            'orderId'                => $order->id,
+            'customer_id'            => $this->customer->id,
+            'seller_id'              => $this->seller->id,
+            'reason'                 => 'Damaged Collar',
+            'status'                 => 'Approved',
+            'return_status'          => 'return_received',
+            'physical_return_status' => 'received',
+            'refund_status'          => 'pending',
+            'requested_amount'       => 2500.00,
+        ]);
+
+        $transferProof = UploadedFile::fake()->image('gcash_receipt.png');
+
+        $response = $this->actingAs($this->seller)->postJson("/seller/returns/{$returnRequest->id}/cash-refund", [
+            'refund_amount'       => 2500.00,
+            'resolution_type'     => 'refund',
+            'payment_method'      => 'gcash',
+            'transfer_proof'      => $transferProof,
+            'notes'               => 'Artisan sent refund directly via GCash.',
+        ]);
+
+        $response->assertStatus(200);
+        $returnRequest->refresh();
+
+        $this->assertEquals('resolved', $returnRequest->return_status);
+        $this->assertEquals('transferred', $returnRequest->refund_status);
+        $this->assertEquals(2500.00, (float) $returnRequest->approved_amount);
+        $this->assertEquals($this->seller->id, $returnRequest->resolved_by);
     }
 
     public function test_admin_can_approve_and_record_centralized_gcash_refund_with_linkage_and_encryption(): void
@@ -379,7 +414,7 @@ class CentralizedReturnRefundTest extends TestCase
         $returnRequest->refresh();
 
         $this->assertEquals('resolved', $returnRequest->dispute_status);
-        $this->assertEquals('admin_review', $returnRequest->return_status);
+        $this->assertEquals('approved', $returnRequest->return_status);
         $this->assertEquals('override_approved', $returnRequest->admin_decision);
     }
 
