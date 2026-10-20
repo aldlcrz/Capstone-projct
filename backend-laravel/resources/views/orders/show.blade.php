@@ -802,7 +802,7 @@
                         <div class="flex items-center gap-2.5">
                             <div class="w-9 h-9 rounded-full bg-linear-to-tr from-[#3D2B1F] to-[#C0422A] border border-[#ECE3D2] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
                                 @if($order->seller?->profile_photo_url)
-                                    <img src="{{ $order->seller->profile_photo_url }}" alt="{{ $order->seller?->display_name ?? 'Artisan' }}" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'">
+                                    <img src="{{ $order->seller->profile_photo_url }}" alt="{{ $order->seller?->display_name ?? 'Artisan' }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/logo-icon.png') }}'">
                                 @else
                                     {{ strtoupper(substr($order->seller?->shopName ?: ($order->seller?->name ?: 'AR'), 0, 2)) }}
                                 @endif

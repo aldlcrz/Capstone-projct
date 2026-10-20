@@ -961,7 +961,7 @@
                         <div class="relative z-10 flex gap-4 items-center">
                             <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-2 border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-2xl sm:text-3xl text-stone-400 shadow-md">
                                 <template x-if="shopSeller && shopSeller.profilePhoto">
-                                    <img :src="getProductImage(shopSeller.profilePhoto)" class="w-full h-full object-cover" onerror="this.src='/uploads/products/default.jpg'" />
+                                    <img :src="getProductImage(shopSeller.profilePhoto)" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/logo-icon.png'" />
                                 </template>
                                 <template x-if="!shopSeller || !shopSeller.profilePhoto">
                                     <span x-text="shopSeller?.shopName ? shopSeller.shopName.charAt(0).toUpperCase() : 'A'"></span>
