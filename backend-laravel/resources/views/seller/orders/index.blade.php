@@ -174,6 +174,7 @@ function sellerOrdersManager() {
         trackingNumber: '',
         trackingLink: '',
         shippingError: '',
+        isEditingTracking: false,
         claimCodeInput: '',
         claimCodeLoading: false,
         claimCodeError: '',
@@ -1327,6 +1328,7 @@ function sellerOrdersManager() {
                     if (this.detailsOrder && this.detailsOrder.id === target.id) {
                         this.detailsOrder = data;
                     }
+                    this.isEditingTracking = false;
                     this.showToast('Courier and tracking details saved successfully!');
                 } else {
                     this.shippingError = data.message || 'Failed to update shipping info.';
@@ -1370,6 +1372,7 @@ function sellerOrdersManager() {
                 this.trackingLink = this.getDirectTrackingLink(this.courierName, this.trackingNumber);
             }
             this.shippingError = '';
+            this.isEditingTracking = false;
             this.packingPhotoFile = null;
             let proof = order.packingProofUrl || order.packingProof || null;
             if (proof && !proof.startsWith('http') && !proof.startsWith('/')) {
@@ -2737,44 +2740,21 @@ if (window.Alpine) {
                             </template>
                         </div>
 
-                        {{-- STANDARD COURIER CARD — Modernized with Automated Real-Time Tracking --}}
+                        {{-- STANDARD COURIER CARD --}}
                         <div x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) !== 'pending' && normalizeStatus(detailsOrder.status) !== 'to ship' && normalizeStatus(detailsOrder.status) !== 'cancellation pending' && normalizeStatus(detailsOrder.status) !== 'cancellation requested' && !getReturnRequest(detailsOrder) && !normalizeStatus(detailsOrder.status).includes('return')" x-transition 
                              class="p-4 sm:p-5 rounded-3xl space-y-3.5 border"
                              style="background: #FFFCF7; border-color: #E8DECB;">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-1.5">
                                     <x-lucide name="truck" class="w-4 h-4 text-[#C49520]" />
-                                    <span>Courier & Automated Tracking</span>
+                                    <span>Courier & Tracking</span>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <template x-if="!isShippingLocked(detailsOrder)">
-                                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <span>⚡ Real-Time API Sync</span>
-                                        </span>
-                                    </template>
-                                    <template x-if="isShippingLocked(detailsOrder)">
-                                        <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
-                                              class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-2xs">
-                                            <x-lucide name="lock" class="w-3 h-3 text-[#C49520]" /> Read Only / Locked
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-
-                            {{-- Real-Time Logistics Sync Banner --}}
-                            <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-50/70 to-teal-50/40 border border-emerald-200/70 flex items-start gap-2.5">
-                                <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 text-emerald-700">
-                                    <x-lucide name="zap" class="w-3.5 h-3.5 text-emerald-600" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                                        <span>Automated Logistics Tracking Active</span>
-                                    </div>
-                                    <p class="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
-                                        Status checkpoints (<span class="font-semibold text-emerald-900">In Transit</span>, <span class="font-semibold text-emerald-900">Out for Delivery</span>, <span class="font-semibold text-emerald-900">Delivered</span>) update automatically via direct courier API & webhook polling once scanned by the rider.
-                                    </p>
-                                </div>
+                                <template x-if="isShippingLocked(detailsOrder)">
+                                    <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                          class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-2xs">
+                                        <x-lucide name="lock" class="w-3 h-3 text-[#C49520]" /> Read Only
+                                    </span>
+                                </template>
                             </div>
 
                             <template x-if="isShippingLocked(detailsOrder)">
@@ -2783,95 +2763,90 @@ if (window.Alpine) {
                                 </p>
                             </template>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <div>
-                                     <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block mb-1">Assigned Courier</label>
-                                     <select x-model="courierName" @change="onCourierChange()" :disabled="isShippingLocked(detailsOrder)"
-                                         style="background: #FFFFFF; border-color: #E8DECB;"
-                                         class="w-full h-9 px-3 border rounded-xl text-xs font-semibold outline-none focus:border-[#C49520] disabled:bg-[#FAF8F5] disabled:text-gray-500 cursor-pointer text-[#1E1915]">
-                                         <option value="J&T Express">J&T Express (Default)</option>
-                                         <option value="LBC Express">LBC Express</option>
-                                         <option value="Flash Express">Flash Express</option>
-                                         <option value="Ninja Van">Ninja Van</option>
-                                         <option value="2GO Express">2GO Express</option>
-                                         <option value="JRS Express">JRS Express</option>
-                                         <option value="Lalamove">Lalamove</option>
-                                         <option value="GrabExpress">GrabExpress</option>
-                                         <option value="Other Courier">Other Courier</option>
-                                     </select>
-                                </div>
-                                <div>
-                                     <div class="flex items-center justify-between mb-1">
-                                         <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block">Waybill / Tracking Number <span class="text-red-500">*</span></label>
-                                         <span class="text-[9px] font-mono text-[#766C60]" x-text="trackingNumber ? (trackingNumber.trim().length + ' chars') : ''"></span>
-                                     </div>
-                                     <input type="text" 
-                                         x-model="trackingNumber" 
-                                         @input="shippingError = ''"
-                                         :placeholder="getCourierConfig(courierName).placeholder" 
-                                         :disabled="isShippingLocked(detailsOrder)"
-                                         :class="{
-                                             'border-emerald-500 focus:border-emerald-600 bg-emerald-50/20 text-emerald-950': trackingNumber && trackingValidationStatus.valid,
-                                             'border-red-400 focus:border-red-500 bg-red-50/20 text-red-950': trackingNumber && !trackingValidationStatus.valid,
-                                             'border-[#E8DECB] focus:border-[#C49520] bg-white text-[#1E1915]': !trackingNumber
-                                         }"
-                                         class="w-full h-9 px-3 border rounded-xl text-xs font-mono font-bold outline-none uppercase transition-colors disabled:bg-[#FAF8F5] disabled:text-gray-500">
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5 pt-0.5">
-                                <div class="flex items-center justify-between flex-wrap gap-1 text-[10px]">
-                                    <div class="text-[#766C60] flex items-center gap-1">
-                                        <span class="font-bold text-[#1E1915]">Format Guide:</span>
-                                        <span class="italic text-[#766C60]" x-text="getCourierConfig(courierName).hint"></span>
+                            {{-- State A: Tracking Number Already Saved --}}
+                            <template x-if="(detailsOrder.trackingNumber || detailsOrder.shipping?.tracking_number) && !isEditingTracking">
+                                <div class="p-3.5 rounded-2xl bg-white border border-[#E8DECB] shadow-2xs flex items-center justify-between flex-wrap sm:flex-nowrap gap-3">
+                                    <div class="space-y-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-[#1E1915]" x-text="courierName"></span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                <span>Auto-Tracking Active</span>
+                                            </span>
+                                        </div>
+                                        <div class="text-sm font-mono font-black text-[#1E1915] tracking-wide" x-text="trackingNumber"></div>
+                                        <p class="text-[11px] text-[#766C60]">Checkpoints will update automatically as the courier delivers the package.</p>
                                     </div>
-                                    <template x-if="trackingNumber">
-                                        <span :class="trackingValidationStatus.valid ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'"
-                                              class="px-2 py-0.5 rounded-md border font-bold text-[9px] inline-flex items-center gap-1 shadow-2xs"
-                                              x-text="trackingValidationStatus.message"></span>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <template x-if="!isShippingLocked(detailsOrder)">
+                                            <button type="button" @click="isEditingTracking = true"
+                                                style="border: 1px solid #E8DECB; background: #FFFFFF; color: #766C60;"
+                                                class="px-3 py-1.5 rounded-xl text-xs font-semibold hover:text-[#1E1915] hover:bg-[#FDF8EE] hover:border-[#C49520] transition-colors cursor-pointer">
+                                                Edit
+                                            </button>
+                                        </template>
+                                        <a :href="getDirectTrackingLink(courierName, trackingNumber)" target="_blank" rel="noopener noreferrer"
+                                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#1E1915] text-white hover:bg-[#C0420A] transition-colors shadow-2xs">
+                                            <span>Track Package</span>
+                                            <x-lucide name="external-link" class="w-3.5 h-3.5 text-white" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- State B: No Tracking Number Saved Yet (or Editing) --}}
+                            <template x-if="(!detailsOrder.trackingNumber && !detailsOrder.shipping?.tracking_number) || isEditingTracking">
+                                <div class="space-y-2.5">
+                                    <p class="text-[11px] text-[#766C60] leading-relaxed">
+                                        Enter the tracking number from your courier drop-off receipt to link the parcel and begin automated tracking.
+                                    </p>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div>
+                                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block mb-1">Courier</label>
+                                            <select x-model="courierName" @change="onCourierChange()" :disabled="isShippingLocked(detailsOrder)"
+                                                style="background: #FFFFFF; border-color: #E8DECB;"
+                                                class="w-full h-9 px-2.5 border rounded-xl text-xs font-semibold outline-none focus:border-[#C49520] disabled:bg-[#FAF8F5] disabled:text-gray-500 cursor-pointer text-[#1E1915]">
+                                                <option value="J&T Express">J&T Express</option>
+                                                <option value="LBC Express">LBC Express</option>
+                                                <option value="Flash Express">Flash Express</option>
+                                                <option value="Ninja Van">Ninja Van</option>
+                                                <option value="2GO Express">2GO Express</option>
+                                                <option value="JRS Express">JRS Express</option>
+                                                <option value="Other Courier">Other Courier</option>
+                                            </select>
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <label class="text-[10px] font-bold text-[#766C60] uppercase tracking-wider block mb-1">Waybill / Tracking Number <span class="text-red-500">*</span></label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="text" 
+                                                    x-model="trackingNumber" 
+                                                    @input="shippingError = ''"
+                                                    :placeholder="getCourierConfig(courierName).placeholder" 
+                                                    :disabled="isShippingLocked(detailsOrder)"
+                                                    style="background: #FFFFFF; border-color: #E8DECB;"
+                                                    class="flex-1 h-9 px-3 border rounded-xl text-xs font-mono font-bold outline-none uppercase focus:border-[#C49520] disabled:bg-[#FAF8F5] text-[#1E1915]">
+                                                <button type="button" @click="saveShippingDetails(detailsOrder)" :disabled="shippingUpdating || !trackingNumber.trim()"
+                                                    style="background-color: #1E1915; color: #ffffff;"
+                                                    class="px-4 h-9 rounded-xl text-xs font-bold hover:bg-[#C0420A] disabled:opacity-50 text-white transition-colors shrink-0 shadow-2xs cursor-pointer flex items-center gap-1.5">
+                                                    <span x-text="shippingUpdating ? 'Saving...' : 'Save'"></span>
+                                                </button>
+                                                <template x-if="isEditingTracking && (detailsOrder.trackingNumber || detailsOrder.shipping?.tracking_number)">
+                                                    <button type="button" @click="isEditingTracking = false"
+                                                        style="border: 1px solid #E8DECB; background: #FFFFFF; color: #766C60;"
+                                                        class="px-3 h-9 rounded-xl text-xs font-semibold hover:text-[#1E1915] transition-colors cursor-pointer">
+                                                        Cancel
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <template x-if="shippingError">
+                                        <p class="text-xs text-red-600 font-semibold" x-text="shippingError"></p>
                                     </template>
                                 </div>
-                            </div>
-
-                            {{-- Live Waybill Direct Trace Link Card (Replaces obsolete manual URL input) --}}
-                            <div class="pt-1">
-                                <template x-if="trackingNumber && trackingValidationStatus.valid">
-                                    <div class="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E8DECB] shadow-2xs gap-3 flex-wrap sm:flex-nowrap">
-                                        <div class="flex items-center gap-2.5 min-w-0">
-                                            <div class="w-8 h-8 rounded-xl bg-[#FDF8EE] border border-[#E8DECB] flex items-center justify-center shrink-0 text-[#996515]">
-                                                <x-lucide name="compass" class="w-4 h-4 text-[#C49520]" />
-                                            </div>
-                                            <div class="min-w-0">
-                                                <div class="text-[10px] uppercase font-bold text-[#766C60] tracking-wider flex items-center gap-1.5">
-                                                    <span>Live Courier Trace Portal</span>
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                </div>
-                                                <div class="text-xs font-mono font-bold text-[#1E1915] truncate" x-text="courierName + ' • ' + trackingNumber"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            <template x-if="!isShippingLocked(detailsOrder) && trackingNumber.trim().toUpperCase() !== String(detailsOrder.trackingNumber || '').trim().toUpperCase()">
-                                                <button type="button" @click="saveShippingDetails(detailsOrder)" :disabled="shippingUpdating"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#C49520] hover:bg-[#A16D19] text-white transition-colors shadow-2xs cursor-pointer">
-                                                    <x-lucide name="check" class="w-3 h-3 text-white" />
-                                                    <span x-text="shippingUpdating ? 'Saving...' : 'Save Waybill'"></span>
-                                                </button>
-                                            </template>
-                                            <a :href="getDirectTrackingLink(courierName, trackingNumber)" target="_blank" rel="noopener noreferrer"
-                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1E1915] text-white hover:bg-[#C0420A] transition-colors shadow-2xs">
-                                                <span>Track Package</span>
-                                                <x-lucide name="external-link" class="w-3 h-3 text-white" />
-                                            </a>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="!trackingNumber">
-                                    <div class="p-2.5 rounded-xl bg-[#FDF8EE] border border-[#E8DECB] text-[11px] text-[#766C60] flex items-center gap-2">
-                                        <x-lucide name="info" class="w-3.5 h-3.5 text-[#C49520] shrink-0" />
-                                        <span>Enter the waybill number provided on your drop-off receipt to generate direct live parcel tracking.</span>
-                                    </div>
-                                </template>
-                            </div>
+                            </template>
                         </div>
 
                         {{-- Purchased Product Items (Full Width Card Matching Mockup) --}}
@@ -3125,36 +3100,6 @@ if (window.Alpine) {
                                 </template>
                                 <span style="color: #ffffff;" x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for special delivery'"></span>
                             </button>
-                        </template>
-                        <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end">
-                                <div class="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>Awaiting courier scan (Auto-syncs via API)</span>
-                                </div>
-                                <button type="button"
-                                    @click="(() => {
-                                        const valRes = validateTrackingNumber(courierName, trackingNumber);
-                                        if (!valRes.valid) {
-                                            shippingError = valRes.message;
-                                        } else {
-                                            shippingError = '';
-                                            requestStatusUpdate(detailsOrder, 'In Transit');
-                                        }
-                                    })()"
-                                    :disabled="statusUpdating || statusConfirmLoading"
-                                    title="Optional: Force transition to In Transit if courier scanner is offline or delayed"
-                                    style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
-                                    class="flex-1 sm:flex-none px-4 py-2 hover:bg-[#FDF8EE] hover:border-[#C49520] disabled:opacity-50 text-xs font-bold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
-                                    <template x-if="statusUpdating || statusConfirmLoading">
-                                        <svg class="w-3.5 h-3.5 animate-spin text-[#1E1915] shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                                    </template>
-                                    <template x-if="!statusUpdating && !statusConfirmLoading">
-                                        <x-lucide name="truck" class="w-3.5 h-3.5 text-[#C49520]" />
-                                    </template>
-                                    <span x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Manual Scan Override (In Transit)'"></span>
-                                </button>
-                            </div>
                         </template>
                     </div>
                 </template>
