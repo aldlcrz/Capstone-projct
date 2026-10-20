@@ -8,16 +8,30 @@ use App\Models\Product;
 use App\Models\ShippingProvider;
 use App\Models\ShippingRate;
 use App\Models\SellerShippingProvider;
+use App\Services\Courier\Contracts\CourierRateProviderInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 class ShippingCalculatorService
 {
     protected ShippingZoneResolverService $zoneResolver;
+    protected ?CourierTrackingService $courierTrackingService;
 
-    public function __construct(ShippingZoneResolverService $zoneResolver)
-    {
+    public function __construct(
+        ShippingZoneResolverService $zoneResolver,
+        ?CourierTrackingService $courierTrackingService = null
+    ) {
         $this->zoneResolver = $zoneResolver;
+        $this->courierTrackingService = $courierTrackingService;
+    }
+
+    protected function getCourierTrackingService(): CourierTrackingService
+    {
+        if ($this->courierTrackingService === null) {
+            $this->courierTrackingService = app(CourierTrackingService::class);
+        }
+        return $this->courierTrackingService;
     }
 
     /**
@@ -271,17 +285,19 @@ class ShippingCalculatorService
             }
 
             foreach ($courierCandidates as $provider) {
+                $carrierCode = $this->getCourierTrackingService()->getCarrierCode($provider->code . ' ' . $provider->name);
+                $adapter = $carrierCode ? $this->getCourierTrackingService()->getProvider($carrierCode) : null;
+
                 $rateQuery = ShippingRate::where('provider_id', $provider->id)
                     ->where('origin_zone_id', $originZone->id)
                     ->where('destination_zone_id', $destinationZone->id)
                     ->where('is_active', true);
 
                 $candidateRates = (clone $rateQuery)->orderBy('min_weight', 'asc')->get();
-                if ($candidateRates->isEmpty()) {
-                    continue;
-                }
 
-                $divisor = $candidateRates->first()->volumetric_divisor ?: ($provider->default_volumetric_divisor ?: 3500);
+                $divisor = $candidateRates->isNotEmpty() && $candidateRates->first()->volumetric_divisor
+                    ? $candidateRates->first()->volumetric_divisor
+                    : ($provider->default_volumetric_divisor ?: 3500);
                 if ($divisor <= 0) $divisor = 3500;
 
                 $volumetricWeight = round($totalPackedVolume / $divisor, 2);
@@ -292,6 +308,64 @@ class ShippingCalculatorService
                     if ($rate->max_weight !== null && $chargeableWeight > $rate->max_weight) return false;
                     return true;
                 });
+
+                // Attempt live real-time API quote if adapter supports CourierRateProviderInterface
+                $liveQuote = null;
+                if ($adapter instanceof CourierRateProviderInterface) {
+                    try {
+                        $pkgLength = 35.0;
+                        $pkgWidth = 25.0;
+                        $pkgHeight = max(5.0, round($totalPackedVolume / (35.0 * 25.0), 1));
+                        $originPostal = (string) ($seller->shopPostalCode ?: '4014');
+
+                        $liveQuote = $adapter->calculateRate(
+                            $originPostal,
+                            (string) ($destProvince ?? 'Metro Manila'),
+                            (string) ($destCity ?? 'Manila'),
+                            $destPostal ? (string) $destPostal : null,
+                            (float) max(0.5, $totalActualWeight),
+                            $pkgLength,
+                            $pkgWidth,
+                            $pkgHeight
+                        );
+                    } catch (\Throwable $e) {
+                        Log::info("Real-time courier rate calculation error for {$provider->name}: " . $e->getMessage());
+                    }
+                }
+
+                if ($liveQuote !== null && isset($liveQuote['fee']) && $liveQuote['fee'] > 0) {
+                    $shippingFee = round((float) $liveQuote['fee'], 2);
+                    $estDaysMin = (int) ($maxHandlingDays + ($liveQuote['min_days'] ?? 2));
+                    $estDaysMax = (int) ($maxHandlingDays + ($liveQuote['max_days'] ?? 4));
+
+                    $quotes[] = [
+                        'provider_id'                  => $provider->id,
+                        'provider_name'                => 'Standard Delivery',
+                        'courier_name'                 => $provider->name,
+                        'provider_code'                => $provider->code,
+                        'shipping_rate_id'             => $matchingRate ? $matchingRate->id : null,
+                        'origin_zone_id'               => $originZone->id,
+                        'origin_zone_name'             => $originZone->name,
+                        'destination_zone_id'          => $destinationZone->id,
+                        'destination_zone_name'        => $destinationZone->name,
+                        'actual_weight'                => round($totalActualWeight, 2),
+                        'volumetric_weight'            => $volumetricWeight,
+                        'chargeable_weight'            => round($chargeableWeight, 2),
+                        'rate_base_snapshot'           => $matchingRate ? (float) $matchingRate->base_rate : $shippingFee,
+                        'additional_weight_rate_snapshot' => $matchingRate ? (float) $matchingRate->additional_weight_rate : 0.0,
+                        'volumetric_divisor_snapshot'  => $divisor,
+                        'shipping_fee'                 => $shippingFee,
+                        'estimated_days_min'           => $estDaysMin,
+                        'estimated_days_max'           => $estDaysMax,
+                        'delivery_estimate_display'    => "{$estDaysMin}–{$estDaysMax} Days",
+                        'is_realtime_api'              => true,
+                    ];
+
+                    if (!$specificProviderId) {
+                        break;
+                    }
+                    continue;
+                }
 
                 if (!$matchingRate) {
                     continue;
@@ -325,6 +399,7 @@ class ShippingCalculatorService
                     'estimated_days_min'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_min),
                     'estimated_days_max'           => (int) ($maxHandlingDays + $matchingRate->estimated_days_max),
                     'delivery_estimate_display'    => ((int) ($maxHandlingDays + $matchingRate->estimated_days_min)) . '–' . ((int) ($maxHandlingDays + $matchingRate->estimated_days_max)) . ' Days',
+                    'is_realtime_api'              => false,
                 ];
 
                 if (!$specificProviderId) {

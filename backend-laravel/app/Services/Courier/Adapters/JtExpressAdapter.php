@@ -3,10 +3,12 @@
 namespace App\Services\Courier\Adapters;
 
 use App\Services\Courier\Contracts\CourierTrackingProviderInterface;
+use App\Services\Courier\Contracts\CourierRateProviderInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class JtExpressAdapter implements CourierTrackingProviderInterface
+class JtExpressAdapter implements CourierTrackingProviderInterface, CourierRateProviderInterface
 {
     public function getCarrierCode(): string
     {
@@ -82,8 +84,105 @@ class JtExpressAdapter implements CourierTrackingProviderInterface
 
     public function fetchTracking(string $trackingNumber): ?array
     {
-        // Direct querying requires official enterprise credentials.
-        // Public web scraping is prohibited per security specifications.
+        $apiKey = config('services.jtexpress.api_key') ?? env('JTEXPRESS_API_KEY');
+        $customerCode = config('services.jtexpress.customer_code') ?? env('JTEXPRESS_CUSTOMER_CODE');
+        $apiUrl = config('services.jtexpress.api_url') ?? env('JTEXPRESS_API_URL', 'https://openapi.jtexpress.ph');
+
+        if (empty($apiKey) || empty($customerCode)) {
+            return null;
+        }
+
+        try {
+            $data = json_encode(['billCodes' => $trackingNumber]);
+            $digest = base64_encode(md5($data . $apiKey, true));
+
+            $response = Http::timeout(3.5)->asForm()->post(rtrim($apiUrl, '/') . '/web/logistics/trace', [
+                'logistics_interface' => $data,
+                'data_digest'         => $digest,
+                'msg_type'            => 'TRACK_QUERY',
+                'eccompanyid'         => $customerCode,
+            ]);
+
+            if ($response->successful()) {
+                $resData = $response->json();
+                if (!empty($resData['responseitems'])) {
+                    return [
+                        'carrier'         => $this->getDisplayName(),
+                        'tracking_number' => $trackingNumber,
+                        'events'          => $resData['responseitems'][0]['traces'] ?? [],
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("J&T Express tracking fetch failed: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Real-time J&T Express rate calculation.
+     */
+    public function calculateRate(
+        string $originPostalCode,
+        string $destProvince,
+        string $destCity,
+        ?string $destPostalCode,
+        float $actualWeightKg,
+        float $lengthCm,
+        float $widthCm,
+        float $heightCm
+    ): ?array {
+        $apiKey = config('services.jtexpress.api_key') ?? env('JTEXPRESS_API_KEY');
+        $customerCode = config('services.jtexpress.customer_code') ?? env('JTEXPRESS_CUSTOMER_CODE');
+        $apiUrl = config('services.jtexpress.api_url') ?? env('JTEXPRESS_API_URL', 'https://openapi.jtexpress.ph');
+
+        if (empty($apiKey) || empty($customerCode)) {
+            return null;
+        }
+
+        try {
+            $payload = [
+                'sender' => [
+                    'province' => 'Laguna',
+                    'city'     => 'Lumban',
+                    'postCode' => $originPostalCode ?: '4014',
+                ],
+                'receiver' => [
+                    'province' => $destProvince,
+                    'city'     => $destCity,
+                    'postCode' => $destPostalCode ?: '1000',
+                ],
+                'weight' => max(0.5, $actualWeightKg),
+                'length' => max(1, $lengthCm),
+                'width'  => max(1, $widthCm),
+                'height' => max(1, $heightCm),
+            ];
+
+            $jsonStr = json_encode($payload);
+            $digest = base64_encode(md5($jsonStr . $apiKey, true));
+
+            $response = Http::timeout(2.5)->asForm()->post(rtrim($apiUrl, '/') . '/web/freight/inquiry', [
+                'logistics_interface' => $jsonStr,
+                'data_digest'         => $digest,
+                'msg_type'            => 'FREIGHT_INQUIRY',
+                'eccompanyid'         => $customerCode,
+            ]);
+
+            if ($response->successful()) {
+                $resData = $response->json();
+                if (isset($resData['freight'])) {
+                    return [
+                        'fee'      => (float) $resData['freight'],
+                        'min_days' => 2,
+                        'max_days' => 4,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::info("J&T Express live rate inquiry bypassed: " . $e->getMessage());
+        }
+
         return null;
     }
 

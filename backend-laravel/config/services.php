@@ -51,4 +51,23 @@ return [
         'webhook_secret' => env('TRACKINGMORE_WEBHOOK_SECRET'),
     ],
 
+    'jtexpress' => [
+        'api_key'       => env('JTEXPRESS_API_KEY'),
+        'customer_code' => env('JTEXPRESS_CUSTOMER_CODE'),
+        'api_url'       => env('JTEXPRESS_API_URL', 'https://openapi.jtexpress.ph'),
+    ],
+
+    'flashexpress' => [
+        'mch_id'   => env('FLASHEXPRESS_MCH_ID'),
+        'sign_key' => env('FLASHEXPRESS_SIGN_KEY'),
+        'api_url'  => env('FLASHEXPRESS_API_URL', 'https://open-api.flashexpress.ph'),
+    ],
+
+    'lbc' => [
+        'partner_token' => env('LBC_PARTNER_TOKEN'),
+        'secret_key'    => env('LBC_SECRET_KEY'),
+        'account_no'    => env('LBC_ACCOUNT_NO'),
+        'api_url'       => env('LBC_API_URL', 'https://api.lbcexpress.com'),
+    ],
+
 ];

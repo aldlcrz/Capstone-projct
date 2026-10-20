@@ -3,10 +3,12 @@
 namespace App\Services\Courier\Adapters;
 
 use App\Services\Courier\Contracts\CourierTrackingProviderInterface;
+use App\Services\Courier\Contracts\CourierRateProviderInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class FlashExpressAdapter implements CourierTrackingProviderInterface
+class FlashExpressAdapter implements CourierTrackingProviderInterface, CourierRateProviderInterface
 {
     public function getCarrierCode(): string
     {
@@ -84,7 +86,105 @@ class FlashExpressAdapter implements CourierTrackingProviderInterface
 
     public function fetchTracking(string $trackingNumber): ?array
     {
-        // Direct querying requires official enterprise credentials.
+        $mchId = config('services.flashexpress.mch_id') ?? env('FLASHEXPRESS_MCH_ID');
+        $signKey = config('services.flashexpress.sign_key') ?? env('FLASHEXPRESS_SIGN_KEY');
+        $apiUrl = config('services.flashexpress.api_url') ?? env('FLASHEXPRESS_API_URL', 'https://open-api.flashexpress.ph');
+
+        if (empty($mchId) || empty($signKey)) {
+            return null;
+        }
+
+        try {
+            $params = [
+                'mchId' => $mchId,
+                'pno'   => $trackingNumber,
+            ];
+            ksort($params);
+            $signStr = '';
+            foreach ($params as $k => $v) {
+                if ($v !== null && $v !== '') {
+                    $signStr .= $k . '=' . $v . '&';
+                }
+            }
+            $signStr .= 'key=' . $signKey;
+            $params['sign'] = strtoupper(md5($signStr));
+
+            $response = Http::timeout(3.5)->asForm()->post(rtrim($apiUrl, '/') . '/open/v1/orders/track', $params);
+            if ($response->successful()) {
+                $data = $response->json();
+                if (($data['code'] ?? null) == 1 && !empty($data['data'])) {
+                    return [
+                        'carrier'         => $this->getDisplayName(),
+                        'tracking_number' => $trackingNumber,
+                        'events'          => $data['data']['routes'] ?? [],
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Flash Express tracking fetch failed: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Real-time Flash Express rate calculation.
+     */
+    public function calculateRate(
+        string $originPostalCode,
+        string $destProvince,
+        string $destCity,
+        ?string $destPostalCode,
+        float $actualWeightKg,
+        float $lengthCm,
+        float $widthCm,
+        float $heightCm
+    ): ?array {
+        $mchId = config('services.flashexpress.mch_id') ?? env('FLASHEXPRESS_MCH_ID');
+        $signKey = config('services.flashexpress.sign_key') ?? env('FLASHEXPRESS_SIGN_KEY');
+        $apiUrl = config('services.flashexpress.api_url') ?? env('FLASHEXPRESS_API_URL', 'https://open-api.flashexpress.ph');
+
+        if (empty($mchId) || empty($signKey)) {
+            return null;
+        }
+
+        try {
+            $weightGrams = (int) round($actualWeightKg * 1000);
+            $params = [
+                'mchId'         => $mchId,
+                'srcPostalCode' => $originPostalCode ?: '4014',
+                'dstPostalCode' => $destPostalCode ?: '1000',
+                'weight'        => max(100, $weightGrams),
+                'width'         => max(1, (int) round($widthCm)),
+                'length'        => max(1, (int) round($lengthCm)),
+                'height'        => max(1, (int) round($heightCm)),
+            ];
+            ksort($params);
+            $signStr = '';
+            foreach ($params as $k => $v) {
+                if ($v !== null && $v !== '') {
+                    $signStr .= $k . '=' . $v . '&';
+                }
+            }
+            $signStr .= 'key=' . $signKey;
+            $params['sign'] = strtoupper(md5($signStr));
+
+            $response = Http::timeout(2.5)->asForm()->post(rtrim($apiUrl, '/') . '/open/v1/orders/fee', $params);
+            if ($response->successful()) {
+                $data = $response->json();
+                if (($data['code'] ?? null) == 1 && isset($data['data']['price'])) {
+                    $fee = (float) $data['data']['price'];
+                    return [
+                        'fee'      => $fee,
+                        'min_days' => (int) ($data['data']['min_days'] ?? 2),
+                        'max_days' => (int) ($data['data']['max_days'] ?? 4),
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::info("Flash Express live rate inquiry bypassed: " . $e->getMessage());
+        }
+
         return null;
     }
 
