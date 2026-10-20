@@ -1263,7 +1263,29 @@ class OrderController extends Controller
                     : redirect()->back()->with('error', 'Orders in progress cannot be cancelled directly. Please contact the artisan.');
             }
 
-            $reason = trim($request->input('cancellationReason') ?? $request->input('reason') ?? 'Need to change order details');
+            $validator = Validator::make($request->all(), [
+                'cancellationReason' => 'required|string',
+                'reason'             => 'required_if:cancellationReason,Other|nullable|string|min:5|max:500',
+            ], [
+                'cancellationReason.required' => 'Please select a reason for cancellation.',
+                'reason.required_if'          => 'Please explain why you want to cancel (minimum 5 characters).',
+                'reason.min'                  => 'Please provide a more detailed explanation (minimum 5 characters).',
+            ]);
+
+            if ($validator->fails()) {
+                if ($request->expectsJson() || $request->is('api/*') || $request->is('seller/api/*')) {
+                    return response()->json([
+                        'message' => $validator->errors()->first(),
+                        'errors'  => $validator->errors(),
+                    ], 422);
+                }
+                return redirect()->back()->withErrors($validator)->withInput()->with('error', $validator->errors()->first());
+            }
+
+            $selectedReason = trim($request->input('cancellationReason'));
+            $reason = ($selectedReason === 'Other')
+                ? 'Other: ' . trim($request->input('reason'))
+                : $selectedReason;
 
             DB::beginTransaction();
             try {

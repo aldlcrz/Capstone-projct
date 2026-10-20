@@ -5,7 +5,8 @@
      x-data="{ 
         confirmModal: false, 
         cancelModal: false,
-        cancellationReason: 'Need to change shipping address / details',
+        cancellationReason: '',
+        cancellationOtherText: '',
         cancelLoading: false,
         returnModal: false,
         returnReason: 'Damaged / Defective item',
@@ -256,7 +257,7 @@
                         </span>
 
                         @if($statusLower === 'pending')
-                            <button type="button" @click="cancelModal = true" class="px-2.5 py-0.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold uppercase rounded-full transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
+                            <button type="button" @click="cancellationReason = ''; cancellationOtherText = ''; cancelModal = true" class="px-2.5 py-0.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold uppercase rounded-full transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
                                 <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 <span>Cancel</span>
                             </button>
@@ -1234,7 +1235,8 @@
                 @csrf
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C]">Reason for Cancellation <span class="text-red-500">*</span></label>
-                    <select name="cancellationReason" x-model="cancellationReason" class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] focus:bg-white transition-all">
+                    <select name="cancellationReason" x-model="cancellationReason" required class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs font-semibold text-[#1E1915] outline-none focus:border-[#C49520] focus:bg-white transition-all cursor-pointer">
+                        <option value="" disabled selected>-- Select a reason for cancellation --</option>
                         <option value="Need to change shipping address / details">Need to change shipping address / details</option>
                         <option value="Changed mind / ordered by mistake">Changed mind / ordered by mistake</option>
                         <option value="Decided to buy another item">Decided to buy another item</option>
@@ -1245,8 +1247,13 @@
 
                 <template x-if="cancellationReason === 'Other'">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C]">Explanation</label>
-                        <textarea name="reason" rows="3" placeholder="Provide a brief explanation..." class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs font-medium outline-none focus:border-[#C49520] focus:bg-white resize-none"></textarea>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C]">
+                            Please explain why you want to cancel <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="reason" x-model="cancellationOtherText" required rows="3" placeholder="Provide a brief explanation for the artisan (minimum 5 characters)..." class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs font-medium outline-none focus:border-[#C49520] focus:bg-white resize-none"></textarea>
+                        <p class="text-[9px] text-[#A87B10] font-medium" x-show="cancellationOtherText && cancellationOtherText.trim().length < 5">
+                            Please enter at least 5 characters.
+                        </p>
                     </div>
                 </template>
 
@@ -1258,7 +1265,9 @@
                     <button type="button" @click="cancelModal = false" :disabled="cancelLoading" class="flex-1 py-2.5 rounded-full border border-[#ECE3D2] text-xs font-bold text-[#78716C] hover:bg-[#FAF8F5] transition-all cursor-pointer">
                         Keep Order
                     </button>
-                    <button type="submit" :disabled="cancelLoading" class="flex-1 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                    <button type="submit" 
+                            :disabled="cancelLoading || !cancellationReason || (cancellationReason === 'Other' && (!cancellationOtherText || cancellationOtherText.trim().length < 5))" 
+                            class="flex-1 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                         <template x-if="cancelLoading">
                             <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                         </template>
