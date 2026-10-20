@@ -802,7 +802,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-gray-500 font-medium">by</span>
                             <a href="/shops/{{ $product->sellerId ?? ($product->seller?->id ?? '') }}" class="font-extrabold text-amber-800 hover:underline flex items-center gap-1.5">
-                                <img src="{{ $product->seller?->profile_photo_url ?? asset('images/logo-icon.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/logo-icon.png') }}'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
+                                <img src="{{ $product->seller?->profile_photo_url ?? asset('images/logo-icon.png') }}" onerror="this.onerror=null;this.src='/images/logo-icon.png'" class="w-5 h-5 rounded-full object-cover border border-gray-200" alt="Artisan">
                                 <span>{{ $product->artisan ?? $product->seller?->shopName ?? $product->seller?->name ?? 'BarongniJuan' }}</span>
                             </a>
                         </div>
@@ -1926,7 +1926,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-stone-200 shadow-2xs shrink-0 ring-2 ring-amber-100/60 bg-[#1E1915]">
-                            <img src="{{ $product->seller?->profile_photo_url ?? asset('images/logo-icon.png') }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/logo-icon.png') }}'">
+                            <img src="{{ $product->seller?->profile_photo_url ?? asset('images/logo-icon.png') }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/logo-icon.png'">
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
@@ -2020,7 +2020,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 bg-[#1E1915] rounded-2xl flex items-center justify-center text-xl font-bold text-[#DFC97A] border border-[#DFC97A]/20 shadow-sm shrink-0 relative overflow-hidden">
                             @if($product->seller && $product->seller->profile_photo_url)
-                                <img src="{{ $product->seller->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('images/logo-icon.png') }}'">
+                                <img src="{{ $product->seller->profile_photo_url }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/logo-icon.png'">
                             @else
                                 <img src="{{ asset('images/logo-icon.png') }}" class="w-full h-full object-cover" alt="Artisan">
                             @endif
