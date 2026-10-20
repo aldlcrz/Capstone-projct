@@ -55,9 +55,7 @@
         runTest() {
             this.loading = true;
             this.error = null;
-            this.result = null;
-
-            fetch('{{ route($routePrefix . \".shipping.test-rate\") }}', {
+            fetch('/' + '{{ $routePrefix }}' + '/shipping/test-rate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +121,7 @@
     @endif
 
     {{-- Interactive Live Rate Tester (Collapsible Drawer) --}}
-    <div x-show="showSimulator" x-transition class="bg-gradient-to-br from-stone-900 via-zinc-900 to-neutral-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-zinc-700 space-y-6">
+    <div x-show="showSimulator" x-transition class="bg-linear-to-br from-stone-900 via-zinc-900 to-neutral-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-zinc-700 space-y-6">
         <div class="flex items-center justify-between border-b border-zinc-700/80 pb-4">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-[#C0420A] flex items-center justify-center text-white shadow-md">

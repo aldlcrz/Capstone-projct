@@ -72,7 +72,7 @@ class AdminShippingController extends Controller
         return view('admin.shipping.index', compact('providers', 'zones', 'zoneAreas', 'rates', 'courierApiStatus'));
     }
 
-    public function toggleProvider(Request $request, $id)
+    public function toggleProvider(Request $request, string $id)
     {
         $provider = ShippingProvider::findOrFail($id);
         $provider->is_active = !$provider->is_active;
@@ -81,7 +81,7 @@ class AdminShippingController extends Controller
         return redirect()->back()->with('success', "Logistics provider {$provider->name} status updated.");
     }
 
-    public function updateProvider(Request $request, $id)
+    public function updateProvider(Request $request, string $id)
     {
         $provider = ShippingProvider::findOrFail($id);
         $validated = $request->validate([
@@ -115,7 +115,7 @@ class AdminShippingController extends Controller
         return redirect()->back()->with('success', 'Shipping rate bracket created successfully.');
     }
 
-    public function updateRate(Request $request, $id)
+    public function updateRate(Request $request, string $id)
     {
         $rate = ShippingRate::findOrFail($id);
         $validated = $request->validate([
@@ -133,7 +133,7 @@ class AdminShippingController extends Controller
         return redirect()->back()->with('success', 'Shipping rate updated successfully.');
     }
 
-    public function destroyRate(Request $request, $id)
+    public function destroyRate(Request $request, string $id)
     {
         $rate = ShippingRate::findOrFail($id);
         $isReferenced = \App\Models\OrderShipping::where('shipping_rate_id', $id)->exists();
@@ -163,7 +163,7 @@ class AdminShippingController extends Controller
         return redirect()->back()->with('success', 'Geographic area mapping added successfully.');
     }
 
-    public function destroyArea(Request $request, $id)
+    public function destroyArea(Request $request, string $id)
     {
         $area = ShippingZoneArea::findOrFail($id);
         $area->delete();
