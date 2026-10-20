@@ -159,7 +159,7 @@ class UserController extends Controller
             'productCount' => $productCount,
             'joined' => $joined,
             'isVerified' => (bool)$seller->isVerified,
-            'profilePhoto' => $seller->profilePhoto ?? $seller->profile_photo_url ?? null,
+            'profilePhoto' => $seller->profile_photo_url ?? null,
             'cancellation_policy' => method_exists($seller, 'getCancellationPolicy') ? $seller->getCancellationPolicy() : '',
             'refund_policy' => method_exists($seller, 'getRefundPolicy') ? $seller->getRefundPolicy() : '',
         ]);

@@ -505,7 +505,8 @@ class WebAuthController extends Controller
         $isGoogleVerified = false;
         if ($googleSignup && strtolower(trim($googleSignup['email'] ?? '')) === $email) {
             $googleId = $googleSignup['googleId'] ?? null;
-            $profilePhoto = $googleSignup['picture'] ?? null;
+            // Sellers should not inherit personal Gmail profile pictures as shop logos; they upload their brand logo in settings.
+            $profilePhoto = null;
             $isGoogleVerified = true;
         }
 

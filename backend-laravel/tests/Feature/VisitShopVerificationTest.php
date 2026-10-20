@@ -146,4 +146,43 @@ class VisitShopVerificationTest extends TestCase
         $res3->assertStatus(200);
         $res3->assertJson(['id' => $seller->id]);
     }
+
+    /** @test */
+    public function seller_profile_photo_url_shields_google_personal_avatars_while_allowing_customer_and_uploaded_brand_photos()
+    {
+        $googlePhoto = 'https://lh3.googleusercontent.com/a/ACg8ocIfbwe-C4z76marsChySHDJzSAqIVhM0gMPMQAC_IbGhtiYqQ=s96-c';
+
+        // 1. Seller with Google Photo in DB -> should return null
+        $sellerWithGoogle = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'shopName' => 'Shield Test Shop',
+            'profilePhoto' => $googlePhoto,
+        ]);
+        $this->assertNull($sellerWithGoogle->profile_photo_url);
+
+        $res = $this->getJson('/api/v1/user/seller/' . $sellerWithGoogle->id);
+        $res->assertStatus(200);
+        $this->assertNull($res->json('profilePhoto'));
+
+        // 2. Customer with Google Photo in DB -> should return the photo URL
+        $customerWithGoogle = User::factory()->create([
+            'role' => 'customer',
+            'status' => 'active',
+            'isVerified' => true,
+            'profilePhoto' => $googlePhoto,
+        ]);
+        $this->assertEquals($googlePhoto, $customerWithGoogle->profile_photo_url);
+
+        // 3. Seller with legitimate uploaded brand logo -> should return asset/storage path
+        $sellerWithBrandLogo = User::factory()->create([
+            'role' => 'seller',
+            'status' => 'active',
+            'isVerified' => true,
+            'shopName' => 'Artisan Brand Shop',
+            'profilePhoto' => 'uploads/sellers/my-workshop-logo.png',
+        ]);
+        $this->assertStringContainsString('my-workshop-logo.png', $sellerWithBrandLogo->profile_photo_url);
+    }
 }

@@ -226,6 +226,12 @@ class User extends Authenticatable
                 return null;
             }
 
+            // For sellers and artisans, do not use personal Google avatars (e.g. Gmail selfies).
+            // Artisans must explicitly upload their workshop logo in Seller Settings.
+            if (in_array(strtolower($this->role ?? ''), ['seller', 'vendor']) && (str_contains($photo, 'googleusercontent.com') || str_contains($photo, 'lh3.google'))) {
+                return null;
+            }
+
             if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
                 return $photo;
             }

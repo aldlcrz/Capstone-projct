@@ -263,7 +263,7 @@ class AuthController extends Controller
             // Link/update googleId if not already matching
             if ($googleId && $user->googleId !== $googleId) {
                 $user->googleId = $googleId;
-                if ($picture && !$user->profilePhoto) {
+                if ($picture && !$user->profilePhoto && !in_array($user->role, ['seller', 'vendor'])) {
                     $user->profilePhoto = $picture;
                 }
                 $user->save();
