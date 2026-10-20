@@ -2238,23 +2238,26 @@ if (window.Alpine) {
              style="background: #FAF8F5; border-color: #E8DECB;">
             
             {{-- Modal Header --}}
-            <div class="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b flex items-start justify-between gap-4 shrink-0"
+            <div class="px-5 sm:px-6 py-3.5 sm:py-4 border-b flex items-start justify-between gap-3 shrink-0"
                  style="background: #FFFCF7; border-color: #E8DECB;">
-                {{-- Left: Gold Package Icon + Serif Title & Subtitle --}}
-                <div class="flex items-start gap-3.5 sm:gap-4">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs"
+                {{-- Left: Gold Package Icon + Title & Subtitle --}}
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs"
                          style="background: #FDF8EE; border: 1.5px solid #E8DECB;">
-                        <x-lucide name="package" class="w-6 h-6" style="color: #C49520;" />
+                        <x-lucide name="package" class="w-5 h-5" style="color: #C49520;" />
                     </div>
                     <div>
-                        <h2 class="font-sans text-2xl sm:text-3xl font-bold text-[#1E1915] tracking-tight">Order Details</h2>
-                        <div class="text-xs font-mono font-bold text-[#766C60] mt-0.5 tracking-tight" x-text="detailsOrder ? formatOrderId(detailsOrder) : ''"></div>
-                        <div class="text-[11px] font-medium text-[#766C60] mt-0.5" x-text="(detailsOrder && detailsOrder.createdAt) ? 'Placed ' + new Date(detailsOrder.createdAt).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : ''"></div>
+                        <h2 class="font-sans text-lg sm:text-xl font-bold text-[#1E1915] tracking-tight">Order Details</h2>
+                        <div class="flex items-center gap-1.5 text-xs font-mono font-bold text-[#766C60] mt-0.5">
+                            <span x-text="detailsOrder ? formatOrderId(detailsOrder) : ''"></span>
+                            <span class="text-[#E8DECB]">•</span>
+                            <span class="font-sans font-medium text-[11px]" x-text="(detailsOrder && detailsOrder.createdAt) ? 'Placed ' + new Date(detailsOrder.createdAt).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : ''"></span>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Right: Status Pill Badge & Close Button --}}
-                <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="flex items-center gap-2">
                     <template x-if="detailsOrder">
                         <div>
                             {{-- Special Delivery - Out for special delivery (in transit) --}}
@@ -2359,13 +2362,13 @@ if (window.Alpine) {
             </div>
 
             {{-- Modal Body Content --}}
-            <div class="p-5 sm:p-7 overflow-y-auto flex-1 space-y-5" style="background: #FAF8F5;">
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3.5" style="background: #FAF8F5;">
                 <template x-if="detailsOrder">
-                    <div class="space-y-5">
+                    <div class="space-y-3.5">
                         
                         {{-- Shipping Error Alert --}}
                         <template x-if="shippingError">
-                            <div class="p-3 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-tight flex items-center gap-2">
+                            <div class="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600 leading-tight flex items-center gap-2">
                                 <x-lucide name="alert-circle" class="w-4 h-4 text-red-500 shrink-0" />
                                 <span x-text="shippingError"></span>
                             </div>
@@ -2373,8 +2376,8 @@ if (window.Alpine) {
 
                         {{-- Cancellation Request Banner --}}
                         <template x-if="detailsOrder && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
-                            <div class="p-4 bg-orange-50 border border-orange-200 rounded-2xl space-y-1.5 shadow-2xs">
-                                <div class="flex items-center gap-2 text-orange-950 font-black text-xs uppercase tracking-wider">
+                            <div class="p-3.5 bg-orange-50 border border-orange-200 rounded-xl space-y-1 shadow-2xs">
+                                <div class="flex items-center gap-1.5 text-orange-950 font-black text-xs uppercase tracking-wider">
                                     <span class="inline-flex items-center gap-1"><x-lucide name="clock" class="w-3.5 h-3.5 text-amber-600" /> Buyer Requested Order Cancellation</span>
                                 </div>
                                 <p class="text-xs text-orange-900 leading-relaxed">
@@ -2389,15 +2392,15 @@ if (window.Alpine) {
 
                         {{-- Return Request Details Banner --}}
                         <template x-if="detailsOrder && getReturnRequest(detailsOrder)">
-                            <div class="rounded-2xl border p-4 space-y-3 shadow-2xs transition-all"
+                            <div class="rounded-xl border p-3.5 space-y-2.5 shadow-2xs transition-all"
                                  :class="{
                                      'bg-amber-50/90 border-amber-200': hasPendingReturn(detailsOrder),
                                      'bg-blue-50/90 border-blue-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
                                      'bg-red-50/90 border-red-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Rejected'
                                  }">
                                 <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-base" x-text="hasPendingReturn(detailsOrder) ? 'Return' : (getReturnRequest(detailsOrder).status === 'Approved' ? 'Approved' : 'Declined')"></span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-sm font-bold" x-text="hasPendingReturn(detailsOrder) ? 'Return' : (getReturnRequest(detailsOrder).status === 'Approved' ? 'Approved' : 'Declined')"></span>
                                         <span class="font-black text-xs uppercase tracking-wider"
                                               :class="{
                                                   'text-amber-950': hasPendingReturn(detailsOrder),
@@ -2407,7 +2410,7 @@ if (window.Alpine) {
                                               x-text="hasPendingReturn(detailsOrder) ? 'Buyer Requested Return / Refund' : ('Return Request ' + getReturnRequest(detailsOrder).status)">
                                         </span>
                                     </div>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
                                           :class="{
                                               'bg-amber-100 text-amber-800 border border-amber-200': hasPendingReturn(detailsOrder),
                                               'bg-blue-100 text-blue-800 border border-blue-200': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
@@ -2418,7 +2421,7 @@ if (window.Alpine) {
                                 </div>
 
                                 {{-- Customer Reason --}}
-                                <div class="text-xs space-y-1"
+                                <div class="text-xs space-y-0.5"
                                      :class="{
                                          'text-amber-900': hasPendingReturn(detailsOrder),
                                          'text-blue-900': !hasPendingReturn(detailsOrder) && getReturnRequest(detailsOrder).status === 'Approved',
@@ -2432,7 +2435,7 @@ if (window.Alpine) {
 
                                 {{-- Seller Instructions / Note --}}
                                 <template x-if="getReturnRequest(detailsOrder).adminComment">
-                                    <div class="p-2.5 rounded-xl bg-white/80 border border-black/5 text-[11px] space-y-0.5">
+                                    <div class="p-2 rounded-lg bg-white/80 border border-black/5 text-[11px] space-y-0.5">
                                         <span class="font-bold text-[10px] uppercase tracking-wider text-gray-600 block">Artisan Note:</span>
                                         <span class="text-gray-800 font-medium" x-text="getReturnRequest(detailsOrder).adminComment"></span>
                                     </div>
@@ -2440,7 +2443,7 @@ if (window.Alpine) {
 
                                 {{-- Attached Proof Photos --}}
                                 <template x-if="getProofImages(getReturnRequest(detailsOrder)).length > 0">
-                                    <div class="space-y-1.5 pt-1">
+                                    <div class="space-y-1 pt-0.5">
                                         <div class="text-[10px] font-black uppercase tracking-widest text-gray-600 flex items-center gap-1.5">
                                             <span><x-lucide name="camera" class="w-3.5 h-3.5 inline mr-1 text-gray-600" /> Attached Proof Photos</span>
                                             <span class="text-[9px] font-medium text-gray-500">(Click photo to zoom)</span>
@@ -2449,7 +2452,7 @@ if (window.Alpine) {
                                             <template x-for="(img, pIdx) in getProofImages(getReturnRequest(detailsOrder))" :key="pIdx">
                                                 <button type="button" 
                                                         @click="openProofLightbox(img)"
-                                                        class="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-xs hover:scale-105 transition-all shrink-0 bg-gray-100 cursor-pointer">
+                                                        class="w-14 h-14 rounded-lg overflow-hidden border-2 border-white shadow-xs hover:scale-105 transition-all shrink-0 bg-gray-100 cursor-pointer">
                                                     <img :src="img" class="w-full h-full object-cover" alt="Proof Photo">
                                                 </button>
                                             </template>
@@ -2463,14 +2466,14 @@ if (window.Alpine) {
                                         <button type="button" 
                                                 @click="openRejectReturnModal(detailsOrder)"
                                                 :disabled="approveReturnLoading || rejectReturnLoading"
-                                                class="px-3.5 py-1.5 rounded-full border border-red-200 text-red-700 bg-white hover:bg-red-50 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                                                class="px-3 py-1 rounded-full border border-red-200 text-red-700 bg-white hover:bg-red-50 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer">
                                             Decline Return
                                         </button>
                                         <button type="button" 
                                                 @click="openApproveReturnModal(detailsOrder)"
                                                 :disabled="approveReturnLoading || rejectReturnLoading"
                                                 style="background-color: #C49520; color: #ffffff;"
-                                                class="px-4 py-1.5 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
+                                                class="px-3.5 py-1 rounded-full bg-[#C49520] hover:bg-[#B38519] text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
                                             <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Approve Return
                                         </button>
                                     </div>
@@ -2478,56 +2481,58 @@ if (window.Alpine) {
                             </div>
                         </template>
 
-                        {{-- Upper Two-Column Layout (LumBarong Warm Theme) --}}
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                        {{-- Main Two-Column Balanced Grid (LumBarong Warm Theme) --}}
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 sm:gap-4 items-start">
                             
-                            {{-- Left Column (7 cols): Buyer & delivery details --}}
-                            <div class="md:col-span-7 space-y-4">
-                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 border"
+                            {{-- Left Column (7 cols): Buyer details + Purchased items --}}
+                            <div class="md:col-span-7 space-y-3.5">
+                                
+                                {{-- Buyer & Delivery Details Card --}}
+                                <div class="rounded-2xl p-4 sm:p-4.5 shadow-2xs space-y-3 border"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
                                     <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Buyer & Delivery Details</h3>
-                                        <span class="text-[10px] font-bold text-[#C49520] uppercase tracking-widest inline-flex items-center gap-1">
+                                        <h3 class="font-sans text-sm sm:text-base font-bold text-[#1E1915]">Buyer & Delivery Details</h3>
+                                        <span class="text-[9.5px] font-bold text-[#C49520] uppercase tracking-wider inline-flex items-center gap-1">
                                             <x-lucide name="sparkles" class="w-3 h-3 text-[#C49520]" /> LumBarong
                                         </span>
                                     </div>
 
                                     {{-- Customer & Phone Row --}}
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
-                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Customer</div>
+                                            <div class="text-[9.5px] font-bold text-[#766C60] uppercase tracking-wider mb-0.5">Customer</div>
                                             <div class="flex items-center gap-2">
-                                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                                                    <x-lucide name="user" class="w-3.5 h-3.5 text-[#C49520]" />
+                                                <div class="w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="user" class="w-3 h-3 text-[#C49520]" />
                                                 </div>
                                                 <span class="text-xs font-bold text-[#1E1915] truncate" x-text="detailsOrder.customer?.name || 'Unknown Buyer'"></span>
                                             </div>
                                         </div>
                                         <div>
-                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Phone Number</div>
+                                            <div class="text-[9.5px] font-bold text-[#766C60] uppercase tracking-wider mb-0.5">Phone Number</div>
                                             <div class="flex items-center gap-2">
-                                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                                                    <x-lucide name="phone" class="w-3.5 h-3.5 text-[#C49520]" />
+                                                <div class="w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="phone" class="w-3 h-3 text-[#C49520]" />
                                                 </div>
                                                 <span class="text-xs font-bold text-[#1E1915] truncate" x-text="buyerPhone(detailsOrder)"></span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="pt-3 space-y-3.5 border-t" style="border-color: #E8DECB;">
+                                    <div class="pt-2.5 space-y-2.5 border-t" style="border-color: #E8DECB;">
                                         {{-- Delivery Method --}}
                                         <div>
-                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Delivery Method</div>
-                                            <div class="flex items-start gap-2.5">
-                                                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                            <div class="text-[9.5px] font-bold text-[#766C60] uppercase tracking-wider mb-0.5">Delivery Method</div>
+                                            <div class="flex items-start gap-2">
+                                                <div class="w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
                                                     <template x-if="isSpecialDelivery(detailsOrder)">
-                                                        <x-lucide name="bike" class="w-4 h-4 text-[#C49520]" />
+                                                        <x-lucide name="bike" class="w-3.5 h-3.5 text-[#C49520]" />
                                                     </template>
                                                     <template x-if="isStorePickup(detailsOrder)">
-                                                        <x-lucide name="store" class="w-4 h-4 text-[#C49520]" />
+                                                        <x-lucide name="store" class="w-3.5 h-3.5 text-[#C49520]" />
                                                     </template>
                                                     <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                                                        <x-lucide name="truck" class="w-4 h-4 text-[#C49520]" />
+                                                        <x-lucide name="truck" class="w-3.5 h-3.5 text-[#C49520]" />
                                                     </template>
                                                 </div>
                                                 <div>
@@ -2539,44 +2544,83 @@ if (window.Alpine) {
 
                                         {{-- Delivery Address --}}
                                         <div>
-                                            <div class="text-[10px] font-bold text-[#766C60] uppercase tracking-widest mb-1">Delivery Address</div>
-                                            <div class="flex items-start gap-2.5">
-                                                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
-                                                    <x-lucide name="map-pin" class="w-4 h-4 text-[#C49520]" />
+                                            <div class="text-[9.5px] font-bold text-[#766C60] uppercase tracking-wider mb-0.5">Delivery Address</div>
+                                            <div class="flex items-start gap-2">
+                                                <div class="w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style="background: #FDF8EE; border: 1px solid #E8DECB;">
+                                                    <x-lucide name="map-pin" class="w-3.5 h-3.5 text-[#C49520]" />
                                                 </div>
-                                                <div class="text-xs font-bold text-[#1E1915] leading-relaxed" x-text="formatAddress(detailsOrder)"></div>
+                                                <div class="text-xs font-bold text-[#1E1915] leading-snug" x-text="formatAddress(detailsOrder)"></div>
                                             </div>
                                         </div>
 
                                         {{-- Scheduled Delivery Card (LumBarong Gold Card) --}}
                                         <template x-if="detailsOrder.appointment_date">
-                                            <div class="rounded-2xl p-4 space-y-1.5 mt-2 shadow-2xs border"
+                                            <div class="rounded-xl p-3 space-y-1 mt-1.5 shadow-2xs border"
                                                  style="background: #FDF8EE; border-color: #E8DECB;">
                                                 <div class="flex items-center justify-between">
-                                                    <div class="flex items-center gap-2">
-                                                        <x-lucide name="calendar" class="w-4 h-4 text-[#C49520]" />
+                                                    <div class="flex items-center gap-1.5">
+                                                        <x-lucide name="calendar" class="w-3.5 h-3.5 text-[#C49520]" />
                                                         <span class="text-xs font-bold text-[#996515]" x-text="isStorePickup(detailsOrder) ? 'Scheduled Pickup' : 'Scheduled Delivery'"></span>
                                                     </div>
-                                                    <span style="background: #E8DECB; color: #1E1915;" class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">Scheduled</span>
+                                                    <span style="background: #E8DECB; color: #1E1915;" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">Scheduled</span>
                                                 </div>
-                                                <div class="font-serif text-lg font-bold text-[#1E1915] pl-6" x-text="formatAppointmentDate(detailsOrder.appointment_date)"></div>
-                                                <div class="text-xs text-[#766C60] font-semibold pl-6" x-show="detailsOrder.appointment_time" x-text="formatAppointmentTime(detailsOrder.appointment_time)"></div>
+                                                <div class="font-serif text-base font-bold text-[#1E1915] pl-5" x-text="formatAppointmentDate(detailsOrder.appointment_date)"></div>
+                                                <div class="text-xs text-[#766C60] font-semibold pl-5" x-show="detailsOrder.appointment_time" x-text="formatAppointmentTime(detailsOrder.appointment_time)"></div>
                                                 <template x-if="detailsOrder.appointment_notes">
-                                                    <div class="text-[10px] text-[#996515] font-medium italic pl-6 pt-1" x-text="'Instructions: ' + detailsOrder.appointment_notes"></div>
+                                                    <div class="text-[10px] text-[#996515] font-medium italic pl-5 pt-0.5" x-text="'Instructions: ' + detailsOrder.appointment_notes"></div>
                                                 </template>
                                             </div>
                                         </template>
                                     </div>
                                 </div>
+
+                                {{-- Purchased Product Items (Snug card placed cleanly in left column) --}}
+                                <div class="rounded-2xl p-4 sm:p-4.5 shadow-2xs space-y-3 border"
+                                     style="background: #FFFCF7; border-color: #E8DECB;">
+                                    <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-sans text-sm sm:text-base font-bold text-[#1E1915]">Purchased Items</h3>
+                                        <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
+                                              class="px-2 py-0.5 rounded-full text-[9.5px] font-bold shadow-2xs"
+                                              x-text="(detailsOrder.items ? detailsOrder.items.length : 0) + ' item' + ((detailsOrder.items && detailsOrder.items.length === 1) ? '' : 's')"></span>
+                                    </div>
+
+                                    <div class="space-y-2 max-h-60 overflow-y-auto pr-0.5">
+                                        <template x-for="item in detailsOrder.items || []" :key="item.id">
+                                            <div class="rounded-xl p-2.5 sm:p-3 flex items-center justify-between gap-3 transition-colors border shadow-2xs"
+                                                 style="background: #FFFFFF; border-color: #E8DECB;">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 border"
+                                                         style="background: #FAF8F5; border-color: #E8DECB;">
+                                                        <img :src="item.image_url || productImage(item.product)" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'">
+                                                    </div>
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <h4 class="text-xs font-bold text-[#1E1915] truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
+                                                        <div class="text-[11px] text-[#766C60] font-semibold" x-show="item.size" x-text="'Size: ' + item.size"></div>
+                                                        <div class="text-[10.5px] text-[#766C60]">
+                                                            <span x-text="'Qty: ' + item.quantity"></span>
+                                                            <span class="mx-1 text-[#E8DECB]">|</span>
+                                                            <span x-text="'Unit: ₱' + Number(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right shrink-0">
+                                                    <div class="text-xs sm:text-sm font-bold font-sans text-[#1E1915]" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString(undefined, {minimumFractionDigits: 2})"></div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
                             </div>
 
                             {{-- Right Column (5 cols): Order summary & Payment details --}}
-                            <div class="md:col-span-5 space-y-4">
+                            <div class="md:col-span-5 space-y-3.5">
+                                
                                 {{-- Order Summary Card --}}
-                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border font-sans"
+                                <div class="rounded-2xl p-4 sm:p-4.5 shadow-2xs space-y-2.5 border font-sans"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
-                                    <div class="pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Order Summary</h3>
+                                    <div class="pb-1.5 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-sans text-sm sm:text-base font-bold text-[#1E1915]">Order Summary</h3>
                                     </div>
 
                                     <div class="flex items-center justify-between text-xs font-sans">
@@ -2587,24 +2631,24 @@ if (window.Alpine) {
                                     <div class="flex items-start justify-between text-xs font-sans">
                                         <div>
                                             <div class="text-[#766C60] font-medium">Delivery fee</div>
-                                            <div class="text-[11px] text-[#766C60] font-medium mt-0.5" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping && detailsOrder.shipping.provider_name && !detailsOrder.shipping.provider_name.toLowerCase().includes('spx') ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight || 0).toFixed(2) + ' kg') : 'Standard Delivery'))"></div>
+                                            <div class="text-[10px] text-[#766C60] font-medium" x-text="isStorePickup(detailsOrder) ? 'Store Pickup (Free)' : (isSpecialDelivery(detailsOrder) ? ('Local Artisan Rider' + (detailsOrder.shipping && detailsOrder.shipping.chargeable_weight ? (' • ' + Number(detailsOrder.shipping.chargeable_weight).toFixed(2) + ' kg') : '')) : (detailsOrder.shipping && detailsOrder.shipping.provider_name && !detailsOrder.shipping.provider_name.toLowerCase().includes('spx') ? (detailsOrder.shipping.provider_name + ' • ' + Number(detailsOrder.shipping.chargeable_weight || 0).toFixed(2) + ' kg') : 'Standard Delivery'))"></div>
                                         </div>
                                         <span class="font-bold text-[#1E1915]" x-text="isStorePickup(detailsOrder) ? '₱0.00' : ('₱' + Number(detailsOrder.shipping ? detailsOrder.shipping.shipping_fee : (detailsOrder.shippingFee || 0)).toLocaleString(undefined, {minimumFractionDigits: 2}))"></span>
                                     </div>
 
-                                    <div class="pt-3 border-t" style="border-color: #E8DECB;">
+                                    <div class="pt-2 border-t" style="border-color: #E8DECB;">
                                         <div class="flex items-baseline justify-between font-sans">
-                                            <span class="text-sm sm:text-base font-bold text-[#1E1915]">Total amount</span>
-                                            <span style="color: #C0420A;" class="text-xl sm:text-2xl font-bold font-sans tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                            <span class="text-xs sm:text-sm font-bold text-[#1E1915]">Total amount</span>
+                                            <span style="color: #C0420A;" class="text-lg sm:text-xl font-bold font-sans tracking-tight" x-text="'₱' + Number(detailsOrder.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Payment Details Card --}}
-                                <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3 border font-sans"
+                                <div class="rounded-2xl p-4 sm:p-4.5 shadow-2xs space-y-2.5 border font-sans"
                                      style="background: #FFFCF7; border-color: #E8DECB;">
-                                    <div class="pb-2 border-b" style="border-color: #E8DECB;">
-                                        <h3 class="font-sans text-base sm:text-lg font-bold text-[#1E1915]">Payment Details</h3>
+                                    <div class="pb-1.5 border-b" style="border-color: #E8DECB;">
+                                        <h3 class="font-sans text-sm sm:text-base font-bold text-[#1E1915]">Payment Details</h3>
                                     </div>
 
                                     <div class="flex items-center justify-between text-xs">
@@ -2613,14 +2657,14 @@ if (window.Alpine) {
                                     </div>
 
                                     <template x-if="['GCASH', 'MAYA'].includes((detailsOrder.paymentMethod || '').toUpperCase()) && detailsOrder.paymentReference && !detailsOrder.paymentReference.startsWith('COD-')">
-                                        <div class="flex items-center justify-between text-xs pt-1">
+                                        <div class="flex items-center justify-between text-xs">
                                             <span class="text-[#766C60] font-medium">Reference</span>
                                             <span class="font-mono font-bold text-[#1E1915] text-[11px]" x-text="detailsOrder.paymentReference"></span>
                                         </div>
                                     </template>
 
                                     <template x-if="detailsOrder.paymentProof">
-                                        <div class="pt-2 border-t flex items-center justify-between text-xs" style="border-color: #E8DECB;">
+                                        <div class="pt-1.5 border-t flex items-center justify-between text-xs" style="border-color: #E8DECB;">
                                             <span class="text-[#766C60] font-medium">Receipt file</span>
                                             <button type="button" @click="receiptUrl = detailsOrder.payment_proof_url || ('/orders/' + detailsOrder.id + '/payment-proof'); receiptModal = true;" 
                                                     style="color: #C0420A;"
@@ -2632,20 +2676,20 @@ if (window.Alpine) {
                                     </template>
 
                                     <template x-if="canRecordPayment(detailsOrder) && !isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
-                                        <div class="pt-2 border-t" style="border-color: #E8DECB;">
+                                        <div class="pt-1.5 border-t" style="border-color: #E8DECB;">
                                             <button type="button" @click="openRecordPaymentModal(detailsOrder)" 
                                                     style="background-color: #2E7D32; color: #FFFFFF;"
-                                                    class="w-full py-2 px-3 hover:opacity-90 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                                    class="w-full py-1.5 px-3 hover:opacity-90 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
                                                 <x-lucide name="coins" class="w-3.5 h-3.5" style="color: #FFFFFF;" /> Record Payment Received
                                             </button>
                                         </div>
                                     </template>
 
                                     <template x-if="canRecordDirectRefund(detailsOrder)">
-                                        <div class="pt-2 border-t" style="border-color: #E8DECB;">
+                                        <div class="pt-1.5 border-t" style="border-color: #E8DECB;">
                                             <button type="button" @click="openSellerRefundModal(detailsOrder)" 
                                                     style="background-color: #C49520; color: #FFFFFF;"
-                                                    class="w-full py-2 px-3 hover:bg-[#A16D19] rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                                    class="w-full py-1.5 px-3 hover:bg-[#A16D19] rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
                                                 <x-lucide name="rotate-ccw" class="w-3.5 h-3.5" style="color: #FFFFFF;" /> Record Direct Refund
                                             </button>
                                         </div>
@@ -2656,10 +2700,10 @@ if (window.Alpine) {
 
                         {{-- PACKING PROOF UPLOAD CARD — shown only for standard courier To Ship --}}
                         <div id="packing-proof-card" x-show="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder) && normalizeStatus(detailsOrder.status) === 'to ship'" x-transition 
-                             class="p-4 sm:p-5 rounded-3xl space-y-3 shadow-2xs border"
+                             class="p-3.5 sm:p-4 rounded-2xl space-y-2.5 shadow-2xs border"
                              style="background: #F4FBF4; border-color: #BFE5BF;">
                             <div class="flex items-center gap-2">
-                                <x-lucide name="package" class="w-5 h-5 text-emerald-800 shrink-0" />
+                                <x-lucide name="package" class="w-4 h-4 text-emerald-800 shrink-0" />
                                 <div>
                                     <div class="text-[10px] font-black uppercase tracking-widest text-emerald-900">
                                         Packing Proof Required <span class="text-red-500 font-bold">*</span>
@@ -2673,12 +2717,12 @@ if (window.Alpine) {
 
                             <template x-if="packingUploadSuccess || detailsOrder.packingProof">
                                 <div class="space-y-2">
-                                    <div class="w-full rounded-2xl overflow-hidden border-2 border-emerald-300 bg-white max-h-60 flex items-center justify-center p-1">
-                                        <img :src="packingPhotoPreview || ('/' + detailsOrder.packingProof)" class="max-h-56 w-full object-contain rounded-xl" alt="Packing Proof">
+                                    <div class="w-full rounded-xl overflow-hidden border-2 border-emerald-300 bg-white max-h-52 flex items-center justify-center p-1">
+                                        <img :src="packingPhotoPreview || ('/' + detailsOrder.packingProof)" class="max-h-48 w-full object-contain rounded-lg" alt="Packing Proof">
                                     </div>
-                                    <div class="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-1">
+                                    <div class="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-0.5">
                                         <span class="flex items-center gap-1.5">
-                                            <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <svg class="w-3.5 h-3.5 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                             Packing proof attached and verified.
                                         </span>
                                         <button type="button" @click="document.getElementById('packing-file-input').click()" class="text-emerald-800 hover:text-emerald-950 underline font-black uppercase tracking-wider text-[9px] cursor-pointer">
@@ -2689,12 +2733,12 @@ if (window.Alpine) {
                             </template>
 
                             <template x-if="!packingUploadSuccess && !detailsOrder.packingProof">
-                                <div class="space-y-3">
+                                <div class="space-y-2.5">
                                     <template x-if="packingPhotoPreview">
-                                        <div class="space-y-2">
-                                            <div class="w-full rounded-2xl overflow-hidden border-2 border-dashed border-emerald-400 bg-white max-h-60 flex items-center justify-center p-1 relative group">
-                                                <img :src="packingPhotoPreview" class="max-h-56 w-full object-contain rounded-xl" alt="Preview">
-                                                <button type="button" @click="removeSelectedPackingPhoto()" class="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md text-xs font-bold transition-all cursor-pointer" title="Remove photo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                                        <div class="space-y-1.5">
+                                            <div class="w-full rounded-xl overflow-hidden border-2 border-dashed border-emerald-400 bg-white max-h-52 flex items-center justify-center p-1 relative group">
+                                                <img :src="packingPhotoPreview" class="max-h-48 w-full object-contain rounded-lg" alt="Preview">
+                                                <button type="button" @click="removeSelectedPackingPhoto()" class="absolute top-2.5 right-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md text-xs font-bold transition-all cursor-pointer" title="Remove photo"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                                             </div>
                                             <div class="flex items-center justify-between text-[10px] text-emerald-800 font-bold px-1">
                                                 <span class="inline-flex items-center gap-1"><x-lucide name="check" class="w-3.5 h-3.5 text-emerald-600" /> Photo ready to upload</span>
@@ -2704,19 +2748,19 @@ if (window.Alpine) {
                                     </template>
 
                                     <template x-if="packingUploadError">
-                                        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[11px] font-bold text-red-600 flex items-center gap-2">
+                                        <div class="p-2.5 bg-red-50 border border-red-200 rounded-lg text-[11px] font-bold text-red-600 flex items-center gap-2">
                                             <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                             <span x-text="packingUploadError"></span>
                                         </div>
                                     </template>
 
-                                    <div class="grid grid-cols-2 gap-2.5">
-                                        <button type="button" @click="openCameraModal()" class="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
-                                            <svg class="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" @click="openCameraModal()" class="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
+                                            <svg class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                             <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800">Open Camera</span>
                                         </button>
-                                        <button type="button" @click="document.getElementById('packing-file-input').click()" class="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
-                                            <svg class="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
+                                        <button type="button" @click="document.getElementById('packing-file-input').click()" class="flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl border-2 border-dashed border-emerald-300 bg-white hover:bg-emerald-50 cursor-pointer transition-all group shadow-2xs">
+                                            <svg class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/></svg>
                                             <span class="text-[9px] font-black uppercase tracking-wider text-emerald-800">Gallery / Choose File</span>
                                         </button>
                                     </div>
@@ -2726,7 +2770,7 @@ if (window.Alpine) {
                                             @click="uploadPackingProof()"
                                             :disabled="packingUploading"
                                             style="background-color: #2E7D32; color: #FFFFFF;"
-                                            class="w-full py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                            class="w-full py-2 hover:opacity-90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                                             <template x-if="packingUploading">
                                                 <svg class="w-3.5 h-3.5 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                                             </template>
@@ -2740,64 +2784,27 @@ if (window.Alpine) {
                             </template>
                         </div>
 
-                        {{-- Purchased Product Items (Full Width Card Matching Mockup) --}}
-                        <div class="rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3.5 border"
-                             style="background: #FFFCF7; border-color: #E8DECB;">
-                            <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
-                                <h3 class="font-serif text-base sm:text-lg font-bold text-[#1E1915]">Purchased Items</h3>
-                                <span style="background: #FDF8EE; border: 1px solid #E8DECB; color: #996515;"
-                                      class="px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-2xs"
-                                      x-text="(detailsOrder.items ? detailsOrder.items.length : 0) + ' item' + ((detailsOrder.items && detailsOrder.items.length === 1) ? '' : 's')"></span>
-                            </div>
-
-                            <div class="space-y-2.5">
-                                <template x-for="item in detailsOrder.items || []" :key="item.id">
-                                    <div class="rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-4 transition-colors border shadow-2xs"
-                                         style="background: #FFFFFF; border-color: #E8DECB;">
-                                        <div class="flex items-center gap-3.5 min-w-0">
-                                            <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 border"
-                                                 style="background: #FAF8F5; border-color: #E8DECB;">
-                                                <img :src="item.image_url || productImage(item.product)" class="w-full h-full object-cover" x-on:error="$event.target.src='/uploads/products/default.jpg'">
-                                            </div>
-                                            <div class="min-w-0 space-y-0.5">
-                                                <h4 class="text-xs sm:text-sm font-bold text-[#1E1915] truncate" x-text="(item.display_variation && item.display_variation !== 'Original') ? item.display_variation : (item.product?.name || item.product_name || 'Product Item')"></h4>
-                                                <div class="text-xs text-[#766C60] font-semibold" x-show="item.size" x-text="'Size: ' + item.size"></div>
-                                                <div class="text-[11px] text-[#766C60]">
-                                                    <span x-text="'Quantity: ' + item.quantity"></span>
-                                                    <span class="mx-1 text-[#E8DECB]">|</span>
-                                                    <span x-text="'Unit price: ₱' + Number(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right shrink-0">
-                                            <div class="text-sm sm:text-base font-serif font-bold text-[#1E1915]" x-text="'₱' + (Number(item.price) * item.quantity).toLocaleString(undefined, {minimumFractionDigits: 2})"></div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
                         {{-- Customer Rating & Feedback Card --}}
                         <template x-if="detailsOrder.reviews && detailsOrder.reviews.length > 0">
-                            <div class="rounded-3xl p-5 space-y-3 shadow-2xs border"
+                            <div class="rounded-2xl p-4 space-y-2.5 shadow-2xs border"
                                  style="background: #FFFCF7; border-color: #E8DECB;">
                                 <div class="flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
                                     <div class="text-[10px] font-black uppercase tracking-widest text-[#1E1915] flex items-center gap-1.5">
-                                        <x-lucide name="star" class="w-4 h-4 text-amber-500 fill-amber-500" />
+                                        <x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                                         <span>Customer Rating & Feedback</span>
                                     </div>
                                     <span class="text-[10px] font-bold text-[#996515]" x-text="detailsOrder.reviews.length + ' Review(s)'"></span>
                                 </div>
                                 
-                                <div class="space-y-2.5">
+                                <div class="space-y-2">
                                     <template x-for="rev in detailsOrder.reviews" :key="rev.id">
-                                        <div class="p-3.5 rounded-2xl border shadow-2xs space-y-2"
+                                        <div class="p-3 rounded-xl border shadow-2xs space-y-1.5"
                                              style="background: #FFFFFF; border-color: #E8DECB;">
                                             <div class="flex items-center justify-between flex-wrap gap-2">
-                                                <div class="flex items-center gap-2">
-                                                    <div class="flex items-center text-amber-400 text-sm">
+                                                <div class="flex items-center gap-1.5">
+                                                    <div class="flex items-center text-amber-400 text-xs">
                                                         <template x-for="star in 5" :key="star">
-                                                             <svg class="w-3.5 h-3.5 inline" :class="star <= rev.rating ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                            <svg class="w-3 h-3 inline" :class="star <= rev.rating ? 'text-amber-400 fill-current' : 'text-gray-200 fill-gray-200'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                                         </template>
                                                     </div>
                                                     <span class="text-xs font-black text-[#1E1915]" x-text="rev.rating + '.0'"></span>
@@ -2808,10 +2815,10 @@ if (window.Alpine) {
                                             <p class="text-xs text-[#1E1915] font-medium leading-relaxed" x-text="rev.comment || 'No written comment provided.'"></p>
 
                                             <template x-if="rev.images">
-                                                <div class="flex flex-wrap gap-2 pt-1">
+                                                <div class="flex flex-wrap gap-1.5 pt-0.5">
                                                     <template x-for="(img, idx) in (typeof rev.images === 'string' ? JSON.parse(rev.images || '[]') : (rev.images || []))" :key="idx">
                                                         <a :href="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" target="_blank" 
-                                                           class="w-12 h-12 rounded-xl overflow-hidden border shrink-0 shadow-2xs hover:opacity-80 transition-opacity"
+                                                           class="w-10 h-10 rounded-lg overflow-hidden border shrink-0 shadow-2xs hover:opacity-80 transition-opacity"
                                                            style="border-color: #E8DECB;">
                                                             <img :src="img.startsWith('http') || img.startsWith('/') ? img : '/storage/' + img" class="w-full h-full object-cover">
                                                         </a>
@@ -2826,15 +2833,15 @@ if (window.Alpine) {
 
                         {{-- Order Status History Audit Trail --}}
                         <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">
-                            <div class="rounded-3xl p-5 space-y-3 shadow-2xs border"
+                            <div class="rounded-2xl p-4 space-y-2.5 shadow-2xs border"
                                  style="background: #FFFCF7; border-color: #E8DECB;">
-                                <div class="text-[10px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between pb-2 border-b" style="border-color: #E8DECB;">
+                                <div class="text-[10px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between pb-1.5 border-b" style="border-color: #E8DECB;">
                                     <span>Status History Audit Trail</span>
                                     <span class="text-[#766C60] text-[10px]" x-text="detailsOrder.status_histories.length + ' entry(ies)'"></span>
                                 </div>
-                                <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                                     <template x-for="hist in detailsOrder.status_histories" :key="hist.id">
-                                        <div class="flex items-start justify-between text-xs py-1.5 border-b last:border-0" style="border-color: #E8DECB;">
+                                        <div class="flex items-start justify-between text-xs py-1 border-b last:border-0" style="border-color: #E8DECB;">
                                             <div>
                                                 <span class="font-bold text-[#1E1915] text-xs" x-text="hist.newStatus"></span>
                                                 <span class="text-[10px] text-[#766C60] block" x-text="'Updated by ' + (hist.userRole || 'system')"></span>
@@ -2850,11 +2857,11 @@ if (window.Alpine) {
             </div>
 
             {{-- Modal Footer Actions (LumBarong Artisan Brand Button Bar) --}}
-            <div class="p-4 sm:p-5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0"
+            <div class="px-5 py-3 sm:py-3.5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0"
                  style="background: #FFFCF7; border-color: #E8DECB;">
                 <button type="button" @click.stop="detailsModal = false"
                     style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
-                    class="px-6 py-2.5 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
+                    class="px-5 py-2 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
                     Close
                 </button>
 
