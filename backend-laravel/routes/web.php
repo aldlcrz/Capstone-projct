@@ -325,6 +325,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/shipping/rates/{id}', [AdminShippingController::class, 'destroyRate'])->name('admin.shipping.rates.destroy');
     Route::post('/shipping/areas', [AdminShippingController::class, 'storeArea'])->name('admin.shipping.areas.store');
     Route::delete('/shipping/areas/{id}', [AdminShippingController::class, 'destroyArea'])->name('admin.shipping.areas.destroy');
+    Route::post('/shipping/test-rate', [AdminShippingController::class, 'testRate'])->name('admin.shipping.test-rate');
 
     // Return & Refund Resolution Hub
     Route::get('/returns', [AdminReturnController::class, 'index'])->name('admin.returns.index');
@@ -497,6 +498,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('superadmin')->group(function 
     Route::delete('/shipping/rates/{id}', [AdminShippingController::class, 'destroyRate'])->name('superadmin.shipping.rates.destroy');
     Route::post('/shipping/areas', [AdminShippingController::class, 'storeArea'])->name('superadmin.shipping.areas.store');
     Route::delete('/shipping/areas/{id}', [AdminShippingController::class, 'destroyArea'])->name('superadmin.shipping.areas.destroy');
+    Route::post('/shipping/test-rate', [AdminShippingController::class, 'testRate'])->name('superadmin.shipping.test-rate');
 
     // Return & Refund Resolution Hub Parity
     Route::get('/returns', [AdminReturnController::class, 'index'])->name('superadmin.returns.index');
