@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<x-shop-client :id="$id" />
+<div style="background-color: #FAF8F5; min-height: 100vh;">
+    <x-shop-client :id="$id" />
+</div>
 @endsection
+

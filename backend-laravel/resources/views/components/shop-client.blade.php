@@ -1,6 +1,6 @@
 @props(['id'])
 
-<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen bg-stone-50 pb-24 font-sans">
+<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen pb-24 font-sans" style="background-color: #FAF8F5;">
     <!-- Back Button -->
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex justify-between items-center">
         <a href="javascript:history.back()" class="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[#C0420A] transition-colors">
@@ -21,13 +21,13 @@
 
     <!-- Profile Info -->
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 mb-6">
-        <div class="bg-white rounded-md shadow-sm border border-stone-200 flex flex-col md:flex-row overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm border flex flex-col md:flex-row overflow-hidden" style="border-color: #ECE3D2;">
             
             <!-- Left Side: Artisan Workshop Header -->
-            <div class="w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden bg-[#1A1A1A]">
-                <div class="absolute inset-0 opacity-[0.03] bg-white mix-blend-overlay"></div>
+            <div class="w-full md:w-95 p-5 flex flex-col justify-between shrink-0 relative overflow-hidden" style="background: radial-gradient(ellipse at center, #FFFFFF 0%, #FAF6EE 55%, #EFE8DC 100%); border-right: 1px solid #ECE3D2;">
+                <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(circle at 50% 30%, rgba(196,149,32,0.12) 0%, rgba(192,66,42,0.04) 50%, transparent 75%);"></div>
                 <div class="relative z-10 flex gap-4 items-center">
-                    <div class="w-18 h-18 rounded-full border border-white/20 bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-400">
+                    <div class="w-18 h-18 rounded-full border bg-white overflow-hidden shrink-0 flex items-center justify-center font-serif text-3xl text-stone-500 shadow-2xs" style="border-color: #D5C9B3;">
                         <template x-if="seller && seller.profilePhoto">
                             <img :src="getProductImage(seller.profilePhoto)" class="w-full h-full object-cover" x-on:error="$event.target.src='/images/logo-icon.png'" />
                         </template>
@@ -35,15 +35,15 @@
                             <span x-text="seller?.shopName?.[0] || 'A'"></span>
                         </template>
                     </div>
-                    <div class="text-left text-white">
-                        <h1 class="font-serif text-[17px] font-bold leading-tight flex items-center gap-1.5 tracking-wide flex-wrap">
+                    <div class="text-left text-[#1E1915]">
+                        <h1 class="font-serif text-[17px] font-bold leading-tight flex items-center gap-1.5 tracking-wide flex-wrap text-[#1E1915]">
                             <span x-text="seller?.shopName || 'Artisan Workshop'"></span>
                             <template x-if="seller?.isVerified">
-                                <svg class="w-3.5 h-3.5 text-[#A1D4B1]" fill="currentColor" viewBox="0 0 20 20" title="Verified Store"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                <svg class="w-3.5 h-3.5 text-[#15803D]" fill="currentColor" viewBox="0 0 20 20" title="Verified Store"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                             </template>
                         </h1>
-                        <div class="text-white/60 text-[11px] mt-1.5 flex items-center gap-1 font-medium tracking-wide">
-                            <svg class="w-3 h-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <div class="text-[#78716C] text-[11px] mt-1.5 flex items-center gap-1 font-medium tracking-wide">
+                            <svg class="w-3 h-3 text-[#946328]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             <span x-text="seller?.location || 'Lumban, Laguna'"></span>
                         </div>
                     </div>
@@ -52,7 +52,10 @@
                     @if(!Auth::check() || Auth::id() !== $id)
                     <button
                         @click="messageSeller"
-                        class="flex-1 flex items-center justify-center gap-1.5 border border-white/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-white/10 rounded-sm cursor-pointer"
+                        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#2C241E] transition-all hover:bg-white hover:text-[#C0420A] rounded-xl cursor-pointer shadow-2xs"
+                        style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid #D5C9B3;"
+                        onmouseover="this.style.borderColor='#C0420A'; this.style.color='#C0420A';"
+                        onmouseout="this.style.borderColor='#D5C9B3'; this.style.color='#2C241E';"
                     >
                         <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                         Message
@@ -60,7 +63,10 @@
                     @endif
                     <button
                         @click="showPolicyModal = true"
-                        class="flex-1 flex items-center justify-center gap-1.5 border border-white/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:bg-white/10 rounded-sm cursor-pointer"
+                        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#2C241E] transition-all hover:bg-white hover:text-[#C0420A] rounded-xl cursor-pointer shadow-2xs"
+                        style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid #D5C9B3;"
+                        onmouseover="this.style.borderColor='#C0420A'; this.style.color='#C0420A';"
+                        onmouseout="this.style.borderColor='#D5C9B3'; this.style.color='#2C241E';"
                     >
                         <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Policies
