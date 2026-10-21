@@ -82,17 +82,19 @@
         x-init="startTimer()"
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
-        style="background: #0d0c0a; min-height: 380px;"
-        class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between select-none py-3 sm:py-5 px-3"
+        style="background: #FAF8F5; min-height: 380px; border: 1px solid #E8DECB;"
+        class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl shadow-stone-200/60 flex flex-col justify-between select-none py-3 sm:py-5 px-3"
     >
-        {{-- Luxury Studio Atmosphere Backdrop --}}
-        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at center, #261f17 0%, #110f0d 55%, #050505 100%);"></div>
-        <div class="absolute inset-0 pointer-events-none bg-black/20"></div>
+        {{-- Luxury Heritage Atelier Backdrop --}}
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at center, #FFFFFF 0%, #FAF6EE 50%, #EFE8DC 100%);"></div>
+        <div class="absolute inset-0 pointer-events-none opacity-50" style="background: radial-gradient(circle at 50% 30%, rgba(196,149,32,0.10) 0%, rgba(192,66,42,0.04) 55%, transparent 75%);"></div>
 
         {{-- 3D Product Carousel Stage --}}
         <div class="relative w-full flex items-center justify-center overflow-hidden" style="height: 220px; min-height: 220px;">
             {{-- Center Spotlight Glow --}}
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none z-0"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full blur-3xl pointer-events-none z-0" style="background: radial-gradient(circle, rgba(212,163,42,0.18) 0%, rgba(192,66,42,0.05) 50%, transparent 70%);"></div>
+            {{-- Center Subtle Pedestal Shadow --}}
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-5 rounded-full blur-md pointer-events-none z-0 opacity-30" style="background: radial-gradient(ellipse, rgba(74, 53, 30, 0.4) 0%, transparent 70%);"></div>
 
             <template x-for="(item, idx) in items" :key="item.id">
                 <div
@@ -104,28 +106,32 @@
                     <img :src="item.image_url" 
                          :alt="item.title"
                          style="max-height: 220px; height: 100%; width: auto; max-width: 320px; object-fit: contain;"
-                         class="rounded-2xl drop-shadow-[0_12px_28px_rgba(0,0,0,0.9)] filter contrast-[1.03]">
+                         class="rounded-2xl drop-shadow-[0_12px_24px_rgba(74,53,30,0.18)] filter contrast-[1.02]">
                 </div>
             </template>
         </div>
 
         {{-- Centered Dynamic Product Information & Action Buttons --}}
         <div class="relative z-30 flex flex-col items-center justify-center text-center px-4 pt-2 space-y-1.5 sm:space-y-2">
-            <p class="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow-md" x-text="current.subtitle"></p>
-            <h2 class="text-lg sm:text-2xl lg:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] max-w-xl mx-auto truncate px-2" x-text="current.title"></h2>
+            <p class="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em]" style="color: #C0422A;" x-text="current.subtitle"></p>
+            <h2 class="text-lg sm:text-2xl lg:text-3xl font-black leading-tight tracking-tight max-w-xl mx-auto truncate px-2" style="color: #1E1915;" x-text="current.title"></h2>
 
             <div class="flex items-center justify-center gap-2.5 sm:gap-3.5 pt-1">
                 {{-- Dynamic Shop Now button matching centered product --}}
                 <a :href="current.button_url_1"
                    @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 bg-[#C0422A] hover:bg-[#a6351f] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer">
+                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+                   style="background-color: #C0422A;">
                     <span x-text="current.button_text_1 || 'Shop now'"></span>
                 </a>
 
                 {{-- Dynamic Visit Shop button matching centered product --}}
                 <a :href="current.button_url_2"
                    @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 bg-black/70 hover:bg-black/90 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl border border-white/30 backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md">
+                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
+                   style="background-color: rgba(255, 255, 255, 0.92); color: #2C241E; border: 1px solid #D5C9B3;"
+                   onmouseover="this.style.color='#C0422A'; this.style.borderColor='#C0422A';"
+                   onmouseout="this.style.color='#2C241E'; this.style.borderColor='#D5C9B3';">
                     <span x-text="current.button_text_2 || 'Visit shop'"></span>
                 </a>
             </div>
@@ -135,7 +141,7 @@
                 <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
                     <button type="button"
                             @click="goTo(dIdx)"
-                            :class="active === dIdx ? 'w-6 bg-amber-400' : 'w-2 bg-white/40 hover:bg-white/70'"
+                            :style="active === dIdx ? 'width: 24px; background-color: #C0422A;' : 'width: 8px; background-color: #D5C9B3;'"
                             class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"></button>
                 </template>
             </div>
@@ -144,10 +150,10 @@
         {{-- Left & Right Navigation Chevrons --}}
         <template x-if="total > 1">
             <div>
-                <button type="button" @click="prev()" aria-label="Previous product" class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/70 hover:bg-black/95 text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xl backdrop-blur-xs">
+                <button type="button" @click="prev()" aria-label="Previous product" class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg backdrop-blur-xs" style="background-color: rgba(255, 255, 255, 0.92); color: #2C241E; border: 1px solid #E2D9C8;" onmouseover="this.style.color='#C0422A'; this.style.borderColor='#C0422A';" onmouseout="this.style.color='#2C241E'; this.style.borderColor='#E2D9C8';">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button type="button" @click="next()" aria-label="Next product" class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/70 hover:bg-black/95 text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xl backdrop-blur-xs">
+                <button type="button" @click="next()" aria-label="Next product" class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg backdrop-blur-xs" style="background-color: rgba(255, 255, 255, 0.92); color: #2C241E; border: 1px solid #E2D9C8;" onmouseover="this.style.color='#C0422A'; this.style.borderColor='#C0422A';" onmouseout="this.style.color='#2C241E'; this.style.borderColor='#E2D9C8';">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
