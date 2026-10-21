@@ -91,10 +91,12 @@
                         <input type="text" name="search" value="{{ request('search') }}"
                                placeholder="Search Barongs, Sellers..."
                                style="padding-left: 18px; padding-right: 44px;"
-                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C0422A] focus:ring-2 focus:ring-[#C0422A]/20 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs truncate">
+                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs truncate">
                         <button type="submit"
-                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px;"
-                                class="flex items-center justify-center rounded-full bg-[#C0422A] hover:bg-black text-white transition-all shadow-2xs active:scale-95 cursor-pointer border-0"
+                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; background: linear-gradient(135deg, #D4A32A 0%, #C49520 100%);"
+                                onmouseover="this.style.background='#1E1915';"
+                                onmouseout="this.style.background='linear-gradient(135deg, #D4A32A 0%, #C49520 100%)';"
+                                class="flex items-center justify-center rounded-full text-white transition-all shadow-2xs active:scale-95 cursor-pointer border-0"
                                 title="Search">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
