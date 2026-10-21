@@ -1,6 +1,11 @@
 @props(['id'])
 
-<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen pb-24 font-sans" style="background-color: #FAF8F5;">
+<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen pb-24 font-sans relative" style="background-color: #FAF8F5;">
+    {{-- Carousel matching luxury backdrop --}}
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" style="background: radial-gradient(ellipse at top, #FFFFFF 0%, #FAF6EE 40%, #EFE8DC 100%); opacity: 0.85; z-index: 0;"></div>
+    <div class="pointer-events-none absolute inset-0 opacity-40" style="background: radial-gradient(circle at 50% 25%, rgba(196,149,32,0.10) 0%, rgba(192,66,42,0.04) 55%, transparent 75%); z-index: 0;"></div>
+
+    <div class="relative z-10">
     <!-- Back Button -->
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex justify-between items-center">
         <a href="javascript:history.back()" class="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-[#C0420A] transition-colors">
@@ -309,6 +314,7 @@
                 <svg class="w-8 h-8 animate-spin text-[#C0420A]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </div>
         </template>
+    </div>
     </div>
 
     <!-- Shop Policies Modal -->

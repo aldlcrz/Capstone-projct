@@ -28,7 +28,7 @@
 
     <style>
         html, body { overflow-x: clip; max-width: 100vw; }
-        body { font-family: 'Inter', sans-serif; background-color: #FAFAFA; }
+        body { font-family: 'Inter', sans-serif; background-color: #FAF8F5; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         /* Prevent Alpine.js x-cloak elements from flashing before initialization */
