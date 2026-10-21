@@ -887,9 +887,14 @@
                             </div>
                             <div>
                                 <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#78716C;display:block;margin-bottom:4px;">Price Preview</label>
-                                <div id="discountPreview" class="hidden w-full px-4 py-2 bg-white rounded-xl border border-[#EEDBBA] items-center justify-center gap-2 h-10.5 shadow-2xs">
-                                    <span id="previewOriginal" class="text-xs text-[#78716C] line-through font-bold"></span>
-                                    <span id="previewSale" class="text-sm font-black text-[#7A5505]"></span>
+                                <div id="discountPreview" style="min-height:42px;width:100%;padding:8px 14px;background-color:#FFFFFF;border:1px solid #E2D9C8;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;">
+                                    <span id="previewPlaceholder" style="font-size:12px;color:#9CA3AF;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                                        <svg style="width:13px;height:13px;color:#D4AF37;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <span>Set base price above first</span>
+                                    </span>
+                                    <span id="previewOriginal" style="font-size:12px;color:#78716C;text-decoration:line-through;font-weight:700;display:none;"></span>
+                                    <span id="previewSale" style="font-size:14px;font-weight:800;color:#7A5505;display:none;"></span>
+                                    <span id="previewBadge" style="font-size:10px;font-weight:800;background-color:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:6px;display:none;"></span>
                                 </div>
                             </div>
                         </div>
@@ -2528,9 +2533,9 @@ function toggleDiscount(checkbox) {
     } else {
         fields.classList.add('hidden');
         hiddenInput.value = '0';
-        document.getElementById('discountPreview').classList.add('hidden');
         const pct = document.getElementById('discountPercentage');
         if (pct) pct.value = '';
+        updateDiscountPreview();
     }
 }
 
@@ -2565,26 +2570,57 @@ function selectSaleDuration(val) {
 }
 
 function updateDiscountPreview() {
-    const priceInput = document.querySelector('input[name="price"]');
+    const priceInput = document.getElementById('priceInput') || document.querySelector('input[name="price"]');
     const pctInput = document.getElementById('discountPercentage');
     const preview = document.getElementById('discountPreview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
     const previewOriginal = document.getElementById('previewOriginal');
     const previewSale = document.getElementById('previewSale');
+    const previewBadge = document.getElementById('previewBadge');
 
-    if (!priceInput || !pctInput || !preview) return;
+    if (!pctInput || !preview) return;
 
-    const price = parseFloat(priceInput.value) || 0;
+    let price = priceInput ? (parseFloat(priceInput.value) || 0) : 0;
+    if (price <= 0 && typeof Alpine !== 'undefined') {
+        const alpineEl = document.querySelector('[x-data*="addProductManager"]');
+        if (alpineEl && alpineEl._x_dataStack && alpineEl._x_dataStack[0]?.price) {
+            price = parseFloat(alpineEl._x_dataStack[0].price) || 0;
+        }
+    }
+
     const pct = parseFloat(pctInput.value) || 0;
 
     if (price > 0 && pct > 0 && pct < 100) {
         const salePrice = price * (1 - pct / 100);
-        previewOriginal.textContent = '₱' + price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        previewSale.textContent = '₱' + salePrice.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        preview.classList.remove('hidden');
-        preview.classList.add('flex');
+        if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+
+        if (previewOriginal) {
+            previewOriginal.textContent = '₱' + price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            previewOriginal.style.display = 'inline';
+        }
+        if (previewSale) {
+            previewSale.textContent = '₱' + salePrice.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            previewSale.style.display = 'inline';
+        }
+        if (previewBadge) {
+            previewBadge.textContent = '-' + pct + '%';
+            previewBadge.style.display = 'inline-block';
+        }
     } else {
-        preview.classList.add('hidden');
-        preview.classList.remove('flex');
+        if (previewOriginal) previewOriginal.style.display = 'none';
+        if (previewSale) previewSale.style.display = 'none';
+        if (previewBadge) previewBadge.style.display = 'none';
+
+        if (previewPlaceholder) {
+            previewPlaceholder.style.display = 'inline-flex';
+            if (price <= 0) {
+                previewPlaceholder.innerHTML = `<svg style="width:13px;height:13px;color:#D4AF37;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>Set base price above first</span>`;
+            } else if (pct <= 0) {
+                previewPlaceholder.innerHTML = `<svg style="width:13px;height:13px;color:#D4AF37;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>Enter discount %</span>`;
+            } else {
+                previewPlaceholder.textContent = 'Invalid discount';
+            }
+        }
     }
 }
 
@@ -3145,7 +3181,7 @@ document.addEventListener('click', (e) => {
     }
 }, true); // Capture phase to intercept reliably
 
-// Also ensure form submission sets _leaveAllowed
+// Also ensure form submission sets _leaveAllowed and initialize discount preview listener
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('productForm');
     if (form) {
@@ -3154,6 +3190,18 @@ document.addEventListener('DOMContentLoaded', () => {
             clearProductDraft();
         });
     }
+
+    const priceInp = document.getElementById('priceInput') || document.querySelector('input[name="price"]');
+    if (priceInp) {
+        priceInp.addEventListener('input', updateDiscountPreview);
+        priceInp.addEventListener('change', updateDiscountPreview);
+    }
+    const pctInp = document.getElementById('discountPercentage');
+    if (pctInp) {
+        pctInp.addEventListener('input', updateDiscountPreview);
+        pctInp.addEventListener('change', updateDiscountPreview);
+    }
+    updateDiscountPreview();
 });
 </script>
 
