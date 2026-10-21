@@ -313,6 +313,7 @@ class ShippingCalculatorService
                 $liveQuote = null;
                 if ($adapter instanceof CourierRateProviderInterface) {
                     try {
+                        /** @var CourierRateProviderInterface $adapter */
                         $pkgLength = 35.0;
                         $pkgWidth = 25.0;
                         $pkgHeight = max(5.0, round($totalPackedVolume / (35.0 * 25.0), 1));

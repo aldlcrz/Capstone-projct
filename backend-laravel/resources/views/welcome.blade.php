@@ -89,7 +89,7 @@
         <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 50% 40%, #FCF8F0 0%, #F6ECDA 45%, #EADBBE 85%, #DFC9A2 100%);"></div>
         <div class="absolute inset-0 pointer-events-none opacity-60" style="background: radial-gradient(circle at 50% 30%, rgba(212,163,42,0.18) 0%, rgba(196,149,32,0.08) 50%, transparent 75%);"></div>
         {{-- Fine Organic Fiber Grain Texture Overlay --}}
-        <div class="absolute inset-0 pointer-events-none opacity-[0.035]" style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E&quot;); mix-blend-mode: multiply;"></div>
+        <div class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#C49520 0.8px, transparent 0.8px), radial-gradient(#8C6B1B 0.8px, transparent 0.8px); background-size: 14px 14px; background-position: 0 0, 7px 7px; mix-blend-mode: multiply;"></div>
 
         {{-- 3D Product Carousel Stage --}}
         <div class="relative w-full flex items-center justify-center overflow-hidden" style="height: 220px; min-height: 220px;">
