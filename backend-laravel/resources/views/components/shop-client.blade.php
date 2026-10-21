@@ -1,6 +1,6 @@
 @props(['id'])
 
-<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen pb-24 font-sans relative" style="background-color: #FAF8F5;">
+<div x-data="shopClient({ sellerId: '{{ $id }}', isLoggedIn: {{ auth()->check() ? 'true' : 'false' }} })" x-init="init()" class="min-h-screen pb-24 font-sans relative" style="background-color: #EFE8DC;">
     {{-- Carousel matching luxury backdrop --}}
     <div class="pointer-events-none absolute inset-0 overflow-hidden" style="background: radial-gradient(ellipse at top, #FFFFFF 0%, #FAF6EE 40%, #EFE8DC 100%); opacity: 0.85; z-index: 0;"></div>
     <div class="pointer-events-none absolute inset-0 opacity-40" style="background: radial-gradient(circle at 50% 25%, rgba(196,149,32,0.10) 0%, rgba(192,66,42,0.04) 55%, transparent 75%); z-index: 0;"></div>
