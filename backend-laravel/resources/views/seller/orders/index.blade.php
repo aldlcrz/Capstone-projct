@@ -142,7 +142,32 @@ function sellerOrdersManager() {
         detailsModal: false,
         detailsOrder: null,
 
+        get isAnyModalOpen() {
+            return Boolean(
+                this.detailsModal || 
+                this.statusModal || 
+                this.receiptModal || 
+                this.showCameraModal || 
+                this.showVerifyModal || 
+                this.showRejectModal || 
+                this.showCancelOrderModal || 
+                this.showApproveCancellationModal || 
+                this.showDeclineCancellationModal || 
+                this.showApproveReturnModal || 
+                this.showRejectReturnModal || 
+                this.showProofLightboxModal || 
+                this.showDeliveryConfirmModal || 
+                this.showStatusConfirmModal || 
+                this.showRecordPaymentModal || 
+                this.showSellerRefundModal
+            );
+        },
+
         init() {
+            this.$watch('isAnyModalOpen', (isOpen) => {
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            });
+
             const urlParams = new URLSearchParams(window.location.search);
             const statusParam = urlParams.get('status');
             if (statusParam) {
@@ -2231,10 +2256,10 @@ if (window.Alpine) {
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          style="display: none;"
-         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-end sm:items-center justify-center p-0 pt-6 sm:p-4"
          @click.self="detailsModal = false">
         
-        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border"
+        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[86dvh] sm:max-h-[90vh] overscroll-contain border"
              style="background: #FAF8F5; border-color: #E8DECB;">
             
             {{-- Modal Header --}}
@@ -2857,29 +2882,29 @@ if (window.Alpine) {
             </div>
 
             {{-- Modal Footer Actions (LumBarong Artisan Brand Button Bar) --}}
-            <div class="px-5 py-3 sm:py-3.5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0"
+            <div class="px-4 sm:px-6 py-3 sm:py-3.5 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0"
                  style="background: #FFFCF7; border-color: #E8DECB;">
                 <button type="button" @click.stop="detailsModal = false"
                     style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
-                    class="px-5 py-2 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
+                    class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-full text-xs font-bold hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer text-center order-last sm:order-first shadow-2xs">
                     Close
                 </button>
 
                 {{-- Return Request Actions: Decline Return OR Approve Return --}}
                 <template x-if="detailsOrder && hasPendingReturn(detailsOrder)">
-                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                    <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
                         <button type="button" 
                             @click="openRejectReturnModal(detailsOrder)"
                             :disabled="approveReturnLoading || rejectReturnLoading"
                             style="border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626;"
-                            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                            class="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Return
                         </button>
                         <button type="button" 
                             @click="openApproveReturnModal(detailsOrder)"
                             :disabled="approveReturnLoading || rejectReturnLoading"
                             style="background-color: #C49520; color: #ffffff;"
-                            class="flex-1 sm:flex-none px-6 py-2.5 hover:bg-[#A16D19] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
+                            class="w-full sm:w-auto sm:flex-none px-6 py-2.5 hover:bg-[#A16D19] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
                             <x-lucide name="check" class="w-3.5 h-3.5 text-white" />
                             <span>Approve Return</span>
                         </button>
@@ -2888,19 +2913,19 @@ if (window.Alpine) {
 
                 {{-- Cancellation Pending Actions: Decline OR Approve --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && (normalizeStatus(detailsOrder.status) === 'cancellation pending' || normalizeStatus(detailsOrder.status) === 'cancellation requested')">
-                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2">
+                    <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
                         <button type="button" 
                             @click="openDeclineCancellationModal(detailsOrder)"
                             :disabled="approveCancellationLoading || declineCancellationLoading"
                             style="border: 1px solid #E8DECB; background: #FFFFFF; color: #1E1915;"
-                            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                            class="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap hover:bg-[#FDF8EE] hover:border-[#C49520] transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Decline Cancellation
                         </button>
                         <button type="button" 
                             @click="openApproveCancellationModal(detailsOrder)"
                             :disabled="approveCancellationLoading || declineCancellationLoading"
                             style="background-color: #DC2626; color: #ffffff;"
-                            class="flex-1 sm:flex-none px-6 py-2.5 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
+                            class="w-full sm:w-auto sm:flex-none px-6 py-2.5 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer shrink-0">
                             <x-lucide name="check" class="w-3.5 h-3.5 text-white" />
                             <span>Approve Cancellation</span>
                         </button>
@@ -2909,18 +2934,18 @@ if (window.Alpine) {
 
                 {{-- Pending Order Actions: Reject & Cancel OR Verify & Accept Order --}}
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'pending'">
-                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2.5">
+                    <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5">
                         <button type="button" 
                             @click="openRejectPaymentModal(detailsOrder)"
                             style="border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626;"
-                            class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                            class="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
                             <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Reject & Cancel
                         </button>
                         <button type="button" 
                             @click="openVerifyPaymentModal(detailsOrder)"
                             :disabled="statusUpdating || verifyingPayment"
                             style="background-color: #2E7D32; color: #ffffff;"
-                            class="flex-1 sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer shrink-0">
+                            class="w-full sm:w-auto sm:flex-none px-6 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer shrink-0">
                             <template x-if="statusUpdating || verifyingPayment">
                                 <svg class="w-4 h-4 animate-spin text-white shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                             </template>
@@ -3146,7 +3171,15 @@ if (window.Alpine) {
             }
         }"
         x-init="initNavigator()"
-        class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2"
+        x-show="!isAnyModalOpen"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex flex-col gap-2"
+        x-cloak
     >
         <!-- Scroll to Top Button -->
         <button 
