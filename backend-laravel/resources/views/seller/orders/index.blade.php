@@ -2241,6 +2241,30 @@ if (window.Alpine) {
         </template>
     </div>
 
+    {{-- Scoped sizing for Order Detail Modal (not dependent on compiled Tailwind arbitrary classes) --}}
+    <style>
+        .seller-details-modal-panel {
+            height: 85vh;
+            height: 85dvh;
+            max-height: 85dvh;
+            min-height: 0;
+        }
+        .seller-details-modal-body {
+            flex: 1 1 0%;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+        }
+        @media (min-width: 640px) {
+            .seller-details-modal-panel {
+                height: auto;
+                max-height: 90vh;
+            }
+        }
+    </style>
+
     {{-- Order Detail Modal (LumBarong Artisan Premium Theme) --}}
     <div x-show="detailsModal" 
          x-cloak
@@ -2255,7 +2279,7 @@ if (window.Alpine) {
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-end sm:items-center justify-center p-0 pt-6 sm:p-4"
          @click.self="detailsModal = false">
         
-        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85dvh] sm:h-auto sm:max-h-[90vh] border"
+        <div class="seller-details-modal-panel w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border"
              style="background: #FAF8F5; border-color: #E8DECB;">
             
             {{-- Modal Header --}}
@@ -2383,7 +2407,7 @@ if (window.Alpine) {
             </div>
 
             {{-- Modal Body Content --}}
-            <div class="p-4 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-3.5" style="background: #FAF8F5; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
+            <div class="seller-details-modal-body p-4 sm:p-5 space-y-3.5" style="background: #FAF8F5;">
                 <template x-if="detailsOrder">
                     <div class="space-y-3.5">
                         
