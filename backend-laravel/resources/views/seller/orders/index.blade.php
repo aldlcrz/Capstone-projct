@@ -164,10 +164,6 @@ function sellerOrdersManager() {
         },
 
         init() {
-            this.$watch('isAnyModalOpen', (isOpen) => {
-                document.body.style.overflow = isOpen ? 'hidden' : '';
-            });
-
             const urlParams = new URLSearchParams(window.location.search);
             const statusParam = urlParams.get('status');
             if (statusParam) {
@@ -2259,7 +2255,7 @@ if (window.Alpine) {
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-end sm:items-center justify-center p-0 pt-6 sm:p-4"
          @click.self="detailsModal = false">
         
-        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[86dvh] sm:max-h-[90vh] overscroll-contain border"
+        <div class="w-full sm:max-w-3xl lg:max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85dvh] sm:h-auto sm:max-h-[90vh] border"
              style="background: #FAF8F5; border-color: #E8DECB;">
             
             {{-- Modal Header --}}
@@ -2387,7 +2383,7 @@ if (window.Alpine) {
             </div>
 
             {{-- Modal Body Content --}}
-            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3.5" style="background: #FAF8F5;">
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-3.5" style="background: #FAF8F5; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
                 <template x-if="detailsOrder">
                     <div class="space-y-3.5">
                         
