@@ -686,7 +686,7 @@
         </div>
 
     {{-- ====== Product Catalogue Section ====== --}}
-    <div id="catalogue-section" class="space-y-4 sm:space-y-8 transition-opacity duration-300">
+    <div id="catalogue-section" class="scroll-mt-20 sm:scroll-mt-24 space-y-4 sm:space-y-8 transition-opacity duration-300">
         @if(request('sort') === 'best_sellers' || request('sort') === 'trending')
             <div class="text-xs text-amber-950 font-medium flex items-center justify-between bg-amber-50/90 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-xs">
                 <div class="flex items-center gap-3">
@@ -1314,10 +1314,37 @@
 
         function scrollToCatalogue() {
             const section = document.getElementById('catalogue-section');
-            if (section) {
-                const topOffset = section.getBoundingClientRect().top + window.pageYOffset - 80;
-                window.scrollTo({ top: topOffset, behavior: 'smooth' });
-            }
+            if (!section) return;
+
+            // Use requestAnimationFrame to ensure layout reflow has completed (especially in Chrome/Chromium)
+            requestAnimationFrame(function() {
+                const headerOffset = window.innerWidth < 640 ? 68 : 84;
+                const rect = section.getBoundingClientRect();
+                const currentScroll = window.scrollY || document.documentElement.scrollTop || window.pageYOffset || 0;
+                const targetY = Math.max(0, rect.top + currentScroll - headerOffset);
+
+                // If already at catalogue section (within 25px), avoid redundant jitter
+                if (Math.abs(rect.top - headerOffset) < 25) return;
+
+                try {
+                    window.scrollTo({ top: targetY, behavior: 'smooth' });
+                } catch(e) {
+                    window.scrollTo(0, targetY);
+                }
+
+                // Chrome resilience: if smooth scroll was aborted by layout reflow or focus-anchoring,
+                // verify and fallback to scrollIntoView after 220ms
+                setTimeout(function() {
+                    const checkRect = section.getBoundingClientRect();
+                    if (checkRect.top > headerOffset + 90 || checkRect.top < -40) {
+                        try {
+                            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } catch(e) {
+                            window.scrollTo(0, targetY);
+                        }
+                    }
+                }, 220);
+            });
         }
 
         let catalogueRequestSeq = 0;
@@ -1485,7 +1512,14 @@
             } catch(e) { return false; }
         })();
         if (!isReloadNav && (window.location.search.includes('category=') || window.location.search.includes('sort=') || window.location.search.includes('search=') || window.location.hash === '#catalogue-section')) {
-            setTimeout(scrollToCatalogue, 150);
+            if ('scrollRestoration' in history) {
+                try { history.scrollRestoration = 'manual'; } catch(e) {}
+            }
+            setTimeout(scrollToCatalogue, 120);
+            setTimeout(scrollToCatalogue, 350);
+            window.addEventListener('load', function() {
+                setTimeout(scrollToCatalogue, 80);
+            }, { once: true });
         }
 
         function buildFormCatalogueUrl(form) {
@@ -1514,9 +1548,9 @@
                 searchDebounceTimer = setTimeout(function() {
                     const form = searchInput.closest('form');
                     if (form) {
-                        loadCatalogue(buildFormCatalogueUrl(form));
+                        loadCatalogue(buildFormCatalogueUrl(form), true, true);
                     }
-                }, 200);
+                }, 280);
                 return;
             }
 
@@ -1565,7 +1599,22 @@
                 e.preventDefault();
                 clearTimeout(priceDebounceTimer);
                 clearTimeout(searchDebounceTimer);
-                loadCatalogue(buildFormCatalogueUrl(form), true, false);
+
+                // Unfocus search input in Chrome/Blink to release focus lock and dismiss mobile keyboard
+                const searchInput = form.querySelector('input[name="search"]:not([type="hidden"])');
+                if (searchInput && document.activeElement === searchInput) {
+                    searchInput.blur();
+                }
+
+                // Check if this is the header search bar or contains search
+                const isHeaderSearch = !!form.closest('header, #tour-search-bar') || !!searchInput;
+
+                // Immediately start smooth scroll on submit for instant user feedback
+                if (isHeaderSearch) {
+                    scrollToCatalogue();
+                }
+
+                loadCatalogue(buildFormCatalogueUrl(form), true, isHeaderSearch);
             }
         });
 
