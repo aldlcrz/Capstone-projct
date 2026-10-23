@@ -84,132 +84,130 @@
         x-init="startTimer()"
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
-        style="background: radial-gradient(circle at 65% 45%, #FDFBF7 0%, #F5EDE2 52%, #EADBCC 100%); min-height: 460px; border: 1px solid rgba(220, 205, 185, 0.7); box-shadow: 0 25px 60px -20px rgba(70, 50, 25, 0.12);"
-        class="relative w-full rounded-2xl sm:rounded-3xl lg:rounded-4xl overflow-hidden select-none transition-all duration-500"
+        class="lb-hero"
     >
-        {{-- Luxury Architectural Soft Sunlight Ambient Vignette (No dotted pattern) --}}
-        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle at 75% 35%, rgba(255, 255, 255, 0.7) 0%, transparent 60%);"></div>
-        <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 30%, rgba(220,205,185,0.2) 100%);"></div>
+        <style>
+            .lb-hero{position:relative;width:100%;height:clamp(420px,42vw,560px);overflow:hidden;user-select:none;font-family:'Inter',sans-serif}
+            .lb-hero-wall{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#F3ECE2 0%,#EEE5D8 84%,#E5DACA 84.25%,#EFE7DB 86%,#ECE3D6 100%)}
+            .lb-hero-light{position:absolute;inset:0;pointer-events:none;background:linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,.55) 42%,rgba(255,255,255,0) 54%,rgba(120,92,55,.07) 62%,rgba(255,255,255,0) 74%,rgba(255,255,255,.35) 86%,rgba(255,255,255,0) 100%)}
+            .lb-hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 70% at 70% 28%,rgba(255,252,246,.75) 0%,rgba(255,252,246,0) 70%)}
+            .lb-arch{position:absolute;left:59%;width:25%;top:3%;bottom:16%;pointer-events:none;border-top-left-radius:9999px;border-top-right-radius:9999px;background:#F4EDE3;box-shadow:0 0 0 1px rgba(170,145,110,.10),-18px 10px 40px -20px rgba(110,85,50,.25)}
+            .lb-arch::before{content:'';position:absolute;left:12px;right:12px;top:12px;bottom:0;border-top-left-radius:9999px;border-top-right-radius:9999px;background:linear-gradient(180deg,#E6DACA 0%,#DCCDB9 100%);box-shadow:inset 14px 22px 34px rgba(95,70,38,.18)}
+            .lb-arch::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:16%;background:linear-gradient(180deg,#E9DFD1 0%,#E2D6C5 100%);box-shadow:0 -1px 0 rgba(150,125,90,.18)}
+            .lb-stage{position:absolute;left:50%;width:34%;top:4%;bottom:0;z-index:3;pointer-events:none}
+            .lb-stage-item{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center}
+            .lb-stage-item img{max-height:100%;max-width:100%;object-fit:contain;object-position:center bottom;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 70% 78% at 50% 48%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 70% 78% at 50% 48%,#000 60%,transparent 100%)}
+            .lb-copy{position:absolute;left:22.5%;top:50%;transform:translateY(-55%);width:25%;z-index:5}
+            .lb-over{font-size:10px;letter-spacing:.26em;text-transform:uppercase;font-weight:500;color:#A2894F}
+            .lb-over-rule{width:30px;height:1px;background:#BFA87A;margin:11px 0 16px}
+            .lb-title{font-family:'Cormorant Garamond','Playfair Display',Georgia,serif;font-weight:500;text-transform:uppercase;color:#2B2520;line-height:1;letter-spacing:.015em;font-size:clamp(36px,4.6vw,64px);margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+            .lb-title--md{font-size:clamp(28px,3.3vw,46px)}
+            .lb-title--sm{font-size:clamp(24px,2.6vw,36px)}
+            .lb-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(15px,1.45vw,19px);line-height:1.3;color:#3F3730;margin:0 0 22px;max-width:250px}
+            .lb-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+            .lb-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 20px;border-radius:999px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;transition:background-color .25s,transform .25s,box-shadow .25s;cursor:pointer;white-space:nowrap}
+            .lb-btn:hover{transform:translateY(-1px)}
+            .lb-btn-primary{background:#9A7E3C;color:#fff;box-shadow:0 6px 16px -8px rgba(110,85,30,.6)}
+            .lb-btn-primary:hover{background:#86692C}
+            .lb-btn-ghost{border:1px solid #8E867B;color:#3B342D;background:transparent}
+            .lb-btn-ghost:hover{background:rgba(255,255,255,.55)}
+            .lb-peek{position:absolute;top:50%;transform:translateY(-50%);width:16.2%;aspect-ratio:.84;border-radius:14px;overflow:hidden;cursor:pointer;z-index:4;box-shadow:0 14px 30px -16px rgba(70,50,25,.35);transition:transform .35s,box-shadow .35s;background:#E6DCCE}
+            .lb-peek:hover{transform:translateY(-50%) scale(1.03)}
+            .lb-peek img{width:100%;height:100%;object-fit:cover;filter:saturate(.85) brightness(1.03)}
+            .lb-peek::after{content:'';position:absolute;inset:0;background:rgba(243,236,226,.12);pointer-events:none}
+            .lb-peek-left{left:3.3%}
+            .lb-peek-right{right:3%}
+            .lb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.96);color:#3A322B;display:flex;align-items:center;justify-content:center;z-index:10;cursor:pointer;box-shadow:0 4px 14px rgba(60,45,25,.18);transition:transform .25s,color .25s}
+            .lb-arrow:hover{transform:translateY(-50%) scale(1.08);color:#9A7E3C}
+            .lb-arrow-left{left:1.4%}
+            .lb-arrow-right{right:1.4%}
+            .lb-dots{position:absolute;bottom:5.5%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;z-index:10}
+            .lb-dots-line{width:60px;height:1px;background:#D6CAB8;margin:0 10px}
+            .lb-dot{width:6px;height:6px;border-radius:999px;background:#D3C6B3;transition:all .3s;cursor:pointer}
+            .lb-dot.is-active{width:22px;background:#A0843F}
+            @media (max-width:767px){
+                .lb-hero{height:auto;display:flex;flex-direction:column;padding:30px 20px 56px}
+                .lb-arch,.lb-peek,.lb-dots-line{display:none}
+                .lb-copy{position:relative;left:auto;top:auto;transform:none;width:100%;order:1;display:flex;flex-direction:column;align-items:center;text-align:center}
+                .lb-sub{max-width:300px}
+                .lb-stage{position:relative;left:auto;top:auto;bottom:auto;width:100%;height:300px;order:2;margin-top:18px}
+                .lb-arrow{top:auto;bottom:150px;transform:none}
+                .lb-arrow:hover{transform:scale(1.08)}
+                .lb-dots{bottom:20px}
+            }
+        </style>
 
-        {{-- Main Panoramic Composition: [Left Card] [Text Block] [Center Arch Hero] [Right Card] --}}
-        <div class="relative z-20 w-full min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 lg:py-10 gap-4 sm:gap-6 lg:gap-8">
-            
-            {{-- 1. Flank Left Preview Card (Visible on tablet & desktop) --}}
-            <template x-if="prevItem">
-                <div @click="prev()"
-                     title="View previous collection"
-                     class="hidden md:flex relative shrink-0 rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-85 hover:opacity-100 items-center justify-center p-1.5 group"
-                     style="width: 150px; height: 230px; border: 3px solid rgba(255, 255, 255, 0.95); box-shadow: 0 15px 35px -5px rgba(60, 45, 20, 0.16); background: #E8DDD0;">
-                    <img :src="prevItem.image_url" :alt="prevItem.title" style="width: 100%; height: 100%; object-fit: cover; border-radius: 1rem;" class="transition-transform duration-500 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-                    <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="prevItem.title"></div>
-                </div>
-            </template>
+        {{-- Room backdrop: plaster wall, window light, floor line --}}
+        <div class="lb-hero-wall"></div>
+        <div class="lb-hero-light"></div>
+        <div class="lb-hero-glow"></div>
 
-            {{-- 2. Editorial Headline & CTA Actions Block --}}
-            <div class="w-full md:flex-1 flex flex-col items-center md:items-start text-center md:text-left z-20 px-2 sm:px-4 py-2">
-                {{-- Overline Tag --}}
-                <div class="inline-flex items-center gap-2 mb-2 sm:mb-3">
-                    <span class="w-5 sm:w-7 h-[1.5px] bg-[#9C783E]"></span>
-                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.28em] text-[#9C783E]" x-text="current.subtitle || 'FEATURED COLLECTION'"></span>
-                </div>
+        {{-- Architectural arch niche behind the hero garment --}}
+        <div class="lb-arch"></div>
 
-                {{-- Hero Title in Regal Playfair Serif --}}
-                <h2 class="font-serif text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl text-[#1E1915] font-normal leading-[1.1] tracking-tight mb-2 sm:mb-3 drop-shadow-xs transition-all duration-300"
-                    x-text="current.title"></h2>
-
-                {{-- Subtitle / Narrative Description --}}
-                <p class="text-xs sm:text-sm lg:text-base text-[#635548] leading-relaxed max-w-sm sm:max-w-md mb-5 sm:mb-7 font-light">
-                    A modern take on a timeless Filipino tradition. Handcrafted by master artisans with authentic heritage embroidery.
-                </p>
-
-                {{-- CTA Action Buttons --}}
-                <div class="flex items-center gap-3 sm:gap-4 pt-1">
-                    {{-- Primary Shop Now button with arrow --}}
-                    <a :href="current.button_url_1"
-                       @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                       class="inline-flex items-center justify-center gap-2 px-5 sm:px-7 lg:px-8 py-2.5 sm:py-3.5 text-white text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md hover:shadow-xl group"
-                       style="background: linear-gradient(135deg, #8E6D38 0%, #765625 100%); box-shadow: 0 4px 15px rgba(118, 86, 37, 0.28);">
-                        <span x-text="current.button_text_1 || 'SHOP NOW'"></span>
-                        <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
-                    </a>
-
-                    {{-- Secondary Visit Shop button with luxury pill outline --}}
-                    <a :href="current.button_url_2"
-                       @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                       class="inline-flex items-center justify-center px-4 sm:px-6 lg:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md border border-[#2C241E]/35 text-[#2C241E] bg-white/70 hover:bg-white backdrop-blur-xs">
-                        <span x-text="current.button_text_2 || 'VISIT SHOP'"></span>
-                    </a>
-                </div>
-            </div>
-
-            {{-- 3. Center Architectural Arch Showcase Stage --}}
-            <div class="relative shrink-0 flex items-center justify-center mt-3 md:mt-0"
-                 style="width: 320px; height: 410px; max-width: 90vw;">
-                {{-- Architectural Arch Wall Niche Frame with Depth Shadow --}}
-                <div class="absolute inset-0 rounded-t-full rounded-b-3xl overflow-hidden flex items-center justify-center"
-                     style="background: linear-gradient(180deg, #FAF4EB 0%, #EADBCC 100%); border: 4px solid #FFFFFF; box-shadow: 0 20px 45px -10px rgba(60, 45, 20, 0.18), inset 0 8px 24px rgba(70, 50, 20, 0.10);">
-                    
-                    {{-- Soft Interior Arch Ambient Shadow & Pedestal --}}
-                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 w-48 h-6 rounded-full blur-md bg-[#3A2A18]/25 pointer-events-none"></div>
-
-                    {{-- Active Garment Display Inside Arch --}}
-                    <template x-for="(item, idx) in items" :key="'hero-' + item.id">
-                        <div x-show="active === idx"
-                             x-transition:enter="transition ease-out duration-500"
-                             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
-                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                             x-transition:leave="transition ease-in duration-300"
-                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 scale-95 -translate-y-3"
-                             class="absolute inset-0 flex items-center justify-center p-4">
-                            <img :src="item.image_url" 
-                                 :alt="item.title"
-                                 style="max-height: 92%; max-width: 92%; object-fit: contain; filter: drop-shadow(0 16px 28px rgba(40, 25, 12, 0.25));"
-                                 class="select-none pointer-events-none transition-transform duration-500">
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            {{-- 4. Flank Right Preview Card (Visible on tablet & desktop) --}}
-            <template x-if="nextItem">
-                <div @click="next()"
-                     title="View next collection"
-                     class="hidden md:flex relative shrink-0 rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-85 hover:opacity-100 items-center justify-center p-1.5 group"
-                     style="width: 150px; height: 230px; border: 3px solid rgba(255, 255, 255, 0.95); box-shadow: 0 15px 35px -5px rgba(60, 45, 20, 0.16); background: #E8DDD0;">
-                    <img :src="nextItem.image_url" :alt="nextItem.title" style="width: 100%; height: 100%; object-fit: cover; border-radius: 1rem;" class="transition-transform duration-500 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-                    <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="nextItem.title"></div>
+        {{-- Hero garment --}}
+        <div class="lb-stage">
+            <template x-for="(item, idx) in items" :key="'hero-' + item.id">
+                <div class="lb-stage-item" x-show="active === idx" x-transition.opacity.duration.500ms>
+                    <img :src="item.image_url" :alt="item.title" draggable="false">
                 </div>
             </template>
         </div>
 
-        {{-- 5. Floating Outer Left & Right Circular Navigation Arrows --}}
+        {{-- Editorial copy --}}
+        <div class="lb-copy">
+            <div class="lb-over">Featured Collection</div>
+            <div class="lb-over-rule"></div>
+            <h2 class="lb-title"
+                :class="current.title.length > 30 ? 'lb-title--sm' : (current.title.length > 16 ? 'lb-title--md' : '')"
+                x-text="current.title"></h2>
+            <p class="lb-sub">A modern take on a timeless Filipino tradition.</p>
+            <div class="lb-actions">
+                <a :href="current.button_url_1"
+                   @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                   class="lb-btn lb-btn-primary">
+                    <span x-text="current.button_text_1 || 'Shop now'"></span>
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
+                <a :href="current.button_url_2"
+                   @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                   class="lb-btn lb-btn-ghost">
+                    <span x-text="current.button_text_2 || 'Visit shop'"></span>
+                </a>
+            </div>
+        </div>
+
+        {{-- Flanking preview cards --}}
+        <template x-if="prevItem">
+            <div class="lb-peek lb-peek-left" @click="prev()" :title="prevItem.title">
+                <img :src="prevItem.image_url" :alt="prevItem.title" draggable="false">
+            </div>
+        </template>
+        <template x-if="nextItem">
+            <div class="lb-peek lb-peek-right" @click="next()" :title="nextItem.title">
+                <img :src="nextItem.image_url" :alt="nextItem.title" draggable="false">
+            </div>
+        </template>
+
+        {{-- Navigation arrows --}}
         <template x-if="total > 1">
             <div>
-                <button type="button" @click="prev()" aria-label="Previous product" 
-                        class="absolute left-1.5 sm:left-3 lg:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-lg hover:shadow-xl bg-white/95 text-[#2C241E] border border-white hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                <button type="button" @click="prev()" aria-label="Previous product" class="lb-arrow lb-arrow-left">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button type="button" @click="next()" aria-label="Next product" 
-                        class="absolute right-1.5 sm:right-3 lg:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-lg hover:shadow-xl bg-white/95 text-[#2C241E] border border-white hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                <button type="button" @click="next()" aria-label="Next product" class="lb-arrow lb-arrow-right">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </template>
 
-        {{-- 6. Bottom Minimalist Pagination Slider Bar --}}
-        <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2" x-show="total > 1">
+        {{-- Pagination --}}
+        <div class="lb-dots" x-show="total > 1">
+            <span class="lb-dots-line"></span>
             <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
-                <button type="button"
-                        @click="goTo(dIdx)"
-                        :style="active === dIdx ? 'width: 30px; background-color: #8E6D38;' : 'width: 8px; background-color: #D4C4B0;'"
-                        class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
-                        :aria-label="'Go to slide ' + (dIdx + 1)"></button>
+                <button type="button" @click="goTo(dIdx)" class="lb-dot" :class="active === dIdx && 'is-active'" :aria-label="'Go to slide ' + (dIdx + 1)"></button>
             </template>
+            <span class="lb-dots-line"></span>
         </div>
     </div>
     @endif
