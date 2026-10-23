@@ -39,7 +39,7 @@ class Product extends Model
         'sizes', 'categories', 'image', 'shippingFee', 'shippingDays',
         'sellerId', 'status', 'rejectionReason', 'views',
         'sku', 'fabric_type', 'collar_type', 'artisan_region', 'CategoryId',
-        'target_group', 'size_stocks',
+        'target_group', 'size_stocks', 'color', 'colors',
         // Product Variants / Variations
         'has_variants', 'variations',
         // Lumban Special discount / Lumbarong Seller Sales
@@ -121,6 +121,7 @@ class Product extends Model
             'sale_ends_at'            => 'datetime',
             'is_gcash_available'      => 'boolean',
             'is_maya_available'       => 'boolean',
+            'colors'                  => 'array',
         ];
     }
 
@@ -658,6 +659,54 @@ class Product extends Model
     public function scopeSearch($query, ?string $search, ?string $sort = null)
     {
         return \App\Services\ProductSearchService::apply($query, $search, $sort);
+    }
+
+    /**
+     * Get tailored badge styling classes for the garment color.
+     */
+    public function getColorBadgeClass(): string
+    {
+        $c = strtolower(trim((string)$this->color));
+        return match (true) {
+            str_contains($c, 'pink') || str_contains($c, 'rose') || str_contains($c, 'blush') => 'bg-pink-50 text-pink-700 border-pink-200',
+            str_contains($c, 'blue') || str_contains($c, 'navy') || str_contains($c, 'cyan') => 'bg-sky-50 text-sky-800 border-sky-200',
+            str_contains($c, 'green') || str_contains($c, 'emerald') || str_contains($c, 'sage') => 'bg-emerald-50 text-emerald-800 border-emerald-200',
+            str_contains($c, 'red') || str_contains($c, 'maroon') || str_contains($c, 'burgundy') => 'bg-rose-50 text-rose-800 border-rose-200',
+            str_contains($c, 'black') || str_contains($c, 'charcoal') || str_contains($c, 'dark') => 'bg-gray-100 text-gray-900 border-gray-300',
+            str_contains($c, 'white') || str_contains($c, 'ivory') => 'bg-gray-50 text-gray-700 border-gray-200',
+            str_contains($c, 'gold') || str_contains($c, 'yellow') || str_contains($c, 'mustard') => 'bg-amber-50 text-amber-800 border-amber-200',
+            str_contains($c, 'purple') || str_contains($c, 'violet') || str_contains($c, 'lavender') => 'bg-purple-50 text-purple-800 border-purple-200',
+            str_contains($c, 'orange') || str_contains($c, 'rust') || str_contains($c, 'peach') => 'bg-orange-50 text-orange-800 border-orange-200',
+            str_contains($c, 'multi') => 'bg-gradient-to-r from-pink-50 via-amber-50 to-sky-50 text-gray-800 border-gray-200',
+            default => 'bg-stone-50 text-stone-800 border-stone-200', // Natural/Ecru/Beige/Cream
+        };
+    }
+
+    /**
+     * Get tailored dot styling classes for the garment color dot.
+     */
+    public function getColorDotClass(): string
+    {
+        $c = strtolower(trim((string)$this->color));
+        return match (true) {
+            str_contains($c, 'pink') || str_contains($c, 'rose') || str_contains($c, 'blush') => 'bg-pink-400',
+            str_contains($c, 'navy') => 'bg-blue-900',
+            str_contains($c, 'blue') || str_contains($c, 'cyan') => 'bg-sky-500',
+            str_contains($c, 'emerald') => 'bg-emerald-600',
+            str_contains($c, 'green') || str_contains($c, 'sage') => 'bg-emerald-500',
+            str_contains($c, 'maroon') || str_contains($c, 'burgundy') => 'bg-rose-900',
+            str_contains($c, 'red') => 'bg-rose-600',
+            str_contains($c, 'black') || str_contains($c, 'charcoal') => 'bg-black',
+            str_contains($c, 'white') || str_contains($c, 'ivory') => 'bg-white border border-gray-300',
+            str_contains($c, 'gold') || str_contains($c, 'mustard') => 'bg-amber-500',
+            str_contains($c, 'yellow') => 'bg-yellow-400',
+            str_contains($c, 'purple') || str_contains($c, 'violet') => 'bg-purple-600',
+            str_contains($c, 'lavender') => 'bg-purple-300',
+            str_contains($c, 'orange') || str_contains($c, 'rust') => 'bg-orange-500',
+            str_contains($c, 'peach') => 'bg-orange-300',
+            str_contains($c, 'multi') => 'bg-gradient-to-tr from-pink-500 via-amber-400 to-sky-400',
+            default => 'bg-[#D6C4A5]', // Natural / Ecru Piña tone
+        };
     }
 }
 

@@ -429,6 +429,21 @@ class ProductManagementController extends Controller
             $product->variations = !empty($savedVariations) ? $savedVariations : null;
             $product->status = $isDraft ? 'draft' : 'pending';
 
+            // Auto-detect garment color from cover image or metadata if not explicitly provided
+            if ($request->filled('color')) {
+                $product->color = trim((string)$request->color);
+                $product->colors = [$product->color];
+            } else {
+                $coverImg = !empty($cleanStoreImages[0]) ? $cleanStoreImages[0] : null;
+                $colorResult = \App\Services\ProductColorDetectorService::detect(
+                    $coverImg,
+                    $product->name,
+                    $product->description
+                );
+                $product->color = $colorResult['primary_color'];
+                $product->colors = $colorResult['colors'];
+            }
+
             \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Store]', [
                 'product_id' => $product->id,
                 'has_cover' => !empty($savedVariations),
@@ -868,6 +883,21 @@ class ProductManagementController extends Controller
             $cleanImages = [$updatedVariations[0]['images'][0]];
         }
         $product->image = !empty($cleanImages) ? $cleanImages : ['products/default.jpg'];
+
+        // Auto-detect or sync garment color
+        if ($request->filled('color')) {
+            $product->color = trim((string)$request->color);
+            $product->colors = [$product->color];
+        } elseif (empty($product->color)) {
+            $coverImg = !empty($cleanImages[0]) ? $cleanImages[0] : null;
+            $colorResult = \App\Services\ProductColorDetectorService::detect(
+                $coverImg,
+                $product->name,
+                $product->description
+            );
+            $product->color = $colorResult['primary_color'];
+            $product->colors = $colorResult['colors'];
+        }
 
         \Illuminate\Support\Facades\Log::info('[ProductImagePipeline:Update]', [
             'product_id' => $product->id,

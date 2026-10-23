@@ -831,9 +831,18 @@
                         @endif
                     </div>
 
-                    <!-- Category Specification -->
-                    <div class="space-y-1 text-xs text-gray-600 mb-6">
+                    <!-- Category & Color Specification -->
+                    <div class="space-y-2 text-xs text-gray-600 mb-6">
                         <div><span class="font-bold text-gray-800">Category:</span> {{ $product->category->name ?? 'Wedding Barong' }}</div>
+                        @if(!empty($product->color))
+                            <div class="flex items-center gap-2 pt-0.5">
+                                <span class="font-bold text-gray-800">Color:</span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-2xs border {{ $product->getColorBadgeClass() }}">
+                                    <span class="w-2.5 h-2.5 rounded-full {{ $product->getColorDotClass() }}"></span>
+                                    {{ $product->color }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Style / Variation Selection (When product has multiple variants) -->
@@ -1993,6 +2002,15 @@
                         <span class="text-stone-400 font-medium">Category:</span>
                         <span class="font-bold text-stone-900 truncate">{{ $product->category->name ?? 'Barong Tagalog' }}</span>
                     </div>
+                    @if(!empty($product->color))
+                    <div class="flex items-center gap-1.5 text-stone-600">
+                        <span class="text-stone-400 font-medium">Color:</span>
+                        <span class="font-bold text-stone-900 flex items-center gap-1 truncate">
+                            <span class="w-2 h-2 rounded-full shrink-0 {{ $product->getColorDotClass() }}"></span>
+                            {{ $product->color }}
+                        </span>
+                    </div>
+                    @endif
                     <div class="flex items-center gap-1.5 text-stone-600">
                         <span class="text-stone-400 font-medium">Craft:</span>
                         <span class="font-bold text-stone-900">Hand Embroidered</span>

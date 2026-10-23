@@ -913,5 +913,62 @@ class ProductSearchEngineTest extends TestCase
         $content = $response->getContent();
         $this->assertMatchesRegularExpression('/background-color:\s*#1c1917\s*!important;\s*color:\s*#DFC97A\s*!important;[^>]*>\s*Men\s*<\/a>/i', $content);
     }
+
+    public function test_search_color_returns_products_with_matching_color_attribute(): void
+    {
+        // Product that does NOT have the word "pink" anywhere in name or description
+        $pinkGown = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Duchess Filipiniana Gown',
+            'description' => 'Elegant formal gown handcrafted with traditional Lumban embroidery.',
+            'price' => 4500,
+            'stock' => 3,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'Pink',
+            'colors' => ['Pink'],
+        ]);
+
+        $blueBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Executive Office Attire',
+            'description' => 'Lightweight everyday formal wear.',
+            'price' => 2200,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Blue',
+            'colors' => ['Blue'],
+        ]);
+
+        $results = Product::query()->where('status', 'approved')->search('pink')->get();
+
+        $this->assertTrue($results->contains('id', $pinkGown->id), 'Searching "pink" should return product with color=Pink even if "pink" is not in the title');
+        $this->assertFalse($results->contains('id', $blueBarong->id), 'Searching "pink" should not return product with color=Blue');
+    }
+
+    public function test_detect_product_colors_command_backfills_unassigned_products(): void
+    {
+        $duchessItem = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Duchess Filipiniana Dress',
+            'description' => 'Special occasion dress',
+            'price' => 3800,
+            'stock' => 2,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => null,
+        ]);
+
+        $this->artisan('products:detect-colors')
+            ->assertSuccessful();
+
+        $duchessItem->refresh();
+        $this->assertEquals('Pink', $duchessItem->color);
+        $this->assertContains('Pink', $duchessItem->colors);
+    }
 }
 

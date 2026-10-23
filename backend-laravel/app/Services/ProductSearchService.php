@@ -578,6 +578,8 @@ class ProductSearchService
                    ->orWhere('name', 'like', '%' . $normalized . '%')
                    ->orWhere('description', 'like', '%' . $rawSearch . '%')
                    ->orWhere('description', 'like', '%' . $normalized . '%')
+                   ->orWhere('color', 'like', '%' . $rawSearch . '%')
+                   ->orWhere('color', 'like', '%' . $normalized . '%')
                    ->orWhere('sku', 'like', '%' . $rawSearch . '%')
                    ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
                        $cq->where('name', 'like', '%' . $rawSearch . '%')
@@ -600,6 +602,7 @@ class ProductSearchService
                         foreach ($variants as $v) {
                             $subQuery->orWhere('name', 'like', '%' . $v . '%')
                                      ->orWhere('description', 'like', '%' . $v . '%')
+                                     ->orWhere('color', 'like', '%' . $v . '%')
                                      ->orWhere('fabric_type', 'like', '%' . $v . '%')
                                      ->orWhere('collar_type', 'like', '%' . $v . '%')
                                      ->orWhere('artisan_region', 'like', '%' . $v . '%')
@@ -728,6 +731,15 @@ class ProductSearchService
                 $bindings[] = '%jusilyn%';
             }
             $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $fabricChecks) . ") THEN 30 ELSE 0 END";
+
+            // Color match (+50 points)
+            $colorChecks = ["LOWER(COALESCE(products.color, '')) LIKE ?"];
+            $bindings[] = '%' . $orig . '%';
+            if ($resolved !== $orig) {
+                $colorChecks[] = "LOWER(COALESCE(products.color, '')) LIKE ?";
+                $bindings[] = '%' . $resolved . '%';
+            }
+            $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $colorChecks) . ") THEN 50 ELSE 0 END";
         }
 
         if (!empty($relevanceCases)) {
