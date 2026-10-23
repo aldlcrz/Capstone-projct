@@ -38,10 +38,10 @@ class ProductColorDetectorService
         'White'         => ['White', 'Natural', 'Cream', 'Off-White'],
         'Natural'       => ['Natural', 'White', 'Cream', 'Off-White', 'Ecru'],
         'Pink'          => ['Pink', 'Rose', 'Blush', 'Magenta'],
-        'Maroon'        => ['Maroon', 'Burgundy', 'Wine', 'Pink', 'Red'],
-        'Red'           => ['Red', 'Crimson', 'Maroon'],
+        'Maroon'        => ['Maroon', 'Burgundy', 'Wine'],
+        'Red'           => ['Red', 'Crimson'],
         'Blue'          => ['Blue', 'Navy Blue', 'Royal Blue', 'Sky Blue', 'Dusty Blue'],
-        'Navy Blue'     => ['Navy Blue', 'Navy', 'Blue', 'Dark Blue'],
+        'Navy Blue'     => ['Navy Blue', 'Navy', 'Blue'],
         'Royal Blue'    => ['Royal Blue', 'Blue'],
         'Green'         => ['Green', 'Sage Green', 'Emerald Green', 'Olive'],
         'Emerald Green' => ['Emerald Green', 'Green'],
@@ -107,17 +107,37 @@ class ProductColorDetectorService
     public static function finalizeDetection(array $detection, ?array $titleColor = null): array
     {
         $primary = $detection['primary_color'] ?? 'White';
-        $colors = $detection['colors'] ?? [$primary];
+        $colors = [$primary];
+
+        // Only allow secondary color if garment fabric is genuinely dual-toned/ombre or specified
+        if (!empty($detection['secondary_color']) && strtolower((string)$detection['secondary_color']) !== 'null') {
+            $sec = self::normalizeColorName($detection['secondary_color']);
+            if ($sec !== $primary && !in_array($sec, ['White', 'Natural'], true)) {
+                $colors[] = $sec;
+                $colors[] = 'Multicolor';
+            }
+        } elseif (!empty($detection['colors']) && count($detection['colors']) > 1) {
+            // White and Natural garments strictly NEVER have secondary colors (embroidery thread must never pollute base cloth)
+            if (!in_array($primary, ['White', 'Natural'], true)) {
+                foreach ($detection['colors'] as $c) {
+                    $norm = self::normalizeColorName($c);
+                    if ($norm !== $primary && !in_array($norm, $colors, true)) {
+                        $colors[] = $norm;
+                    }
+                }
+            }
+        }
 
         // If title explicitly mentions a color (e.g. "Two Tone", "Sage Green"), merge it
         if ($titleColor !== null) {
             $titlePrimary = $titleColor['primary_color'] ?? null;
-            if ($titlePrimary && !in_array($titlePrimary, $colors, true)) {
-                $colors[] = $titlePrimary;
-            }
-            // If primary was generic white/natural but title had specific shade (e.g. Sage Green)
-            if (in_array($primary, ['White', 'Natural'], true) && $titlePrimary && !in_array($titlePrimary, ['White', 'Natural'], true)) {
-                $primary = $titlePrimary;
+            if ($titlePrimary) {
+                if (in_array($primary, ['White', 'Natural'], true) && !in_array($titlePrimary, ['White', 'Natural'], true)) {
+                    $primary = $titlePrimary;
+                    $colors = [$primary];
+                } elseif (!in_array($titlePrimary, $colors, true)) {
+                    $colors[] = $titlePrimary;
+                }
             }
         }
 
@@ -256,7 +276,30 @@ class ProductColorDetectorService
             $imageData = base64_encode(File::get($fullPath));
             $mimeType = File::mimeType($fullPath) ?: 'image/jpeg';
 
-            $prompt = 'Look at the main clothing / garment in this photo. Ignore the background wall, backdrop, model skin, and mannequin stand. Identify the primary color and any prominent secondary colors of the attire itself. Return ONLY a JSON object formatted as: {"primary_color": "...", "colors": ["..."]}. Valid standard colors: White, Off-White, Natural, Cream, Pink, Red, Maroon, Blue, Navy Blue, Royal Blue, Green, Emerald Green, Sage Green, Black, Gold, Purple, Orange, Multicolor.';
+            $prompt = 'You are a master fashion attire color classifier for Philippine Barong Tagalog and Filipiniana e-commerce.
+
+TASK:
+Classify the DOMINANT BASE FABRIC COLOR of the garment piece being sold in the photograph.
+
+CRITICAL RULES:
+1. BASE CLOTH ONLY: Look strictly at the body textile/fabric of the barong shirt, polo, dress, or gown.
+2. COMPLETELY IGNORE EMBROIDERY THREAD & BUTTONS: Traditional Barongs feature intricate dark or colored embroidery stitches (Calado, handpainted, or thread patterns). You MUST IGNORE embroidery thread colors, collar piping, buttons, and inner lining. For example:
+   - A white, cream, or ecru Barong Tagalog with black, dark navy, or brown embroidery is 100% "White" (or "Natural"). Never classify it as Black or Blue.
+   - A piña/natural Barong Tagalog with colored embroidery is 100% "Natural".
+3. COMPLETELY IGNORE STUDIO WALLS & BACKDROPS:
+   - Photographers often use solid blue, cyan, green, or gray backdrops. If a model or mannequin wearing a white, cream, or gray garment stands in front of a blue studio wall, the garment is WHITE or NATURAL, NOT BLUE.
+   - Mannequins, model face, skin, hair, and trousers must be completely ignored.
+4. TWO-TONE / OMBRÉ FABRICS:
+   - ONLY return a secondary color if the GARMENT FABRIC ITSELF is genuinely dual-colored (e.g., ombré dip-dye fading from Pink/Maroon at the shoulders to Black at the hem).
+   - If the garment fabric is a single uniform color, return null for secondary_color.
+5. VINTAGE PRINTS & HISTORICAL DRAWINGS:
+   - If the image is a drawing/illustration of historical attire (e.g., ancient barong / boxer codex), classify the dominant costume color as "Natural" or "White".
+
+Output strictly valid JSON:
+{
+  "primary_color": "<one of: White, Natural, Black, Pink, Blue, Navy Blue, Royal Blue, Green, Sage Green, Emerald Green, Maroon, Red, Gold, Purple, Orange, Multicolor>",
+  "secondary_color": null
+}';
 
             $payload = [
                 'contents' => [
@@ -293,10 +336,15 @@ class ProductColorDetectorService
                     $data = json_decode($cleaned, true);
                     if (is_array($data) && !empty($data['primary_color'])) {
                         $pColor = self::normalizeColorName($data['primary_color']);
+                        $secColor = (!empty($data['secondary_color']) && strtolower((string)$data['secondary_color']) !== 'null') 
+                            ? self::normalizeColorName($data['secondary_color']) 
+                            : null;
+
                         return [
-                            'primary_color' => $pColor,
-                            'colors'        => !empty($data['colors']) ? array_map([self::class, 'normalizeColorName'], (array)$data['colors']) : [$pColor],
-                            'source'        => 'gemini_vision',
+                            'primary_color'   => $pColor,
+                            'secondary_color' => $secColor,
+                            'colors'          => $secColor ? [$pColor, $secColor] : [$pColor],
+                            'source'          => 'gemini_vision',
                         ];
                     }
                 }
