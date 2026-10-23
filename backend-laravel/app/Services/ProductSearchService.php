@@ -14,7 +14,9 @@ class ProductSearchService
      */
     protected const STOP_WORDS = [
         'for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an',
-        'at', 'by', 'on', 'all', 'any', 'is', 'it', 'or', 'from'
+        'at', 'by', 'on', 'all', 'any', 'is', 'it', 'or', 'from',
+        // Tagalog connectors and prepositions
+        'na', 'ng', 'nang', 'mga', 'sa', 'para', 'ang', 'may', 'ay'
     ];
 
     /**
@@ -66,48 +68,96 @@ class ProductSearchService
     /**
      * Color search synonyms allowing shoppers to find traditional white/cream barongs and colored garments.
      */
+    /**
+     * Color search synonyms allowing shoppers to find traditional white/cream barongs and colored garments.
+     * Supports both English and Tagalog color terms.
+     */
     protected const COLOR_SEARCH_SYNONYMS = [
-        'white'      => ['white', 'natural', 'cream', 'ecru', 'off-white'],
-        'natural'    => ['natural', 'white', 'cream', 'ecru', 'off-white'],
-        'cream'      => ['cream', 'white', 'natural', 'off-white'],
-        'pink'       => ['pink', 'blush', 'rose', 'magenta', 'salmon'],
-        'maroon'     => ['maroon', 'burgundy', 'wine'],
-        'red'        => ['red', 'crimson', 'scarlet', 'maroon', 'burgundy'],
-        'blue'       => ['blue', 'navy', 'royal', 'sky', 'dusty'],
-        'navy'       => ['navy', 'blue', 'midnight'],
-        'green'      => ['green', 'sage', 'emerald', 'olive', 'mint'],
-        'sage'       => ['sage', 'green', 'mint'],
-        'emerald'    => ['emerald', 'green'],
-        'black'      => ['black', 'charcoal', 'dark'],
-        'gold'       => ['gold', 'golden', 'yellow'],
-        'yellow'     => ['yellow', 'gold'],
-        'purple'     => ['purple', 'violet', 'lavender', 'lilac'],
-        'orange'     => ['orange', 'rust', 'terracotta', 'peach', 'coral'],
-        'brown'      => ['brown', 'tan', 'chocolate', 'coffee'],
-        'tan'        => ['tan', 'beige', 'natural'],
-        'beige'      => ['beige', 'natural', 'cream', 'tan'],
-        'gray'       => ['gray', 'grey', 'silver', 'charcoal'],
-        'grey'       => ['grey', 'gray', 'silver', 'charcoal'],
+        // White / Natural
+        'white'      => ['white', 'natural', 'cream', 'ecru', 'off-white', 'puti'],
+        'puti'       => ['white', 'natural', 'cream', 'ecru', 'off-white', 'puti'],
+        'maputi'     => ['white', 'natural', 'cream', 'ecru', 'off-white', 'puti'],
+        'natural'    => ['natural', 'white', 'cream', 'ecru', 'off-white', 'puti', 'kayumanggi'],
+        'cream'      => ['cream', 'white', 'natural', 'off-white', 'puti'],
+
+        // Pink
+        'pink'       => ['pink', 'blush', 'rose', 'magenta', 'salmon', 'rosas'],
+        'rosas'      => ['pink', 'blush', 'rose', 'magenta', 'salmon', 'rosas'],
+
+        // Red / Maroon / Wine
+        'red'        => ['red', 'crimson', 'scarlet', 'maroon', 'burgundy', 'pula'],
+        'pula'       => ['red', 'crimson', 'scarlet', 'maroon', 'burgundy', 'pula'],
+        'mapula'     => ['red', 'crimson', 'scarlet', 'maroon', 'burgundy', 'pula'],
+        'maroon'     => ['maroon', 'burgundy', 'wine', 'pula'],
+
+        // Blue
+        'blue'       => ['blue', 'navy', 'royal', 'sky', 'dusty', 'asul', 'bughaw'],
+        'asul'       => ['blue', 'navy', 'royal', 'sky', 'dusty', 'asul', 'bughaw'],
+        'bughaw'     => ['blue', 'navy', 'royal', 'sky', 'dusty', 'asul', 'bughaw'],
+        'navy'       => ['navy', 'blue', 'midnight', 'asul'],
+
+        // Green
+        'green'      => ['green', 'sage', 'emerald', 'olive', 'mint', 'berde', 'lunti', 'luntian'],
+        'berde'      => ['green', 'sage', 'emerald', 'olive', 'mint', 'berde', 'lunti', 'luntian'],
+        'lunti'      => ['green', 'sage', 'emerald', 'olive', 'mint', 'berde', 'lunti', 'luntian'],
+        'luntian'    => ['green', 'sage', 'emerald', 'olive', 'mint', 'berde', 'lunti', 'luntian'],
+        'sage'       => ['sage', 'green', 'mint', 'berde'],
+        'emerald'    => ['emerald', 'green', 'berde'],
+
+        // Black
+        'black'      => ['black', 'charcoal', 'dark', 'itim'],
+        'itim'       => ['black', 'charcoal', 'dark', 'itim'],
+        'maitim'     => ['black', 'charcoal', 'dark', 'itim'],
+
+        // Gold & Yellow
+        'gold'       => ['gold', 'golden', 'yellow', 'ginto'],
+        'ginto'      => ['gold', 'golden', 'yellow', 'ginto'],
+        'yellow'     => ['yellow', 'gold', 'dilaw'],
+        'dilaw'      => ['yellow', 'gold', 'dilaw'],
+        'madilaw'    => ['yellow', 'gold', 'dilaw'],
+
+        // Purple
+        'purple'     => ['purple', 'violet', 'lavender', 'lilac', 'lila', 'ube'],
+        'lila'       => ['purple', 'violet', 'lavender', 'lilac', 'lila', 'ube'],
+        'ube'        => ['purple', 'violet', 'lavender', 'lilac', 'lila', 'ube'],
+
+        // Orange
+        'orange'     => ['orange', 'rust', 'terracotta', 'peach', 'coral', 'kahel', 'dalandan'],
+        'kahel'      => ['orange', 'rust', 'terracotta', 'peach', 'coral', 'kahel'],
+        'dalandan'   => ['orange', 'rust', 'terracotta', 'peach', 'coral', 'dalandan'],
+
+        // Brown / Tan / Beige
+        'brown'      => ['brown', 'tan', 'chocolate', 'coffee', 'kayumanggi'],
+        'kayumanggi' => ['brown', 'tan', 'natural', 'beige', 'kayumanggi'],
+        'tan'        => ['tan', 'beige', 'natural', 'kayumanggi'],
+        'beige'      => ['beige', 'natural', 'cream', 'tan', 'kayumanggi'],
+
+        // Gray
+        'gray'       => ['gray', 'grey', 'silver', 'charcoal', 'abo'],
+        'grey'       => ['grey', 'gray', 'silver', 'charcoal', 'abo'],
+        'abo'        => ['gray', 'grey', 'silver', 'charcoal', 'abo'],
+
+        // Teal & Multicolor
         'teal'       => ['teal', 'turquoise'],
         'multicolor' => ['multicolor', 'two tone', 'two-tone', 'ombre'],
     ];
 
     /**
-     * Recognized apparel color keywords across the platform.
+     * Recognized apparel color keywords across the platform (English & Tagalog).
      */
     protected const COLOR_KEYWORDS = [
-        'white', 'natural', 'cream', 'ecru', 'off-white',
-        'pink', 'blush', 'rose', 'magenta', 'salmon', 'fuchsia',
+        'white', 'natural', 'cream', 'ecru', 'off-white', 'puti', 'maputi',
+        'pink', 'blush', 'rose', 'magenta', 'salmon', 'fuchsia', 'rosas',
         'maroon', 'burgundy', 'wine', 'bordeaux',
-        'red', 'crimson', 'scarlet',
-        'blue', 'navy', 'royal', 'sky', 'dusty', 'midnight', 'sapphire',
-        'green', 'sage', 'emerald', 'olive', 'mint',
-        'black', 'charcoal', 'dark', 'onyx',
-        'gold', 'golden', 'yellow', 'mustard',
-        'purple', 'violet', 'lavender', 'lilac', 'plum',
-        'orange', 'rust', 'terracotta', 'peach', 'coral',
-        'brown', 'tan', 'beige', 'champagne', 'chocolate', 'coffee',
-        'gray', 'grey', 'silver',
+        'red', 'crimson', 'scarlet', 'pula', 'mapula',
+        'blue', 'navy', 'royal', 'sky', 'dusty', 'midnight', 'sapphire', 'asul', 'bughaw',
+        'green', 'sage', 'emerald', 'olive', 'mint', 'berde', 'lunti', 'luntian',
+        'black', 'charcoal', 'dark', 'onyx', 'itim', 'maitim',
+        'gold', 'golden', 'yellow', 'mustard', 'ginto', 'dilaw', 'madilaw',
+        'purple', 'violet', 'lavender', 'lilac', 'plum', 'lila', 'ube',
+        'orange', 'rust', 'terracotta', 'peach', 'coral', 'kahel', 'dalandan',
+        'brown', 'tan', 'beige', 'champagne', 'chocolate', 'coffee', 'kayumanggi',
+        'gray', 'grey', 'silver', 'abo',
         'teal', 'turquoise',
         'multicolor', 'rainbow', 'two tone', 'two-tone', 'ombre'
     ];
@@ -280,6 +330,8 @@ class ProductSearchService
         $clean = preg_replace('/\bbar\s+ong\b/u', 'barong', $clean);
         $clean = preg_replace('/\bpo\s+lo\b/u', 'polo', $clean);
         $clean = preg_replace('/\bju\s+si\b/u', 'jusi', $clean);
+        // Normalize Tagalog 'kulay' color prefix (e.g. 'kulay asul' -> 'asul', 'kulay-puti' -> 'puti')
+        $clean = preg_replace('/\bkulay[-\s]+/u', '', $clean);
         // Replace non-alphanumeric (except accented letters) with spaces
         $clean = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $clean);
         return trim((string) preg_replace('/\s+/', ' ', $clean));

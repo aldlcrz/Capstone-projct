@@ -1055,6 +1055,88 @@ class ProductSearchEngineTest extends TestCase
         $this->assertFalse($results->contains('id', $blueBarong->id), 'Searching "red" MUST NEVER return blue barong despite "tailored" or "embroidered" in description');
         $this->assertFalse($results->contains('id', $whiteEmbroideredBarong->id), 'Searching "red" MUST NEVER return white barong despite "Embroidered" in name or "tailored" in description');
     }
+
+    public function test_tagalog_color_searches_and_phrases(): void
+    {
+        $blueBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Royal Heritage Barong',
+            'description' => 'Fine handcrafted attire',
+            'price' => 3200,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Blue',
+            'colors' => ['Blue', 'Navy Blue', 'Royal Blue'],
+        ]);
+
+        $whiteBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Classic Piña Barong',
+            'description' => 'Traditional wedding barong',
+            'price' => 2800,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'White',
+            'colors' => ['White', 'Natural', 'Cream'],
+        ]);
+
+        $blackBolero = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Filipiniana Bolero',
+            'description' => 'Evening formal bolero',
+            'price' => 1800,
+            'stock' => 3,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'Black',
+            'colors' => ['Black', 'Charcoal'],
+        ]);
+
+        $pinkDress = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Mestiza Dress',
+            'description' => 'Elegant rose formal gown',
+            'price' => 3800,
+            'stock' => 2,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'Pink',
+            'colors' => ['Pink', 'Rose', 'Blush'],
+        ]);
+
+        // 1. Search 'puti' (white)
+        $putiResults = Product::query()->where('status', 'approved')->search('puti')->get();
+        $this->assertTrue($putiResults->contains('id', $whiteBarong->id), 'Searching "puti" must match white garments');
+        $this->assertFalse($putiResults->contains('id', $blackBolero->id), 'Searching "puti" must not match black garments');
+
+        // 2. Search 'asul' (blue) and 'bughaw'
+        $asulResults = Product::query()->where('status', 'approved')->search('asul')->get();
+        $this->assertTrue($asulResults->contains('id', $blueBarong->id), 'Searching "asul" must match blue barong');
+        $this->assertFalse($asulResults->contains('id', $whiteBarong->id), 'Searching "asul" must not match white barong');
+
+        $bughawResults = Product::query()->where('status', 'approved')->search('bughaw')->get();
+        $this->assertTrue($bughawResults->contains('id', $blueBarong->id), 'Searching "bughaw" must match blue barong');
+
+        // 3. Search 'itim' (black)
+        $itimResults = Product::query()->where('status', 'approved')->search('itim')->get();
+        $this->assertTrue($itimResults->contains('id', $blackBolero->id), 'Searching "itim" must match black garments');
+        $this->assertFalse($itimResults->contains('id', $blueBarong->id), 'Searching "itim" must not match blue garments');
+
+        // 4. Search phrase with ligature 'na' ('barong na asul')
+        $phraseResults = Product::query()->where('status', 'approved')->search('barong na asul')->get();
+        $this->assertTrue($phraseResults->contains('id', $blueBarong->id), 'Searching "barong na asul" must match blue barong');
+        $this->assertFalse($phraseResults->contains('id', $whiteBarong->id), 'Searching "barong na asul" must NOT match white barong');
+
+        // 5. Search with prefix 'kulay' ('kulay rosas')
+        $kulayResults = Product::query()->where('status', 'approved')->search('kulay rosas')->get();
+        $this->assertTrue($kulayResults->contains('id', $pinkDress->id), 'Searching "kulay rosas" must match pink dress');
+    }
 }
 
 
