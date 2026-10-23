@@ -306,12 +306,12 @@
                 transform: translateY(-1px);
             }
 
-            /* 4. Center-Right Featured Garment Presentation (Standardized Uniform Dimensions) */
+            /* 4. Center-Right Featured Garment Presentation (Standardized Fashion Portrait Dimensions) */
             .lb-featured-stage {
                 position: relative;
                 flex-shrink: 0;
                 width: 320px;
-                height: 262px;
+                height: 380px;
                 z-index: 5;
                 display: flex;
                 align-items: center;
@@ -320,15 +320,15 @@
 
             @media (min-width: 1024px) {
                 .lb-featured-stage {
-                    width: 390px;
-                    height: 320px;
+                    width: 380px;
+                    height: 440px;
                 }
             }
 
             @media (min-width: 1280px) {
                 .lb-featured-stage {
-                    width: 440px;
-                    height: 360px;
+                    width: 420px;
+                    height: 480px;
                 }
             }
 
@@ -343,15 +343,15 @@
                 justify-content: center;
             }
 
-            /* The garment image itself fills the exact same container across all products */
+            /* The garment image fills the standardized portrait frame with full garment visibility */
             .lb-featured-img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
-                object-position: center 22%;
+                object-position: center 15%;
                 display: block;
                 border-radius: 28px;
-                filter: drop-shadow(0 12px 24px rgba(50, 35, 15, 0.14));
+                filter: drop-shadow(0 14px 28px rgba(50, 35, 15, 0.14));
                 pointer-events: none;
                 user-select: none;
                 transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
@@ -483,7 +483,7 @@
                     order: 1;
                     width: 100%;
                     max-width: 320px;
-                    height: 260px;
+                    height: 360px;
                 }
 
                 .lb-nav-arrow {
