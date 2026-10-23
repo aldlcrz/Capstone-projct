@@ -133,9 +133,19 @@ class ProductColorDetectorService
             }
         }
 
+        // Include lowercase forms so MySQL/MariaDB utf8mb4_bin JSON columns match case-insensitively
+        $indexedColors = [];
+        foreach ($expanded as $c) {
+            $indexedColors[] = $c;
+            $lower = strtolower($c);
+            if (!in_array($lower, $indexedColors, true)) {
+                $indexedColors[] = $lower;
+            }
+        }
+
         return [
             'primary_color' => $primary,
-            'colors'        => array_values(array_unique($expanded)),
+            'colors'        => array_values(array_unique($indexedColors)),
             'source'        => $detection['source'] ?? 'algorithm',
         ];
     }
