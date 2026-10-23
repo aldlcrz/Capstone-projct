@@ -87,11 +87,48 @@
                 <!-- Center: Modern Pill Search Bar (LumBarong theme) -->
                 @if(!request()->is('cart*', 'profile*', 'orders*', 'wishlist*', 'checkout*'))
                 <div class="flex-1 min-w-0 max-w-lg mx-auto">
-                    <form action="/" method="GET" class="ajax-search-form" id="tour-search-bar" style="position: relative; width: 100%;">
-                        <input type="text" name="search" value="{{ request('search') }}"
+                    <form action="/" method="GET" class="ajax-search-form" id="tour-search-bar"
+                          x-data="{
+                              query: '{{ addslashes(request('search', '')) }}',
+                              clearSearch() {
+                                  this.query = '';
+                                  const input = this.$refs.searchInput;
+                                  input.value = '';
+                                  input.focus();
+                                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                              }
+                          }"
+                          style="position: relative; width: 100%;">
+                        <input type="text" name="search"
+                               x-ref="searchInput"
+                               x-model="query"
+                               @input="query = $event.target.value"
+                               value="{{ request('search') }}"
                                placeholder="Search Barongs, Sellers..."
-                               style="padding-left: 18px; padding-right: 44px;"
+                               style="padding-left: 18px; padding-right: 70px;"
                                class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs truncate">
+                        
+                        <!-- Clear 'X' Button (Only visible when input has text) -->
+                        <button type="button"
+                                x-show="query && query.trim().length > 0"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 scale-75"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-75"
+                                @click="clearSearch()"
+                                style="position: absolute; right: 40px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px;"
+                                class="flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-200/80 transition-all cursor-pointer border-0 p-0"
+                                aria-label="Clear search"
+                                title="Clear search">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+
+                        <!-- Primary Search Button -->
                         <button type="submit"
                                 style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; background: linear-gradient(135deg, #D4A32A 0%, #C49520 100%);"
                                 onmouseover="this.style.background='#1E1915';"
