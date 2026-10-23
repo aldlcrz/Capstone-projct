@@ -98,9 +98,10 @@
             <template x-if="prevItem">
                 <div @click="prev()"
                      title="View previous collection"
-                     class="hidden md:flex relative shrink-0 w-24 md:w-32 lg:w-40 xl:w-48 h-36 md:h-48 lg:h-60 xl:h-72 rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border-2 border-white/90 bg-[#E8DDD0] cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-75 hover:opacity-100 items-center justify-center p-1.5 group">
-                    <img :src="prevItem.image_url" :alt="prevItem.title" class="w-full h-full object-cover rounded-xl lg:rounded-2xl transition-transform duration-500 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl lg:rounded-2xl"></div>
+                     class="hidden md:flex relative shrink-0 rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-85 hover:opacity-100 items-center justify-center p-1.5 group"
+                     style="width: 150px; height: 230px; border: 3px solid rgba(255, 255, 255, 0.95); box-shadow: 0 15px 35px -5px rgba(60, 45, 20, 0.16); background: #E8DDD0;">
+                    <img :src="prevItem.image_url" :alt="prevItem.title" style="width: 100%; height: 100%; object-fit: cover; border-radius: 1rem;" class="transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
                     <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="prevItem.title"></div>
                 </div>
             </template>
@@ -145,27 +146,29 @@
             </div>
 
             {{-- 3. Center Architectural Arch Showcase Stage --}}
-            <div class="relative shrink-0 flex items-center justify-center w-60 sm:w-72 md:w-80 lg:w-96 xl:w-105 h-[280px] sm:h-[350px] md:h-[380px] lg:h-[440px] mt-2 md:mt-0">
-                {{-- Architectural Arch Wall Niche Frame --}}
-                <div class="absolute inset-x-2 sm:inset-x-4 top-1 bottom-1 rounded-t-full rounded-b-3xl overflow-hidden border-3 sm:border-4 border-white/85 shadow-2xl flex items-center justify-center"
-                     style="background: radial-gradient(ellipse at 50% 35%, #FFFDF9 0%, #F5EDE2 55%, #EADBCC 100%);">
-                    {{-- Soft Interior Arch Ambient Shadow --}}
-                    <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 6px 20px rgba(90, 65, 30, 0.08);"></div>
-                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-5 rounded-full blur-sm bg-[#3A2A18]/20 pointer-events-none"></div>
+            <div class="relative shrink-0 flex items-center justify-center mt-3 md:mt-0"
+                 style="width: 320px; height: 410px; max-width: 90vw;">
+                {{-- Architectural Arch Wall Niche Frame with Depth Shadow --}}
+                <div class="absolute inset-0 rounded-t-full rounded-b-3xl overflow-hidden flex items-center justify-center"
+                     style="background: linear-gradient(180deg, #FAF4EB 0%, #EADBCC 100%); border: 4px solid #FFFFFF; box-shadow: 0 20px 45px -10px rgba(60, 45, 20, 0.18), inset 0 8px 24px rgba(70, 50, 20, 0.10);">
+                    
+                    {{-- Soft Interior Arch Ambient Shadow & Pedestal --}}
+                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 w-48 h-6 rounded-full blur-md bg-[#3A2A18]/25 pointer-events-none"></div>
 
                     {{-- Active Garment Display Inside Arch --}}
                     <template x-for="(item, idx) in items" :key="'hero-' + item.id">
                         <div x-show="active === idx"
                              x-transition:enter="transition ease-out duration-500"
-                             x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-300"
                              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
-                             class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-3"
+                             class="absolute inset-0 flex items-center justify-center p-4">
                             <img :src="item.image_url" 
                                  :alt="item.title"
-                                 class="max-h-full max-w-full object-contain filter drop-shadow-[0_16px_28px_rgba(40,25,12,0.22)] select-none pointer-events-none transition-transform duration-500">
+                                 style="max-height: 92%; max-width: 92%; object-fit: contain; filter: drop-shadow(0 16px 28px rgba(40, 25, 12, 0.25));"
+                                 class="select-none pointer-events-none transition-transform duration-500">
                         </div>
                     </template>
                 </div>
@@ -175,9 +178,10 @@
             <template x-if="nextItem">
                 <div @click="next()"
                      title="View next collection"
-                     class="hidden md:flex relative shrink-0 w-24 md:w-32 lg:w-40 xl:w-48 h-36 md:h-48 lg:h-60 xl:h-72 rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border-2 border-white/90 bg-[#E8DDD0] cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-75 hover:opacity-100 items-center justify-center p-1.5 group">
-                    <img :src="nextItem.image_url" :alt="nextItem.title" class="w-full h-full object-cover rounded-xl lg:rounded-2xl transition-transform duration-500 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl lg:rounded-2xl"></div>
+                     class="hidden md:flex relative shrink-0 rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-85 hover:opacity-100 items-center justify-center p-1.5 group"
+                     style="width: 150px; height: 230px; border: 3px solid rgba(255, 255, 255, 0.95); box-shadow: 0 15px 35px -5px rgba(60, 45, 20, 0.16); background: #E8DDD0;">
+                    <img :src="nextItem.image_url" :alt="nextItem.title" style="width: 100%; height: 100%; object-fit: cover; border-radius: 1rem;" class="transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
                     <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="nextItem.title"></div>
                 </div>
             </template>
