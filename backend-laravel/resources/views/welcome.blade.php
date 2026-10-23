@@ -84,37 +84,41 @@
         x-init="startTimer()"
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
-        style="background: #F4EBE1; min-height: 420px; border: 1px solid #E6D8C5; box-shadow: 0 20px 45px -15px rgba(80, 58, 25, 0.12);"
+        style="background: radial-gradient(circle at 65% 45%, #FDFBF7 0%, #F5EDE2 52%, #EADBCC 100%); min-height: 460px; border: 1px solid rgba(220, 205, 185, 0.7); box-shadow: 0 25px 60px -20px rgba(70, 50, 25, 0.12);"
         class="relative w-full rounded-2xl sm:rounded-3xl lg:rounded-4xl overflow-hidden select-none transition-all duration-500"
     >
-        {{-- Luxury Architectural Arch Canvas Backdrop --}}
-        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 70% 45%, #FBF6EE 0%, #F4ECE1 55%, #EADBCC 100%);"></div>
-        <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(circle at 75% 40%, rgba(204,154,54,0.15) 0%, rgba(160,118,35,0.05) 55%, transparent 75%);"></div>
-        {{-- Soft Organic Fiber Weave Texture --}}
-        <div class="absolute inset-0 pointer-events-none opacity-15" style="background-image: radial-gradient(#9C783E 0.75px, transparent 0.75px), radial-gradient(#73531F 0.75px, transparent 0.75px); background-size: 14px 14px; background-position: 0 0, 7px 7px; mix-blend-mode: multiply;"></div>
+        {{-- Luxury Architectural Soft Sunlight Ambient Vignette (No dotted pattern) --}}
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle at 75% 35%, rgba(255, 255, 255, 0.7) 0%, transparent 60%);"></div>
+        <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 30%, rgba(220,205,185,0.2) 100%);"></div>
 
-        {{-- Architectural Arch Showcase Feature (Desktop/Tablet) --}}
-        <div class="hidden md:block absolute right-[14%] lg:right-[18%] top-6 bottom-6 w-60 sm:w-72 lg:w-88 rounded-t-full pointer-events-none border border-[#E8DDCE]/90"
-             style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(246, 238, 226, 0.25) 100%); box-shadow: inset 0 2px 12px rgba(255,255,255,0.7);"></div>
-
-        {{-- Main Editorial Split Layout --}}
-        <div class="relative z-20 w-full min-h-105 sm:min-h-115 lg:min-h-125 flex flex-col md:flex-row items-center justify-between px-6 sm:px-14 lg:px-24 py-8 sm:py-12">
+        {{-- Main Panoramic Composition: [Left Card] [Text Block] [Center Arch Hero] [Right Card] --}}
+        <div class="relative z-20 w-full min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 lg:py-10 gap-4 sm:gap-6 lg:gap-8">
             
-            {{-- Left Column: Editorial Headline & Actions --}}
-            <div class="w-full md:w-1/2 lg:w-[48%] flex flex-col items-center md:items-start text-center md:text-left z-20 py-2 md:py-0">
-                
+            {{-- 1. Flank Left Preview Card (Visible on tablet & desktop) --}}
+            <template x-if="prevItem">
+                <div @click="prev()"
+                     title="View previous collection"
+                     class="hidden md:flex relative shrink-0 w-24 md:w-32 lg:w-40 xl:w-48 h-36 md:h-48 lg:h-60 xl:h-72 rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border-2 border-white/90 bg-[#E8DDD0] cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-75 hover:opacity-100 items-center justify-center p-1.5 group">
+                    <img :src="prevItem.image_url" :alt="prevItem.title" class="w-full h-full object-cover rounded-xl lg:rounded-2xl transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl lg:rounded-2xl"></div>
+                    <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="prevItem.title"></div>
+                </div>
+            </template>
+
+            {{-- 2. Editorial Headline & CTA Actions Block --}}
+            <div class="w-full md:flex-1 flex flex-col items-center md:items-start text-center md:text-left z-20 px-2 sm:px-4 py-2">
                 {{-- Overline Tag --}}
                 <div class="inline-flex items-center gap-2 mb-2 sm:mb-3">
                     <span class="w-5 sm:w-7 h-[1.5px] bg-[#9C783E]"></span>
                     <span class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.28em] text-[#9C783E]" x-text="current.subtitle || 'FEATURED COLLECTION'"></span>
                 </div>
 
-                {{-- Hero Title in Regal Serif --}}
-                <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl xl:text-6xl text-[#1E1915] font-normal leading-[1.08] tracking-tight mb-3 sm:mb-4 drop-shadow-xs transition-all duration-300"
+                {{-- Hero Title in Regal Playfair Serif --}}
+                <h2 class="font-serif text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl text-[#1E1915] font-normal leading-[1.1] tracking-tight mb-2 sm:mb-3 drop-shadow-xs transition-all duration-300"
                     x-text="current.title"></h2>
 
                 {{-- Subtitle / Narrative Description --}}
-                <p class="text-xs sm:text-sm lg:text-base text-[#6B5E52] leading-relaxed max-w-md mb-6 sm:mb-8 font-light">
+                <p class="text-xs sm:text-sm lg:text-base text-[#635548] leading-relaxed max-w-sm sm:max-w-md mb-5 sm:mb-7 font-light">
                     A modern take on a timeless Filipino tradition. Handcrafted by master artisans with authentic heritage embroidery.
                 </p>
 
@@ -123,8 +127,8 @@
                     {{-- Primary Shop Now button with arrow --}}
                     <a :href="current.button_url_1"
                        @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                       class="inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-2.5 sm:py-3.5 text-white text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md hover:shadow-lg group"
-                       style="background: linear-gradient(135deg, #8E6D38 0%, #765625 100%); box-shadow: 0 4px 15px rgba(118, 86, 37, 0.3);">
+                       class="inline-flex items-center justify-center gap-2 px-5 sm:px-7 lg:px-8 py-2.5 sm:py-3.5 text-white text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md hover:shadow-xl group"
+                       style="background: linear-gradient(135deg, #8E6D38 0%, #765625 100%); box-shadow: 0 4px 15px rgba(118, 86, 37, 0.28);">
                         <span x-text="current.button_text_1 || 'SHOP NOW'"></span>
                         <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -134,78 +138,71 @@
                     {{-- Secondary Visit Shop button with luxury pill outline --}}
                     <a :href="current.button_url_2"
                        @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                       class="inline-flex items-center justify-center px-5 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
-                       style="background: rgba(255, 255, 255, 0.75); color: #2C241E; border: 1.5px solid #8E6D38;"
-                       onmouseover="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.borderColor='#765625';"
-                       onmouseout="this.style.background='rgba(255, 255, 255, 0.75)'; this.style.borderColor='#8E6D38';">
+                       class="inline-flex items-center justify-center px-4 sm:px-6 lg:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md border border-[#2C241E]/35 text-[#2C241E] bg-white/70 hover:bg-white backdrop-blur-xs">
                         <span x-text="current.button_text_2 || 'VISIT SHOP'"></span>
                     </a>
                 </div>
             </div>
 
-            {{-- Center-Right Column: Hero Garment Stage --}}
-            <div class="relative w-full md:w-1/2 lg:w-[48%] flex items-center justify-center h-64 sm:h-80 md:h-95 lg:h-110 mt-4 md:mt-0">
-                {{-- Soft Floor Pedestal Shadow --}}
-                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-6 rounded-full blur-md pointer-events-none opacity-25" style="background: radial-gradient(ellipse, #3B2A17 0%, transparent 70%);"></div>
+            {{-- 3. Center Architectural Arch Showcase Stage --}}
+            <div class="relative shrink-0 flex items-center justify-center w-60 sm:w-72 md:w-80 lg:w-96 xl:w-105 h-[280px] sm:h-[350px] md:h-[380px] lg:h-[440px] mt-2 md:mt-0">
+                {{-- Architectural Arch Wall Niche Frame --}}
+                <div class="absolute inset-x-2 sm:inset-x-4 top-1 bottom-1 rounded-t-full rounded-b-3xl overflow-hidden border-3 sm:border-4 border-white/85 shadow-2xl flex items-center justify-center"
+                     style="background: radial-gradient(ellipse at 50% 35%, #FFFDF9 0%, #F5EDE2 55%, #EADBCC 100%);">
+                    {{-- Soft Interior Arch Ambient Shadow --}}
+                    <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 6px 20px rgba(90, 65, 30, 0.08);"></div>
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-5 rounded-full blur-sm bg-[#3A2A18]/20 pointer-events-none"></div>
 
-                {{-- Hero Garment Showcase --}}
-                <template x-for="(item, idx) in items" :key="'hero-' + item.id">
-                    <div x-show="active === idx"
-                         x-transition:enter="transition ease-out duration-500"
-                         x-transition:enter-start="opacity-0 scale-95 translate-y-3"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-300"
-                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 scale-95 -translate-y-3"
-                         class="absolute inset-0 flex items-center justify-center">
-                        <img :src="item.image_url" 
-                             :alt="item.title"
-                             class="max-h-62.5 sm:max-h-80 lg:max-h-100 w-auto max-w-full object-contain filter drop-shadow-[0_16px_30px_rgba(60,40,20,0.22)] select-none pointer-events-none transition-transform duration-500">
-                    </div>
-                </template>
+                    {{-- Active Garment Display Inside Arch --}}
+                    <template x-for="(item, idx) in items" :key="'hero-' + item.id">
+                        <div x-show="active === idx"
+                             x-transition:enter="transition ease-out duration-500"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-300"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+                            <img :src="item.image_url" 
+                                 :alt="item.title"
+                                 class="max-h-full max-w-full object-contain filter drop-shadow-[0_16px_28px_rgba(40,25,12,0.22)] select-none pointer-events-none transition-transform duration-500">
+                        </div>
+                    </template>
+                </div>
             </div>
+
+            {{-- 4. Flank Right Preview Card (Visible on tablet & desktop) --}}
+            <template x-if="nextItem">
+                <div @click="next()"
+                     title="View next collection"
+                     class="hidden md:flex relative shrink-0 w-24 md:w-32 lg:w-40 xl:w-48 h-36 md:h-48 lg:h-60 xl:h-72 rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border-2 border-white/90 bg-[#E8DDD0] cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 opacity-75 hover:opacity-100 items-center justify-center p-1.5 group">
+                    <img :src="nextItem.image_url" :alt="nextItem.title" class="w-full h-full object-cover rounded-xl lg:rounded-2xl transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl lg:rounded-2xl"></div>
+                    <div class="absolute bottom-2 left-2 right-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-sm text-center" x-text="nextItem.title"></div>
+                </div>
+            </template>
         </div>
 
-        {{-- Far-Left Flanking Peek Card (Desktop) --}}
-        <template x-if="prevItem">
-            <div @click="prev()"
-                 title="Previous piece"
-                 class="hidden xl:flex absolute left-4 lg:left-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
-                <img :src="prevItem.image_url" :alt="prevItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-            </div>
-        </template>
-
-        {{-- Far-Right Flanking Peek Card (Desktop) --}}
-        <template x-if="nextItem">
-            <div @click="next()"
-                 title="Next piece"
-                 class="hidden xl:flex absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
-                <img :src="nextItem.image_url" :alt="nextItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-            </div>
-        </template>
-
-        {{-- Floating Left & Right Circular Navigation Arrows --}}
+        {{-- 5. Floating Outer Left & Right Circular Navigation Arrows --}}
         <template x-if="total > 1">
             <div>
                 <button type="button" @click="prev()" aria-label="Previous product" 
-                        class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg bg-white/95 text-[#3A2F25] border border-[#E4D9C8]/80 hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
+                        class="absolute left-1.5 sm:left-3 lg:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-lg hover:shadow-xl bg-white/95 text-[#2C241E] border border-white hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <button type="button" @click="next()" aria-label="Next product" 
-                        class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg bg-white/95 text-[#3A2F25] border border-[#E4D9C8]/80 hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
+                        class="absolute right-1.5 sm:right-3 lg:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-lg hover:shadow-xl bg-white/95 text-[#2C241E] border border-white hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </template>
 
-        {{-- Bottom Minimalist Pagination Slider Bar --}}
-        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5" x-show="total > 1">
+        {{-- 6. Bottom Minimalist Pagination Slider Bar --}}
+        <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2" x-show="total > 1">
             <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
                 <button type="button"
                         @click="goTo(dIdx)"
-                        :style="active === dIdx ? 'width: 28px; background-color: #8E6D38;' : 'width: 8px; background-color: #D6C8B5;'"
+                        :style="active === dIdx ? 'width: 30px; background-color: #8E6D38;' : 'width: 8px; background-color: #D4C4B0;'"
                         class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
                         :aria-label="'Go to slide ' + (dIdx + 1)"></button>
             </template>
