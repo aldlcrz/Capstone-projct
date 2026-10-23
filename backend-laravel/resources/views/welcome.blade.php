@@ -85,7 +85,7 @@
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
         style="background: #F4EBE1; min-height: 420px; border: 1px solid #E6D8C5; box-shadow: 0 20px 45px -15px rgba(80, 58, 25, 0.12);"
-        class="relative w-full rounded-2xl sm:rounded-3xl lg:rounded-[2rem] overflow-hidden select-none transition-all duration-500"
+        class="relative w-full rounded-2xl sm:rounded-3xl lg:rounded-4xl overflow-hidden select-none transition-all duration-500"
     >
         {{-- Luxury Architectural Arch Canvas Backdrop --}}
         <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 70% 45%, #FBF6EE 0%, #F4ECE1 55%, #EADBCC 100%);"></div>
@@ -98,7 +98,7 @@
              style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(246, 238, 226, 0.25) 100%); box-shadow: inset 0 2px 12px rgba(255,255,255,0.7);"></div>
 
         {{-- Main Editorial Split Layout --}}
-        <div class="relative z-20 w-full min-h-[420px] sm:min-h-[460px] lg:min-h-[500px] flex flex-col md:flex-row items-center justify-between px-6 sm:px-14 lg:px-24 py-8 sm:py-12">
+        <div class="relative z-20 w-full min-h-105 sm:min-h-115 lg:min-h-125 flex flex-col md:flex-row items-center justify-between px-6 sm:px-14 lg:px-24 py-8 sm:py-12">
             
             {{-- Left Column: Editorial Headline & Actions --}}
             <div class="w-full md:w-1/2 lg:w-[48%] flex flex-col items-center md:items-start text-center md:text-left z-20 py-2 md:py-0">
@@ -144,7 +144,7 @@
             </div>
 
             {{-- Center-Right Column: Hero Garment Stage --}}
-            <div class="relative w-full md:w-1/2 lg:w-[48%] flex items-center justify-center h-64 sm:h-80 md:h-[380px] lg:h-[440px] mt-4 md:mt-0">
+            <div class="relative w-full md:w-1/2 lg:w-[48%] flex items-center justify-center h-64 sm:h-80 md:h-95 lg:h-110 mt-4 md:mt-0">
                 {{-- Soft Floor Pedestal Shadow --}}
                 <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-6 rounded-full blur-md pointer-events-none opacity-25" style="background: radial-gradient(ellipse, #3B2A17 0%, transparent 70%);"></div>
 
@@ -160,7 +160,7 @@
                          class="absolute inset-0 flex items-center justify-center">
                         <img :src="item.image_url" 
                              :alt="item.title"
-                             class="max-h-[250px] sm:max-h-[320px] lg:max-h-[400px] w-auto max-w-full object-contain filter drop-shadow-[0_16px_30px_rgba(60,40,20,0.22)] select-none pointer-events-none transition-transform duration-500">
+                             class="max-h-62.5 sm:max-h-80 lg:max-h-100 w-auto max-w-full object-contain filter drop-shadow-[0_16px_30px_rgba(60,40,20,0.22)] select-none pointer-events-none transition-transform duration-500">
                     </div>
                 </template>
             </div>
@@ -172,7 +172,7 @@
                  title="Previous piece"
                  class="hidden xl:flex absolute left-4 lg:left-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
                 <img :src="prevItem.image_url" :alt="prevItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+                <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
             </div>
         </template>
 
@@ -182,7 +182,7 @@
                  title="Next piece"
                  class="hidden xl:flex absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
                 <img :src="nextItem.image_url" :alt="nextItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+                <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
             </div>
         </template>
 
