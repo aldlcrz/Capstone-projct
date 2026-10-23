@@ -59,7 +59,29 @@ class ProductSearchService
         'barong', 'polo', 'jusi', 'jusilyn', 'organza', 'filipiniana', 'mestiza',
         'bolero', 'terno', 'calado', 'embroidery', 'embroidered', 'lumban',
         'monochrome', 'mandarin', 'cocoon', 'linen', 'cotton', 'silk',
-        'dress', 'gown', 'blouse', 'suit', 'coat', 'jacket', 'tagalog'
+        'dress', 'gown', 'blouse', 'suit', 'coat', 'jacket', 'tagalog',
+        'white', 'natural', 'cream', 'pink', 'blue', 'green', 'black', 'maroon', 'gold', 'sage', 'emerald'
+    ];
+
+    /**
+     * Color search synonyms allowing shoppers to find traditional white/cream barongs and colored garments.
+     */
+    protected const COLOR_SEARCH_SYNONYMS = [
+        'white'      => ['white', 'natural', 'cream', 'ecru', 'off-white'],
+        'natural'    => ['natural', 'white', 'cream', 'ecru', 'off-white'],
+        'cream'      => ['cream', 'white', 'natural', 'off-white'],
+        'pink'       => ['pink', 'blush', 'rose', 'magenta', 'salmon'],
+        'maroon'     => ['maroon', 'burgundy', 'wine', 'pink', 'magenta', 'red'],
+        'red'        => ['red', 'crimson', 'maroon', 'scarlet'],
+        'blue'       => ['blue', 'navy', 'royal', 'sky', 'dusty'],
+        'navy'       => ['navy', 'blue', 'midnight'],
+        'green'      => ['green', 'sage', 'emerald', 'olive', 'mint'],
+        'sage'       => ['sage', 'green', 'mint'],
+        'emerald'    => ['emerald', 'green'],
+        'black'      => ['black', 'charcoal', 'dark'],
+        'gold'       => ['gold', 'golden', 'yellow'],
+        'yellow'     => ['yellow', 'gold'],
+        'purple'     => ['purple', 'violet', 'lavender', 'lilac'],
     ];
 
     /**
@@ -347,6 +369,15 @@ class ProductSearchService
                 }
             }
 
+            // 6. Color search synonyms (e.g. white matches natural/cream, pink matches blush/magenta)
+            if (isset(self::COLOR_SEARCH_SYNONYMS[$effectiveWord])) {
+                foreach (self::COLOR_SEARCH_SYNONYMS[$effectiveWord] as $colorSyn) {
+                    if (!in_array($colorSyn, $variants, true)) {
+                        $variants[] = $colorSyn;
+                    }
+                }
+            }
+
             $tokens[] = [
                 'original' => $w,
                 'resolved' => $effectiveWord,
@@ -580,6 +611,8 @@ class ProductSearchService
                    ->orWhere('description', 'like', '%' . $normalized . '%')
                    ->orWhere('color', 'like', '%' . $rawSearch . '%')
                    ->orWhere('color', 'like', '%' . $normalized . '%')
+                   ->orWhere('colors', 'like', '%' . $rawSearch . '%')
+                   ->orWhere('colors', 'like', '%' . $normalized . '%')
                    ->orWhere('sku', 'like', '%' . $rawSearch . '%')
                    ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
                        $cq->where('name', 'like', '%' . $rawSearch . '%')
@@ -603,6 +636,7 @@ class ProductSearchService
                             $subQuery->orWhere('name', 'like', '%' . $v . '%')
                                      ->orWhere('description', 'like', '%' . $v . '%')
                                      ->orWhere('color', 'like', '%' . $v . '%')
+                                     ->orWhere('colors', 'like', '%' . $v . '%')
                                      ->orWhere('fabric_type', 'like', '%' . $v . '%')
                                      ->orWhere('collar_type', 'like', '%' . $v . '%')
                                      ->orWhere('artisan_region', 'like', '%' . $v . '%')
@@ -733,11 +767,25 @@ class ProductSearchService
             $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $fabricChecks) . ") THEN 30 ELSE 0 END";
 
             // Color match (+50 points)
-            $colorChecks = ["LOWER(COALESCE(products.color, '')) LIKE ?"];
+            $colorChecks = [
+                "LOWER(COALESCE(products.color, '')) LIKE ?",
+                "LOWER(COALESCE(products.colors, '')) LIKE ?"
+            ];
+            $bindings[] = '%' . $orig . '%';
             $bindings[] = '%' . $orig . '%';
             if ($resolved !== $orig) {
                 $colorChecks[] = "LOWER(COALESCE(products.color, '')) LIKE ?";
+                $colorChecks[] = "LOWER(COALESCE(products.colors, '')) LIKE ?";
                 $bindings[] = '%' . $resolved . '%';
+                $bindings[] = '%' . $resolved . '%';
+            }
+            if (isset(self::COLOR_SEARCH_SYNONYMS[$resolved])) {
+                foreach (self::COLOR_SEARCH_SYNONYMS[$resolved] as $cSyn) {
+                    $colorChecks[] = "LOWER(COALESCE(products.color, '')) LIKE ?";
+                    $colorChecks[] = "LOWER(COALESCE(products.colors, '')) LIKE ?";
+                    $bindings[] = '%' . $cSyn . '%';
+                    $bindings[] = '%' . $cSyn . '%';
+                }
             }
             $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $colorChecks) . ") THEN 50 ELSE 0 END";
         }

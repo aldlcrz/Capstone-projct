@@ -951,24 +951,59 @@ class ProductSearchEngineTest extends TestCase
 
     public function test_detect_product_colors_command_backfills_unassigned_products(): void
     {
-        $duchessItem = Product::create([
+        $greenBarong = Product::create([
             'sellerId' => $this->seller->id,
-            'name' => 'Duchess Filipiniana Dress',
-            'description' => 'Special occasion dress',
+            'name' => 'Sage Green Monochromatic Barong',
+            'description' => 'Fine piña barong for weddings',
             'price' => 3800,
             'stock' => 2,
             'status' => 'approved',
-            'target_group' => 'Women',
-            'CategoryId' => $this->womenCategory->id,
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
             'color' => null,
         ]);
 
         $this->artisan('products:detect-colors')
             ->assertSuccessful();
 
-        $duchessItem->refresh();
-        $this->assertEquals('Pink', $duchessItem->color);
-        $this->assertContains('Pink', $duchessItem->colors);
+        $greenBarong->refresh();
+        $this->assertEquals('Sage Green', $greenBarong->color);
+        $this->assertContains('Green', $greenBarong->colors);
+    }
+
+    public function test_search_white_matches_natural_and_cream_heritage_garments(): void
+    {
+        $naturalBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Polo Barong Calado',
+            'description' => 'Authentic handwoven formalwear',
+            'price' => 2500,
+            'stock' => 4,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Natural',
+            'colors' => ['Natural', 'White', 'Cream', 'Off-White'],
+        ]);
+
+        $blackBolero = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Midnight Bolero',
+            'description' => 'Evening bolero jacket',
+            'price' => 1800,
+            'stock' => 3,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'Black',
+            'colors' => ['Black'],
+        ]);
+
+        $results = Product::query()->where('status', 'approved')->search('white')->get();
+
+        $this->assertTrue($results->contains('id', $naturalBarong->id), 'Searching "white" should find natural/cream/off-white heritage garments');
+        $this->assertFalse($results->contains('id', $blackBolero->id), 'Searching "white" should NOT return black bolero');
     }
 }
+
 

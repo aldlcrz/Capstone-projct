@@ -71,14 +71,8 @@ class DetectProductColorsCommand extends Command
                     $product->description
                 );
 
-                $detectedColor = $detection['primary_color'] ?? 'Natural';
+                $detectedColor = $detection['primary_color'] ?? 'White';
                 $allColors = $detection['colors'] ?? [$detectedColor];
-
-                // Special safeguard for known iconic catalog items if detection needed extra refinement
-                if (stripos($product->name, 'duchess') !== false) {
-                    $detectedColor = 'Pink';
-                    $allColors = ['Pink'];
-                }
 
                 $product->color = $detectedColor;
                 $product->colors = $allColors;

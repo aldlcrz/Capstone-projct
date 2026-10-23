@@ -5,34 +5,56 @@ namespace App\Services;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ProductColorDetectorService
 {
     /**
-     * Standard curated palette of Filipino fashion colors.
+     * Standard curated palette of Filipino fashion colors and their searchable aliases.
+     * Note: Fabric materials like piña, organza, jusilyn are strictly EXCLUDED from color palettes.
      */
     public const PALETTE = [
-        'Pink'          => ['blush', 'dusty rose', 'rose', 'pink', 'magenta', 'salmon'],
-        'Blue'          => ['blue', 'sky blue', 'light blue'],
+        'White'         => ['white', 'pure white', 'snow white', 'off-white', 'cream', 'ivory', 'ecru', 'natural'],
+        'Natural'       => ['natural', 'ecru', 'cream', 'beige', 'champagne', 'tan', 'off-white', 'white'],
+        'Pink'          => ['blush', 'dusty rose', 'rose', 'pink', 'magenta', 'salmon', 'fuchsia'],
+        'Maroon'        => ['maroon', 'burgundy', 'wine', 'bordeaux', 'magenta'],
+        'Red'           => ['red', 'crimson', 'scarlet'],
+        'Blue'          => ['blue', 'sky blue', 'light blue', 'dusty blue'],
         'Navy Blue'     => ['navy', 'navy blue', 'midnight blue'],
         'Royal Blue'    => ['royal blue', 'sapphire'],
         'Green'         => ['green', 'olive', 'forest green'],
         'Emerald Green' => ['emerald', 'emerald green', 'dark green'],
         'Sage Green'    => ['sage', 'sage green', 'mint'],
-        'Red'           => ['red', 'crimson', 'scarlet'],
-        'Maroon'        => ['maroon', 'burgundy', 'wine', 'bordeaux'],
         'Black'         => ['black', 'charcoal', 'jet black', 'onyx'],
-        'White'         => ['white', 'pure white', 'snow white'],
-        'Natural'       => ['natural', 'ecru', 'pina', 'piña', 'cream', 'beige', 'champagne', 'tan', 'off-white'],
         'Gold'          => ['gold', 'golden', 'yellow', 'mustard'],
         'Purple'        => ['purple', 'violet', 'lavender', 'lilac', 'plum'],
         'Orange'        => ['orange', 'rust', 'terracotta', 'peach', 'coral'],
-        'Multicolor'    => ['multicolor', 'multi-color', 'colorful', 'rainbow', 'printed', 'floral'],
+        'Multicolor'    => ['multicolor', 'multi-color', 'colorful', 'rainbow', 'two tone', 'two-tone', 'ombre'],
     ];
 
     /**
-     * Detect dominant garment color from image and/or text metadata.
+     * Related color synonyms for indexing and search cross-matching.
+     */
+    public const SYNONYM_EXPANSIONS = [
+        'White'         => ['White', 'Natural', 'Cream', 'Off-White'],
+        'Natural'       => ['Natural', 'White', 'Cream', 'Off-White', 'Ecru'],
+        'Pink'          => ['Pink', 'Rose', 'Blush', 'Magenta'],
+        'Maroon'        => ['Maroon', 'Burgundy', 'Wine', 'Pink', 'Red'],
+        'Red'           => ['Red', 'Crimson', 'Maroon'],
+        'Blue'          => ['Blue', 'Navy Blue', 'Royal Blue', 'Sky Blue', 'Dusty Blue'],
+        'Navy Blue'     => ['Navy Blue', 'Navy', 'Blue', 'Dark Blue'],
+        'Royal Blue'    => ['Royal Blue', 'Blue'],
+        'Green'         => ['Green', 'Sage Green', 'Emerald Green', 'Olive'],
+        'Emerald Green' => ['Emerald Green', 'Green'],
+        'Sage Green'    => ['Sage Green', 'Green', 'Mint'],
+        'Black'         => ['Black', 'Charcoal'],
+        'Gold'          => ['Gold', 'Yellow', 'Golden'],
+        'Purple'        => ['Purple', 'Violet', 'Lavender'],
+        'Orange'        => ['Orange', 'Peach', 'Terracotta'],
+        'Multicolor'    => ['Multicolor', 'Two Tone', 'Ombre'],
+    ];
+
+    /**
+     * Detect dominant garment color from image and/or title metadata.
      *
      * @param array|string|null $imagePath Path or array of paths to image
      * @param string|null $name Product name
@@ -46,11 +68,8 @@ class ProductColorDetectorService
             $imagePath = is_string($first) ? $first : null;
         }
 
-        // 1. Text-based heuristic check (explicit color mentioned in name or description)
-        $textResult = self::detectFromText($name, $description);
-        if ($textResult !== null) {
-            return $textResult;
-        }
+        // 1. Check title for explicit high-intent color words (e.g. "Sage Green", "Two Tone", "Dusty Blue")
+        $titleColor = self::detectFromTitle($name);
 
         // 2. Resolve image full path
         $fullPath = self::resolveImagePath($imagePath);
@@ -59,42 +78,104 @@ class ProductColorDetectorService
         if ($fullPath && File::exists($fullPath)) {
             $geminiResult = self::detectWithGemini($fullPath);
             if ($geminiResult !== null) {
-                return $geminiResult;
+                return self::finalizeDetection($geminiResult, $titleColor);
             }
 
             // 4. Local GD Algorithm check (fast background-subtracted center sampling)
             $gdResult = self::detectWithGD($fullPath);
             if ($gdResult !== null) {
-                return $gdResult;
+                return self::finalizeDetection($gdResult, $titleColor);
             }
         }
 
-        // 5. Default heritage fallback
+        // 5. If image was unavailable or unreadable, fall back to title color
+        if ($titleColor !== null) {
+            return self::finalizeDetection($titleColor, null);
+        }
+
+        // 6. Default heritage attire fallback (Classic White / Natural Piña tone)
         return [
-            'primary_color' => 'Natural',
-            'colors'        => ['Natural'],
+            'primary_color' => 'White',
+            'colors'        => ['White', 'Natural', 'Cream'],
             'source'        => 'default_heritage',
         ];
     }
 
     /**
-     * Detect color from product title and description.
+     * Finalize detection result by expanding color synonyms and merging title nuances.
      */
-    public static function detectFromText(?string $name = null, ?string $description = null): ?array
+    public static function finalizeDetection(array $detection, ?array $titleColor = null): array
     {
-        $haystack = strtolower(trim(($name ?? '') . ' ' . ($description ?? '')));
-        if (empty($haystack)) {
+        $primary = $detection['primary_color'] ?? 'White';
+        $colors = $detection['colors'] ?? [$primary];
+
+        // If title explicitly mentions a color (e.g. "Two Tone", "Sage Green"), merge it
+        if ($titleColor !== null) {
+            $titlePrimary = $titleColor['primary_color'] ?? null;
+            if ($titlePrimary && !in_array($titlePrimary, $colors, true)) {
+                $colors[] = $titlePrimary;
+            }
+            // If primary was generic white/natural but title had specific shade (e.g. Sage Green)
+            if (in_array($primary, ['White', 'Natural'], true) && $titlePrimary && !in_array($titlePrimary, ['White', 'Natural'], true)) {
+                $primary = $titlePrimary;
+            }
+        }
+
+        // Automatically expand synonym search terms so customers searching "white", "natural", or "cream" find this product
+        $expanded = $colors;
+        foreach ($colors as $c) {
+            if (isset(self::SYNONYM_EXPANSIONS[$c])) {
+                foreach (self::SYNONYM_EXPANSIONS[$c] as $syn) {
+                    if (!in_array($syn, $expanded, true)) {
+                        $expanded[] = $syn;
+                    }
+                }
+            }
+        }
+
+        return [
+            'primary_color' => $primary,
+            'colors'        => array_values(array_unique($expanded)),
+            'source'        => $detection['source'] ?? 'algorithm',
+        ];
+    }
+
+    /**
+     * Detect explicit color words strictly from the product TITLE.
+     * (We deliberately avoid matching description to prevent fabric material terms from triggering false colors).
+     */
+    public static function detectFromTitle(?string $name = null): ?array
+    {
+        if (empty($name)) {
             return null;
         }
 
+        $haystack = mb_strtolower(trim($name), 'UTF-8');
+
+        // Check compound colors first (e.g. 'Sage Green', 'Navy Blue', 'Royal Blue', 'Two Tone')
         foreach (self::PALETTE as $standardColor => $aliases) {
             foreach ($aliases as $alias) {
-                // Look for word boundaries to avoid false positives (e.g. 'read' matching 'red')
+                if (str_contains($alias, ' ') || str_contains($alias, '-')) {
+                    if (preg_match('/\b' . preg_quote($alias, '/') . '\b/i', $haystack)) {
+                        return [
+                            'primary_color' => $standardColor,
+                            'colors'        => [$standardColor],
+                            'source'        => 'title_analysis',
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Check single-word colors
+        foreach (self::PALETTE as $standardColor => $aliases) {
+            foreach ($aliases as $alias) {
+                // Avoid matching short 3-letter false positives
                 if (preg_match('/\b' . preg_quote($alias, '/') . '\b/i', $haystack)) {
                     return [
                         'primary_color' => $standardColor,
                         'colors'        => [$standardColor],
-                        'source'        => 'text_analysis',
+                        'source'        => 'title_analysis',
                     ];
                 }
             }
@@ -104,9 +185,17 @@ class ProductColorDetectorService
     }
 
     /**
+     * Backward-compatible alias for text detection.
+     */
+    public static function detectFromText(?string $name = null, ?string $description = null): ?array
+    {
+        return self::detectFromTitle($name);
+    }
+
+    /**
      * Resolve image path to a readable local filesystem path.
      */
-    private static function resolveImagePath(?string $imagePath): ?string
+    public static function resolveImagePath(?string $imagePath): ?string
     {
         if (empty($imagePath)) {
             return null;
@@ -116,23 +205,25 @@ class ProductColorDetectorService
             return $imagePath;
         }
 
-        // Check storage/app/public
+        // 1. Check storage/app/public
         $storagePath = storage_path('app/public/' . ltrim($imagePath, '/'));
         if (File::exists($storagePath)) {
             return $storagePath;
         }
 
-        // Check public/uploads or public/
+        // 2. Check public/
         $publicPath = public_path(ltrim($imagePath, '/'));
         if (File::exists($publicPath)) {
             return $publicPath;
         }
 
+        // 3. Check public/uploads/
         $publicUploads = public_path('uploads/' . ltrim($imagePath, '/'));
         if (File::exists($publicUploads)) {
             return $publicUploads;
         }
 
+        // 4. Check public/storage/
         $storagePublic = public_path('storage/' . ltrim($imagePath, '/'));
         if (File::exists($storagePublic)) {
             return $storagePublic;
@@ -144,7 +235,7 @@ class ProductColorDetectorService
     /**
      * Detect garment color using Google Gemini Vision AI.
      */
-    private static function detectWithGemini(string $fullPath): ?array
+    public static function detectWithGemini(string $fullPath): ?array
     {
         $apiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
         if (!$apiKey) {
@@ -155,7 +246,7 @@ class ProductColorDetectorService
             $imageData = base64_encode(File::get($fullPath));
             $mimeType = File::mimeType($fullPath) ?: 'image/jpeg';
 
-            $prompt = 'Look at the main clothing / garment in this photo. Ignore the background wall, backdrop, model skin, and hair. Identify the primary color of the attire itself. Return ONLY a JSON object formatted as: {"primary_color": "...", "colors": ["..."]}. Valid standard colors: Pink, Red, Maroon, Blue, Navy Blue, Royal Blue, Green, Emerald Green, Sage Green, Black, White, Natural, Gold, Purple, Orange, Multicolor.';
+            $prompt = 'Look at the main clothing / garment in this photo. Ignore the background wall, backdrop, model skin, and mannequin stand. Identify the primary color and any prominent secondary colors of the attire itself. Return ONLY a JSON object formatted as: {"primary_color": "...", "colors": ["..."]}. Valid standard colors: White, Off-White, Natural, Cream, Pink, Red, Maroon, Blue, Navy Blue, Royal Blue, Green, Emerald Green, Sage Green, Black, Gold, Purple, Orange, Multicolor.';
 
             $payload = [
                 'contents' => [
@@ -172,7 +263,7 @@ class ProductColorDetectorService
                     ]
                 ],
                 'generationConfig' => [
-                    'temperature'     => 0.2,
+                    'temperature'     => 0.1,
                     'maxOutputTokens' => 150,
                 ]
             ];
@@ -180,9 +271,10 @@ class ProductColorDetectorService
             $model = config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash');
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
+            // Allow sufficient timeout (12s) for image upload and vision analysis
             $response = Http::withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
-            ])->timeout(4.0)->post($url, $payload);
+            ])->timeout(12.0)->post($url, $payload);
 
             if ($response->successful()) {
                 $rawText = $response->json('candidates.0.content.parts.0.text');
@@ -215,12 +307,12 @@ class ProductColorDetectorService
             return null;
         }
 
-        $img = null;
         $info = @getimagesize($fullPath);
         if (!$info) {
             return null;
         }
 
+        $img = null;
         switch ($info[2]) {
             case IMAGETYPE_JPEG:
                 $img = @imagecreatefromjpeg($fullPath);
@@ -262,7 +354,7 @@ class ProductColorDetectorService
             $bgHues[] = $hsl;
         }
 
-        // 2. Sample Central Torso / Garment Zone (30%-70% width, 25%-75% height)
+        // 2. Sample Central Torso / Garment Zone (28%-72% width, 22%-78% height)
         $minX = (int)($w * 0.28);
         $maxX = (int)($w * 0.72);
         $minY = (int)($h * 0.22);
@@ -297,12 +389,11 @@ class ProductColorDetectorService
                 if ($isBg) continue;
 
                 // Filter 2: Check if pixel is human skin tone (face/arms/legs)
-                // Skin tones: Hue ~12-38, Saturation 0.20-0.65, Lightness 0.35-0.80
                 if ($hue >= 12 && $hue <= 38 && $sat >= 0.20 && $sat <= 0.65 && $lum >= 0.35 && $lum <= 0.80) {
                     continue;
                 }
 
-                // Filter 3: Check if pixel is hair (very dark near head)
+                // Filter 3: Check if pixel is head/hair
                 if ($y < (int)($h * 0.30) && $lum < 0.15) {
                     continue;
                 }
@@ -335,9 +426,9 @@ class ProductColorDetectorService
             ];
         }
 
-        // If multiple distinct colors share the garment (e.g. 2 strong clusters)
+        // If multiple distinct colors share the garment (e.g. 2 strong clusters like Ombre/Two-tone)
         $keys = array_keys($colorVotes);
-        if (count($keys) >= 2 && ($colorVotes[$keys[1]] / $totalVotes) * 100 >= 25) {
+        if (count($keys) >= 2 && ($colorVotes[$keys[1]] / $totalVotes) * 100 >= 20) {
             return [
                 'primary_color' => $topColor,
                 'colors'        => [$topColor, $keys[1]],
@@ -353,7 +444,7 @@ class ProductColorDetectorService
     }
 
     /**
-     * Classify an HSL pixel into a fashion color name.
+     * Classify an HSL pixel into a fashion color name with realistic garment thresholds.
      */
     private static function classifyHsl(float $h, float $s, float $l, int $r, int $g, int $b): ?string
     {
@@ -362,63 +453,68 @@ class ProductColorDetectorService
             return 'Black';
         }
 
-        // Pure White
-        if ($l > 0.88 && $s < 0.14) {
+        // High Lightness Neutrals (Classic White / Natural Barong)
+        // Indoor photographs of white/ecru barongs on mannequins have L between 0.58 and 0.95 and S <= 0.25
+        if ($l >= 0.58 && $s < 0.25) {
+            // Warm ivory/beige/ecru tone
+            if ($h >= 25 && $h <= 65 && $s >= 0.10) {
+                return 'Natural';
+            }
             return 'White';
         }
 
-        // Natural / Cream / Ecru (Piña fabric)
-        if ($s < 0.28 && $l >= 0.60 && $l <= 0.88 && $h >= 30 && $h <= 60) {
-            return 'Natural';
+        // True Gray / Charcoal (medium lightness, very low saturation)
+        if ($s < 0.10 && $l >= 0.18 && $l < 0.58) {
+            return 'Black';
         }
 
-        // Gray / Silver
-        if ($s < 0.12 && $l >= 0.20 && $l <= 0.85) {
-            return 'Silver';
-        }
-
-        // Pink / Blush / Dusty Rose: Hue 310 - 355
-        if ($h >= 310 && $h <= 355 && $s >= 0.18 && $l >= 0.35) {
+        // Pink / Blush / Magenta / Rose: Hue 300 - 355
+        if ($h >= 300 && $h <= 355 && $s >= 0.16 && $l >= 0.25) {
             return 'Pink';
         }
 
         // Red / Crimson: Hue 355 - 12 (high saturation)
-        if (($h >= 355 || $h <= 12) && $s >= 0.40) {
+        if (($h >= 355 || $h <= 12) && $s >= 0.35) {
             return $l < 0.35 ? 'Maroon' : 'Red';
         }
 
-        // Maroon / Burgundy
-        if (($h >= 340 || $h <= 15) && $l <= 0.35 && $s >= 0.25) {
+        // Maroon / Burgundy / Wine / Deep Magenta
+        if (($h >= 335 || $h <= 18) && $l < 0.38 && $s >= 0.20) {
             return 'Maroon';
         }
 
-        // Orange / Peach: Hue 12 - 40
-        if ($h > 12 && $h <= 40 && $s >= 0.35) {
-            return 'Orange';
+        // Orange / Rust / Terracotta / Peach: Hue 12 - 42
+        if ($h > 12 && $h <= 42 && $s >= 0.30) {
+            return $l > 0.65 ? 'Natural' : 'Orange';
         }
 
-        // Gold / Yellow: Hue 40 - 65
-        if ($h > 40 && $h <= 65 && $s >= 0.30) {
+        // Gold / Mustard / Yellow: Hue 42 - 65
+        if ($h > 42 && $h <= 65 && $s >= 0.25) {
             return 'Gold';
         }
 
         // Green / Emerald / Sage: Hue 65 - 170
-        if ($h > 65 && $h <= 170 && $s >= 0.20) {
+        if ($h > 65 && $h <= 170 && $s >= 0.16) {
             if ($l < 0.35) return 'Emerald Green';
-            if ($s < 0.35) return 'Sage Green';
+            if ($s < 0.32) return 'Sage Green';
             return 'Green';
         }
 
-        // Blue / Sky / Navy / Royal: Hue 170 - 260
-        if ($h > 170 && $h <= 260 && $s >= 0.20) {
+        // Blue / Sky / Navy / Royal: Hue 170 - 265
+        if ($h > 170 && $h <= 265 && $s >= 0.16) {
             if ($l < 0.28) return 'Navy Blue';
-            if ($l > 0.68) return 'Blue';
+            if ($l > 0.65) return 'Blue';
             return 'Royal Blue';
         }
 
-        // Purple / Violet: Hue 260 - 310
-        if ($h > 260 && $h < 310 && $s >= 0.20) {
+        // Purple / Violet: Hue 265 - 300
+        if ($h > 265 && $h < 300 && $s >= 0.18) {
             return 'Purple';
+        }
+
+        // Fallback for light items
+        if ($l >= 0.50) {
+            return 'White';
         }
 
         return null;
@@ -470,7 +566,7 @@ class ProductColorDetectorService
     /**
      * Standardize color naming.
      */
-    private static function normalizeColorName(string $name): string
+    public static function normalizeColorName(string $name): string
     {
         $trimmed = trim(ucwords(strtolower($name)));
         foreach (self::PALETTE as $standard => $aliases) {
