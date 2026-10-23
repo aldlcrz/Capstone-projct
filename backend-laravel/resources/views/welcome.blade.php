@@ -96,18 +96,8 @@
                 box-shadow: none;
                 overflow: hidden;
                 user-select: none;
-                padding-top: 12px;
-                padding-bottom: 34px;
-            }
-
-            /* Ambient diagonal sunlight wash */
-            .lb-sun-beam {
-                position: absolute;
-                inset: 0;
-                pointer-events: none;
-                background: linear-gradient(116deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 35%, transparent 60%);
-                mix-blend-mode: overlay;
-                z-index: 1;
+                padding-top: 14px;
+                padding-bottom: 38px;
             }
 
             /* Main stage container */
@@ -131,7 +121,7 @@
                 }
             }
 
-            /* 2. Side Preview Cards (left & right) */
+            /* 2. Side Preview Cards (left & right) - subtle, secondary */
             .lb-side-card {
                 position: relative;
                 flex-shrink: 0;
@@ -141,10 +131,10 @@
                 overflow: hidden;
                 cursor: pointer;
                 background: #E8DDD0;
-                border: 3px solid rgba(255, 255, 255, 0.85);
-                box-shadow: 0 12px 28px -8px rgba(80, 60, 30, 0.14);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                box-shadow: 0 8px 20px -6px rgba(70, 50, 25, 0.10);
                 transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, opacity 0.35s ease;
-                opacity: 0.82;
+                opacity: 0.72;
                 z-index: 5;
             }
 
@@ -165,9 +155,9 @@
             }
 
             .lb-side-card:hover {
-                transform: translateY(-4px) scale(1.02);
-                opacity: 1;
-                box-shadow: 0 18px 36px -8px rgba(80, 60, 30, 0.22);
+                transform: translateY(-3px) scale(1.02);
+                opacity: 0.95;
+                box-shadow: 0 14px 28px -6px rgba(70, 50, 25, 0.18);
             }
 
             .lb-side-card img {
@@ -187,7 +177,7 @@
                 position: absolute;
                 inset: 0;
                 pointer-events: none;
-                background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%, rgba(50, 35, 15, 0.22) 100%);
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, transparent 45%, rgba(50, 35, 15, 0.18) 100%);
             }
 
             /* 3. Center-Left Editorial Copy Block */
@@ -211,48 +201,47 @@
             .lb-eyebrow-wrap {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 14px;
+                gap: 12px;
+                margin-bottom: 16px;
             }
 
             .lb-eyebrow-rule {
-                width: 28px;
+                width: 32px;
                 height: 1.5px;
-                background: #B38E46;
+                background: #9E7D3B;
             }
 
             .lb-eyebrow-text {
                 font-family: 'Inter', sans-serif;
-                font-size: 10.5px;
-                font-weight: 700;
-                letter-spacing: 0.28em;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.22em;
                 text-transform: uppercase;
-                color: #A07C32;
+                color: #9E7D3B;
             }
 
             .lb-hero-title {
                 font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-                font-size: clamp(34px, 4vw, 56px);
+                font-size: clamp(32px, 3.8vw, 54px);
                 font-weight: 500;
-                line-height: 1.05;
-                letter-spacing: 0.01em;
+                line-height: 1.08;
+                letter-spacing: 0.02em;
                 text-transform: uppercase;
                 color: #241D17;
-                margin: 0 0 14px 0;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
+                margin: 0 0 16px 0;
+                display: block;
+                word-break: normal;
+                overflow-wrap: break-word;
             }
 
             .lb-hero-desc {
                 font-family: 'Cormorant Garamond', Georgia, serif;
-                font-size: clamp(15px, 1.35vw, 18px);
+                font-size: clamp(16px, 1.4vw, 19px);
                 font-weight: 400;
-                line-height: 1.42;
-                color: #554A3F;
-                margin: 0 0 24px 0;
-                max-width: 380px;
+                line-height: 1.45;
+                color: #554A3E;
+                margin: 0 0 28px 0;
+                max-width: 420px;
             }
 
             .lb-hero-ctas {
@@ -267,17 +256,17 @@
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
-                height: 40px;
-                padding: 0 24px;
+                height: 44px;
+                padding: 0 28px;
                 border-radius: 9999px;
                 background: #8E6D38;
                 color: #FFFFFF;
                 font-family: 'Inter', sans-serif;
                 font-size: 11px;
                 font-weight: 600;
-                letter-spacing: 0.14em;
+                letter-spacing: 0.16em;
                 text-transform: uppercase;
-                box-shadow: 0 6px 16px -4px rgba(118, 86, 37, 0.35);
+                box-shadow: 0 8px 18px -4px rgba(120, 85, 30, 0.32);
                 transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
                 cursor: pointer;
                 text-decoration: none;
@@ -286,23 +275,23 @@
             .lb-btn-primary:hover {
                 background: #785A28;
                 transform: translateY(-1px);
-                box-shadow: 0 10px 22px -4px rgba(118, 86, 37, 0.45);
+                box-shadow: 0 12px 24px -4px rgba(120, 85, 30, 0.42);
             }
 
             .lb-btn-secondary {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                height: 40px;
-                padding: 0 22px;
+                height: 44px;
+                padding: 0 26px;
                 border-radius: 9999px;
-                background: rgba(255, 255, 255, 0.35);
-                border: 1px solid #786C5E;
+                background: rgba(255, 255, 255, 0.4);
+                border: 1px solid rgba(120, 108, 94, 0.35);
                 color: #2C231B;
                 font-family: 'Inter', sans-serif;
                 font-size: 11px;
                 font-weight: 600;
-                letter-spacing: 0.14em;
+                letter-spacing: 0.16em;
                 text-transform: uppercase;
                 backdrop-filter: blur(4px);
                 -webkit-backdrop-filter: blur(4px);
@@ -312,95 +301,60 @@
             }
 
             .lb-btn-secondary:hover {
-                background: rgba(255, 255, 255, 0.75);
+                background: rgba(255, 255, 255, 0.85);
                 border-color: #2C231B;
                 transform: translateY(-1px);
             }
 
-            /* 4. Center-Right Architectural Arch & Garment Showcase */
-            .lb-arch-stage {
+            /* 4. Center-Right Featured Garment Presentation (Seamless, Floating) */
+            .lb-featured-stage {
                 position: relative;
                 flex-shrink: 0;
-                width: 300px;
-                height: 430px;
+                width: 320px;
+                height: 440px;
                 z-index: 5;
                 display: flex;
-                align-items: flex-end;
+                align-items: center;
                 justify-content: center;
             }
 
             @media (min-width: 1024px) {
-                .lb-arch-stage {
-                    width: 350px;
-                    height: 490px;
+                .lb-featured-stage {
+                    width: 390px;
+                    height: 500px;
                 }
             }
 
             @media (min-width: 1280px) {
-                .lb-arch-stage {
-                    width: 390px;
-                    height: 520px;
+                .lb-featured-stage {
+                    width: 440px;
+                    height: 530px;
                 }
             }
 
-            /* The architectural arch shape behind the garment */
-            .lb-arch-niche {
-                position: absolute;
-                inset-inline: 0;
-                top: 0;
-                bottom: 0;
-                border-top-left-radius: 9999px;
-                border-top-right-radius: 9999px;
-                background: linear-gradient(180deg, rgba(234, 222, 206, 0.65) 0%, rgba(224, 210, 192, 0.5) 75%, rgba(215, 200, 180, 0.65) 100%);
-                border: 2px solid rgba(255, 255, 255, 0.6);
-                box-shadow: inset 0 14px 28px rgba(80, 60, 30, 0.10), 0 18px 40px -15px rgba(80, 60, 30, 0.12);
-                overflow: hidden;
-                pointer-events: none;
-            }
-
-            /* Arch interior lighting & pedestal base */
-            .lb-arch-niche::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 65% 25%, rgba(255, 255, 255, 0.6) 0%, transparent 65%);
-            }
-
-            .lb-arch-pedestal {
-                position: absolute;
-                bottom: 12px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 70%;
-                height: 18px;
-                border-radius: 9999px;
-                background: radial-gradient(ellipse, rgba(50, 35, 15, 0.28) 0%, transparent 72%);
-                filter: blur(4px);
-                pointer-events: none;
-                z-index: 1;
-            }
-
-            /* Garment item container */
-            .lb-garment-wrapper {
+            /* Garment container */
+            .lb-featured-wrapper {
                 position: absolute;
                 inset: 0;
                 display: flex;
-                align-items: flex-end;
+                align-items: center;
                 justify-content: center;
-                padding-bottom: 10px;
-                z-index: 2;
             }
 
-            /* The garment image itself */
-            .lb-garment-img {
-                max-height: 94%;
-                max-width: 94%;
+            /* The garment image itself with soft edge feathering */
+            .lb-featured-img {
+                max-height: 100%;
+                max-width: 100%;
                 object-fit: contain;
-                object-position: center bottom;
-                filter: drop-shadow(0 14px 24px rgba(40, 25, 10, 0.24));
+                object-position: center center;
+                border-radius: 28px;
+                /* Seamless soft feathering to naturally blend solid backgrounds into the ecru page canvas */
+                -webkit-mask-image: radial-gradient(ellipse 88% 90% at 50% 50%, black 65%, rgba(0, 0, 0, 0.75) 82%, transparent 100%);
+                mask-image: radial-gradient(ellipse 88% 90% at 50% 50%, black 65%, rgba(0, 0, 0, 0.75) 82%, transparent 100%);
+                filter: drop-shadow(0 14px 28px rgba(50, 35, 15, 0.12));
                 pointer-events: none;
                 user-select: none;
-                transition: transform 0.5s ease, opacity 0.5s ease;
+                transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
             }
 
             /* 5. Minimal Circular Navigation Arrows */
@@ -525,10 +479,10 @@
                     justify-content: center;
                 }
 
-                .lb-arch-stage {
+                .lb-featured-stage {
                     order: 1;
-                    width: 240px;
-                    height: 320px;
+                    width: 250px;
+                    height: 330px;
                 }
 
                 .lb-nav-arrow {
@@ -536,9 +490,6 @@
                 }
             }
         </style>
-
-        {{-- Ambient sunlight wash across the section --}}
-        <div class="lb-sun-beam"></div>
 
         {{-- Main panoramic stage --}}
         <div class="lb-hero-stage">
@@ -583,17 +534,11 @@
                 </div>
             </div>
 
-            {{-- Center-Right: Architectural Arch Niche & Featured Hero Garment --}}
-            <div class="lb-arch-stage">
-                {{-- Architectural Wall Niche --}}
-                <div class="lb-arch-niche"></div>
-
-                {{-- Floor Pedestal Ambient Shadow --}}
-                <div class="lb-arch-pedestal"></div>
-
+            {{-- Center-Right: Featured Hero Garment (Seamless, Floating) --}}
+            <div class="lb-featured-stage">
                 {{-- Active Garment --}}
                 <template x-for="(item, idx) in items" :key="'hero-' + item.id">
-                    <div class="lb-garment-wrapper"
+                    <div class="lb-featured-wrapper"
                          x-show="active === idx"
                          x-transition:enter="transition ease-out duration-500"
                          x-transition:enter-start="opacity-0 scale-95 translate-y-2"
@@ -603,7 +548,7 @@
                          x-transition:leave-end="opacity-0 scale-95 -translate-y-2">
                         <img :src="item.image_url"
                              :alt="item.title"
-                             class="lb-garment-img"
+                             class="lb-featured-img"
                              draggable="false">
                     </div>
                 </template>
