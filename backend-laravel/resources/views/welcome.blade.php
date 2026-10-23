@@ -53,13 +53,15 @@
             active: 0,
             get total() { return this.items.length; },
             get current() { return this.items[this.active] || this.items[0]; },
-            getItemPos(idx) {
-                if (this.total === 1) return 'center';
-                var diff = (idx - this.active + this.total) % this.total;
-                if (diff === 0) return 'center';
-                if (diff === 1 || (this.total === 2 && diff === 1)) return 'right';
-                if (diff === this.total - 1) return 'left';
-                return 'hidden';
+            get prevItem() { 
+                if (this.total <= 1) return null;
+                var prevIdx = (this.active - 1 + this.total) % this.total;
+                return this.items[prevIdx];
+            },
+            get nextItem() { 
+                if (this.total <= 1) return null;
+                var nextIdx = (this.active + 1) % this.total;
+                return this.items[nextIdx];
             },
             prev() {
                 this.active = (this.active - 1 + this.total) % this.total;
@@ -73,7 +75,7 @@
             timer: null,
             startTimer() {
                 if (this.total <= 1) return;
-                this.timer = setInterval(() => { this.next(); }, 3000);
+                this.timer = setInterval(() => { this.next(); }, 4000);
             },
             stopTimer() {
                 if (this.timer) clearInterval(this.timer);
@@ -82,84 +84,132 @@
         x-init="startTimer()"
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
-        style="background: #F4EBD9; min-height: 380px; border: 1px solid #D8C29D; box-shadow: 0 16px 36px -10px rgba(110, 80, 30, 0.15), inset 0 0 60px rgba(212, 163, 42, 0.08);"
-        class="relative rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col justify-between select-none py-3 sm:py-5 px-3"
+        style="background: #F4EBE1; min-height: 420px; border: 1px solid #E6D8C5; box-shadow: 0 20px 45px -15px rgba(80, 58, 25, 0.12);"
+        class="relative w-full rounded-2xl sm:rounded-3xl lg:rounded-[2rem] overflow-hidden select-none transition-all duration-500"
     >
-        {{-- Luxury Heritage Antique Piña Parchment Backdrop --}}
-        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 50% 40%, #FCF8F0 0%, #F6ECDA 45%, #EADBBE 85%, #DFC9A2 100%);"></div>
-        <div class="absolute inset-0 pointer-events-none opacity-60" style="background: radial-gradient(circle at 50% 30%, rgba(212,163,42,0.18) 0%, rgba(196,149,32,0.08) 50%, transparent 75%);"></div>
-        {{-- Fine Organic Fiber Grain Texture Overlay --}}
-        <div class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#C49520 0.8px, transparent 0.8px), radial-gradient(#8C6B1B 0.8px, transparent 0.8px); background-size: 14px 14px; background-position: 0 0, 7px 7px; mix-blend-mode: multiply;"></div>
+        {{-- Luxury Architectural Arch Canvas Backdrop --}}
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 70% 45%, #FBF6EE 0%, #F4ECE1 55%, #EADBCC 100%);"></div>
+        <div class="absolute inset-0 pointer-events-none opacity-40" style="background: radial-gradient(circle at 75% 40%, rgba(204,154,54,0.15) 0%, rgba(160,118,35,0.05) 55%, transparent 75%);"></div>
+        {{-- Soft Organic Fiber Weave Texture --}}
+        <div class="absolute inset-0 pointer-events-none opacity-15" style="background-image: radial-gradient(#9C783E 0.75px, transparent 0.75px), radial-gradient(#73531F 0.75px, transparent 0.75px); background-size: 14px 14px; background-position: 0 0, 7px 7px; mix-blend-mode: multiply;"></div>
 
-        {{-- 3D Product Carousel Stage --}}
-        <div class="relative w-full flex items-center justify-center overflow-hidden" style="height: 220px; min-height: 220px;">
-            {{-- Center Spotlight Glow --}}
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl pointer-events-none z-0" style="background: radial-gradient(circle, rgba(212,163,42,0.25) 0%, rgba(196,149,32,0.10) 50%, transparent 70%);"></div>
-            {{-- Center Subtle Pedestal Shadow --}}
-            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-5 rounded-full blur-md pointer-events-none z-0 opacity-30" style="background: radial-gradient(ellipse, rgba(74, 53, 30, 0.4) 0%, transparent 70%);"></div>
+        {{-- Architectural Arch Showcase Feature (Desktop/Tablet) --}}
+        <div class="hidden md:block absolute right-[14%] lg:right-[18%] top-6 bottom-6 w-60 sm:w-72 lg:w-88 rounded-t-full pointer-events-none border border-[#E8DDCE]/90"
+             style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(246, 238, 226, 0.25) 100%); box-shadow: inset 0 2px 12px rgba(255,255,255,0.7);"></div>
 
-            <template x-for="(item, idx) in items" :key="item.id">
-                <div
-                    @click="if(getItemPos(idx) !== 'center') goTo(idx)"
-                    :style="getItemPos(idx) === 'center' ? 'left: 50%; transform: translateX(-50%) scale(1); z-index: 20; opacity: 1;' : (getItemPos(idx) === 'left' ? 'left: 20%; transform: translateX(-50%) scale(0.75); z-index: 10; opacity: 0.38; cursor: pointer;' : (getItemPos(idx) === 'right' ? 'left: 80%; transform: translateX(-50%) scale(0.75); z-index: 10; opacity: 0.38; cursor: pointer;' : 'left: 50%; transform: translateX(-50%) scale(0.5); z-index: 0; opacity: 0; pointer-events: none;'))"
-                    class="absolute top-0 bottom-0 flex items-center justify-center transition-all duration-500 ease-out"
-                    style="height: 220px;"
-                >
-                    <img :src="item.image_url" 
-                         :alt="item.title"
-                         style="max-height: 220px; height: 100%; width: auto; max-width: 320px; object-fit: contain;"
-                         class="rounded-2xl drop-shadow-[0_12px_24px_rgba(74,53,30,0.18)] filter contrast-[1.02]">
+        {{-- Main Editorial Split Layout --}}
+        <div class="relative z-20 w-full min-h-[420px] sm:min-h-[460px] lg:min-h-[500px] flex flex-col md:flex-row items-center justify-between px-6 sm:px-14 lg:px-24 py-8 sm:py-12">
+            
+            {{-- Left Column: Editorial Headline & Actions --}}
+            <div class="w-full md:w-1/2 lg:w-[48%] flex flex-col items-center md:items-start text-center md:text-left z-20 py-2 md:py-0">
+                
+                {{-- Overline Tag --}}
+                <div class="inline-flex items-center gap-2 mb-2 sm:mb-3">
+                    <span class="w-5 sm:w-7 h-[1.5px] bg-[#9C783E]"></span>
+                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.28em] text-[#9C783E]" x-text="current.subtitle || 'FEATURED COLLECTION'"></span>
                 </div>
-            </template>
-        </div>
 
-        {{-- Centered Dynamic Product Information & Action Buttons --}}
-        <div class="relative z-30 flex flex-col items-center justify-center text-center px-4 pt-2 space-y-1.5 sm:space-y-2">
-            <p class="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em]" style="color: #C49520;" x-text="current.subtitle"></p>
-            <h2 class="text-lg sm:text-2xl lg:text-3xl font-black leading-tight tracking-tight max-w-xl mx-auto truncate px-2" style="color: #1E1915;" x-text="current.title"></h2>
+                {{-- Hero Title in Regal Serif --}}
+                <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl xl:text-6xl text-[#1E1915] font-normal leading-[1.08] tracking-tight mb-3 sm:mb-4 drop-shadow-xs transition-all duration-300"
+                    x-text="current.title"></h2>
 
-            <div class="flex items-center justify-center gap-2.5 sm:gap-3.5 pt-1">
-                {{-- Dynamic Shop Now button matching centered product --}}
-                <a :href="current.button_url_1"
-                   @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="inline-flex items-center justify-center px-6 py-2 sm:px-8 sm:py-2.5 text-white text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                   style="background: linear-gradient(135deg, #D4A32A 0%, #C49520 50%, #A67C1A 100%); box-shadow: 0 4px 14px rgba(196, 149, 32, 0.35);">
-                    <span x-text="current.button_text_1 || 'Shop now'"></span>
-                </a>
+                {{-- Subtitle / Narrative Description --}}
+                <p class="text-xs sm:text-sm lg:text-base text-[#6B5E52] leading-relaxed max-w-md mb-6 sm:mb-8 font-light">
+                    A modern take on a timeless Filipino tradition. Handcrafted by master artisans with authentic heritage embroidery.
+                </p>
 
-                {{-- Dynamic Visit Shop button matching centered product --}}
-                <a :href="current.button_url_2"
-                   @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="inline-flex items-center justify-center px-5 py-2 sm:px-7 sm:py-2.5 text-[11px] sm:text-xs font-black uppercase tracking-wider rounded-xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
-                   style="background-color: rgba(255, 255, 255, 0.95); color: #2C241E; border: 1px solid #D5C9B3;"
-                   onmouseover="this.style.color='#C49520'; this.style.borderColor='#C49520';"
-                   onmouseout="this.style.color='#2C241E'; this.style.borderColor='#D5C9B3';">
-                    <span x-text="current.button_text_2 || 'Visit shop'"></span>
-                </a>
+                {{-- CTA Action Buttons --}}
+                <div class="flex items-center gap-3 sm:gap-4 pt-1">
+                    {{-- Primary Shop Now button with arrow --}}
+                    <a :href="current.button_url_1"
+                       @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                       class="inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-2.5 sm:py-3.5 text-white text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md hover:shadow-lg group"
+                       style="background: linear-gradient(135deg, #8E6D38 0%, #765625 100%); box-shadow: 0 4px 15px rgba(118, 86, 37, 0.3);">
+                        <span x-text="current.button_text_1 || 'SHOP NOW'"></span>
+                        <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </a>
+
+                    {{-- Secondary Visit Shop button with luxury pill outline --}}
+                    <a :href="current.button_url_2"
+                       @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                       class="inline-flex items-center justify-center px-5 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-xs hover:shadow-md"
+                       style="background: rgba(255, 255, 255, 0.75); color: #2C241E; border: 1.5px solid #8E6D38;"
+                       onmouseover="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.borderColor='#765625';"
+                       onmouseout="this.style.background='rgba(255, 255, 255, 0.75)'; this.style.borderColor='#8E6D38';">
+                        <span x-text="current.button_text_2 || 'VISIT SHOP'"></span>
+                    </a>
+                </div>
             </div>
 
-            {{-- Dot Indicators --}}
-            <div class="flex items-center gap-1.5 pt-2" x-show="total > 1">
-                <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
-                    <button type="button"
-                            @click="goTo(dIdx)"
-                            :style="active === dIdx ? 'width: 24px; background-color: #C49520;' : 'width: 8px; background-color: #D5C9B3;'"
-                            class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"></button>
+            {{-- Center-Right Column: Hero Garment Stage --}}
+            <div class="relative w-full md:w-1/2 lg:w-[48%] flex items-center justify-center h-64 sm:h-80 md:h-[380px] lg:h-[440px] mt-4 md:mt-0">
+                {{-- Soft Floor Pedestal Shadow --}}
+                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-6 rounded-full blur-md pointer-events-none opacity-25" style="background: radial-gradient(ellipse, #3B2A17 0%, transparent 70%);"></div>
+
+                {{-- Hero Garment Showcase --}}
+                <template x-for="(item, idx) in items" :key="'hero-' + item.id">
+                    <div x-show="active === idx"
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-3"
+                         class="absolute inset-0 flex items-center justify-center">
+                        <img :src="item.image_url" 
+                             :alt="item.title"
+                             class="max-h-[250px] sm:max-h-[320px] lg:max-h-[400px] w-auto max-w-full object-contain filter drop-shadow-[0_16px_30px_rgba(60,40,20,0.22)] select-none pointer-events-none transition-transform duration-500">
+                    </div>
                 </template>
             </div>
         </div>
 
-        {{-- Left & Right Navigation Chevrons --}}
+        {{-- Far-Left Flanking Peek Card (Desktop) --}}
+        <template x-if="prevItem">
+            <div @click="prev()"
+                 title="Previous piece"
+                 class="hidden xl:flex absolute left-4 lg:left-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
+                <img :src="prevItem.image_url" :alt="prevItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            </div>
+        </template>
+
+        {{-- Far-Right Flanking Peek Card (Desktop) --}}
+        <template x-if="nextItem">
+            <div @click="next()"
+                 title="Next piece"
+                 class="hidden xl:flex absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 z-20 w-24 lg:w-28 h-36 lg:h-44 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-100 opacity-60 bg-white/40 border border-white/60 shadow-lg backdrop-blur-xs items-center justify-center p-2 group">
+                <img :src="nextItem.image_url" :alt="nextItem.title" class="w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            </div>
+        </template>
+
+        {{-- Floating Left & Right Circular Navigation Arrows --}}
         <template x-if="total > 1">
             <div>
-                <button type="button" @click="prev()" aria-label="Previous product" class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg backdrop-blur-xs" style="background-color: rgba(255, 255, 255, 0.95); color: #2C241E; border: 1px solid #E2D9C8;" onmouseover="this.style.color='#C49520'; this.style.borderColor='#C49520';" onmouseout="this.style.color='#2C241E'; this.style.borderColor='#E2D9C8';">
+                <button type="button" @click="prev()" aria-label="Previous product" 
+                        class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg bg-white/95 text-[#3A2F25] border border-[#E4D9C8]/80 hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button type="button" @click="next()" aria-label="Next product" class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg backdrop-blur-xs" style="background-color: rgba(255, 255, 255, 0.95); color: #2C241E; border: 1px solid #E2D9C8;" onmouseover="this.style.color='#C49520'; this.style.borderColor='#C49520';" onmouseout="this.style.color='#2C241E'; this.style.borderColor='#E2D9C8';">
+                <button type="button" @click="next()" aria-label="Next product" 
+                        class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg bg-white/95 text-[#3A2F25] border border-[#E4D9C8]/80 hover:text-[#8E6D38] hover:border-[#8E6D38] backdrop-blur-xs">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </template>
+
+        {{-- Bottom Minimalist Pagination Slider Bar --}}
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5" x-show="total > 1">
+            <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
+                <button type="button"
+                        @click="goTo(dIdx)"
+                        :style="active === dIdx ? 'width: 28px; background-color: #8E6D38;' : 'width: 8px; background-color: #D6C8B5;'"
+                        class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+                        :aria-label="'Go to slide ' + (dIdx + 1)"></button>
+            </template>
+        </div>
     </div>
     @endif
 
