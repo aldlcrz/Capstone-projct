@@ -306,12 +306,12 @@
                 transform: translateY(-1px);
             }
 
-            /* 4. Center-Right Featured Garment Presentation (Seamless, Floating) */
+            /* 4. Center-Right Featured Garment Presentation (Standardized Uniform Dimensions) */
             .lb-featured-stage {
                 position: relative;
                 flex-shrink: 0;
                 width: 320px;
-                height: 440px;
+                height: 262px;
                 z-index: 5;
                 display: flex;
                 align-items: center;
@@ -321,14 +321,14 @@
             @media (min-width: 1024px) {
                 .lb-featured-stage {
                     width: 390px;
-                    height: 500px;
+                    height: 320px;
                 }
             }
 
             @media (min-width: 1280px) {
                 .lb-featured-stage {
                     width: 440px;
-                    height: 530px;
+                    height: 360px;
                 }
             }
 
@@ -336,22 +336,22 @@
             .lb-featured-wrapper {
                 position: absolute;
                 inset: 0;
+                width: 100%;
+                height: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
-            /* The garment image itself with soft edge feathering */
+            /* The garment image itself fills the exact same container across all products */
             .lb-featured-img {
-                max-height: 100%;
-                max-width: 100%;
-                object-fit: contain;
-                object-position: center center;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center 22%;
+                display: block;
                 border-radius: 28px;
-                /* Seamless soft feathering to naturally blend solid backgrounds into the ecru page canvas */
-                -webkit-mask-image: radial-gradient(ellipse 88% 90% at 50% 50%, black 65%, rgba(0, 0, 0, 0.75) 82%, transparent 100%);
-                mask-image: radial-gradient(ellipse 88% 90% at 50% 50%, black 65%, rgba(0, 0, 0, 0.75) 82%, transparent 100%);
-                filter: drop-shadow(0 14px 28px rgba(50, 35, 15, 0.12));
+                filter: drop-shadow(0 12px 24px rgba(50, 35, 15, 0.14));
                 pointer-events: none;
                 user-select: none;
                 transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
@@ -481,8 +481,9 @@
 
                 .lb-featured-stage {
                     order: 1;
-                    width: 250px;
-                    height: 330px;
+                    width: 100%;
+                    max-width: 320px;
+                    height: 260px;
                 }
 
                 .lb-nav-arrow {
