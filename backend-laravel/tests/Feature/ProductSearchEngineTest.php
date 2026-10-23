@@ -1004,6 +1004,57 @@ class ProductSearchEngineTest extends TestCase
         $this->assertTrue($results->contains('id', $naturalBarong->id), 'Searching "white" should find natural/cream/off-white heritage garments');
         $this->assertFalse($results->contains('id', $blackBolero->id), 'Searching "white" should NOT return black bolero');
     }
+
+    public function test_search_red_does_not_return_blue_or_white_products_with_tailored_or_embroidered_in_description(): void
+    {
+        // Product 1: Blue barong that says 'Tailored in Lumban with delicate embroidered patterns' in description
+        $blueBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Blue Heritage Barong',
+            'description' => 'Meticulously tailored in Lumban, Laguna featuring embroidered Calado details.',
+            'price' => 3200,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Blue',
+            'colors' => ['Blue', 'Navy Blue', 'Royal Blue'],
+        ]);
+
+        // Product 2: White barong with 'Embroidered' in title and 'tailored' in description
+        $whiteEmbroideredBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Classic Embroidered Piña Barong',
+            'description' => 'Tailored for elegance and ordered for special occasions.',
+            'price' => 2800,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'White',
+            'colors' => ['White', 'Natural', 'Cream'],
+        ]);
+
+        // Product 3: Genuine Maroon/Red product
+        $maroonBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Crimson Silk Barong Tagalog',
+            'description' => 'Vibrant shade barong.',
+            'price' => 3500,
+            'stock' => 2,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Red',
+            'colors' => ['Red', 'Crimson', 'Maroon'],
+        ]);
+
+        $results = Product::query()->where('status', 'approved')->search('red')->get();
+
+        $this->assertTrue($results->contains('id', $maroonBarong->id), 'Searching "red" must return the crimson/red barong');
+        $this->assertFalse($results->contains('id', $blueBarong->id), 'Searching "red" MUST NEVER return blue barong despite "tailored" or "embroidered" in description');
+        $this->assertFalse($results->contains('id', $whiteEmbroideredBarong->id), 'Searching "red" MUST NEVER return white barong despite "Embroidered" in name or "tailored" in description');
+    }
 }
 
 

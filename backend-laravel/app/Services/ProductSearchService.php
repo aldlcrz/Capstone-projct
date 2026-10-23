@@ -72,7 +72,7 @@ class ProductSearchService
         'cream'      => ['cream', 'white', 'natural', 'off-white'],
         'pink'       => ['pink', 'blush', 'rose', 'magenta', 'salmon'],
         'maroon'     => ['maroon', 'burgundy', 'wine'],
-        'red'        => ['red', 'crimson', 'scarlet'],
+        'red'        => ['red', 'crimson', 'scarlet', 'maroon', 'burgundy'],
         'blue'       => ['blue', 'navy', 'royal', 'sky', 'dusty'],
         'navy'       => ['navy', 'blue', 'midnight'],
         'green'      => ['green', 'sage', 'emerald', 'olive', 'mint'],
@@ -82,7 +82,45 @@ class ProductSearchService
         'gold'       => ['gold', 'golden', 'yellow'],
         'yellow'     => ['yellow', 'gold'],
         'purple'     => ['purple', 'violet', 'lavender', 'lilac'],
+        'orange'     => ['orange', 'rust', 'terracotta', 'peach', 'coral'],
+        'brown'      => ['brown', 'tan', 'chocolate', 'coffee'],
+        'tan'        => ['tan', 'beige', 'natural'],
+        'beige'      => ['beige', 'natural', 'cream', 'tan'],
+        'gray'       => ['gray', 'grey', 'silver', 'charcoal'],
+        'grey'       => ['grey', 'gray', 'silver', 'charcoal'],
+        'teal'       => ['teal', 'turquoise'],
+        'multicolor' => ['multicolor', 'two tone', 'two-tone', 'ombre'],
     ];
+
+    /**
+     * Recognized apparel color keywords across the platform.
+     */
+    protected const COLOR_KEYWORDS = [
+        'white', 'natural', 'cream', 'ecru', 'off-white',
+        'pink', 'blush', 'rose', 'magenta', 'salmon', 'fuchsia',
+        'maroon', 'burgundy', 'wine', 'bordeaux',
+        'red', 'crimson', 'scarlet',
+        'blue', 'navy', 'royal', 'sky', 'dusty', 'midnight', 'sapphire',
+        'green', 'sage', 'emerald', 'olive', 'mint',
+        'black', 'charcoal', 'dark', 'onyx',
+        'gold', 'golden', 'yellow', 'mustard',
+        'purple', 'violet', 'lavender', 'lilac', 'plum',
+        'orange', 'rust', 'terracotta', 'peach', 'coral',
+        'brown', 'tan', 'beige', 'champagne', 'chocolate', 'coffee',
+        'gray', 'grey', 'silver',
+        'teal', 'turquoise',
+        'multicolor', 'rainbow', 'two tone', 'two-tone', 'ombre'
+    ];
+
+    /**
+     * Check if a given search token represents a color.
+     */
+    public static function isColorToken(string $term): bool
+    {
+        $term = strtolower(trim($term));
+        return in_array($term, self::COLOR_KEYWORDS, true)
+            || isset(self::COLOR_SEARCH_SYNONYMS[$term]);
+    }
 
     /**
      * Curated typo dictionary for common marketplace search misspellings.
@@ -603,71 +641,110 @@ class ProductSearchService
 
         // Apply WHERE clauses combining keywords across product attributes
         $query->where(function (Builder $mainQuery) use ($rawSearch, $normalized, $searchTokens, $detectedAudience) {
+            $isPureColorSearch = self::isColorToken($normalized);
+
             // Path 1: Direct full phrase match on attributes (when attributes exist)
-            $mainQuery->where(function (Builder $pq) use ($rawSearch, $normalized) {
-                $pq->where('name', 'like', '%' . $rawSearch . '%')
-                   ->orWhere('name', 'like', '%' . $normalized . '%')
-                   ->orWhere('description', 'like', '%' . $rawSearch . '%')
-                   ->orWhere('description', 'like', '%' . $normalized . '%')
-                   ->orWhere('color', 'like', '%' . $rawSearch . '%')
-                   ->orWhere('color', 'like', '%' . $normalized . '%')
-                   ->orWhere('colors', 'like', '%' . $rawSearch . '%')
-                   ->orWhere('colors', 'like', '%' . $normalized . '%')
-                   ->orWhere('sku', 'like', '%' . $rawSearch . '%')
-                   ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
-                       $cq->where('name', 'like', '%' . $rawSearch . '%')
-                          ->orWhere('name', 'like', '%' . $normalized . '%');
-                   });
-            });
+            // Skip Path 1 if the query is a color keyword to prevent English substring false positives in description (e.g. 'tailored' for 'red')
+            if (!$isPureColorSearch) {
+                $mainQuery->where(function (Builder $pq) use ($rawSearch, $normalized) {
+                    $pq->where('name', 'like', '%' . $rawSearch . '%')
+                       ->orWhere('name', 'like', '%' . $normalized . '%')
+                       ->orWhere('description', 'like', '%' . $rawSearch . '%')
+                       ->orWhere('description', 'like', '%' . $normalized . '%')
+                       ->orWhere('color', 'like', '%' . $rawSearch . '%')
+                       ->orWhere('color', 'like', '%' . $normalized . '%')
+                       ->orWhere('colors', 'like', '%' . $rawSearch . '%')
+                       ->orWhere('colors', 'like', '%' . $normalized . '%')
+                       ->orWhere('sku', 'like', '%' . $rawSearch . '%')
+                       ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
+                           $cq->where('name', 'like', '%' . $rawSearch . '%')
+                              ->orWhere('name', 'like', '%' . $normalized . '%');
+                       });
+                });
+            }
 
             // Path 2: Token-based multi-attribute match
             // Each meaningful token must match AT LEAST ONE searchable field
-            $mainQuery->orWhere(function (Builder $tokenQuery) use ($searchTokens, $detectedAudience) {
+            $tokenCondition = function (Builder $tokenQuery) use ($searchTokens, $detectedAudience) {
                 $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
 
                 foreach ($searchTokens as $tokenData) {
                     $orig = $tokenData['original'];
                     $resolved = $tokenData['resolved'] ?? $orig;
                     $variants = $tokenData['variants'];
+                    $isColorToken = self::isColorToken($orig) || self::isColorToken($resolved);
 
                     // General attribute matching
-                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isFemaleSearch) {
-                        foreach ($variants as $v) {
-                            $subQuery->orWhere('name', 'like', '%' . $v . '%')
-                                     ->orWhere('description', 'like', '%' . $v . '%')
-                                     ->orWhere('color', 'like', '%' . $v . '%')
-                                     ->orWhere('colors', 'like', '%' . $v . '%')
-                                     ->orWhere('fabric_type', 'like', '%' . $v . '%')
-                                     ->orWhere('collar_type', 'like', '%' . $v . '%')
-                                     ->orWhere('artisan_region', 'like', '%' . $v . '%')
-                                     ->orWhere('sku', 'like', '%' . $v . '%')
-                                     ->orWhere('categories', 'like', '%' . $v . '%')
-                                     ->orWhere('variations', 'like', '%' . $v . '%')
-                                     ->orWhereHas('category', function ($cq) use ($v) {
-                                         $cq->where('name', 'like', '%' . $v . '%');
-                                     })
-                                     ->orWhereHas('seller', function ($sq) use ($v) {
-                                         $sq->where('shopName', 'like', '%' . $v . '%')
-                                            ->orWhere('name', 'like', '%' . $v . '%');
-                                     });
+                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isColorToken, $isFemaleSearch) {
+                        if ($isColorToken) {
+                            foreach ($variants as $v) {
+                                $v = strtolower(trim($v));
+                                if (empty($v)) continue;
 
-                            // If 'barong' is searched in female context (e.g. 'barong for girl' or 'barong for women'),
-                            // also match Filipiniana / Lady Barong attire
-                            if (($v === 'barong' || $resolved === 'barong') && $isFemaleSearch) {
-                                $subQuery->orWhere('name', 'like', '%filipiniana%')
-                                         ->orWhere('name', 'like', '%lady%')
-                                         ->orWhere('name', 'like', '%bolero%')
-                                         ->orWhere('name', 'like', '%mestiza%')
-                                         ->orWhereHas('category', function ($cq) {
-                                             $cq->where('name', 'like', '%filipiniana%')
-                                                ->orWhere('name', 'like', '%lady%')
-                                                ->orWhere('name', 'like', '%gown%');
+                                // 1. Matches color column
+                                $subQuery->orWhere('color', 'like', '%' . $v . '%');
+
+                                // 2. Matches detected colors JSON array
+                                $subQuery->orWhere('colors', 'like', '%' . $v . '%');
+
+                                // 3. Matches product name ONLY as a whole word (never as substring inside 'embroidered')
+                                $subQuery->orWhere('name', '=', $v)
+                                         ->orWhere('name', 'like', $v . ' %')
+                                         ->orWhere('name', 'like', '% ' . $v . ' %')
+                                         ->orWhere('name', 'like', '% ' . $v)
+                                         ->orWhere('name', 'like', '%(' . $v . ')%')
+                                         ->orWhere('name', 'like', '%/' . $v . '%')
+                                         ->orWhere('name', 'like', '%-' . $v . '%');
+
+                                // 4. Matches description ONLY as a distinct word (never inside 'tailored', 'ordered', 'layered')
+                                $subQuery->orWhere('description', 'like', $v . ' %')
+                                         ->orWhere('description', 'like', '% ' . $v . ' %')
+                                         ->orWhere('description', 'like', '% ' . $v);
+                            }
+                        } else {
+                            foreach ($variants as $v) {
+                                $subQuery->orWhere('name', 'like', '%' . $v . '%')
+                                         ->orWhere('description', 'like', '%' . $v . '%')
+                                         ->orWhere('color', 'like', '%' . $v . '%')
+                                         ->orWhere('colors', 'like', '%' . $v . '%')
+                                         ->orWhere('fabric_type', 'like', '%' . $v . '%')
+                                         ->orWhere('collar_type', 'like', '%' . $v . '%')
+                                         ->orWhere('artisan_region', 'like', '%' . $v . '%')
+                                         ->orWhere('sku', 'like', '%' . $v . '%')
+                                         ->orWhere('categories', 'like', '%' . $v . '%')
+                                         ->orWhere('variations', 'like', '%' . $v . '%')
+                                         ->orWhereHas('category', function ($cq) use ($v) {
+                                             $cq->where('name', 'like', '%' . $v . '%');
+                                         })
+                                         ->orWhereHas('seller', function ($sq) use ($v) {
+                                             $sq->where('shopName', 'like', '%' . $v . '%')
+                                                ->orWhere('name', 'like', '%' . $v . '%');
                                          });
+
+                                // If 'barong' is searched in female context (e.g. 'barong for girl' or 'barong for women'),
+                                // also match Filipiniana / Lady Barong attire
+                                if (($v === 'barong' || $resolved === 'barong') && $isFemaleSearch) {
+                                    $subQuery->orWhere('name', 'like', '%filipiniana%')
+                                             ->orWhere('name', 'like', '%lady%')
+                                             ->orWhere('name', 'like', '%bolero%')
+                                             ->orWhere('name', 'like', '%mestiza%')
+                                             ->orWhereHas('category', function ($cq) {
+                                                 $cq->where('name', 'like', '%filipiniana%')
+                                                    ->orWhere('name', 'like', '%lady%')
+                                                    ->orWhere('name', 'like', '%gown%');
+                                             });
+                                }
                             }
                         }
                     });
                 }
-            });
+            };
+
+            if ($isPureColorSearch) {
+                $mainQuery->where($tokenCondition);
+            } else {
+                $mainQuery->orWhere($tokenCondition);
+            }
         });
 
         // Apply Relevance Ranking when no explicit sort (like price, newest, or rating) is requested
@@ -745,11 +822,25 @@ class ProductSearchService
             }
 
             // Name match (checks original token and resolved typo/canonical word)
-            $nameChecks = ["LOWER(products.name) LIKE ?"];
-            $bindings[] = '%' . $orig . '%';
-            if ($resolved !== $orig) {
-                $nameChecks[] = "LOWER(products.name) LIKE ?";
-                $bindings[] = '%' . $resolved . '%';
+            $isColor = self::isColorToken($orig) || self::isColorToken($resolved);
+            if ($isColor) {
+                $nameChecks = [
+                    "LOWER(products.name) = ?",
+                    "LOWER(products.name) LIKE ?",
+                    "LOWER(products.name) LIKE ?",
+                    "LOWER(products.name) LIKE ?"
+                ];
+                $bindings[] = $orig;
+                $bindings[] = $orig . ' %';
+                $bindings[] = '% ' . $orig . ' %';
+                $bindings[] = '% ' . $orig;
+            } else {
+                $nameChecks = ["LOWER(products.name) LIKE ?"];
+                $bindings[] = '%' . $orig . '%';
+                if ($resolved !== $orig) {
+                    $nameChecks[] = "LOWER(products.name) LIKE ?";
+                    $bindings[] = '%' . $resolved . '%';
+                }
             }
             $relevanceCases[] = "CASE WHEN (" . implode(' OR ', $nameChecks) . ") THEN 40 ELSE 0 END";
 
