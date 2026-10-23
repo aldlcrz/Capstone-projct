@@ -381,157 +381,221 @@ class ProductSearchService
             return $query->where('name', 'like', '%' . $rawSearch . '%');
         }
 
-        // Apply WHERE clauses combining keywords across product attributes
-        $query->where(function (Builder $mainQuery) use ($rawSearch, $normalized, $tokens, $detectedAudience) {
-            // Path 1: Direct full phrase match on name, description, SKU, or category
-            $mainQuery->where('name', 'like', '%' . $rawSearch . '%')
-                      ->orWhere('name', 'like', '%' . $normalized . '%')
-                      ->orWhere('description', 'like', '%' . $rawSearch . '%')
-                      ->orWhere('description', 'like', '%' . $normalized . '%')
-                      ->orWhere('sku', 'like', '%' . $rawSearch . '%')
-                      ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
-                          $cq->where('name', 'like', '%' . $rawSearch . '%')
-                             ->orWhere('name', 'like', '%' . $normalized . '%');
+        $demographicTerms = [
+            'men', 'mens', 'male', 'males', 'man', 'gentleman', 'gentlemen', 'mne',
+            'women', 'womens', 'woman', 'female', 'females', 'ladies', 'lady', 'filipiniana', 'filipinianas', 'mestiza', 'mestizas', 'terno', 'ternos', 'wmen', 'womn',
+            'kid', 'kids', 'child', 'children', 'childrens', 'kds', 'kidds', 'boy', 'boys', 'byo', 'byos', 'girl', 'girls', 'gril', 'grils'
+        ];
+
+        $attributeTokens = array_values(array_filter($tokens, function ($t) use ($demographicTerms) {
+            $orig = strtolower($t['original'] ?? '');
+            $resolved = strtolower($t['resolved'] ?? $orig);
+            return !in_array($orig, $demographicTerms, true) && !in_array($resolved, $demographicTerms, true);
+        }));
+
+        $isPureDemographicSearch = ($detectedAudience !== null) && empty($attributeTokens);
+
+        // Case A: Pure demographic search (e.g. 'men', 'male', 'women', 'kids', 'filipiniana')
+        // Directly isolate the demographic collection and eliminate substring collisions like 'women' or 'garment'
+        if ($isPureDemographicSearch) {
+            if ($detectedAudience === 'Men') {
+                $query->where(function (Builder $q) {
+                    $q->where(function ($sq) {
+                        $sq->where('target_group', 'like', '%men%')
+                           ->where('target_group', 'not like', '%women%');
+                    })->orWhere(function ($sq) {
+                        $sq->whereNull('target_group')
+                           ->where('name', 'like', '%barong%')
+                           ->where('name', 'not like', '%lady%');
+                    })->orWhereHas('category', function ($cq) {
+                        $cq->where('name', 'like', '%men%')
+                           ->where('name', 'not like', '%women%');
+                    });
+                })
+                ->where(function (Builder $q) {
+                    $q->where('target_group', 'not like', '%women%')
+                      ->where('target_group', 'not like', '%female%')
+                      ->where('target_group', 'not like', '%kid%')
+                      ->orWhereNull('target_group');
+                })
+                ->where('name', 'not like', '%filipiniana%')
+                ->where('name', 'not like', '%bolero%')
+                ->where('name', 'not like', '%mestiza%')
+                ->where('name', 'not like', '%terno%')
+                ->where('name', 'not like', '%gown%')
+                ->where('name', 'not like', '%dress%')
+                ->where('name', 'not like', '%women%');
+            } elseif ($detectedAudience === 'Women') {
+                $query->where(function (Builder $q) {
+                    $q->where('target_group', 'like', '%women%')
+                      ->orWhere('target_group', 'like', '%female%')
+                      ->orWhere('name', 'like', '%filipiniana%')
+                      ->orWhere('name', 'like', '%bolero%')
+                      ->orWhere('name', 'like', '%mestiza%')
+                      ->orWhere('name', 'like', '%terno%')
+                      ->orWhere('name', 'like', '%gown%')
+                      ->orWhere('name', 'like', '%dress%')
+                      ->orWhere('name', 'like', '%lady%')
+                      ->orWhereHas('category', function ($cq) {
+                          $cq->where('name', 'like', '%women%')
+                             ->orWhere('name', 'like', '%filipiniana%')
+                             ->orWhere('name', 'like', '%gown%');
                       });
+                })
+                ->where(function (Builder $q) {
+                    $q->where(function ($sq) {
+                        $sq->where('target_group', 'not like', '%men%')
+                           ->orWhere('target_group', 'like', '%women%');
+                    })->orWhereNull('target_group');
+                });
+            } elseif ($detectedAudience === 'Boys') {
+                $query->where(function (Builder $q) {
+                    $q->where(function ($sq) {
+                        $sq->where('target_group', 'like', '%boy%')
+                           ->orWhere('target_group', 'like', '%kid%')
+                           ->orWhere('target_group', 'like', '%child%');
+                    })->orWhere('name', 'like', '%boy%')
+                      ->orWhereHas('category', function ($cq) {
+                          $cq->where('name', 'like', '%kid%')
+                             ->orWhere('name', 'like', '%boy%');
+                      });
+                })
+                ->where(function (Builder $q) {
+                    $q->where('target_group', 'not like', '%women%')
+                      ->where('target_group', 'not like', '%girl%')
+                      ->orWhereNull('target_group');
+                })
+                ->where('name', 'not like', '%filipiniana%')
+                ->where('name', 'not like', '%gown%')
+                ->where('name', 'not like', '%dress%')
+                ->where('name', 'not like', '%girl%');
+            } elseif ($detectedAudience === 'Girls') {
+                $query->where(function (Builder $q) {
+                    $q->where(function ($sq) {
+                        $sq->where('target_group', 'like', '%girl%')
+                           ->orWhere('target_group', 'like', '%kid%')
+                           ->orWhere('target_group', 'like', '%child%');
+                    })->orWhere('name', 'like', '%girl%')
+                      ->orWhereHas('category', function ($cq) {
+                          $cq->where('name', 'like', '%kid%')
+                             ->orWhere('name', 'like', '%girl%');
+                      });
+                })
+                ->where(function (Builder $q) {
+                    $q->whereNotIn('target_group', ['Men', 'Boys', 'boy', 'male'])
+                      ->where('target_group', 'not like', '%boy%')
+                      ->orWhere('name', 'like', '%lady%')
+                      ->orWhere('name', 'like', '%filipiniana%')
+                      ->orWhere('name', 'like', '%dress%')
+                      ->orWhereNull('target_group');
+                })
+                ->where('name', 'not like', '%boy%');
+            } else {
+                // Kids general
+                $query->where(function (Builder $q) {
+                    $q->where('target_group', 'like', '%kid%')
+                      ->orWhere('target_group', 'like', '%child%')
+                      ->orWhere('name', 'like', '%kid%')
+                      ->orWhere('name', 'like', '%boy%')
+                      ->orWhere('name', 'like', '%girl%')
+                      ->orWhereHas('category', function ($cq) {
+                          $cq->where('name', 'like', '%kid%')
+                             ->orWhere('name', 'like', '%child%');
+                      });
+                });
+            }
+
+            self::applyRelevanceOrder($query, $rawSearch, $normalized, $tokens, $detectedAudience, $sort);
+            return $query;
+        }
+
+        // Case B: Search query containing demographic modifier and/or specific garment attributes
+        // Enforce demographic exclusion boundaries first
+        if ($detectedAudience === 'Men') {
+            $query->where(function (Builder $q) {
+                $q->where('target_group', 'not like', '%women%')
+                  ->where('target_group', 'not like', '%female%')
+                  ->orWhereNull('target_group');
+            })
+            ->where('name', 'not like', '%filipiniana%')
+            ->where('name', 'not like', '%bolero%')
+            ->where('name', 'not like', '%mestiza%')
+            ->where('name', 'not like', '%terno%');
+        } elseif ($detectedAudience === 'Women') {
+            $query->where(function (Builder $q) {
+                $q->where(function ($sq) {
+                    $sq->where('target_group', 'not like', '%men%')
+                       ->orWhere('target_group', 'like', '%women%')
+                       ->orWhere('name', 'like', '%lady%')
+                       ->orWhere('name', 'like', '%filipiniana%')
+                       ->orWhere('name', 'like', '%bolero%')
+                       ->orWhere('name', 'like', '%mestiza%')
+                       ->orWhere('name', 'like', '%terno%');
+                })->orWhereNull('target_group');
+            });
+        } elseif ($detectedAudience === 'Boys') {
+            $query->where(function (Builder $q) {
+                $q->where('target_group', 'not like', '%women%')
+                  ->where('target_group', 'not like', '%girl%')
+                  ->orWhereNull('target_group');
+            })
+            ->where('name', 'not like', '%filipiniana%')
+            ->where('name', 'not like', '%gown%')
+            ->where('name', 'not like', '%dress%')
+            ->where('name', 'not like', '%girl%');
+        } elseif ($detectedAudience === 'Girls') {
+            $query->where(function (Builder $q) {
+                $q->where(function ($sq) {
+                    $sq->whereNotIn('target_group', ['Men', 'Boys', 'boy', 'male'])
+                       ->where('target_group', 'not like', '%boy%')
+                       ->orWhere('name', 'like', '%lady%')
+                       ->orWhere('name', 'like', '%filipiniana%')
+                       ->orWhere('name', 'like', '%dress%');
+                })->orWhereNull('target_group');
+            })
+            ->where('name', 'not like', '%boy%');
+        } elseif ($detectedAudience === 'Kids') {
+            $query->where(function (Builder $q) {
+                $q->where('target_group', 'like', '%kid%')
+                  ->orWhere('target_group', 'like', '%child%')
+                  ->orWhere('name', 'like', '%kid%')
+                  ->orWhere('name', 'like', '%boy%')
+                  ->orWhere('name', 'like', '%girl%')
+                  ->orWhereHas('category', function ($cq) {
+                      $cq->where('name', 'like', '%kid%')
+                         ->orWhere('name', 'like', '%child%');
+                  });
+            });
+        }
+
+        $searchTokens = !empty($attributeTokens) ? $attributeTokens : $tokens;
+
+        // Apply WHERE clauses combining keywords across product attributes
+        $query->where(function (Builder $mainQuery) use ($rawSearch, $normalized, $searchTokens, $detectedAudience) {
+            // Path 1: Direct full phrase match on attributes (when attributes exist)
+            $mainQuery->where(function (Builder $pq) use ($rawSearch, $normalized) {
+                $pq->where('name', 'like', '%' . $rawSearch . '%')
+                   ->orWhere('name', 'like', '%' . $normalized . '%')
+                   ->orWhere('description', 'like', '%' . $rawSearch . '%')
+                   ->orWhere('description', 'like', '%' . $normalized . '%')
+                   ->orWhere('sku', 'like', '%' . $rawSearch . '%')
+                   ->orWhereHas('category', function ($cq) use ($rawSearch, $normalized) {
+                       $cq->where('name', 'like', '%' . $rawSearch . '%')
+                          ->orWhere('name', 'like', '%' . $normalized . '%');
+                   });
+            });
 
             // Path 2: Token-based multi-attribute match
             // Each meaningful token must match AT LEAST ONE searchable field
-            $mainQuery->orWhere(function (Builder $tokenQuery) use ($tokens, $detectedAudience) {
-                foreach ($tokens as $tokenData) {
+            $mainQuery->orWhere(function (Builder $tokenQuery) use ($searchTokens, $detectedAudience) {
+                $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
+
+                foreach ($searchTokens as $tokenData) {
                     $orig = $tokenData['original'];
                     $resolved = $tokenData['resolved'] ?? $orig;
                     $variants = $tokenData['variants'];
 
-                    // Men token
-                    if (in_array($resolved, ['men', 'mens', 'male', 'man', 'gentleman', 'gentlemen'], true)) {
-                        $tokenQuery->where(function (Builder $aq) {
-                            $aq->where(function ($sq) {
-                                // Safe Men check: contains 'men' but NOT 'women'
-                                $sq->where('target_group', 'like', '%men%')
-                                   ->where('target_group', 'not like', '%women%');
-                            })->orWhere('name', 'like', '%men%')
-                              ->orWhere('description', 'like', '%men%')
-                              ->orWhereHas('category', function ($cq) {
-                                  $cq->where('name', 'like', '%men%')
-                                     ->where('name', 'not like', '%women%');
-                              });
-                        });
-                        // Filter out women's garments
-                        $tokenQuery->where(function (Builder $nq) {
-                            $nq->where('target_group', 'not like', '%women%')
-                               ->orWhereNull('target_group');
-                        });
-                        continue;
-                    }
-
-                    // Women token
-                    if (in_array($resolved, ['women', 'womens', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno'], true)) {
-                        $tokenQuery->where(function (Builder $aq) use ($variants) {
-                            $aq->where(function ($sq) {
-                                $sq->where('target_group', 'like', '%women%')
-                                   ->orWhere('target_group', 'like', '%female%');
-                            });
-                            foreach ($variants as $v) {
-                                $aq->orWhere('name', 'like', '%' . $v . '%')
-                                   ->orWhere('description', 'like', '%' . $v . '%')
-                                   ->orWhereHas('category', function ($cq) use ($v) {
-                                       $cq->where('name', 'like', '%' . $v . '%');
-                                    });
-                            }
-                        });
-                        continue;
-                    }
-
-                    // Boy token: primary Kids/Boys, related male attire (Barongs), excludes women's apparel
-                    if (in_array($resolved, ['boy', 'boys'], true)) {
-                        $tokenQuery->where(function (Builder $aq) use ($variants) {
-                            $aq->where(function ($sq) {
-                                $sq->where('target_group', 'like', '%kid%')
-                                   ->orWhere('target_group', 'like', '%child%')
-                                   ->orWhere('target_group', 'like', '%men%'); // Related male attire
-                            });
-                            foreach ($variants as $v) {
-                                $aq->orWhere('name', 'like', '%' . $v . '%')
-                                   ->orWhere('description', 'like', '%' . $v . '%')
-                                   ->orWhereHas('category', function ($cq) use ($v) {
-                                       $cq->where('name', 'like', '%' . $v . '%')
-                                          ->orWhere('name', 'like', '%barong%')
-                                          ->orWhere('name', 'like', '%boy%');
-                                   });
-                            }
-                        });
-                        // Filter out women's dresses/apparel
-                        $tokenQuery->where(function (Builder $nq) {
-                            $nq->where('target_group', 'not like', '%women%')
-                               ->orWhereNull('target_group');
-                        });
-                        continue;
-                    }
-
-                    // Girl token: primary Kids/Girls, related female formal wear (Filipiniana / Lady Barong), excludes men's barongs
-                    if (in_array($resolved, ['girl', 'girls'], true)) {
-                        $tokenQuery->where(function (Builder $aq) use ($variants) {
-                            $aq->where(function ($sq) {
-                                $sq->where('target_group', 'like', '%kid%')
-                                   ->orWhere('target_group', 'like', '%child%')
-                                   ->orWhere('target_group', 'like', '%women%')
-                                   ->orWhere('target_group', 'like', '%female%');
-                            });
-                            foreach ($variants as $v) {
-                                $aq->orWhere('name', 'like', '%' . $v . '%')
-                                   ->orWhere('description', 'like', '%' . $v . '%')
-                                   ->orWhereHas('category', function ($cq) use ($v) {
-                                       $cq->where('name', 'like', '%' . $v . '%')
-                                          ->orWhere('name', 'like', '%filipiniana%')
-                                          ->orWhere('name', 'like', '%gown%')
-                                          ->orWhere('name', 'like', '%lady%')
-                                          ->orWhere('name', 'like', '%girl%');
-                                   });
-                            }
-                            $aq->orWhere('name', 'like', '%filipiniana%')
-                               ->orWhere('name', 'like', '%dress%')
-                               ->orWhere('name', 'like', '%bolero%')
-                               ->orWhere('name', 'like', '%mestiza%')
-                               ->orWhere('name', 'like', '%lady%');
-                        });
-                        // Filter out pure male barongs unless lady barong
-                        $tokenQuery->where(function (Builder $nq) {
-                            $nq->where(function ($sq) {
-                                $sq->where('target_group', '!=', 'Men')
-                                   ->orWhere('name', 'like', '%lady%')
-                                   ->orWhere('name', 'like', '%filipiniana%');
-                            });
-                        });
-                        continue;
-                    }
-
-                    // Kid / Child token
-                    if (in_array($resolved, ['kid', 'kids', 'child', 'children'], true)) {
-                        $tokenQuery->where(function (Builder $aq) use ($variants) {
-                            $aq->where(function ($sq) {
-                                $sq->where('target_group', 'like', '%kid%')
-                                   ->orWhere('target_group', 'like', '%child%');
-                            });
-                            foreach ($variants as $v) {
-                                $aq->orWhere('name', 'like', '%' . $v . '%')
-                                   ->orWhere('description', 'like', '%' . $v . '%')
-                                   ->orWhereHas('category', function ($cq) use ($v) {
-                                       $cq->where('name', 'like', '%' . $v . '%')
-                                          ->orWhere('name', 'like', '%kid%')
-                                          ->orWhere('name', 'like', '%boy%')
-                                          ->orWhere('name', 'like', '%girl%');
-                                   });
-                            }
-                            // Fallback so catalog is not completely empty if store has not yet tagged Kids products
-                            $aq->orWhereIn('target_group', ['Men', 'Women']);
-                        });
-                        continue;
-                    }
-
-                    // Check if query is in a female demographic context (e.g. 'barong for girl' or 'barong for women')
-                    $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
-
-                    // General attribute matching for non-audience keywords
+                    // General attribute matching
                     $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isFemaleSearch) {
                         foreach ($variants as $v) {
                             $subQuery->orWhere('name', 'like', '%' . $v . '%')

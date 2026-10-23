@@ -457,7 +457,7 @@ function shopClient(config) {
                 p = p.filter(item => {
                     const tg = (item.target_group || '').toLowerCase();
                     const name = (item.name || '').toLowerCase();
-                    return tg.includes('men') || tg.includes('male') || (name.includes('men') && !name.includes('women'));
+                    return !tg.includes('women') && !tg.includes('female') && !name.includes('women') && !name.includes('filipiniana') && !name.includes('bolero') && (tg.includes('men') || tg.includes('male') || name.includes('barong'));
                 });
             } else if (this.activeTab === 'women') {
                 p = p.filter(item => {
@@ -549,7 +549,7 @@ function shopClient(config) {
                                        (tg.includes('kid') || tg.includes('girl') || tg.includes('women') || name.includes('girl') || name.includes('filipiniana') || name.includes('dress') || name.includes('bolero') || name.includes('lady'));
                             }
                             if (effective === 'kid' || effective === 'kids' || effective === 'child' || effective === 'children') {
-                                return tg.includes('kid') || tg.includes('child') || name.includes('kid') || desc.includes('kid') || tg.includes('men') || tg.includes('women');
+                                return tg.includes('kid') || tg.includes('child') || name.includes('kid') || desc.includes('kid') || name.includes('boy') || name.includes('girl');
                             }
 
                             // Female barong matching (barong for girl / women)

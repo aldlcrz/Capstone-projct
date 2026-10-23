@@ -220,27 +220,36 @@ class ProductSearchEngineTest extends TestCase
         // 1. Search 'barong for men'
         $response = $this->get('/?search=barong+for+men');
         $response->assertStatus(200);
-        $response->assertSee('Authentic Polo Barong');
+        $this->assertTrue($response->viewData('products')->contains('id', $poloMen->id));
+        $this->assertFalse($response->viewData('products')->contains('id', $boleroWomen->id));
+
+        // 1b. Search 'men'
+        $resMen = $this->get('/?search=men');
+        $resMen->assertStatus(200);
+        $this->assertTrue($resMen->viewData('products')->contains('id', $poloMen->id));
+        $this->assertFalse($resMen->viewData('products')->contains('id', $boleroWomen->id));
 
         // 2. Search "men's barong"
         $response = $this->get("/?search=men's+barong");
         $response->assertStatus(200);
-        $response->assertSee('Authentic Polo Barong');
+        $this->assertTrue($response->viewData('products')->contains('id', $poloMen->id));
+        $this->assertFalse($response->viewData('products')->contains('id', $boleroWomen->id));
 
         // 3. Search plural "barongs"
         $response = $this->get('/?search=barongs');
         $response->assertStatus(200);
-        $response->assertSee('Authentic Polo Barong');
+        $this->assertTrue($response->viewData('products')->contains('id', $poloMen->id));
 
         // 4. Search 'polo barong'
         $response = $this->get('/?search=polo+barong');
         $response->assertStatus(200);
-        $response->assertSee('Authentic Polo Barong');
+        $this->assertTrue($response->viewData('products')->contains('id', $poloMen->id));
 
         // 5. Search 'barong for women'
         $response = $this->get('/?search=barong+for+women');
         $response->assertStatus(200);
-        $response->assertSee('Mestiza Filipiniana Bolero');
+        $this->assertTrue($response->viewData('products')->contains('id', $boleroWomen->id));
+        $this->assertFalse($response->viewData('products')->contains('id', $poloMen->id));
 
         // 6. Search unrelated keyword
         $response = $this->get('/?search=nonexistentphone123');
@@ -809,6 +818,100 @@ class ProductSearchEngineTest extends TestCase
         $this->assertContains($budget->id, $apiIds);
         $this->assertNotContains($midPiece->id, $apiIds);
         $this->assertNotContains($premiumPiece->id, $apiIds);
+    }
+
+    public function test_search_men_strictly_isolates_men_products_and_excludes_women_filipiniana_and_kids(): void
+    {
+        $weddingBarongMen = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Wedding Barong',
+            'description' => 'Classic traditional barong for men wedding ceremony',
+            'price' => 600,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+        ]);
+
+        $womenBolero = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Women Bolero',
+            'description' => 'Elegant embroidered garment for women special events',
+            'price' => 600,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+        ]);
+
+        $jusilynFilipiniana = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Jusilyn Filipiniana',
+            'description' => 'Recommended garment for formal occasions',
+            'price' => 3199,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+        ]);
+
+        $kidsTesting = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'For Testing',
+            'description' => 'Fine children garment for ceremonial occasions',
+            'price' => 1419.50,
+            'stock' => 3,
+            'status' => 'approved',
+            'target_group' => 'Kids',
+        ]);
+
+        // Search 'men'
+        $results = Product::query()->where('status', 'approved')->search('men')->get();
+
+        $this->assertTrue($results->contains('id', $weddingBarongMen->id), 'Men wedding barong must be returned');
+        $this->assertFalse($results->contains('id', $womenBolero->id), 'Women Bolero must NOT be returned when searching men');
+        $this->assertFalse($results->contains('id', $jusilynFilipiniana->id), 'Jusilyn Filipiniana must NOT be returned when searching men');
+        $this->assertFalse($results->contains('id', $kidsTesting->id), 'Kids product must NOT be returned when searching men');
+    }
+
+    public function test_search_women_strictly_isolates_women_and_excludes_men(): void
+    {
+        $weddingBarongMen = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Wedding Barong Tagalog',
+            'description' => 'Formal piece for gentlemen',
+            'price' => 600,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+        ]);
+
+        $womenBolero = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Organza Filipiniana Bolero',
+            'description' => 'Exquisite women formal attire',
+            'price' => 1999,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+        ]);
+
+        $results = Product::query()->where('status', 'approved')->search('women')->get();
+
+        $this->assertTrue($results->contains('id', $womenBolero->id), 'Women bolero must be returned');
+        $this->assertFalse($results->contains('id', $weddingBarongMen->id), 'Men barong must NOT be returned when searching women');
+    }
+
+    public function test_homepage_collection_tab_highlights_men_when_searching_men(): void
+    {
+        $response = $this->get('/?search=men');
+        $response->assertStatus(200);
+
+        // Men tab should be styled active with #DFC97A and Men text
+        $content = $response->getContent();
+        $this->assertMatchesRegularExpression('/background-color:\s*#1c1917\s*!important;\s*color:\s*#DFC97A\s*!important;[^>]*>\s*Men\s*<\/a>/i', $content);
     }
 }
 

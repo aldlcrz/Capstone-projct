@@ -742,7 +742,28 @@
 
             $isAllPrices = empty($currentPriceRange) && empty($currentMinPrice) && empty($currentMaxPrice);
 
-            $buildCatalogueUrl = function($overrides = []) use ($currentCatParam, $currentSortParam, $currentPriceRange, $currentSearchParam, $currentMinPrice, $currentMaxPrice) {
+            // Detect target audience from current search term if category is empty
+            $detectedSearchAudience = !empty($currentSearchParam)
+                ? \App\Services\ProductSearchService::detectTargetAudience(\App\Services\ProductSearchService::normalize($currentSearchParam))
+                : null;
+
+            $pureDemographicWords = [
+                'men', 'mens', 'man', 'male', 'males', 'gentleman', 'gentlemen',
+                'women', 'womens', 'woman', 'female', 'females', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno',
+                'kids', 'kid', 'child', 'children', 'boy', 'boys', 'girl', 'girls'
+            ];
+            $isPureDemographicSearch = !empty($currentSearchParam) && in_array(strtolower(trim($currentSearchParam)), $pureDemographicWords, true);
+
+            $effectiveDemographic = !empty($currentCatParam) 
+                ? strtolower($currentCatParam) 
+                : ($detectedSearchAudience ? strtolower($detectedSearchAudience) : '');
+
+            $isMenActive = in_array($effectiveDemographic, ['men', 'male', 'boys', 'boy']);
+            $isWomenActive = in_array($effectiveDemographic, ['women', 'female', 'girls', 'girl']);
+            $isKidsActive = in_array($effectiveDemographic, ['kids', 'kid', 'child', 'children']);
+            $isAllActive = empty($effectiveDemographic) && $currentSortParam !== 'lumban_special';
+
+            $buildCatalogueUrl = function($overrides = []) use ($currentCatParam, $currentSortParam, $currentPriceRange, $currentSearchParam, $currentMinPrice, $currentMaxPrice, $isPureDemographicSearch) {
                 $params = [
                     'category'    => $currentCatParam,
                     'sort'        => $currentSortParam,
@@ -751,6 +772,12 @@
                     'max_price'   => $currentMaxPrice,
                     'search'      => $currentSearchParam,
                 ];
+                // When selecting a collection tab, if current search was a pure demographic keyword, clear search to avoid conflicting filters
+                if (isset($overrides['category']) || (array_key_exists('category', $overrides) && $overrides['category'] === null)) {
+                    if ($isPureDemographicSearch) {
+                        unset($params['search']);
+                    }
+                }
                 foreach ($overrides as $k => $v) {
                     if ($v === null || $v === '' || $v === '__all__') {
                         unset($params[$k]);
@@ -772,10 +799,10 @@
             };
 
             $classifications = [
-                ['label' => 'All Pieces', 'param' => ['category' => null, 'sort' => $currentSortParam === 'lumban_special' ? null : $currentSortParam], 'active' => empty($currentCatParam) && $currentSortParam !== 'lumban_special'],
-                ['label' => 'Men', 'param' => ['category' => 'Men'], 'active' => strtolower($currentCatParam) === 'men' || strtolower($currentCatParam) === 'male'],
-                ['label' => 'Women', 'param' => ['category' => 'Women'], 'active' => strtolower($currentCatParam) === 'women' || strtolower($currentCatParam) === 'female'],
-                ['label' => 'Kids', 'param' => ['category' => 'Kids'], 'active' => strtolower($currentCatParam) === 'kids'],
+                ['label' => 'All Pieces', 'param' => ['category' => null, 'search' => $isPureDemographicSearch ? null : $currentSearchParam, 'sort' => $currentSortParam === 'lumban_special' ? null : $currentSortParam], 'active' => $isAllActive],
+                ['label' => 'Men', 'param' => ['category' => 'Men', 'search' => $isPureDemographicSearch ? null : $currentSearchParam], 'active' => $isMenActive],
+                ['label' => 'Women', 'param' => ['category' => 'Women', 'search' => $isPureDemographicSearch ? null : $currentSearchParam], 'active' => $isWomenActive],
+                ['label' => 'Kids', 'param' => ['category' => 'Kids', 'search' => $isPureDemographicSearch ? null : $currentSearchParam], 'active' => $isKidsActive],
             ];
 
             $priceTiers = [
