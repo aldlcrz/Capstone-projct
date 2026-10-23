@@ -84,128 +84,569 @@
         x-init="startTimer()"
         @mouseenter="stopTimer()"
         @mouseleave="startTimer()"
-        class="lb-hero"
+        class="lb-hero-root"
     >
         <style>
-            .lb-hero{position:relative;width:100%;height:clamp(420px,42vw,560px);overflow:hidden;user-select:none;font-family:'Inter',sans-serif}
-            .lb-hero-wall{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#F3ECE2 0%,#EEE5D8 84%,#E5DACA 84.25%,#EFE7DB 86%,#ECE3D6 100%)}
-            .lb-hero-light{position:absolute;inset:0;pointer-events:none;background:linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,.55) 42%,rgba(255,255,255,0) 54%,rgba(120,92,55,.07) 62%,rgba(255,255,255,0) 74%,rgba(255,255,255,.35) 86%,rgba(255,255,255,0) 100%)}
-            .lb-hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 70% at 70% 28%,rgba(255,252,246,.75) 0%,rgba(255,252,246,0) 70%)}
-            .lb-arch{position:absolute;left:59%;width:25%;top:3%;bottom:16%;pointer-events:none;border-top-left-radius:9999px;border-top-right-radius:9999px;background:#F4EDE3;box-shadow:0 0 0 1px rgba(170,145,110,.10),-18px 10px 40px -20px rgba(110,85,50,.25)}
-            .lb-arch::before{content:'';position:absolute;left:12px;right:12px;top:12px;bottom:0;border-top-left-radius:9999px;border-top-right-radius:9999px;background:linear-gradient(180deg,#E6DACA 0%,#DCCDB9 100%);box-shadow:inset 14px 22px 34px rgba(95,70,38,.18)}
-            .lb-arch::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:16%;background:linear-gradient(180deg,#E9DFD1 0%,#E2D6C5 100%);box-shadow:0 -1px 0 rgba(150,125,90,.18)}
-            .lb-stage{position:absolute;left:50%;width:34%;top:4%;bottom:0;z-index:3;pointer-events:none}
-            .lb-stage-item{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center}
-            .lb-stage-item img{max-height:100%;max-width:100%;object-fit:contain;object-position:center bottom;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 70% 78% at 50% 48%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 70% 78% at 50% 48%,#000 60%,transparent 100%)}
-            .lb-copy{position:absolute;left:22.5%;top:50%;transform:translateY(-55%);width:25%;z-index:5}
-            .lb-over{font-size:10px;letter-spacing:.26em;text-transform:uppercase;font-weight:500;color:#A2894F}
-            .lb-over-rule{width:30px;height:1px;background:#BFA87A;margin:11px 0 16px}
-            .lb-title{font-family:'Cormorant Garamond','Playfair Display',Georgia,serif;font-weight:500;text-transform:uppercase;color:#2B2520;line-height:1;letter-spacing:.015em;font-size:clamp(36px,4.6vw,64px);margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-            .lb-title--md{font-size:clamp(28px,3.3vw,46px)}
-            .lb-title--sm{font-size:clamp(24px,2.6vw,36px)}
-            .lb-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(15px,1.45vw,19px);line-height:1.3;color:#3F3730;margin:0 0 22px;max-width:250px}
-            .lb-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-            .lb-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 20px;border-radius:999px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;transition:background-color .25s,transform .25s,box-shadow .25s;cursor:pointer;white-space:nowrap}
-            .lb-btn:hover{transform:translateY(-1px)}
-            .lb-btn-primary{background:#9A7E3C;color:#fff;box-shadow:0 6px 16px -8px rgba(110,85,30,.6)}
-            .lb-btn-primary:hover{background:#86692C}
-            .lb-btn-ghost{border:1px solid #8E867B;color:#3B342D;background:transparent}
-            .lb-btn-ghost:hover{background:rgba(255,255,255,.55)}
-            .lb-peek{position:absolute;top:50%;transform:translateY(-50%);width:16.2%;aspect-ratio:.84;border-radius:14px;overflow:hidden;cursor:pointer;z-index:4;box-shadow:0 14px 30px -16px rgba(70,50,25,.35);transition:transform .35s,box-shadow .35s;background:#E6DCCE}
-            .lb-peek:hover{transform:translateY(-50%) scale(1.03)}
-            .lb-peek img{width:100%;height:100%;object-fit:cover;filter:saturate(.85) brightness(1.03)}
-            .lb-peek::after{content:'';position:absolute;inset:0;background:rgba(243,236,226,.12);pointer-events:none}
-            .lb-peek-left{left:3.3%}
-            .lb-peek-right{right:3%}
-            .lb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.96);color:#3A322B;display:flex;align-items:center;justify-content:center;z-index:10;cursor:pointer;box-shadow:0 4px 14px rgba(60,45,25,.18);transition:transform .25s,color .25s}
-            .lb-arrow:hover{transform:translateY(-50%) scale(1.08);color:#9A7E3C}
-            .lb-arrow-left{left:1.4%}
-            .lb-arrow-right{right:1.4%}
-            .lb-dots{position:absolute;bottom:5.5%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;z-index:10}
-            .lb-dots-line{width:60px;height:1px;background:#D6CAB8;margin:0 10px}
-            .lb-dot{width:6px;height:6px;border-radius:999px;background:#D3C6B3;transition:all .3s;cursor:pointer}
-            .lb-dot.is-active{width:22px;background:#A0843F}
-            @media (max-width:767px){
-                .lb-hero{height:auto;display:flex;flex-direction:column;padding:30px 20px 56px}
-                .lb-arch,.lb-peek,.lb-dots-line{display:none}
-                .lb-copy{position:relative;left:auto;top:auto;transform:none;width:100%;order:1;display:flex;flex-direction:column;align-items:center;text-align:center}
-                .lb-sub{max-width:300px}
-                .lb-stage{position:relative;left:auto;top:auto;bottom:auto;width:100%;height:300px;order:2;margin-top:18px}
-                .lb-arrow{top:auto;bottom:150px;transform:none}
-                .lb-arrow:hover{transform:scale(1.08)}
-                .lb-dots{bottom:20px}
+            /* 1. Root & background: 100% seamless, matching page background */
+            .lb-hero-root {
+                position: relative;
+                width: 100%;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                overflow: hidden;
+                user-select: none;
+                padding-top: 12px;
+                padding-bottom: 34px;
+            }
+
+            /* Ambient diagonal sunlight wash */
+            .lb-sun-beam {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(116deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 35%, transparent 60%);
+                mix-blend-mode: overlay;
+                z-index: 1;
+            }
+
+            /* Main stage container */
+            .lb-hero-stage {
+                position: relative;
+                width: 100%;
+                max-width: 1360px;
+                margin: 0 auto;
+                min-height: 480px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                z-index: 2;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-hero-stage {
+                    min-height: 520px;
+                    padding: 10px 24px;
+                }
+            }
+
+            /* 2. Side Preview Cards (left & right) */
+            .lb-side-card {
+                position: relative;
+                flex-shrink: 0;
+                width: 140px;
+                height: 220px;
+                border-radius: 20px;
+                overflow: hidden;
+                cursor: pointer;
+                background: #E8DDD0;
+                border: 3px solid rgba(255, 255, 255, 0.85);
+                box-shadow: 0 12px 28px -8px rgba(80, 60, 30, 0.14);
+                transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, opacity 0.35s ease;
+                opacity: 0.82;
+                z-index: 5;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-side-card {
+                    width: 175px;
+                    height: 275px;
+                    border-radius: 24px;
+                }
+            }
+
+            @media (min-width: 1280px) {
+                .lb-side-card {
+                    width: 195px;
+                    height: 300px;
+                    border-radius: 26px;
+                }
+            }
+
+            .lb-side-card:hover {
+                transform: translateY(-4px) scale(1.02);
+                opacity: 1;
+                box-shadow: 0 18px 36px -8px rgba(80, 60, 30, 0.22);
+            }
+
+            .lb-side-card img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                transition: transform 0.6s ease;
+            }
+
+            .lb-side-card:hover img {
+                transform: scale(1.04);
+            }
+
+            /* Subtle gradient vignette on side cards */
+            .lb-side-card-vignette {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%, rgba(50, 35, 15, 0.22) 100%);
+            }
+
+            /* 3. Center-Left Editorial Copy Block */
+            .lb-hero-copy {
+                flex: 1 1 auto;
+                max-width: 440px;
+                padding-left: 18px;
+                padding-right: 18px;
+                z-index: 6;
+                text-align: left;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-hero-copy {
+                    max-width: 460px;
+                    padding-left: 28px;
+                    padding-right: 24px;
+                }
+            }
+
+            .lb-eyebrow-wrap {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+            .lb-eyebrow-rule {
+                width: 28px;
+                height: 1.5px;
+                background: #B38E46;
+            }
+
+            .lb-eyebrow-text {
+                font-family: 'Inter', sans-serif;
+                font-size: 10.5px;
+                font-weight: 700;
+                letter-spacing: 0.28em;
+                text-transform: uppercase;
+                color: #A07C32;
+            }
+
+            .lb-hero-title {
+                font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+                font-size: clamp(34px, 4vw, 56px);
+                font-weight: 500;
+                line-height: 1.05;
+                letter-spacing: 0.01em;
+                text-transform: uppercase;
+                color: #241D17;
+                margin: 0 0 14px 0;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .lb-hero-desc {
+                font-family: 'Cormorant Garamond', Georgia, serif;
+                font-size: clamp(15px, 1.35vw, 18px);
+                font-weight: 400;
+                line-height: 1.42;
+                color: #554A3F;
+                margin: 0 0 24px 0;
+                max-width: 380px;
+            }
+
+            .lb-hero-ctas {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+
+            .lb-btn-primary {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                height: 40px;
+                padding: 0 24px;
+                border-radius: 9999px;
+                background: #8E6D38;
+                color: #FFFFFF;
+                font-family: 'Inter', sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                box-shadow: 0 6px 16px -4px rgba(118, 86, 37, 0.35);
+                transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .lb-btn-primary:hover {
+                background: #785A28;
+                transform: translateY(-1px);
+                box-shadow: 0 10px 22px -4px rgba(118, 86, 37, 0.45);
+            }
+
+            .lb-btn-secondary {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                padding: 0 22px;
+                border-radius: 9999px;
+                background: rgba(255, 255, 255, 0.35);
+                border: 1px solid #786C5E;
+                color: #2C231B;
+                font-family: 'Inter', sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .lb-btn-secondary:hover {
+                background: rgba(255, 255, 255, 0.75);
+                border-color: #2C231B;
+                transform: translateY(-1px);
+            }
+
+            /* 4. Center-Right Architectural Arch & Garment Showcase */
+            .lb-arch-stage {
+                position: relative;
+                flex-shrink: 0;
+                width: 300px;
+                height: 430px;
+                z-index: 5;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-arch-stage {
+                    width: 350px;
+                    height: 490px;
+                }
+            }
+
+            @media (min-width: 1280px) {
+                .lb-arch-stage {
+                    width: 390px;
+                    height: 520px;
+                }
+            }
+
+            /* The architectural arch shape behind the garment */
+            .lb-arch-niche {
+                position: absolute;
+                inset-inline: 0;
+                top: 0;
+                bottom: 0;
+                border-top-left-radius: 9999px;
+                border-top-right-radius: 9999px;
+                background: linear-gradient(180deg, rgba(234, 222, 206, 0.65) 0%, rgba(224, 210, 192, 0.5) 75%, rgba(215, 200, 180, 0.65) 100%);
+                border: 2px solid rgba(255, 255, 255, 0.6);
+                box-shadow: inset 0 14px 28px rgba(80, 60, 30, 0.10), 0 18px 40px -15px rgba(80, 60, 30, 0.12);
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            /* Arch interior lighting & pedestal base */
+            .lb-arch-niche::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 65% 25%, rgba(255, 255, 255, 0.6) 0%, transparent 65%);
+            }
+
+            .lb-arch-pedestal {
+                position: absolute;
+                bottom: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 70%;
+                height: 18px;
+                border-radius: 9999px;
+                background: radial-gradient(ellipse, rgba(50, 35, 15, 0.28) 0%, transparent 72%);
+                filter: blur(4px);
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            /* Garment item container */
+            .lb-garment-wrapper {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                padding-bottom: 10px;
+                z-index: 2;
+            }
+
+            /* The garment image itself */
+            .lb-garment-img {
+                max-height: 94%;
+                max-width: 94%;
+                object-fit: contain;
+                object-position: center bottom;
+                filter: drop-shadow(0 14px 24px rgba(40, 25, 10, 0.24));
+                pointer-events: none;
+                user-select: none;
+                transition: transform 0.5s ease, opacity 0.5s ease;
+            }
+
+            /* 5. Minimal Circular Navigation Arrows */
+            .lb-nav-arrow {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 38px;
+                height: 38px;
+                border-radius: 9999px;
+                background: rgba(255, 255, 255, 0.92);
+                border: 1px solid rgba(220, 205, 185, 0.6);
+                color: #332B23;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 4px 14px rgba(70, 50, 25, 0.12);
+                transition: transform 0.25s ease, background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+                z-index: 10;
+            }
+
+            .lb-nav-arrow:hover {
+                transform: translateY(-50%) scale(1.08);
+                background: #FFFFFF;
+                color: #8E6D38;
+                box-shadow: 0 6px 18px rgba(70, 50, 25, 0.20);
+            }
+
+            .lb-nav-arrow-prev {
+                left: 4px;
+            }
+
+            .lb-nav-arrow-next {
+                right: 4px;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-nav-arrow-prev { left: 8px; }
+                .lb-nav-arrow-next { right: 8px; }
+            }
+
+            /* 6. Minimal Bottom Pagination Indicator */
+            .lb-dots-bar {
+                position: absolute;
+                bottom: 6px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                z-index: 10;
+            }
+
+            .lb-dots-line {
+                width: 44px;
+                height: 1px;
+                background: #D4C6B2;
+                opacity: 0.7;
+                margin: 0 8px;
+            }
+
+            .lb-dot-btn {
+                height: 5px;
+                border-radius: 9999px;
+                background: #D1C2AD;
+                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                cursor: pointer;
+                border: none;
+                padding: 0;
+            }
+
+            .lb-dot-btn.is-active {
+                width: 22px;
+                background: #8E6D38;
+            }
+
+            .lb-dot-btn:not(.is-active) {
+                width: 5px;
+            }
+
+            .lb-dot-btn:hover:not(.is-active) {
+                background: #A6957E;
+            }
+
+            /* 7. Responsive Mobile Layout (< 768px) */
+            @media (max-width: 767px) {
+                .lb-hero-stage {
+                    flex-direction: column;
+                    min-height: auto;
+                    padding: 10px 16px 28px 16px;
+                    gap: 20px;
+                }
+
+                .lb-side-card {
+                    display: none;
+                }
+
+                .lb-dots-line {
+                    display: none;
+                }
+
+                .lb-hero-copy {
+                    order: 2;
+                    max-width: 100%;
+                    padding: 0;
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .lb-eyebrow-wrap {
+                    justify-content: center;
+                }
+
+                .lb-hero-desc {
+                    max-width: 320px;
+                }
+
+                .lb-hero-ctas {
+                    justify-content: center;
+                }
+
+                .lb-arch-stage {
+                    order: 1;
+                    width: 240px;
+                    height: 320px;
+                }
+
+                .lb-nav-arrow {
+                    top: 170px;
+                }
             }
         </style>
 
-        {{-- Room backdrop: plaster wall, window light, floor line --}}
-        <div class="lb-hero-wall"></div>
-        <div class="lb-hero-light"></div>
-        <div class="lb-hero-glow"></div>
+        {{-- Ambient sunlight wash across the section --}}
+        <div class="lb-sun-beam"></div>
 
-        {{-- Architectural arch niche behind the hero garment --}}
-        <div class="lb-arch"></div>
+        {{-- Main panoramic stage --}}
+        <div class="lb-hero-stage">
+            
+            {{-- Far-Left: Previous Product Preview Card (desktop/tablet) --}}
+            <template x-if="prevItem">
+                <div @click="prev()"
+                     :title="'View ' + prevItem.title"
+                     class="lb-side-card">
+                    <img :src="prevItem.image_url" :alt="prevItem.title" draggable="false">
+                    <div class="lb-side-card-vignette"></div>
+                </div>
+            </template>
 
-        {{-- Hero garment --}}
-        <div class="lb-stage">
-            <template x-for="(item, idx) in items" :key="'hero-' + item.id">
-                <div class="lb-stage-item" x-show="active === idx" x-transition.opacity.duration.500ms>
-                    <img :src="item.image_url" :alt="item.title" draggable="false">
+            {{-- Center-Left: Editorial Product Copy --}}
+            <div class="lb-hero-copy">
+                {{-- Eyebrow --}}
+                <div class="lb-eyebrow-wrap">
+                    <span class="lb-eyebrow-rule"></span>
+                    <span class="lb-eyebrow-text" x-text="current.subtitle || 'Featured Collection'">Featured Collection</span>
+                </div>
+
+                {{-- Editorial Title --}}
+                <h1 class="lb-hero-title" x-text="current.title">Barong Pintax</h1>
+
+                {{-- Editorial Subtitle --}}
+                <p class="lb-hero-desc">A modern take on a timeless Filipino tradition.</p>
+
+                {{-- Action CTAs --}}
+                <div class="lb-hero-ctas">
+                    <a :href="current.button_url_1"
+                       @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                       class="lb-btn-primary">
+                        <span x-text="current.button_text_1 || 'Shop now'">Shop now</span>
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                    <a :href="current.button_url_2"
+                       @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
+                       class="lb-btn-secondary">
+                        <span x-text="current.button_text_2 || 'Visit shop'">Visit shop</span>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Center-Right: Architectural Arch Niche & Featured Hero Garment --}}
+            <div class="lb-arch-stage">
+                {{-- Architectural Wall Niche --}}
+                <div class="lb-arch-niche"></div>
+
+                {{-- Floor Pedestal Ambient Shadow --}}
+                <div class="lb-arch-pedestal"></div>
+
+                {{-- Active Garment --}}
+                <template x-for="(item, idx) in items" :key="'hero-' + item.id">
+                    <div class="lb-garment-wrapper"
+                         x-show="active === idx"
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-2">
+                        <img :src="item.image_url"
+                             :alt="item.title"
+                             class="lb-garment-img"
+                             draggable="false">
+                    </div>
+                </template>
+            </div>
+
+            {{-- Far-Right: Next Product Preview Card (desktop/tablet) --}}
+            <template x-if="nextItem">
+                <div @click="next()"
+                     :title="'View ' + nextItem.title"
+                     class="lb-side-card">
+                    <img :src="nextItem.image_url" :alt="nextItem.title" draggable="false">
+                    <div class="lb-side-card-vignette"></div>
                 </div>
             </template>
         </div>
 
-        {{-- Editorial copy --}}
-        <div class="lb-copy">
-            <div class="lb-over">Featured Collection</div>
-            <div class="lb-over-rule"></div>
-            <h2 class="lb-title"
-                :class="current.title.length > 30 ? 'lb-title--sm' : (current.title.length > 16 ? 'lb-title--md' : '')"
-                x-text="current.title"></h2>
-            <p class="lb-sub">A modern take on a timeless Filipino tradition.</p>
-            <div class="lb-actions">
-                <a :href="current.button_url_1"
-                   @click="if(current.button_url_1 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="lb-btn lb-btn-primary">
-                    <span x-text="current.button_text_1 || 'Shop now'"></span>
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
-                <a :href="current.button_url_2"
-                   @click="if(current.button_url_2 === '#catalogue-section') { $event.preventDefault(); document.getElementById('catalogue-section')?.scrollIntoView({ behavior: 'smooth' }); }"
-                   class="lb-btn lb-btn-ghost">
-                    <span x-text="current.button_text_2 || 'Visit shop'"></span>
-                </a>
-            </div>
-        </div>
-
-        {{-- Flanking preview cards --}}
-        <template x-if="prevItem">
-            <div class="lb-peek lb-peek-left" @click="prev()" :title="prevItem.title">
-                <img :src="prevItem.image_url" :alt="prevItem.title" draggable="false">
-            </div>
-        </template>
-        <template x-if="nextItem">
-            <div class="lb-peek lb-peek-right" @click="next()" :title="nextItem.title">
-                <img :src="nextItem.image_url" :alt="nextItem.title" draggable="false">
-            </div>
-        </template>
-
-        {{-- Navigation arrows --}}
+        {{-- Floating Outer Navigation Controls (< and >) --}}
         <template x-if="total > 1">
             <div>
-                <button type="button" @click="prev()" aria-label="Previous product" class="lb-arrow lb-arrow-left">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                <button type="button"
+                        @click="prev()"
+                        aria-label="Previous product"
+                        class="lb-nav-arrow lb-nav-arrow-prev">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button type="button" @click="next()" aria-label="Next product" class="lb-arrow lb-arrow-right">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <button type="button"
+                        @click="next()"
+                        aria-label="Next product"
+                        class="lb-nav-arrow lb-nav-arrow-next">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </template>
 
-        {{-- Pagination --}}
-        <div class="lb-dots" x-show="total > 1">
+        {{-- Minimalist Bottom Pagination Slider Bar --}}
+        <div class="lb-dots-bar" x-show="total > 1">
             <span class="lb-dots-line"></span>
             <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
-                <button type="button" @click="goTo(dIdx)" class="lb-dot" :class="active === dIdx && 'is-active'" :aria-label="'Go to slide ' + (dIdx + 1)"></button>
+                <button type="button"
+                        @click="goTo(dIdx)"
+                        class="lb-dot-btn"
+                        :class="active === dIdx && 'is-active'"
+                        :aria-label="'Go to slide ' + (dIdx + 1)"></button>
             </template>
             <span class="lb-dots-line"></span>
         </div>
