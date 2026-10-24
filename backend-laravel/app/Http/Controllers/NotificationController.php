@@ -8,32 +8,50 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
-     * Get all notifications for the authenticated user.
+     * Get all popup candidate notifications for the authenticated user.
      */
     public function getMyNotifications(Request $request)
     {
-        $userId = $request->user()->id;
-        $role = $request->query('role', $request->user()->role);
+        $user = $request->user();
+        $userId = $user->id;
+        $role = $request->query('role', $user->role);
 
-        $query = Notification::where('userId', $userId);
-        
-        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
-            $query->where('is_dismissed', false);
-        }
-        
-        if ($role) {
-            if (in_array($role, ['admin', 'superadmin'])) {
-                $query->where(function ($q) {
-                    $q->whereIn('targetRole', ['admin', 'superadmin'])
-                      ->orWhereNull('targetRole');
-                });
-            } else {
+        $query = Notification::query();
+
+        if (in_array($role, ['admin', 'superadmin']) || in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = in_array($role, ['superadmin']) || $user->role === 'superadmin'
+                ? ['admin', 'superadmin']
+                : ['admin'];
+
+            $query->where(function ($q) use ($userId, $targetRoles) {
+                $q->where('userId', $userId)
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            });
+
+            $query->where(function ($q) use ($targetRoles) {
+                $q->whereIn('targetRole', $targetRoles)
+                  ->orWhereNull('targetRole');
+            });
+        } else {
+            $query->where('userId', $userId);
+            if ($role) {
                 $query->where(function ($q) use ($role) {
                     $q->where('targetRole', $role)
                       ->orWhereNull('targetRole');
                 });
             }
         }
+
+        // Exclude dismissed notifications so dismissed alerts never reappear on refresh or login
+        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
+            $query->where('is_dismissed', false);
+        }
+
+        // Only unread notifications are candidates for live popup alerts
+        $query->where('isRead', false);
 
         $notifications = $query->orderBy('createdAt', 'desc')->get();
 
@@ -45,18 +63,27 @@ class NotificationController extends Controller
      */
     public function markAllRead(Request $request)
     {
-        $userId = $request->user()->id;
-        $role = $request->query('role', $request->user()->role);
+        $user = $request->user();
+        $userId = $user->id;
+        $role = $request->query('role', $user->role);
 
-        $query = Notification::where('userId', $userId)->where('isRead', false);
-        
-        if ($role) {
-            if (in_array($role, ['admin', 'superadmin'])) {
-                $query->where(function ($q) {
-                    $q->whereIn('targetRole', ['admin', 'superadmin'])
-                      ->orWhereNull('targetRole');
-                });
-            } else {
+        $query = Notification::query()->where('isRead', false);
+
+        if (in_array($role, ['admin', 'superadmin']) || in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = in_array($role, ['superadmin']) || $user->role === 'superadmin'
+                ? ['admin', 'superadmin']
+                : ['admin'];
+
+            $query->where(function ($q) use ($userId, $targetRoles) {
+                $q->where('userId', $userId)
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            });
+        } else {
+            $query->where('userId', $userId);
+            if ($role) {
                 $query->where(function ($q) use ($role) {
                     $q->where('targetRole', $role)
                       ->orWhereNull('targetRole');
@@ -74,18 +101,27 @@ class NotificationController extends Controller
      */
     public function getUnreadCount(Request $request)
     {
-        $userId = $request->user()->id;
-        $role = $request->query('role', $request->user()->role);
+        $user = $request->user();
+        $userId = $user->id;
+        $role = $request->query('role', $user->role);
 
-        $query = Notification::where('userId', $userId)->where('isRead', false);
-        
-        if ($role) {
-            if (in_array($role, ['admin', 'superadmin'])) {
-                $query->where(function ($q) {
-                    $q->whereIn('targetRole', ['admin', 'superadmin'])
-                      ->orWhereNull('targetRole');
-                });
-            } else {
+        $query = Notification::query()->where('isRead', false);
+
+        if (in_array($role, ['admin', 'superadmin']) || in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = in_array($role, ['superadmin']) || $user->role === 'superadmin'
+                ? ['admin', 'superadmin']
+                : ['admin'];
+
+            $query->where(function ($q) use ($userId, $targetRoles) {
+                $q->where('userId', $userId)
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            });
+        } else {
+            $query->where('userId', $userId);
+            if ($role) {
                 $query->where(function ($q) use ($role) {
                     $q->where('targetRole', $role)
                       ->orWhereNull('targetRole');
@@ -103,9 +139,21 @@ class NotificationController extends Controller
      */
     public function dismiss(Request $request, $id)
     {
-        $notification = Notification::where('id', $id)
-            ->where('userId', $request->user()->id)
-            ->first();
+        $user = $request->user();
+        $query = Notification::where('id', $id);
+
+        if (in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = $user->role === 'superadmin' ? ['admin', 'superadmin'] : ['admin'];
+            $query->where(function ($q) use ($user, $targetRoles) {
+                $q->where('userId', $user->id)
+                  ->orWhereNull('userId')
+                  ->orWhereIn('targetRole', $targetRoles);
+            });
+        } else {
+            $query->where('userId', $user->id);
+        }
+
+        $notification = $query->first();
 
         if (!$notification) {
             return response()->json(['message' => 'Notification not found'], 404);
@@ -124,9 +172,21 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
-        $notification = Notification::where('id', $id)
-            ->where('userId', $request->user()->id)
-            ->first();
+        $user = $request->user();
+        $query = Notification::where('id', $id);
+
+        if (in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = $user->role === 'superadmin' ? ['admin', 'superadmin'] : ['admin'];
+            $query->where(function ($q) use ($user, $targetRoles) {
+                $q->where('userId', $user->id)
+                  ->orWhereNull('userId')
+                  ->orWhereIn('targetRole', $targetRoles);
+            });
+        } else {
+            $query->where('userId', $user->id);
+        }
+
+        $notification = $query->first();
 
         if (!$notification) {
             return response()->json(['message' => 'Notification not found'], 404);
@@ -146,9 +206,21 @@ class NotificationController extends Controller
      */
     public function readAndRedirect(Request $request, $id)
     {
-        $notification = Notification::where('id', $id)
-            ->where('userId', $request->user()->id)
-            ->first();
+        $user = $request->user();
+        $query = Notification::where('id', $id);
+
+        if ($user && in_array($user->role, ['admin', 'superadmin'])) {
+            $targetRoles = $user->role === 'superadmin' ? ['admin', 'superadmin'] : ['admin'];
+            $query->where(function ($q) use ($user, $targetRoles) {
+                $q->where('userId', $user->id)
+                  ->orWhereNull('userId')
+                  ->orWhereIn('targetRole', $targetRoles);
+            });
+        } elseif ($user) {
+            $query->where('userId', $user->id);
+        }
+
+        $notification = $query->first();
 
         if ($notification) {
             $notification->isRead = true;
@@ -161,6 +233,12 @@ class NotificationController extends Controller
             if (!empty($targetUrl) && $targetUrl !== '#') {
                 return redirect($targetUrl);
             }
+        }
+
+        if ($user) {
+            if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
+            if ($user->role === 'admin') return redirect()->route('admin.dashboard');
+            if ($user->role === 'seller') return redirect()->route('seller.dashboard');
         }
 
         return redirect()->route('profile.orders');

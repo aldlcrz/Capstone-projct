@@ -290,4 +290,68 @@ class LiveNotificationPopupSystemTest extends TestCase
             $listResponse->assertJsonMissing(['id' => $notif->id]);
         }
     }
+
+    public function test_dismissed_notification_does_not_appear_on_refresh_or_relogin_and_only_new_notification_triggers_popup(): void
+    {
+        $roles = [
+            'admin' => $this->admin,
+            'superadmin' => $this->superadmin,
+            'seller' => $this->seller,
+            'customer' => $this->customer,
+        ];
+
+        foreach ($roles as $roleKey => $user) {
+            // 1. Initial Notification arrives
+            $initialNotif = Notification::create([
+                'userId' => $user->id,
+                'title' => ucfirst($roleKey) . ' Initial Notification',
+                'message' => 'First message for ' . $roleKey,
+                'targetRole' => $roleKey,
+                'isRead' => false,
+                'is_dismissed' => false,
+            ]);
+
+            // User sees it in the candidate list
+            $initialFetch = $this->actingAs($user)->getJson('/api/notifications?role=' . $roleKey);
+            $initialFetch->assertStatus(200);
+            $initialFetch->assertJsonFragment(['id' => $initialNotif->id]);
+
+            // 2. User clicks the "X" button to dismiss
+            $dismissRes = $this->actingAs($user)->postJson('/api/notifications/' . $initialNotif->id . '/dismiss');
+            $dismissRes->assertStatus(200);
+
+            // Verified saved in DB as is_dismissed = true
+            $this->assertDatabaseHas('notifications', [
+                'id' => $initialNotif->id,
+                'is_dismissed' => true,
+            ]);
+
+            // 3. User refreshes the page (new GET request) -> MUST NOT appear
+            $refreshFetch = $this->actingAs($user)->getJson('/api/notifications?role=' . $roleKey);
+            $refreshFetch->assertStatus(200);
+            $refreshFetch->assertJsonMissing(['id' => $initialNotif->id]);
+
+            // 4. User logs out and logs in again (new session/new authentication instance) -> MUST NOT appear
+            auth()->logout();
+            $reloginFetch = $this->actingAs($user)->getJson('/api/notifications?role=' . $roleKey);
+            $reloginFetch->assertStatus(200);
+            $reloginFetch->assertJsonMissing(['id' => $initialNotif->id]);
+
+            // 5. A brand new incoming notification arrives
+            $newIncomingNotif = Notification::create([
+                'userId' => $user->id,
+                'title' => ucfirst($roleKey) . ' Brand New Alert',
+                'message' => 'New incoming event for ' . $roleKey,
+                'targetRole' => $roleKey,
+                'isRead' => false,
+                'is_dismissed' => false,
+            ]);
+
+            // 6. Only the new incoming notification is returned
+            $incomingFetch = $this->actingAs($user)->getJson('/api/notifications?role=' . $roleKey);
+            $incomingFetch->assertStatus(200);
+            $incomingFetch->assertJsonFragment(['id' => $newIncomingNotif->id]);
+            $incomingFetch->assertJsonMissing(['id' => $initialNotif->id]);
+        }
+    }
 }
