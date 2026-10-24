@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Notification;
+use App\Models\NotificationDismissal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -428,5 +429,122 @@ class LiveNotificationPopupSystemTest extends TestCase
         $custReadAll = $this->actingAs($this->customer)->post('/notifications/read-all');
         $custReadAll->assertRedirect();
         $this->assertEquals(0, Notification::where('userId', $this->customer->id)->where('isRead', false)->count());
+    }
+
+    public function test_notification_dismissals_table_persists_user_isolation_for_broadcast_notifs(): void
+    {
+        $admin2 = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $notifAdmin1 = Notification::create([
+            'userId' => $this->admin->id,
+            'title' => 'System Maintenance Alert',
+            'message' => 'Platform maintenance scheduled at midnight.',
+            'targetRole' => 'admin',
+            'isRead' => false,
+            'is_dismissed' => false,
+        ]);
+
+        $notifAdmin2 = Notification::create([
+            'userId' => $admin2->id,
+            'title' => 'System Maintenance Alert',
+            'message' => 'Platform maintenance scheduled at midnight.',
+            'targetRole' => 'admin',
+            'isRead' => false,
+            'is_dismissed' => false,
+        ]);
+
+        // Admin 1 sees it in their popup list
+        $resAdmin1 = $this->actingAs($this->admin)->getJson('/api/notifications?role=admin');
+        $resAdmin1->assertStatus(200);
+        $resAdmin1->assertJsonFragment(['id' => $notifAdmin1->id]);
+
+        // Admin 2 also sees it in their popup list
+        $resAdmin2 = $this->actingAs($admin2)->getJson('/api/notifications?role=admin');
+        $resAdmin2->assertStatus(200);
+        $resAdmin2->assertJsonFragment(['id' => $notifAdmin2->id]);
+
+        // Admin 1 dismisses their alert
+        $dismissRes = $this->actingAs($this->admin)->postJson('/api/notifications/' . $notifAdmin1->id . '/dismiss');
+        $dismissRes->assertStatus(200);
+
+        // Verify dismissal row created specifically for Admin 1
+        $this->assertDatabaseHas('notification_dismissals', [
+            'user_id' => $this->admin->id,
+            'notification_id' => $notifAdmin1->id,
+        ]);
+        // No dismissal row for Admin 2
+        $this->assertDatabaseMissing('notification_dismissals', [
+            'user_id' => $admin2->id,
+            'notification_id' => $notifAdmin2->id,
+        ]);
+
+        // Admin 1 no longer sees it
+        $resAdmin1After = $this->actingAs($this->admin)->getJson('/api/notifications?role=admin');
+        $resAdmin1After->assertJsonMissing(['id' => $notifAdmin1->id]);
+
+        // Admin 2 STILL sees it (isolation preserved!)
+        $resAdmin2After = $this->actingAs($admin2)->getJson('/api/notifications?role=admin');
+        $resAdmin2After->assertJsonFragment(['id' => $notifAdmin2->id]);
+    }
+
+    public function test_dismissal_preserves_unread_status_and_notification_center_count(): void
+    {
+        $notif1 = Notification::create([
+            'userId' => $this->customer->id,
+            'title' => 'Order Placed',
+            'message' => 'Order #1 placed',
+            'targetRole' => 'customer',
+            'isRead' => false,
+        ]);
+        $notif2 = Notification::create([
+            'userId' => $this->customer->id,
+            'title' => 'Order Packed',
+            'message' => 'Order #2 packed',
+            'targetRole' => 'customer',
+            'isRead' => false,
+        ]);
+
+        // Initial count is 2
+        $count1 = $this->actingAs($this->customer)->getJson('/api/notifications/unread-count?role=customer');
+        $count1->assertJson(['unreadCount' => 2]);
+
+        // Customer dismisses notif1 popup
+        $dismissRes = $this->actingAs($this->customer)->postJson('/api/notifications/' . $notif1->id . '/dismiss');
+        $dismissRes->assertStatus(200);
+
+        // 1. notif1 is NOT deleted
+        $this->assertDatabaseHas('notifications', ['id' => $notif1->id]);
+        // 2. notif1 is NOT marked as read
+        $this->assertDatabaseHas('notifications', ['id' => $notif1->id, 'isRead' => false]);
+        // 3. Unread count in notification center is STILL 2
+        $count2 = $this->actingAs($this->customer)->getJson('/api/notifications/unread-count?role=customer');
+        $count2->assertJson(['unreadCount' => 2]);
+        // 4. But popup candidate query only returns notif2
+        $popupList = $this->actingAs($this->customer)->getJson('/api/notifications?role=customer');
+        $popupList->assertJsonCount(1);
+        $popupList->assertJsonFragment(['id' => $notif2->id]);
+        $popupList->assertJsonMissing(['id' => $notif1->id]);
+    }
+
+    public function test_all_four_views_include_seen_tracking_and_keepalive(): void
+    {
+        $adminView = $this->actingAs($this->admin)->get('/admin/dashboard');
+        $adminView->assertSee('seen_popup_notifs_', false);
+        $adminView->assertSee('keepalive: true', false);
+
+        $superAdminView = $this->actingAs($this->superadmin)->get('/superadmin/dashboard');
+        $superAdminView->assertSee('seen_popup_notifs_', false);
+        $superAdminView->assertSee('keepalive: true', false);
+
+        $sellerView = $this->actingAs($this->seller)->get('/seller/dashboard');
+        $sellerView->assertSee('seen_popup_notifs_', false);
+        $sellerView->assertSee('keepalive: true', false);
+
+        $customerView = $this->actingAs($this->customer)->get('/');
+        $customerView->assertSee('seen_popup_notifs_', false);
+        $customerView->assertSee('keepalive: true', false);
     }
 }

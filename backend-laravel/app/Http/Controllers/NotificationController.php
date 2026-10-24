@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\NotificationDismissal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class NotificationController extends Controller
 {
@@ -46,8 +48,18 @@ class NotificationController extends Controller
         }
 
         // Exclude dismissed notifications so dismissed alerts never reappear on refresh or login
-        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
-            $query->where('is_dismissed', false);
+        if (Schema::hasTable('notification_dismissals')) {
+            $dismissedIds = NotificationDismissal::where('user_id', $userId)->pluck('notification_id');
+            if ($dismissedIds->isNotEmpty()) {
+                $query->whereNotIn('id', $dismissedIds);
+            }
+        }
+
+        if (Schema::hasColumn('notifications', 'is_dismissed')) {
+            $query->where(function ($q) {
+                $q->whereNull('is_dismissed')
+                  ->orWhere('is_dismissed', false);
+            });
         }
 
         // Only unread notifications are candidates for live popup alerts
@@ -159,9 +171,18 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
-            $notification->is_dismissed = true;
-            $notification->save();
+        if (Schema::hasTable('notification_dismissals')) {
+            NotificationDismissal::firstOrCreate(
+                ['user_id' => $user->id, 'notification_id' => $notification->id],
+                ['created_at' => now()]
+            );
+        }
+
+        if (Schema::hasColumn('notifications', 'is_dismissed')) {
+            if ($notification->userId === $user->id) {
+                $notification->is_dismissed = true;
+                $notification->save();
+            }
         }
 
         return response()->json(['message' => 'Notification dismissed', 'notification' => $notification]);
@@ -193,8 +214,16 @@ class NotificationController extends Controller
         }
 
         $notification->isRead = true;
-        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
-            $notification->is_dismissed = true;
+        if (Schema::hasTable('notification_dismissals')) {
+            NotificationDismissal::firstOrCreate(
+                ['user_id' => $user->id, 'notification_id' => $notification->id],
+                ['created_at' => now()]
+            );
+        }
+        if (Schema::hasColumn('notifications', 'is_dismissed')) {
+            if ($notification->userId === $user->id) {
+                $notification->is_dismissed = true;
+            }
         }
         $notification->save();
 
@@ -224,8 +253,16 @@ class NotificationController extends Controller
 
         if ($notification) {
             $notification->isRead = true;
-            if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
-                $notification->is_dismissed = true;
+            if (Schema::hasTable('notification_dismissals')) {
+                NotificationDismissal::firstOrCreate(
+                    ['user_id' => $user->id, 'notification_id' => $notification->id],
+                    ['created_at' => now()]
+                );
+            }
+            if (Schema::hasColumn('notifications', 'is_dismissed')) {
+                if ($notification->userId === $user->id) {
+                    $notification->is_dismissed = true;
+                }
             }
             $notification->save();
 

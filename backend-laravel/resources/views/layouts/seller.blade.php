@@ -617,7 +617,10 @@
             return {
                 popupNotif: null,
                 dismissedIds: [],
+                seenIds: [],
+                isInitialized: false,
                 storageKey: 'dismissed_popup_notifs_' + (userId || 'guest'),
+                sessionKey: 'seen_popup_notifs_' + (userId || 'guest'),
                 loadDismissedIds() {
                     try {
                         const stored = localStorage.getItem(this.storageKey);
@@ -628,10 +631,25 @@
                             }
                         }
                     } catch (e) {}
+
+                    try {
+                        const sessionStored = sessionStorage.getItem(this.sessionKey);
+                        if (sessionStored) {
+                            const parsedSession = JSON.parse(sessionStored);
+                            if (Array.isArray(parsedSession)) {
+                                this.seenIds = parsedSession;
+                            }
+                        }
+                    } catch (e) {}
                 },
                 saveDismissedIds() {
                     try {
                         localStorage.setItem(this.storageKey, JSON.stringify(this.dismissedIds));
+                    } catch (e) {}
+                },
+                saveSeenIds() {
+                    try {
+                        sessionStorage.setItem(this.sessionKey, JSON.stringify(this.seenIds));
                     } catch (e) {}
                 },
                 checkNotifications() {
@@ -647,16 +665,47 @@
                     })
                     .then(data => {
                         if (Array.isArray(data)) {
-                            const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
-                            if (unread.length > 0) {
-                                const latest = unread[0];
-                                if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                            const candidates = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
+
+                            if (!this.isInitialized) {
+                                this.isInitialized = true;
+                                const freshCandidates = candidates.filter(n => !this.seenIds.includes(n.id));
+
+                                candidates.forEach(n => {
+                                    if (!this.seenIds.includes(n.id)) {
+                                        this.seenIds.push(n.id);
+                                    }
+                                });
+                                this.saveSeenIds();
+
+                                if (freshCandidates.length > 0) {
+                                    const latest = freshCandidates[0];
                                     this.popupNotif = latest;
                                     setTimeout(() => {
                                         if (this.popupNotif && this.popupNotif.id === latest.id) {
                                             this.dismiss();
                                         }
                                     }, 8000);
+                                }
+                            } else {
+                                const newIncoming = candidates.filter(n => !this.seenIds.includes(n.id));
+                                if (newIncoming.length > 0) {
+                                    const latest = newIncoming[0];
+                                    newIncoming.forEach(n => {
+                                        if (!this.seenIds.includes(n.id)) {
+                                            this.seenIds.push(n.id);
+                                        }
+                                    });
+                                    this.saveSeenIds();
+
+                                    if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                                        this.popupNotif = latest;
+                                        setTimeout(() => {
+                                            if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                                this.dismiss();
+                                            }
+                                        }, 8000);
+                                    }
                                 }
                             }
                         }
@@ -670,6 +719,10 @@
                             this.dismissedIds.push(id);
                             this.saveDismissedIds();
                         }
+                        if (!this.seenIds.includes(id)) {
+                            this.seenIds.push(id);
+                            this.saveSeenIds();
+                        }
                         this.popupNotif = null;
 
                         if (id) {
@@ -677,6 +730,7 @@
                             const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
                             fetch('/api/notifications/' + id + '/dismiss', {
                                 method: 'POST',
+                                keepalive: true,
                                 headers: {
                                     'Accept': 'application/json',
                                     'Content-Type': 'application/json',
