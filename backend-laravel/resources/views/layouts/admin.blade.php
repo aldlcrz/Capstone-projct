@@ -347,14 +347,22 @@
                                 $targetRoles = $isSuperAdmin ? ['superadmin', 'admin'] : ['admin'];
                                 $unreadCount = \App\Models\Notification::where(function($q) use ($targetRoles) {
                                         $q->where('userId', Auth::id())
-                                          ->orWhereIn('targetRole', $targetRoles);
+                                          ->orWhere(function ($sub) use ($targetRoles) {
+                                              $sub->whereNull('userId')
+                                                  ->whereIn('targetRole', $targetRoles);
+                                          });
                                     })
+                                    ->whereIn('targetRole', $targetRoles)
                                     ->where('isRead', false)
                                     ->count();
                                 $recentNotifications = \App\Models\Notification::where(function($q) use ($targetRoles) {
                                         $q->where('userId', Auth::id())
-                                          ->orWhereIn('targetRole', $targetRoles);
+                                          ->orWhere(function ($sub) use ($targetRoles) {
+                                              $sub->whereNull('userId')
+                                                  ->whereIn('targetRole', $targetRoles);
+                                          });
                                     })
+                                    ->whereIn('targetRole', $targetRoles)
                                     ->orderBy('createdAt', 'desc')
                                     ->limit(5)
                                     ->get();

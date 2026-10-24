@@ -153,7 +153,13 @@
                         $unreadNotifications = 0;
                         if (Auth::check()) {
                             try {
-                                $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->where('isRead', false)->count();
+                                $unreadNotifications = \App\Models\Notification::where('userId', Auth::id())
+                                    ->where(function($q) {
+                                        $q->where('targetRole', 'customer')
+                                          ->orWhereNull('targetRole');
+                                    })
+                                    ->where('isRead', false)
+                                    ->count();
                             } catch (\Throwable $e) {}
                         }
                     @endphp
@@ -194,7 +200,14 @@
                                     @php
                                         $recentNotifications = collect([]);
                                         try {
-                                            $recentNotifications = \App\Models\Notification::where('userId', Auth::id())->where('targetRole', 'customer')->latest('createdAt')->take(5)->get();
+                                            $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
+                                                ->where(function($q) {
+                                                    $q->where('targetRole', 'customer')
+                                                      ->orWhereNull('targetRole');
+                                                })
+                                                ->latest('createdAt')
+                                                ->take(5)
+                                                ->get();
                                         } catch (\Throwable $e) {}
                                     @endphp
                                     @forelse($recentNotifications as $notif)

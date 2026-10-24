@@ -274,11 +274,17 @@
                                 $recentNotifications = collect([]);
                                 try {
                                     $unreadCount = \App\Models\Notification::where('userId', Auth::id())
-                                        ->where('targetRole', 'seller')
+                                        ->where(function($q) {
+                                            $q->where('targetRole', 'seller')
+                                              ->orWhereNull('targetRole');
+                                        })
                                         ->where('isRead', false)
                                         ->count();
                                     $recentNotifications = \App\Models\Notification::where('userId', Auth::id())
-                                        ->where('targetRole', 'seller')
+                                        ->where(function($q) {
+                                            $q->where('targetRole', 'seller')
+                                              ->orWhereNull('targetRole');
+                                        })
                                         ->orderBy('createdAt', 'desc')
                                         ->limit(5)
                                         ->get();

@@ -699,13 +699,19 @@ class WebController extends Controller
     public function notifications()
     {
         $notifications = \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'customer')
+            ->where(function($q) {
+                $q->where('targetRole', 'customer')
+                  ->orWhereNull('targetRole');
+            })
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
         
         // Mark all as read when visiting
         \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'customer')
+            ->where(function($q) {
+                $q->where('targetRole', 'customer')
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
             ->update(['isRead' => true]);
 
@@ -718,7 +724,10 @@ class WebController extends Controller
     public function readAllNotifications()
     {
         \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'customer')
+            ->where(function($q) {
+                $q->where('targetRole', 'customer')
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
             ->update(['isRead' => true]);
 

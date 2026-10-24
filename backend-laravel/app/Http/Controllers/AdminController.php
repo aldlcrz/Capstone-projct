@@ -1917,14 +1917,29 @@ class AdminController extends Controller
 
     public function notifications()
     {
-        $notifications = Notification::where('userId', Auth::id())
-            ->where('targetRole', 'admin')
+        $user = Auth::user();
+        $targetRoles = ($user && $user->role === 'superadmin') ? ['superadmin', 'admin'] : ['admin'];
+
+        $notifications = Notification::where(function($q) use ($user, $targetRoles) {
+                $q->where('userId', $user ? $user->id : Auth::id())
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            })
+            ->whereIn('targetRole', $targetRoles)
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
 
         // Mark all as read when visiting
-        Notification::where('userId', Auth::id())
-            ->where('targetRole', 'admin')
+        Notification::where(function($q) use ($user, $targetRoles) {
+                $q->where('userId', $user ? $user->id : Auth::id())
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            })
+            ->whereIn('targetRole', $targetRoles)
             ->where('isRead', false)
             ->update(['isRead' => true]);
 
@@ -1933,12 +1948,21 @@ class AdminController extends Controller
 
     public function readAllNotifications()
     {
-        Notification::where('userId', Auth::id())
-            ->where('targetRole', 'admin')
+        $user = Auth::user();
+        $targetRoles = ($user && $user->role === 'superadmin') ? ['superadmin', 'admin'] : ['admin'];
+
+        Notification::where(function($q) use ($user, $targetRoles) {
+                $q->where('userId', $user ? $user->id : Auth::id())
+                  ->orWhere(function ($sub) use ($targetRoles) {
+                      $sub->whereNull('userId')
+                          ->whereIn('targetRole', $targetRoles);
+                  });
+            })
+            ->whereIn('targetRole', $targetRoles)
             ->where('isRead', false)
             ->update(['isRead' => true]);
 
-        return redirect()->back()->with('success', 'All admin notifications marked as read.');
+        return redirect()->back()->with('success', 'All notifications marked as read.');
     }
 
     /**

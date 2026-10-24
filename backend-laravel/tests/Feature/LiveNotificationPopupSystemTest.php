@@ -354,4 +354,79 @@ class LiveNotificationPopupSystemTest extends TestCase
             $incomingFetch->assertJsonMissing(['id' => $initialNotif->id]);
         }
     }
+
+    public function test_mark_all_as_read_for_admin_superadmin_seller_and_customer(): void
+    {
+        // 1. Test Admin and SuperAdmin isolation & mark all as read
+        $admin2 = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        // Create 2 notifications for Admin 1
+        Notification::create([
+            'userId' => $this->admin->id,
+            'title' => 'Admin 1 Alert',
+            'message' => 'For Admin 1',
+            'targetRole' => 'admin',
+            'isRead' => false,
+        ]);
+        // Create 2 notifications for Admin 2
+        Notification::create([
+            'userId' => $admin2->id,
+            'title' => 'Admin 2 Alert',
+            'message' => 'For Admin 2',
+            'targetRole' => 'admin',
+            'isRead' => false,
+        ]);
+
+        // When Admin 1 visits dashboard, they should see their own unread notifications, not Admin 2's
+        $dashResponse = $this->actingAs($this->admin)->get('/admin/dashboard');
+        $dashResponse->assertStatus(200);
+
+        // Admin 1 clicks "Mark all as read"
+        $readAllRes = $this->actingAs($this->admin)->post('/admin/notifications/read-all');
+        $readAllRes->assertRedirect();
+
+        // Admin 1's notifications are read
+        $this->assertEquals(0, Notification::where('userId', $this->admin->id)->where('isRead', false)->count());
+        // Admin 2's notifications remain unread
+        $this->assertEquals(1, Notification::where('userId', $admin2->id)->where('isRead', false)->count());
+
+        // 2. Test SuperAdmin mark all read
+        Notification::create([
+            'userId' => $this->superadmin->id,
+            'title' => 'SuperAdmin Alert',
+            'message' => 'For Superadmin',
+            'targetRole' => 'superadmin',
+            'isRead' => false,
+        ]);
+        $saReadAll = $this->actingAs($this->superadmin)->post('/superadmin/notifications/read-all');
+        $saReadAll->assertRedirect();
+        $this->assertEquals(0, Notification::where('userId', $this->superadmin->id)->where('isRead', false)->count());
+
+        // 3. Test Seller mark all read
+        Notification::create([
+            'userId' => $this->seller->id,
+            'title' => 'Seller Alert',
+            'message' => 'For Seller',
+            'targetRole' => 'seller',
+            'isRead' => false,
+        ]);
+        $sellerReadAll = $this->actingAs($this->seller)->post('/seller/notifications/read-all');
+        $sellerReadAll->assertRedirect();
+        $this->assertEquals(0, Notification::where('userId', $this->seller->id)->where('isRead', false)->count());
+
+        // 4. Test Customer mark all read
+        Notification::create([
+            'userId' => $this->customer->id,
+            'title' => 'Customer Alert',
+            'message' => 'For Customer',
+            'targetRole' => 'customer',
+            'isRead' => false,
+        ]);
+        $custReadAll = $this->actingAs($this->customer)->post('/notifications/read-all');
+        $custReadAll->assertRedirect();
+        $this->assertEquals(0, Notification::where('userId', $this->customer->id)->where('isRead', false)->count());
+    }
 }

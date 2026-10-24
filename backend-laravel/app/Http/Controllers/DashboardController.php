@@ -1096,13 +1096,19 @@ class DashboardController extends Controller
     public function notifications()
     {
         $notifications = \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'seller')
+            ->where(function($q) {
+                $q->where('targetRole', 'seller')
+                  ->orWhereNull('targetRole');
+            })
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
 
         // Mark all as read when visiting
         \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'seller')
+            ->where(function($q) {
+                $q->where('targetRole', 'seller')
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
             ->update(['isRead' => true]);
 
@@ -1112,7 +1118,10 @@ class DashboardController extends Controller
     public function readAllNotifications()
     {
         \App\Models\Notification::where('userId', Auth::id())
-            ->where('targetRole', 'seller')
+            ->where(function($q) {
+                $q->where('targetRole', 'seller')
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
             ->update(['isRead' => true]);
 
