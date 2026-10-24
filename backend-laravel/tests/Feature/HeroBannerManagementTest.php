@@ -121,6 +121,34 @@ class HeroBannerManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_hero_banner_with_cutout_image()
+    {
+        // 1x1 transparent PNG base64
+        $dummyPngBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+        $response = $this->actingAs($this->admin)->post(route('admin.banners.store'), [
+            'title' => 'Floating Mannequin Barong',
+            'subtitle' => 'Artisan Shop Alpha',
+            'button_text_1' => 'Shop Now',
+            'button_url_1' => '/products/' . $this->productA1->id,
+            'cutout_image_data' => $dummyPngBase64,
+            'is_active' => '1',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $banner = Banner::where('title', 'Floating Mannequin Barong')->first();
+        $this->assertNotNull($banner);
+        $this->assertStringContainsString('_cutout.png', $banner->image_path);
+        $this->assertFileExists(public_path($banner->image_path));
+
+        // Clean up test file
+        if (file_exists(public_path($banner->image_path))) {
+            unlink(public_path($banner->image_path));
+        }
+    }
+
     public function test_admin_cannot_create_second_active_banner_for_same_shop()
     {
         // 1st active banner for Seller A

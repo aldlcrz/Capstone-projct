@@ -164,18 +164,19 @@ class AdminBannerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'preset_image_url' => 'nullable|string',
-            'title'            => 'nullable|string|max:60',
-            'subtitle'         => 'nullable|string|max:100',
-            'button_text_1'    => 'nullable|string|max:50',
-            'button_url_1'     => 'nullable|string|max:255',
-            'button_text_2'    => 'nullable|string|max:50',
-            'button_url_2'     => 'nullable|string|max:255',
-            'order_index'      => 'nullable|integer|min:1',
-            'start_date'       => 'nullable|date',
-            'end_date'         => 'nullable|date|after_or_equal:start_date',
-            'is_active'        => 'nullable|boolean',
+            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url'  => 'nullable|string',
+            'cutout_image_data' => 'nullable|string',
+            'title'             => 'nullable|string|max:60',
+            'subtitle'          => 'nullable|string|max:100',
+            'button_text_1'     => 'nullable|string|max:50',
+            'button_url_1'      => 'nullable|string|max:255',
+            'button_text_2'     => 'nullable|string|max:50',
+            'button_url_2'      => 'nullable|string|max:255',
+            'order_index'       => 'nullable|integer|min:1',
+            'start_date'        => 'nullable|date',
+            'end_date'          => 'nullable|date|after_or_equal:start_date',
+            'is_active'         => 'nullable|boolean',
         ]);
 
         $isActive = $request->has('is_active') ? (bool)$request->is_active : true;
@@ -196,7 +197,24 @@ class AdminBannerController extends Controller
         }
 
         $imagePath = '';
-        if ($request->hasFile('image')) {
+        if ($request->filled('cutout_image_data') && str_starts_with($request->cutout_image_data, 'data:image/')) {
+            $dataUrl = $request->cutout_image_data;
+            if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
+                $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+                $decoded = base64_decode($data);
+                if ($decoded !== false) {
+                    $destinationPath = public_path('uploads/banners');
+                    if (!File::isDirectory($destinationPath)) {
+                        File::makeDirectory($destinationPath, 0755, true, true);
+                    }
+                    $filename = time() . '_' . uniqid() . '_cutout.png';
+                    File::put($destinationPath . '/' . $filename, $decoded);
+                    $imagePath = 'uploads/banners/' . $filename;
+                }
+            }
+        }
+
+        if (!$imagePath && $request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
@@ -208,7 +226,7 @@ class AdminBannerController extends Controller
 
             $file->move($destinationPath, $filename);
             $imagePath = 'uploads/banners/' . $filename;
-        } elseif ($request->filled('preset_image_url')) {
+        } elseif (!$imagePath && $request->filled('preset_image_url')) {
             $imagePath = $request->preset_image_url;
         }
 
@@ -249,18 +267,19 @@ class AdminBannerController extends Controller
         $banner = Banner::findOrFail($id);
 
         $request->validate([
-            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'preset_image_url' => 'nullable|string',
-            'title'            => 'nullable|string|max:60',
-            'subtitle'         => 'nullable|string|max:100',
-            'button_text_1'    => 'nullable|string|max:50',
-            'button_url_1'     => 'nullable|string|max:255',
-            'button_text_2'    => 'nullable|string|max:50',
-            'button_url_2'     => 'nullable|string|max:255',
-            'order_index'      => 'nullable|integer|min:1',
-            'start_date'       => 'nullable|date',
-            'end_date'         => 'nullable|date|after_or_equal:start_date',
-            'is_active'        => 'nullable|boolean',
+            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url'  => 'nullable|string',
+            'cutout_image_data' => 'nullable|string',
+            'title'             => 'nullable|string|max:60',
+            'subtitle'          => 'nullable|string|max:100',
+            'button_text_1'     => 'nullable|string|max:50',
+            'button_url_1'      => 'nullable|string|max:255',
+            'button_text_2'     => 'nullable|string|max:50',
+            'button_url_2'      => 'nullable|string|max:255',
+            'order_index'       => 'nullable|integer|min:1',
+            'start_date'        => 'nullable|date',
+            'end_date'          => 'nullable|date|after_or_equal:start_date',
+            'is_active'         => 'nullable|boolean',
         ]);
 
         $isActive = $request->has('is_active') ? (bool)$request->is_active : false;
@@ -298,7 +317,30 @@ class AdminBannerController extends Controller
             'is_active'     => $isActive,
         ];
 
-        if ($request->hasFile('image')) {
+        if ($request->filled('cutout_image_data') && str_starts_with($request->cutout_image_data, 'data:image/')) {
+            $dataUrl = $request->cutout_image_data;
+            if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
+                $b64 = substr($dataUrl, strpos($dataUrl, ',') + 1);
+                $decoded = base64_decode($b64);
+                if ($decoded !== false) {
+                    // Delete old uploaded image if not default
+                    if ($banner->image_path && str_starts_with($banner->image_path, 'uploads/banners/')) {
+                        $oldPath = public_path($banner->image_path);
+                        if (File::exists($oldPath)) {
+                            File::delete($oldPath);
+                        }
+                    }
+
+                    $destinationPath = public_path('uploads/banners');
+                    if (!File::isDirectory($destinationPath)) {
+                        File::makeDirectory($destinationPath, 0755, true, true);
+                    }
+                    $filename = time() . '_' . uniqid() . '_cutout.png';
+                    File::put($destinationPath . '/' . $filename, $decoded);
+                    $data['image_path'] = 'uploads/banners/' . $filename;
+                }
+            }
+        } elseif ($request->hasFile('image')) {
             // Delete old uploaded image if not default
             if ($banner->image_path && str_starts_with($banner->image_path, 'uploads/banners/')) {
                 $oldPath = public_path($banner->image_path);
