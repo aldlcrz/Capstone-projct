@@ -721,81 +721,7 @@
         </div>
     {{-- Live Notification Popup --}}
     <div
-        x-data="{
-            popupNotif: null,
-            dismissedIds: [],
-            storageKey: 'dismissed_popup_notifs_{{ Auth::id() }}',
-            loadDismissedIds() {
-                try {
-                    const stored = localStorage.getItem(this.storageKey);
-                    if (stored) {
-                        const parsed = JSON.parse(stored);
-                        if (Array.isArray(parsed)) {
-                            this.dismissedIds = parsed;
-                        }
-                    }
-                } catch (e) {}
-            },
-            saveDismissedIds() {
-                try {
-                    localStorage.setItem(this.storageKey, JSON.stringify(this.dismissedIds));
-                } catch (e) {}
-            },
-            checkNotifications() {
-                fetch('/api/notifications?role={{ $isSuperAdmin ? "superadmin" : "admin" }}', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(r => r.ok ? r.json() : [])
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
-                        if (unread.length > 0) {
-                            const latest = unread[0];
-                            if (!this.popupNotif || this.popupNotif.id !== latest.id) {
-                                this.popupNotif = latest;
-                                setTimeout(() => {
-                                    if (this.popupNotif && this.popupNotif.id === latest.id) {
-                                        this.dismiss();
-                                    }
-                                }, 8000);
-                            }
-                        }
-                    }
-                })
-                .catch(() => {});
-            },
-            dismiss() {
-                if (this.popupNotif) {
-                    const id = this.popupNotif.id;
-                    if (!this.dismissedIds.includes(id)) {
-                        this.dismissedIds.push(id);
-                        this.saveDismissedIds();
-                    }
-                    this.popupNotif = null;
-
-                    if (id) {
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                        fetch('/api/notifications/' + id + '/dismiss', {
-                            method: 'POST',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken || '',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        }).catch(() => {});
-                    }
-                }
-            },
-            init() {
-                this.loadDismissedIds();
-                this.checkNotifications();
-                setInterval(() => this.checkNotifications(), 10000);
-            }
-        }"
+        x-data="adminNotificationPopup('{{ Auth::id() }}', '{{ $isSuperAdmin ? 'superadmin' : 'admin' }}')"
         x-show="popupNotif" x-cloak
         x-transition:enter="transition ease-out duration-300 transform"
         x-transition:enter-start="opacity-0 -translate-y-4 sm:translate-x-4 sm:-translate-y-0"
@@ -836,6 +762,85 @@
 
     @stack('scripts')
     <script>
+        function adminNotificationPopup(userId, role) {
+            return {
+                popupNotif: null,
+                dismissedIds: [],
+                storageKey: 'dismissed_popup_notifs_' + (userId || 'guest'),
+                loadDismissedIds() {
+                    try {
+                        const stored = localStorage.getItem(this.storageKey);
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            if (Array.isArray(parsed)) {
+                                this.dismissedIds = parsed;
+                            }
+                        }
+                    } catch (e) {}
+                },
+                saveDismissedIds() {
+                    try {
+                        localStorage.setItem(this.storageKey, JSON.stringify(this.dismissedIds));
+                    } catch (e) {}
+                },
+                checkNotifications() {
+                    fetch('/api/notifications?role=' + (role || 'admin'), {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.ok ? r.json() : [])
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            const unread = data.filter(n => (!n.isRead || n.isRead === 0 || n.isRead === '0' || n.isRead === false) && !this.dismissedIds.includes(n.id));
+                            if (unread.length > 0) {
+                                const latest = unread[0];
+                                if (!this.popupNotif || this.popupNotif.id !== latest.id) {
+                                    this.popupNotif = latest;
+                                    setTimeout(() => {
+                                        if (this.popupNotif && this.popupNotif.id === latest.id) {
+                                            this.dismiss();
+                                        }
+                                    }, 8000);
+                                }
+                            }
+                        }
+                    })
+                    .catch(() => {});
+                },
+                dismiss() {
+                    if (this.popupNotif) {
+                        const id = this.popupNotif.id;
+                        if (!this.dismissedIds.includes(id)) {
+                            this.dismissedIds.push(id);
+                            this.saveDismissedIds();
+                        }
+                        this.popupNotif = null;
+
+                        if (id) {
+                            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                            fetch('/api/notifications/' + id + '/dismiss', {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken || '',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            }).catch(() => {});
+                        }
+                    }
+                },
+                init() {
+                    this.loadDismissedIds();
+                    this.checkNotifications();
+                    setInterval(() => this.checkNotifications(), 10000);
+                }
+            };
+        }
+
         function adminApp() {
             return {
                 isMobileMenuOpen: false,

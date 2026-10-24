@@ -78,7 +78,8 @@ class LiveNotificationPopupSystemTest extends TestCase
             ->get('/seller/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('fetch(\'/api/notifications?role=seller\'', false);
+        $response->assertSee('sellerNotificationPopup', false);
+        $response->assertSee('/api/notifications?role=seller', false);
         $response->assertSee('x-show="popupNotif"', false);
         $response->assertSee('popupNotif?.title', false);
         $response->assertSee('top-24 right-4', false);
@@ -113,7 +114,8 @@ class LiveNotificationPopupSystemTest extends TestCase
             ->get('/admin/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('fetch(\'/api/notifications?role=admin\'', false);
+        $response->assertSee('adminNotificationPopup', false);
+        $response->assertSee('/api/notifications?role=', false);
         $response->assertSee('x-show="popupNotif"', false);
         $response->assertSee('popupNotif?.title', false);
     }
@@ -147,7 +149,8 @@ class LiveNotificationPopupSystemTest extends TestCase
             ->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('fetch(\'/api/notifications?role=customer\'', false);
+        $response->assertSee('customerNotificationPopup', false);
+        $response->assertSee('/api/notifications?role=customer', false);
         $response->assertSee('x-show="popupNotif"', false);
     }
 
