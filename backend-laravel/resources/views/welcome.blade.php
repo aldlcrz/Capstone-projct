@@ -229,7 +229,10 @@
                 text-transform: uppercase;
                 color: #241D17;
                 margin: 0 0 16px 0;
-                display: block;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
                 word-break: normal;
                 overflow-wrap: break-word;
             }
@@ -445,8 +448,8 @@
                 .lb-hero-stage {
                     flex-direction: column;
                     min-height: auto;
-                    padding: 10px 16px 28px 16px;
-                    gap: 20px;
+                    padding: 8px 16px 22px 16px;
+                    gap: 12px;
                 }
 
                 .lb-side-card {
@@ -459,6 +462,7 @@
 
                 .lb-hero-copy {
                     order: 2;
+                    width: 100%;
                     max-width: 100%;
                     padding: 0;
                     text-align: center;
@@ -469,25 +473,67 @@
 
                 .lb-eyebrow-wrap {
                     justify-content: center;
+                    margin-bottom: 6px;
+                }
+
+                .lb-eyebrow-text {
+                    max-width: 280px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 10px;
+                    letter-spacing: 0.18em;
+                }
+
+                .lb-hero-title {
+                    font-size: clamp(20px, 5.2vw, 24px);
+                    line-height: 1.15;
+                    margin: 0 0 6px 0;
+                    min-height: 2.3em;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    max-width: 320px;
                 }
 
                 .lb-hero-desc {
-                    max-width: 320px;
+                    font-size: 13.5px;
+                    line-height: 1.35;
+                    margin: 0 0 14px 0;
+                    max-width: 300px;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 1;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
                 }
 
                 .lb-hero-ctas {
                     justify-content: center;
+                    gap: 10px;
+                }
+
+                .lb-btn-primary, .lb-btn-secondary {
+                    height: 40px;
+                    padding: 0 20px;
+                    font-size: 10px;
+                    letter-spacing: 0.14em;
                 }
 
                 .lb-featured-stage {
                     order: 1;
                     width: 100%;
-                    max-width: 320px;
-                    height: 360px;
+                    max-width: 295px;
+                    height: 325px;
                 }
 
                 .lb-nav-arrow {
-                    top: 170px;
+                    top: 162px;
+                    width: 34px;
+                    height: 34px;
                 }
             }
         </style>
