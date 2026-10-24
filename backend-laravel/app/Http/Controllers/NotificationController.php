@@ -17,6 +17,10 @@ class NotificationController extends Controller
 
         $query = Notification::where('userId', $userId);
         
+        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
+            $query->where('is_dismissed', false);
+        }
+        
         if ($role) {
             if (in_array($role, ['admin', 'superadmin'])) {
                 $query->where(function ($q) {
@@ -95,6 +99,27 @@ class NotificationController extends Controller
     }
 
     /**
+     * Dismiss a popup notification so it never shows as a popup again.
+     */
+    public function dismiss(Request $request, $id)
+    {
+        $notification = Notification::where('id', $id)
+            ->where('userId', $request->user()->id)
+            ->first();
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
+            $notification->is_dismissed = true;
+            $notification->save();
+        }
+
+        return response()->json(['message' => 'Notification dismissed', 'notification' => $notification]);
+    }
+
+    /**
      * Mark a specific notification as read.
      */
     public function markAsRead(Request $request, $id)
@@ -108,6 +133,9 @@ class NotificationController extends Controller
         }
 
         $notification->isRead = true;
+        if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
+            $notification->is_dismissed = true;
+        }
         $notification->save();
 
         return response()->json($notification);
@@ -124,6 +152,9 @@ class NotificationController extends Controller
 
         if ($notification) {
             $notification->isRead = true;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'is_dismissed')) {
+                $notification->is_dismissed = true;
+            }
             $notification->save();
 
             $targetUrl = $notification->target_url;

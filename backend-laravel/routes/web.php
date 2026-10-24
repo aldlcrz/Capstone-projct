@@ -182,6 +182,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/notifications', [NotificationController::class, 'getMyNotifications']);
     Route::post('/api/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::get('/api/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::post('/api/notifications/{id}/dismiss', [NotificationController::class, 'dismiss'])->name('notifications.dismiss');
 
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');

@@ -26,6 +26,7 @@ class Notification extends Model
         'target_url',
         'isRead',
         'is_read',
+        'is_dismissed',
         'targetRole',
         'target_role',
     ];
@@ -83,6 +84,7 @@ class Notification extends Model
     {
         return [
             'isRead' => 'boolean',
+            'is_dismissed' => 'boolean',
             'createdAt' => 'datetime',
             'updatedAt' => 'datetime',
         ];

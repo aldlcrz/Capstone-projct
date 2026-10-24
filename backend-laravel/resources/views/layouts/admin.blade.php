@@ -724,6 +724,23 @@
         x-data="{
             popupNotif: null,
             dismissedIds: [],
+            storageKey: 'dismissed_popup_notifs_{{ Auth::id() }}',
+            loadDismissedIds() {
+                try {
+                    const stored = localStorage.getItem(this.storageKey);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) {
+                            this.dismissedIds = parsed;
+                        }
+                    }
+                } catch (e) {}
+            },
+            saveDismissedIds() {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(this.dismissedIds));
+                } catch (e) {}
+            },
             checkNotifications() {
                 fetch('/api/notifications?role={{ $isSuperAdmin ? "superadmin" : "admin" }}', {
                     headers: {
@@ -752,13 +769,29 @@
             },
             dismiss() {
                 if (this.popupNotif) {
-                    if (!this.dismissedIds.includes(this.popupNotif.id)) {
-                        this.dismissedIds.push(this.popupNotif.id);
+                    const id = this.popupNotif.id;
+                    if (!this.dismissedIds.includes(id)) {
+                        this.dismissedIds.push(id);
+                        this.saveDismissedIds();
                     }
                     this.popupNotif = null;
+
+                    if (id) {
+                        const csrfToken = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
+                        fetch('/api/notifications/' + id + '/dismiss', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || '',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }).catch(() => {});
+                    }
                 }
             },
             init() {
+                this.loadDismissedIds();
                 this.checkNotifications();
                 setInterval(() => this.checkNotifications(), 10000);
             }

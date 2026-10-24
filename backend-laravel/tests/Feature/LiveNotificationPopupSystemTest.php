@@ -205,4 +205,86 @@ class LiveNotificationPopupSystemTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(['unreadCount' => 2]);
     }
+
+    public function test_dismiss_notification_marks_as_dismissed_and_excludes_from_api(): void
+    {
+        $notif1 = Notification::create([
+            'userId' => $this->seller->id,
+            'title' => 'First Order',
+            'message' => 'First notification',
+            'targetRole' => 'seller',
+            'isRead' => false,
+            'is_dismissed' => false,
+        ]);
+
+        $notif2 = Notification::create([
+            'userId' => $this->seller->id,
+            'title' => 'Second Order',
+            'message' => 'Second notification',
+            'targetRole' => 'seller',
+            'isRead' => false,
+            'is_dismissed' => false,
+        ]);
+
+        // Dismiss notif1
+        $dismissResponse = $this->actingAs($this->seller)
+            ->postJson('/api/notifications/' . $notif1->id . '/dismiss');
+
+        $dismissResponse->assertStatus(200);
+        $this->assertDatabaseHas('notifications', [
+            'id' => $notif1->id,
+            'is_dismissed' => true,
+        ]);
+
+        // Calling /api/notifications should now only return notif2
+        $apiResponse = $this->actingAs($this->seller)
+            ->getJson('/api/notifications?role=seller');
+
+        $apiResponse->assertStatus(200);
+        $apiResponse->assertJsonCount(1);
+        $apiResponse->assertJsonFragment(['id' => $notif2->id]);
+        $apiResponse->assertJsonMissing(['id' => $notif1->id]);
+
+        // However, notif1 is still unread for bell count purposes
+        $countResponse = $this->actingAs($this->seller)
+            ->getJson('/api/notifications/unread-count?role=seller');
+        $countResponse->assertStatus(200);
+        $countResponse->assertJson(['unreadCount' => 2]);
+    }
+
+    public function test_all_four_roles_support_dismiss_notification(): void
+    {
+        $roles = [
+            'seller' => $this->seller,
+            'admin' => $this->admin,
+            'superadmin' => $this->superadmin,
+            'customer' => $this->customer,
+        ];
+
+        foreach ($roles as $roleKey => $user) {
+            $notif = Notification::create([
+                'userId' => $user->id,
+                'title' => ucfirst($roleKey) . ' Alert',
+                'message' => 'Test alert for ' . $roleKey,
+                'targetRole' => $roleKey,
+                'isRead' => false,
+                'is_dismissed' => false,
+            ]);
+
+            $response = $this->actingAs($user)
+                ->postJson('/api/notifications/' . $notif->id . '/dismiss');
+
+            $response->assertStatus(200);
+            $this->assertDatabaseHas('notifications', [
+                'id' => $notif->id,
+                'is_dismissed' => true,
+            ]);
+
+            // Excluded from popup query
+            $listResponse = $this->actingAs($user)
+                ->getJson('/api/notifications?role=' . $roleKey);
+            $listResponse->assertStatus(200);
+            $listResponse->assertJsonMissing(['id' => $notif->id]);
+        }
+    }
 }
