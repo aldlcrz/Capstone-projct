@@ -32,7 +32,8 @@ class VerificationCodeMail extends Mailable
                     ->text('emails.verification-code-text')
                     ->withSymfonyMessage(function ($message) {
                         $message->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'OOF, AutoReply');
-                        $message->getHeaders()->addTextHeader('Auto-Submitted', 'auto-generated');
+                        $message->getHeaders()->addTextHeader('X-Priority', '1');
+                        $message->getHeaders()->addTextHeader('Importance', 'high');
                     });
     }
 }

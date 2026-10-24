@@ -77,6 +77,28 @@
                 We sent a 6-digit verification code to:
             </p>
             <div class="mt-1.5 font-bold text-gray-900 text-xs bg-gray-50 py-1 px-3 rounded-xl border border-gray-200 inline-block max-w-full truncate" x-text="email || 'your registered Gmail'"></div>
+            
+            <!-- Quick Open Gmail & Notice -->
+            <div class="mt-3">
+                <a href="https://mail.google.com/mail/u/0/#search/LumBarong" target="_blank" rel="noopener noreferrer" 
+                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200/80 transition-all shadow-xs">
+                    <svg class="w-3.5 h-3.5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+                    </svg>
+                    <span>Open Gmail Inbox ↗</span>
+                </a>
+            </div>
+
+            <!-- Helpful notice box -->
+            <div class="mt-3.5 p-3 rounded-2xl bg-amber-50/80 border border-amber-200/70 text-left text-amber-900 text-[11px] leading-relaxed flex items-start gap-2">
+                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <span class="font-bold text-amber-950">Can't find the email in your Primary inbox?</span>
+                    <span class="text-amber-800"> Please check your <strong>Spam / Junk</strong> folder or <strong>Updates / Promotions</strong> tab. Search for <em>LumBarong</em> in Gmail. (Note: code is sent via <strong>Email</strong>, not phone SMS).</span>
+                </div>
+            </div>
         </div>
 
         @if(session('success'))
@@ -164,18 +186,18 @@
                 @csrf
                 <input type="hidden" name="email" :value="email">
                 
-                <!-- While timer > 0: Locked/Disabled until code expires -->
+                <!-- While resendCooldown > 0: Locked/Disabled (60s throttle) -->
                 <button type="button" 
-                        x-show="timeLeft > 0"
+                        x-show="resendCooldown > 0"
                         disabled 
                         class="text-xs font-semibold text-gray-400 bg-gray-100 px-4 py-2 rounded-full cursor-not-allowed inline-flex items-center gap-1.5 transition-all">
                     <span>Resend Code to Gmail</span>
-                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + formattedTime + ')'"></span>
+                    <span class="font-mono text-[11px] text-gray-500 font-bold" x-text="'(wait ' + resendCooldown + 's)'"></span>
                 </button>
 
-                <!-- When timer reaches 0: Clickable -->
+                <!-- When cooldown finishes: Clickable -->
                 <button type="submit" 
-                        x-show="timeLeft <= 0"
+                        x-show="resendCooldown <= 0"
                         x-cloak
                         class="text-xs font-bold text-white bg-[#C0422A] hover:bg-[#A03520] px-5 py-2.5 rounded-full cursor-pointer inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

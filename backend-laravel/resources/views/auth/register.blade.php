@@ -251,6 +251,12 @@
                             data-logo_alignment="left">
                         </div>
                     </div>
+                    <p class="text-center text-[10px] text-emerald-700 font-semibold mt-2 flex items-center justify-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Instant setup &bull; No verification code required</span>
+                    </p>
 
                     <!-- In-App Browser Notice (Messenger / Facebook / Instagram) -->
                     <div id="in-app-browser-notice" class="hidden mt-4 p-3.5 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 leading-snug text-left shadow-2xs">

@@ -45,7 +45,7 @@ class EmailNotificationService
 
             $existing->update([
                 'code'                     => $code,
-                'expires_at'               => Carbon::now()->addMinutes(5),
+                'expires_at'               => Carbon::now()->addMinutes(15),
                 'last_sent_at'             => Carbon::now(),
                 'resend_count'             => $newResendCount,
                 'resend_window_started_at' => $windowStartedAt,
@@ -59,7 +59,7 @@ class EmailNotificationService
             'email'                    => $normalizedEmail,
             'code'                     => $code,
             'type'                     => $type,
-            'expires_at'               => Carbon::now()->addMinutes(5),
+            'expires_at'               => Carbon::now()->addMinutes(15),
             'resend_count'             => 0,
             'resend_window_started_at' => Carbon::now(),
             'last_sent_at'             => Carbon::now(),

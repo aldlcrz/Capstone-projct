@@ -4,7 +4,7 @@ Thank you for registering with LumBarong. To complete your account verification 
 
 VERIFICATION CODE: {{ $code }}
 
-This code is valid for 5 minutes.
+This code is valid for 15 minutes.
 
 Security Notice:
 If you did not request this verification code, please ignore this email. No changes will be made to your account.

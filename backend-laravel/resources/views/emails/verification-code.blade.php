@@ -1,6 +1,11 @@
 @extends('emails.layout')
 
 @section('content')
+{{-- Invisible Preheader snippet for Gmail inbox preview --}}
+<span style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;">
+    Your LumBarong verification code is {{ $code }}. Valid for 15 minutes.
+</span>
+
 {{-- Header Greeting with Icon Box matching reference image --}}
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 4px;">
     <tr>
@@ -25,7 +30,7 @@
 
 @include('emails.partials.code-vault', [
     'code' => $code,
-    'expiryText' => 'Valid for 5 minutes',
+    'expiryText' => 'Valid for 15 minutes',
     'vaultLabel' => 'ACCOUNT VERIFICATION CODE'
 ])
 
