@@ -124,6 +124,10 @@ class ProductController extends Controller
             $query->where('CategoryId', $request->category);
         }
 
+        if ($request->filled('seller')) {
+            $query->where('sellerId', $request->seller);
+        }
+
         if ($request->filled('search')) {
             \App\Services\ProductSearchService::apply($query, $request->search, $request->sort);
         }
@@ -135,7 +139,7 @@ class ProductController extends Controller
             $request->price_range
         );
 
-        if ($request->has('seller')) {
+        if ($request->filled('seller')) {
             $query->where('sellerId', $request->seller);
         }
 

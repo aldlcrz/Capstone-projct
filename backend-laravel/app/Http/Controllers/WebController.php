@@ -489,7 +489,10 @@ class WebController extends Controller
             abort(404, 'Artisan shop is currently unavailable.');
         }
 
-        return view('shops.show', ['id' => $seller->id]);
+        return view('shops.show', [
+            'id' => $seller->id,
+            'seller' => $seller,
+        ]);
     }
 
     /**

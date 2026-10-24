@@ -87,24 +87,46 @@
                 <!-- Center: Modern Pill Search Bar (LumBarong theme) -->
                 @if(!request()->is('cart*', 'profile*', 'orders*', 'wishlist*', 'checkout*'))
                 <div class="flex-1 min-w-0 max-w-lg mx-auto">
-                    <form action="/" method="GET" class="ajax-search-form" id="tour-search-bar"
+                    <form action="{{ request()->is('shop*') ? url()->current() : '/' }}" method="GET" class="ajax-search-form" id="tour-search-bar"
                           x-data="{
                               query: '{{ addslashes(request('search', '')) }}',
+                              isShopPage: {{ request()->is('shop*') ? 'true' : 'false' }},
                               clearSearch() {
                                   this.query = '';
                                   const input = this.$refs.searchInput;
                                   input.value = '';
                                   input.focus();
                                   input.dispatchEvent(new Event('input', { bubbles: true }));
+                                  if (this.isShopPage) {
+                                      window.dispatchEvent(new CustomEvent('shop-search', { detail: '' }));
+                                  }
+                              },
+                              handleInput(e) {
+                                  this.query = e.target.value;
+                                  if (this.isShopPage) {
+                                      window.dispatchEvent(new CustomEvent('shop-search', { detail: this.query }));
+                                  }
+                              },
+                              handleSubmit(e) {
+                                  if (this.isShopPage) {
+                                      e.preventDefault();
+                                      const input = this.$refs.searchInput;
+                                      if (input) input.blur();
+                                      window.dispatchEvent(new CustomEvent('shop-search', { detail: this.query }));
+                                      const el = document.getElementById('shop-catalogue');
+                                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                  }
                               }
                           }"
+                          @shop-search-cleared.window="query = ''"
+                          @submit="handleSubmit($event)"
                           style="position: relative; width: 100%;">
                         <input type="text" name="search"
                                x-ref="searchInput"
                                x-model="query"
-                               @input="query = $event.target.value"
+                               @input="handleInput($event)"
                                value="{{ request('search') }}"
-                               placeholder="Search Barongs, Sellers..."
+                               placeholder="{{ isset($seller) && !empty($seller->shopName) ? 'Search in ' . $seller->shopName . '...' : (request()->is('shop*') ? 'Search in this shop...' : 'Search Barongs, Sellers...') }}"
                                style="padding-left: 18px; padding-right: 70px;"
                                class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs truncate">
                         

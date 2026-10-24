@@ -84,7 +84,7 @@
                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 w-full">
                   <div class="flex items-center gap-3 text-sm">
                      <span class="text-stone-500 font-medium">Masterpieces:</span>
-                     <span class="text-[#C0420A] font-bold" x-text="products.length"></span>
+                     <span class="text-[#C0420A] font-bold" x-text="allProducts.length || products.length"></span>
                   </div>
                   <div class="flex items-center gap-3 text-sm">
                      <span class="text-stone-500 font-medium">Rating:</span>
@@ -111,14 +111,58 @@
                 The <span class="text-[#C0420A] italic">Collection</span>
             </h3>
 
-            <div class="w-full max-w-md relative mb-6">
-                <input
-                    type="text"
-                    placeholder="Search in this shop..."
-                    x-model.debounce.300ms="searchQuery"
-                    class="w-full bg-white border border-stone-200 rounded-full py-2.5 pl-11 pr-4 text-sm font-medium text-stone-700 outline-none focus:border-[#C0420A] transition-colors shadow-sm"
-                />
-                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            {{-- Modern Pill Search Bar (Landing page setup) --}}
+            <div class="w-full max-w-lg relative mb-6">
+                <form @submit.prevent="submitSearch()" class="relative w-full">
+                    <input
+                        type="text"
+                        x-ref="shopSearchInput"
+                        x-model="searchQuery"
+                        @input="onSearchInput($event)"
+                        :placeholder="seller?.shopName ? `Search in ${seller.shopName}...` : 'Search in this shop...'"
+                        style="padding-left: 42px; padding-right: 76px;"
+                        class="w-full bg-white hover:bg-stone-50/50 focus:bg-white border border-stone-200 hover:border-stone-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-stone-800 placeholder-stone-400 outline-none transition-all shadow-2xs focus:shadow-xs"
+                    />
+                    
+                    <!-- Left Magnifier Icon -->
+                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Clear 'X' Button (Only visible when input has text) -->
+                    <button type="button"
+                            x-show="searchQuery && searchQuery.trim().length > 0"
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 scale-75"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-75"
+                            @click="clearSearch()"
+                            style="position: absolute; right: 42px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px;"
+                            class="flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-200/70 transition-all cursor-pointer border-0 p-0"
+                            aria-label="Clear shop search"
+                            title="Clear search">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+
+                    <!-- Circular Gold Gradient Search Button -->
+                    <button type="submit"
+                            style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: linear-gradient(135deg, #D4A32A 0%, #C49520 100%);"
+                            onmouseover="this.style.background='#1E1915';"
+                            onmouseout="this.style.background='linear-gradient(135deg, #D4A32A 0%, #C49520 100%)';"
+                            class="flex items-center justify-center rounded-full text-white transition-all shadow-2xs active:scale-95 cursor-pointer border-0"
+                            title="Search artisan collection">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                </form>
             </div>
 
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full max-w-4xl pb-1">
@@ -231,6 +275,35 @@
             </div>
         </div>
 
+        <!-- Active Search Feedback Banner -->
+        <template x-if="activeTab !== 'policies' && searchQuery && searchQuery.trim().length > 0">
+            <div class="mb-4 text-xs text-stone-600 font-medium flex items-center justify-between gap-2 bg-stone-50 p-3 sm:p-3.5 rounded-2xl border border-stone-200/80 shadow-2xs animate-fade-in">
+                <div class="flex items-center gap-2 min-w-0">
+                    <svg class="w-4 h-4 text-[#C49520] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span class="truncate">
+                        Results for <strong class="text-stone-900 font-bold" x-text="`&quot;${searchQuery}&quot;`"></strong>
+                        <template x-if="seller?.shopName">
+                            <span>in <strong class="text-stone-900 font-bold" x-text="seller.shopName"></strong></span>
+                        </template>
+                    </span>
+                </div>
+                <button type="button" @click="clearSearch()" class="text-[#C0420A] font-bold hover:underline shrink-0 cursor-pointer text-xs">
+                    Clear Search
+                </button>
+            </div>
+        </template>
+
+        <!-- Collection Sub-header & Piece Count Indicator -->
+        <div x-show="activeTab !== 'policies'" class="mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-4 h-[1.5px] bg-[#C0420A]"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-stone-700" x-text="catalogueTitle"></span>
+            </div>
+            <span class="text-[10px] text-stone-400 font-bold" x-text="`${displayedProducts.length} ${displayedProducts.length === 1 ? 'piece' : 'pieces'}`"></span>
+        </div>
+
         {{-- Products Grid (shown when not on policies tab) --}}
         <div x-show="activeTab !== 'policies'" class="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             <template x-for="product in displayedProducts" :key="product.id">
@@ -303,9 +376,27 @@
             </template>
         </div>
 
-        <template x-if="activeTab !== 'policies' && products.length === 0 && !loading">
-            <div class="rounded-2xl border-2 border-dashed border-gray-200 px-6 py-16 text-center sm:py-24">
-                <p class="font-serif italic text-gray-400">This artisan has not released any collection to the registry yet.</p>
+        <template x-if="activeTab !== 'policies' && displayedProducts.length === 0 && !loading">
+            <div class="rounded-2xl border-2 border-dashed border-stone-200 px-6 py-16 text-center sm:py-20 bg-stone-50/50">
+                <template x-if="searchQuery && searchQuery.trim().length > 0">
+                    <div class="max-w-md mx-auto space-y-3">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-stone-100 flex items-center justify-center text-stone-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-stone-800">No products found in this shop</h4>
+                        <p class="text-xs text-stone-500 leading-relaxed">
+                            No handcrafted items matching &ldquo;<span class="font-semibold text-stone-700" x-text="searchQuery"></span>&rdquo; were found in <span class="font-semibold text-stone-700" x-text="seller?.shopName || 'this shop'"></span>. Try different keywords or browse all pieces.
+                        </p>
+                        <div class="pt-2">
+                            <button type="button" @click="clearSearch()" class="px-5 py-2.5 bg-stone-900 hover:bg-[#C0420A] text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-sm">
+                                Clear Search
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="!searchQuery || !searchQuery.trim().length">
+                    <p class="font-serif italic text-stone-400">This artisan has not released any collection to the registry yet.</p>
+                </template>
             </div>
         </template>
         
@@ -376,49 +467,122 @@ function shopClient(config) {
         sortOrder: 'recommended',
         searchQuery: '',
         searchSeq: 0,
+        _searchTimer: null,
         init() {
+            // Read initial URL query param if present
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialSearch = urlParams.get('search');
+                if (initialSearch) {
+                    this.searchQuery = initialSearch;
+                }
+            } catch (e) {}
+
+            // Listen for global custom event 'shop-search' dispatched by header search bar
+            window.addEventListener('shop-search', (e) => {
+                this.searchQuery = (e.detail || '').toString();
+                this.syncSearch();
+            });
+
             this.fetchData();
-            this.$watch('searchQuery', () => this.syncSearch());
             this.$watch('sortOrder', () => this.syncSearch());
         },
         async fetchData() {
             this.loading = true;
             try {
                 const ts = Date.now();
+                const searchParam = this.searchQuery.trim() ? `&search=${encodeURIComponent(this.searchQuery.trim())}` : '';
                 const [sRes, pRes] = await Promise.all([
                     fetch(`/api/v1/user/seller/${this.sellerId}?t=${ts}`, { cache: 'no-store' }),
-                    fetch(`/api/v1/products?seller=${this.sellerId}&t=${ts}`, { cache: 'no-store' })
+                    fetch(`/api/v1/products?seller=${this.sellerId}${searchParam}&t=${ts}`, { cache: 'no-store' })
                 ]);
                 if (sRes.ok) this.seller = await sRes.json();
                 if (pRes.ok) {
                     const data = await pRes.json();
-                    this.allProducts = [...data];
-                    this.products = data;
+                    // STRICT SHOP ISOLATION: Only accept items belonging to this sellerId
+                    const isolated = Array.isArray(data) 
+                        ? data.filter(item => String(item.sellerId) === String(this.sellerId)) 
+                        : [];
+                    if (!this.searchQuery.trim()) {
+                        this.allProducts = [...isolated];
+                    }
+                    this.products = isolated;
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('fetchData error:', e); }
             this.loading = false;
+        },
+        onSearchInput(e) {
+            clearTimeout(this._searchTimer);
+            this._searchTimer = setTimeout(() => {
+                this.syncSearch();
+            }, 280);
+        },
+        submitSearch() {
+            clearTimeout(this._searchTimer);
+            if (this.$refs.shopSearchInput) {
+                this.$refs.shopSearchInput.blur();
+            }
+            this.syncSearch();
+        },
+        clearSearch() {
+            clearTimeout(this._searchTimer);
+            this.searchQuery = '';
+            if (this.$refs.shopSearchInput) {
+                this.$refs.shopSearchInput.value = '';
+                this.$refs.shopSearchInput.focus();
+            }
+            window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+            this.syncSearch();
         },
         async syncSearch() {
             const seq = ++this.searchSeq;
             const trimmed = this.searchQuery.trim();
+
+            // Sync URL query string without reloading page
+            try {
+                const url = new URL(window.location.href);
+                if (trimmed) {
+                    url.searchParams.set('search', trimmed);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                window.history.replaceState({}, '', url.toString());
+            } catch (e) {}
+
+            // Fast restore cached catalog if cleared with recommended sort
             if (!trimmed && (this.sortOrder === 'recommended' || !this.sortOrder)) {
                 if (this.allProducts && this.allProducts.length) {
                     this.products = [...this.allProducts];
                     return;
                 }
             }
+
             try {
                 const searchParam = trimmed ? `&search=${encodeURIComponent(trimmed)}` : '';
                 const sortParam = (this.sortOrder && this.sortOrder !== 'recommended') ? `&sort=${encodeURIComponent(this.sortOrder)}` : '';
                 const res = await fetch(`/api/v1/products?seller=${this.sellerId}${searchParam}${sortParam}&t=${Date.now()}`);
                 if (res.ok && seq === this.searchSeq) {
-                    this.products = await res.json();
+                    const data = await res.json();
+                    // STRICT SHOP ISOLATION: Only accept items belonging to this sellerId
+                    this.products = Array.isArray(data) 
+                        ? data.filter(item => String(item.sellerId) === String(this.sellerId)) 
+                        : [];
                 }
             } catch (e) {
                 if (seq === this.searchSeq) {
                     console.error('Artisan search sync error:', e);
                 }
             }
+        },
+        get catalogueTitle() {
+            if (this.searchQuery && this.searchQuery.trim().length > 0) {
+                return 'Search Results';
+            }
+            if (this.activeTab === 'sale') return 'On Sale Collection';
+            if (this.activeTab === 'men') return "Men's Collection";
+            if (this.activeTab === 'women') return "Women's Collection";
+            if (this.activeTab === 'kids') return "Kids Collection";
+            return 'Artisan Collection';
         },
         getProductImage(img) {
             if (!img) return '/uploads/products/default.jpg';
@@ -448,7 +612,8 @@ function shopClient(config) {
             return path.startsWith('/') ? path : '/storage/' + path;
         },
         get displayedProducts() {
-            let p = [...this.products];
+            // STRICT ISOLATION: Double-check filter so NO other shop's product is ever returned
+            let p = [...this.products].filter(item => String(item.sellerId) === String(this.sellerId));
             
             // Classification filtering
             if (this.activeTab === 'sale') {
@@ -471,98 +636,6 @@ function shopClient(config) {
                     const name = (item.name || '').toLowerCase();
                     return tg.includes('kid') || tg.includes('boy') || tg.includes('girl') || name.includes('kid') || name.includes('boy') || name.includes('girl');
                 });
-            }
-            
-            // Smart search filtering
-            if (this.searchQuery.trim()) {
-                const cleanQ = this.searchQuery.trim().toLowerCase()
-                    .replace(/['’]s\b/g, '')
-                    .replace(/[^\w\s]+/g, ' ')
-                    .trim();
-
-                if (cleanQ.length <= 2) {
-                    p = p.filter(item => (item.name || '').toLowerCase().includes(cleanQ));
-                } else {
-                    const stopwords = ['for', 'fro', 'the', 'in', 'and', 'with', 'of', 'to', 'a', 'an', 'at', 'by', 'on', 'all', 'any'];
-                    const stems = { 
-                        'barongs': 'barong', 'polos': 'polo', 'dresses': 'dress', 'filipinianas': 'filipiniana', 
-                        'mens': 'men', 'womens': 'women', 'kids': 'kid', 'boys': 'boy', 'girls': 'girl', 'children': 'kid',
-                        'man': 'men', 'woman': 'women', 'lady': 'women', 'ladies': 'women'
-                    };
-                    const typos = {
-                        'barng': 'barong', 'brong': 'barong', 'poloo': 'polo', 'ploo': 'polo',
-                        'jusli': 'jusi', 'jusly': 'jusi', 'organz': 'organza', 'filipina': 'filipiniana',
-                        'mestisa': 'mestiza', 'bolro': 'bolero', 'mne': 'men', 'wmen': 'women'
-                    };
-                    const genericSynonyms = {
-                        'clothing': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
-                        'clothes': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
-                        'apparel': ['formal', 'barong', 'filipiniana', 'attire', 'wear'],
-                        'attire': ['formal', 'barong', 'filipiniana', 'wear'],
-                        'wear': ['formal', 'barong', 'filipiniana', 'attire'],
-                        'traditional': ['traditional', 'classic', 'tagalog', 'barong', 'filipiniana'],
-                        'filipino': ['filipino', 'filipiniana', 'barong', 'tagalog']
-                    };
-
-                    const rawTokens = cleanQ.split(/\s+/).filter(w => w.length > 0 && !stopwords.includes(w));
-                    const isFemaleContext = cleanQ.includes('girl') || cleanQ.includes('women') || cleanQ.includes('lady') || cleanQ.includes('female');
-                    const isMaleContext = cleanQ.includes('boy') || cleanQ.includes('men') || cleanQ.includes('male');
-                    
-                    p = p.filter(item => {
-                        const name = (item.name || '').toLowerCase();
-                        const desc = (item.description || '').toLowerCase();
-                        const tg = (item.target_group || '').toLowerCase();
-                        const fabric = (item.fabric_type || '').toLowerCase();
-                        const collar = (item.collar_type || '').toLowerCase();
-                        
-                        if (name.includes(cleanQ) || desc.includes(cleanQ)) return true;
-
-                        return rawTokens.every(token => {
-                            let effective = typos[token] || token;
-                            const variants = [token, effective];
-                            if (stems[effective]) variants.push(stems[effective]);
-                            if (effective.endsWith('s') && effective.length > 3) variants.push(effective.slice(0, -1));
-                            if (effective === 'jusi') variants.push('jusilyn');
-                            if (effective === 'jusilyn') variants.push('jusi');
-
-                            // Synonym expansion
-                            if (genericSynonyms[effective]) {
-                                let syns = genericSynonyms[effective];
-                                if (isMaleContext) syns = syns.filter(s => !['filipiniana', 'dress', 'gown', 'bolero'].includes(s));
-                                if (isFemaleContext) syns = syns.filter(s => s !== 'polo');
-                                variants.push(...syns);
-                            }
-                            
-                            // Safe audience matching
-                            if (effective === 'men' || effective === 'male') {
-                                return (tg === 'men' || (tg.includes('men') && !tg.includes('women'))) ||
-                                       (name.includes('men') && !name.includes('women'));
-                            }
-                            if (effective === 'women' || effective === 'female' || effective === 'ladies' || effective === 'lady') {
-                                return tg.includes('women') || tg.includes('female') || name.includes('women') || name.includes('filipiniana') || name.includes('lady');
-                            }
-                            if (effective === 'boy' || effective === 'boys') {
-                                return (!tg.includes('women')) && (tg.includes('kid') || tg.includes('boy') || tg.includes('men') || name.includes('boy') || name.includes('barong'));
-                            }
-                            if (effective === 'girl' || effective === 'girls') {
-                                return (!tg.includes('men') || name.includes('lady') || name.includes('filipiniana')) && 
-                                       (tg.includes('kid') || tg.includes('girl') || tg.includes('women') || name.includes('girl') || name.includes('filipiniana') || name.includes('dress') || name.includes('bolero') || name.includes('lady'));
-                            }
-                            if (effective === 'kid' || effective === 'kids' || effective === 'child' || effective === 'children') {
-                                return tg.includes('kid') || tg.includes('child') || name.includes('kid') || desc.includes('kid') || name.includes('boy') || name.includes('girl');
-                            }
-
-                            // Female barong matching (barong for girl / women)
-                            if (effective === 'barong' && isFemaleContext) {
-                                return name.includes('barong') || desc.includes('barong') || name.includes('filipiniana') || name.includes('lady') || desc.includes('filipiniana');
-                            }
-
-                            return variants.some(v => 
-                                name.includes(v) || desc.includes(v) || tg.includes(v) || fabric.includes(v) || collar.includes(v)
-                            );
-                        });
-                    });
-                }
             }
 
             // Sorting
