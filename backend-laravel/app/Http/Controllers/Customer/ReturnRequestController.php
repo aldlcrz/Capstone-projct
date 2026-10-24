@@ -27,7 +27,11 @@ class ReturnRequestController extends Controller
         $user = Auth::user();
         $eval = $this->eligibilityService->evaluateEligibility($order, $user);
         
-        return view('orders.return-create', compact('order', 'eval'));
+        if (!($eval['eligible'] ?? false)) {
+            return redirect()->route('orders.show', $order->id)->with('error', $eval['reason'] ?? 'This order is not eligible for a return.');
+        }
+
+        return redirect()->route('orders.show', ['order' => $order->id, 'action' => 'return']);
     }
 
     /**

@@ -462,7 +462,7 @@
         @yield('breadcrumbs')
 
         {{-- Global Flash Messages (Floating Toasts with Smooth Mobile & Desktop Swipe-to-Dismiss) --}}
-        @if(session('success') || session('error') || session('status'))
+        @if(session('success') || session('error') || session('status') || ($errors->any() && !session('error')))
         <div 
             x-data="{ 
                 show: true,
@@ -578,6 +578,16 @@
                     <div class="grow pt-0.5">
                         <h4 class="text-xs font-black text-black uppercase tracking-wider">Error</h4>
                         <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ session('error') }}</p>
+                    </div>
+                @endif
+
+                @if($errors->any() && !session('error'))
+                    <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0 shadow-sm border border-red-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+                    <div class="grow pt-0.5">
+                        <h4 class="text-xs font-black text-black uppercase tracking-wider">Validation Notice</h4>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5 leading-relaxed">{{ $errors->first() }}</p>
                     </div>
                 @endif
 

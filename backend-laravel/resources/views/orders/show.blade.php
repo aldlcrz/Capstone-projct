@@ -24,6 +24,22 @@
         lightboxModal: false,
         lightboxType: 'image',
         lightboxUrl: '',
+        init() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'return') {
+                this.returnModal = true;
+            } else if (params.get('action') === 'review') {
+                this.reviewModal = true;
+            }
+        },
+        openReviewModal(el) {
+            if (!el) return;
+            this.reviewProductId = el.dataset.productId || null;
+            this.reviewOrderItemId = el.dataset.orderItemId || null;
+            this.reviewProductName = el.dataset.productName || 'Product';
+            this.reviewProductImage = el.dataset.productImage || '/uploads/products/default.jpg';
+            this.reviewModal = true;
+        },
         openLightbox(type, url) {
             if (!url) return;
             this.lightboxType = type;
@@ -390,10 +406,19 @@
                                 <p class="text-[11px] text-emerald-800/90 mt-0.5 m-0 font-medium">Please inspect your order and confirm receipt.</p>
                             </div>
                         </div>
-                        <button @click="confirmModal = true"
-                            class="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
-                            Confirm received
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click="confirmModal = true"
+                                class="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
+                                Confirm received
+                            </button>
+                            @if(!$activeReturn)
+                                <button type="button"
+                                    @click="returnModal = true"
+                                    class="px-3.5 py-1.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-[11px] font-bold uppercase tracking-wider transition-all shadow-2xs shrink-0 cursor-pointer text-center">
+                                    <span>Return</span>
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @elseif($isSpecialDelivery && in_array($statusLower, ['in transit', 'in_transit', 'out for delivery', 'out_for_delivery'], true))
@@ -437,9 +462,26 @@
                                     Return: {{ ucfirst($activeReturn->status ?? 'Pending') }}
                                 </span>
                             @elseif($hasReviews)
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                    <x-lucide name="star" class="w-3.5 h-3.5 inline mr-1 text-amber-500 fill-current" /> Reviewed by Buyer
-                                </span>
+                                @if($unreviewedItem)
+                                    @php
+                                        $imgForReview = \App\Support\VariationFormatter::getImageForVariation($unreviewedItem->variation, $unreviewedItem->product)
+                                            ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
+                                    @endphp
+                                    <button type="button"
+                                        data-product-id="{{ $unreviewedItem->productId }}"
+                                        data-order-item-id="{{ $unreviewedItem->id }}"
+                                        data-product-name="{{ $unreviewedItem->product?->name ?? 'Product' }}"
+                                        data-product-image="{{ $imgForReview }}"
+                                        @click="openReviewModal($el)"
+                                        style="background-color:#1E1915;color:#FFFFFF;"
+                                        class="px-3.5 py-1.5 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 cursor-pointer">
+                                        <span class="flex items-center gap-1"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Rate Remaining</span>
+                                    </button>
+                                @else
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                        <x-lucide name="star" class="w-3.5 h-3.5 inline mr-1 text-amber-500 fill-current" /> Reviewed by Buyer
+                                    </span>
+                                @endif
                             @else
                                 @if($unreviewedItem)
                                     @php
@@ -447,7 +489,11 @@
                                             ?: ($unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg'));
                                     @endphp
                                     <button type="button"
-                                        @click="reviewModal = true; reviewProductId = '{{ $unreviewedItem->productId }}'; reviewOrderItemId = '{{ $unreviewedItem->id }}'; reviewProductName = '{{ addslashes($unreviewedItem->product?->name ?? 'Product') }}'; reviewProductImage = '{{ $imgForReview }}'"
+                                        data-product-id="{{ $unreviewedItem->productId }}"
+                                        data-order-item-id="{{ $unreviewedItem->id }}"
+                                        data-product-name="{{ $unreviewedItem->product?->name ?? 'Product' }}"
+                                        data-product-image="{{ $imgForReview }}"
+                                        @click="openReviewModal($el)"
                                         style="background-color:#1E1915;color:#FFFFFF;"
                                         class="px-3.5 py-1.5 rounded-xl hover:bg-[#C0422A] text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center gap-1 cursor-pointer">
                                         <span class="flex items-center gap-1"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Rate</span>
@@ -530,10 +576,20 @@
                                             <span class="px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-200 text-[10px] font-extrabold text-emerald-800">
                                                 <x-lucide name="check-circle" class="w-3.5 h-3.5 inline mr-1 text-emerald-600" /> {{ $existingReview->rating }}/5 Stars
                                             </span>
+                                        @elseif($canRate && !$existingReview)
+                                            <button type="button"
+                                                data-product-id="{{ $item->productId }}"
+                                                data-order-item-id="{{ $item->id }}"
+                                                data-product-name="{{ $item->product?->name ?? 'Product' }}"
+                                                data-product-image="{{ $imgSrc }}"
+                                                @click="openReviewModal($el)"
+                                                class="px-2.5 py-0.5 bg-[#1E1915] hover:bg-[#C0422A] text-white text-[10px] font-black uppercase tracking-wider rounded-md transition-all shadow-2xs flex items-center gap-1 cursor-pointer">
+                                                <x-lucide name="star" class="w-3 h-3 text-amber-400 fill-amber-400" /> Rate Piece
+                                            </button>
                                         @endif
                                         @if($order->isReceivedByCustomer())
                                             <button type="button"
-                                                    @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: '{{ addslashes($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }}', productId: '{{ $item->productId }}', productName: '{{ addslashes($item->product?->name ?? 'Product') }}', orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: '{{ addslashes($item->size ?? $item->variation ?? '') }}', reportType: 'product' } }))"
+                                                    @click="window.dispatchEvent(new CustomEvent('open-report', { detail: { reportedId: '{{ $order->sellerId }}', reportedName: {{ Js::from($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }}, productId: '{{ $item->productId }}', productName: {{ Js::from($item->product?->name ?? 'Product') }}, orderId: '{{ $order->id }}', referenceId: '{{ $order->id }}', orderItemId: '{{ $item->id }}', variant: {{ Js::from($item->size ?? $item->variation ?? '') }}, reportType: 'product' } }))"
                                                     class="text-[10px] font-bold text-stone-400 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer">
                                                 <span class="flex items-center gap-1"><x-lucide name="flag" class="w-3.5 h-3.5 text-red-600" /> Report Product</span>
                                             </button>
@@ -818,7 +874,7 @@
                         </div>
 
                         <button type="button"
-                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: '{{ addslashes($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }}' } }))"
+                                @click="window.dispatchEvent(new CustomEvent('open-chat', { detail: { sellerId: '{{ $order->sellerId }}', sellerName: {{ Js::from($order->seller?->shopName ?? $order->seller?->name ?? 'Artisan') }} } }))"
                                 style="background-color:#FAF5EA;border:1px solid #E6D8BA;color:#1E1915;"
                                 class="w-full py-2 rounded-xl hover:bg-[#1E1915] hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
                             <x-lucide name="message-square" class="w-4 h-4 inline text-stone-600" />
@@ -965,8 +1021,8 @@
     </div>
 
     {{-- Leave Review Modal --}}
-    <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
-        <div @click.away="reviewModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-3.5 text-gray-900">
+    <div x-show="reviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="z-index: 9999; display: none;" x-cloak>
+        <div @click.away="if (!lightboxModal) reviewModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-3.5 text-gray-900">
             <div class="flex items-center gap-3 pb-2.5" style="border-bottom:1px solid #EAE1D0;">
                 <div class="w-12 h-14 bg-[#FAF8F5] rounded-xl overflow-hidden border border-[#ECE3D2] shrink-0">
                     <img :src="reviewProductImage || '/uploads/products/default.jpg'" class="w-full h-full object-cover object-top" onerror="this.src='/uploads/products/default.jpg'" :alt="reviewProductName">
@@ -1279,7 +1335,7 @@
     </div>
 
     {{-- Request Return Modal --}}
-    <div x-show="returnModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak style="display: none;">
+    <div x-show="returnModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="z-index: 9999; display: none;" x-cloak>
         <div @click.away="returnModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-4 text-gray-900">
             <div class="flex items-center gap-3 pb-3 border-b border-[#EAE1D0]">
                 <div class="w-10 h-10 rounded-full bg-[#FAF5EA] border border-[#E6D8BA] text-[#A87B10] flex items-center justify-center font-bold text-base shrink-0">
