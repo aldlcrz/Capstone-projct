@@ -550,7 +550,7 @@
                     this.popupNotif = null;
 
                     if (id) {
-                        const csrfToken = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                         fetch('/api/notifications/' + id + '/dismiss', {
                             method: 'POST',
                             headers: {
