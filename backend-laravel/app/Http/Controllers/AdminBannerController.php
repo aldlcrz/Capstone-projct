@@ -51,12 +51,12 @@ class AdminBannerController extends Controller
             ->select('id', 'name', 'shopName')
             ->orderBy('shopName')
             ->get()
-            ->map(function (User $s) {
+            ->map(function ($s) {
                 return [
                     'id'        => (string)$s->id,
                     'name'      => $s->name,
                     'shop_name' => $s->shopName ?: $s->name,
-                    'products'  => $s->products->map(function (Product $p) {
+                    'products'  => $s->products->map(function ($p) {
                         return [
                             'id'         => (string)$p->id,
                             'name'       => $p->name,
@@ -74,7 +74,7 @@ class AdminBannerController extends Controller
             ->select('id', 'name', 'image', 'sellerId', 'price')
             ->orderBy('name')
             ->get()
-            ->map(function (Product $p) {
+            ->map(function ($p) {
                 return [
                     'id'         => (string)$p->id,
                     'name'       => $p->name,
@@ -109,7 +109,7 @@ class AdminBannerController extends Controller
                 ->select('id', 'name')
                 ->limit(25)
                 ->get()
-                ->map(function (Product $p) {
+                ->map(function ($p) {
                     return [
                         'id'    => (string)$p->id,
                         'title' => $p->name,
