@@ -1024,8 +1024,8 @@
         :auto-start="(bool) (session('show_first_login_guide') && !Auth::user()->hasSeenGuide())"
         :steps="[
             ['selector' => '#tour-search-bar',          'title' => 'Search Artisans & Barongs',         'text' => 'Search across authentic hand-embroidered Barong Tagalog, Filipiniana attire, master tailoring guilds, or specific fabrics by keyword.'],
-            ['selector' => '#shop-by-category-section', 'title' => 'Browse Heritage Categories',       'text' => 'Browse curated styles organized by audience (Men, Women, Kids) and occasions (Wedding, Modern Barong, Traditional Calado).'],
             ['selector' => '#tour-artisan-shops',        'title' => 'Master Workshops & Promos',        'text' => 'Explore verified Lumban artisan shops, browse customer reviews, and take advantage of limited-time seasonal promotional discounts.'],
+            ['selector' => '#shop-by-category-section', 'title' => 'Browse Heritage Categories',       'text' => 'Browse curated styles organized by audience (Men, Women, Kids) and occasions (Wedding, Modern Barong, Traditional Calado).'],
             ['selector' => '#tour-cart-btn',             'title' => 'Shopping Bag & Flexible Delivery', 'text' => 'Review your cart and proceed to checkout with Special Delivery (local courier) or in-person Store Pickup with interactive workshop maps!'],
         ]"
     />

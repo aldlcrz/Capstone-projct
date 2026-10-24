@@ -734,7 +734,234 @@
     </div>
     @endif
 
-        {{-- ====== Shop by Category ====== --}}
+        {{-- ====== Featured Sections ====== --}}
+        <div id="tour-artisan-shops">
+            <div class="mb-4">
+                <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Featured Sections</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <!-- Best Sellers -->
+                <a href="/?sort=best_sellers#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/featured_best_sellers.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">Best Sellers</h4>
+                        <p class="text-[10px] text-gray-300">Highest selling barongs</p>
+                    </div>
+                </a>
+
+                <!-- Top Rated Shops -->
+                <button type="button" @click="topShopsModalOpen = true" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4 text-left cursor-pointer">
+                    <img src="/uploads/categories/wedding_groom.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Top Rated Shops">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">Top Rated Shops</h4>
+                        <p class="text-[10px] text-gray-300">Ratings, sales & products</p>
+                    </div>
+                </button>
+
+                <!-- New Arrivals -->
+                <a href="/?sort=newest#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/jusi_classic.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <h4 class="font-bold text-xs sm:text-sm">New Arrivals</h4>
+                        <p class="text-[10px] text-gray-300">Fresh hand-embroidered designs</p>
+                    </div>
+                </a>
+
+                <!-- Lumban Special -->
+                <a href="/?sort=lumban_special#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
+                    <img src="/uploads/categories/pina_formal.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
+                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 text-white">
+                        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 7px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;margin-bottom:5px;">
+                            <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
+                            <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;">Special Sale</span>
+                        </div>
+                        <h4 class="font-bold text-xs sm:text-sm">Lumban Special</h4>
+                        <p class="text-[10px] text-gray-300">Exclusive discounted barongs</p>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Top Rated Shops Modal --}}
+            <template x-if="topShopsModalOpen">
+                <div 
+                    class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-sm"
+                    style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);"
+                    @click="topShopsModalOpen = false"
+                    @keydown.escape.window="topShopsModalOpen = false"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                >
+                    <div 
+                        @click.stop
+                        class="w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden relative"
+                        style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:28px !important;box-shadow:0 25px 60px rgba(0,0,0,0.25) !important;padding:24px !important;color:#1E1915 !important;"
+                        x-transition:enter="transition ease-out duration-300 transform"
+                        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    >
+                        <!-- Modal Header -->
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0;">
+                            <div style="display:flex;align-items:center;gap:14px;">
+                                <!-- Heraldic Laurel Wreath + Star Emblem -->
+                                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+                                        <!-- Central Medallion -->
+                                        <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
+                                        <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
+                                        <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
+                                        <!-- Laurel Wreath Left -->
+                                        <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                        <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                                        <!-- Laurel Wreath Right -->
+                                        <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                        <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
+                                        <!-- Base Ribbon -->
+                                        <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
+                                        Top Rated Shops & Artisans
+                                    </h3>
+                                    <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
+                                        Verified master embroiderers & top-performing Lumban ateliers
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                type="button"
+                                @click="topShopsModalOpen = false"
+                                style="width:40px;height:40px;border-radius:50%;border:1px solid #E2D9C8;background-color:#FFFFFF;display:flex;align-items:center;justify-content:center;color:#8C827A;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
+                            >
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Star Divider -->
+                        <div style="position:relative;margin:16px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
+                            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
+                        </div>
+
+                        <!-- Modal Body (Grid of Top Rated Shops) -->
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow space-y-4" style="overflow-y:auto;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+                                @foreach($topShops as $shop)
+                                    <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:18px !important;box-shadow:0 2px 6px rgba(0,0,0,0.03) !important;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.2s;">
+                                        <div>
+                                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                                                <div style="display:flex;align-items:flex-start;gap:14px;min-width:0;">
+                                                    <!-- Gold Ringed Circular Avatar -->
+                                                    <div style="width:58px;height:58px;min-width:58px;max-width:58px;min-height:58px;max-height:58px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);flex-shrink:0;">
+                                                        <img src="{{ $shop->avatar }}" 
+                                                             onerror="this.onerror=null;this.src='/images/logo-icon.png';" 
+                                                             style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#FAF8F5;display:block;"
+                                                             alt="{{ $shop->name }}">
+                                                    </div>
+                                                    <div style="min-width:0;">
+                                                        <h4 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                            {{ $shop->name }}
+                                                        </h4>
+                                                        <p class="line-clamp-2" style="font-size:11px;color:#78716C;margin-top:4px;margin-bottom:0;line-height:1.4;">
+                                                            {{ $shop->description }}
+                                                        </p>
+                                                        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8C827A;font-weight:500;margin-top:6px;">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B88728" stroke-width="2" style="flex-shrink:0;">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            </svg>
+                                                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $shop->location }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Rating Pill Badge -->
+                                                <div style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                                                    <svg width="13" height="13" viewBox="0 0 20 20" fill="#C49520">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                    </svg>
+                                                    <span>{{ $shop->rating }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Bottom Stats & Action -->
+                                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                                            <div style="display:flex;align-items:center;gap:18px;">
+                                                <!-- Total Sold -->
+                                                <div style="display:flex;align-items:center;gap:6px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                                    </svg>
+                                                    <div>
+                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Total Sold</span>
+                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
+                                                            {{ $shop->total_sold }} {{ $shop->total_sold == 1 ? 'barong' : 'barongs' }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                                <!-- Products Count -->
+                                                <div style="display:flex;align-items:center;gap:6px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
+                                                        <rect x="3" y="8" width="18" height="13" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M3 13h18M10 13v2a2 2 0 004 0v-2M8 8V5a2 2 0 012-2h4a2 2 0 012 2v3" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                    <div>
+                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Products</span>
+                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
+                                                            {{ $shop->products_count }} {{ $shop->products_count == 1 ? 'item' : 'items' }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- View Shop Button -->
+                                            <a href="/shops/{{ $shop->id }}#shop-catalogue" 
+                                               @click="topShopsModalOpen = false"
+                                               style="padding:7px 14px;background-color:#1C160E;color:#FAF6F0;font-size:12px;font-weight:600;border-radius:12px;text-decoration:none;display:flex;align-items:center;gap:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:background-color 0.2s;">
+                                                <span>View Shop</span>
+                                                <span style="font-size:13px;line-height:1;">→</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Verified & Trusted Footer Banner -->
+                            <div style="margin-top:16px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
+                                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">All shops are verified and trusted</h5>
+                                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
+                                    </div>
+                                </div>
+                                <!-- Background Embroidery Flourish Watermark -->
+                                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
+                                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+    {{-- ====== Shop by Category ====== --}}
         <div id="shop-by-category-section" x-on:open-all-categories.window="categoriesModalOpen = true">
             <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Shop by Category</h3>
@@ -1029,234 +1256,7 @@
             </template>
         </div>
 
-        {{-- ====== Featured Sections ====== --}}
-        <div id="tour-artisan-shops">
-            <div class="mb-4">
-                <h3 class="text-base sm:text-lg font-extrabold text-gray-900">Featured Sections</h3>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-                <!-- Best Sellers -->
-                <a href="/?sort=best_sellers#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/featured_best_sellers.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Best Sellers">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
-                    <div class="relative z-10 text-white">
-                        <h4 class="font-bold text-xs sm:text-sm">Best Sellers</h4>
-                        <p class="text-[10px] text-gray-300">Highest selling barongs</p>
-                    </div>
-                </a>
-
-                <!-- Top Rated Shops -->
-                <button type="button" @click="topShopsModalOpen = true" class="group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4 text-left cursor-pointer">
-                    <img src="/uploads/categories/wedding_groom.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Top Rated Shops">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
-                    <div class="relative z-10 text-white">
-                        <h4 class="font-bold text-xs sm:text-sm">Top Rated Shops</h4>
-                        <p class="text-[10px] text-gray-300">Ratings, sales & products</p>
-                    </div>
-                </button>
-
-                <!-- New Arrivals -->
-                <a href="/?sort=newest#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/jusi_classic.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="New Arrivals">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
-                    <div class="relative z-10 text-white">
-                        <h4 class="font-bold text-xs sm:text-sm">New Arrivals</h4>
-                        <p class="text-[10px] text-gray-300">Fresh hand-embroidered designs</p>
-                    </div>
-                </a>
-
-                <!-- Lumban Special -->
-                <a href="/?sort=lumban_special#catalogue-section" class="ajax-filter-link group relative rounded-2xl overflow-hidden bg-gray-900 aspect-4/5 shadow-sm flex flex-col justify-end p-4">
-                    <img src="/uploads/categories/pina_formal.png" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500" alt="Lumban Special">
-                    <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent"></div>
-                    <div class="relative z-10 text-white">
-                        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 7px;background:linear-gradient(90deg,#7A5505 0%,#C8890A 25%,#E8AD12 50%,#C8890A 75%,#7A5505 100%);border:1px solid #5C3E04;border-radius:20px;box-shadow:0 2px 10px rgba(200,137,10,0.5),inset 0 1px 0 rgba(255,220,80,0.25);white-space:nowrap;margin-bottom:5px;">
-                            <img src="/images/logo-icon.png" alt="LumBarong" style="width:13px;height:13px;border-radius:50%;flex-shrink:0;object-fit:cover;">
-                            <span style="color:#FFF8E0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;">Special Sale</span>
-                        </div>
-                        <h4 class="font-bold text-xs sm:text-sm">Lumban Special</h4>
-                        <p class="text-[10px] text-gray-300">Exclusive discounted barongs</p>
-                    </div>
-                </a>
-            </div>
-
-            {{-- Top Rated Shops Modal --}}
-            <template x-if="topShopsModalOpen">
-                <div 
-                    class="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-sm"
-                    style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);"
-                    @click="topShopsModalOpen = false"
-                    @keydown.escape.window="topShopsModalOpen = false"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                >
-                    <div 
-                        @click.stop
-                        class="w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden relative"
-                        style="background-color:#FDFBF7 !important;border:1px solid #EAE2D2 !important;border-radius:28px !important;box-shadow:0 25px 60px rgba(0,0,0,0.25) !important;padding:24px !important;color:#1E1915 !important;"
-                        x-transition:enter="transition ease-out duration-300 transform"
-                        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                    >
-                        <!-- Modal Header -->
-                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0;">
-                            <div style="display:flex;align-items:center;gap:14px;">
-                                <!-- Heraldic Laurel Wreath + Star Emblem -->
-                                <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-                                        <!-- Central Medallion -->
-                                        <circle cx="24" cy="23" r="10.5" stroke="#C49520" stroke-width="1" stroke-dasharray="2 1.5"/>
-                                        <circle cx="24" cy="23" r="8.5" stroke="#C49520" stroke-width="0.8"/>
-                                        <path d="M24 17.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7-3.2-1.7-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L24 17.5z" fill="#C49520"/>
-                                        <!-- Laurel Wreath Left -->
-                                        <path d="M15 32.5c-4-3.5-6-8.5-6-14 0-3.5 1-6.5 2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <path d="M10 12c1.8 1.2 3.5 2.8 4 4.5M8 17.5c2 .6 3.8 1.8 4.8 3.5M8 23.5c2 0 3.8.6 5 2M9.5 29.5c2-.8 3.8-.8 5.2 0M12.5 34c1.8-1.2 3.6-1.5 5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                                        <!-- Laurel Wreath Right -->
-                                        <path d="M33 32.5c4-3.5 6-8.5 6-14 0-3.5-1-6.5-2.5-9" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                        <path d="M38 12c-1.8 1.2-3.5 2.8-4 4.5M40 17.5c-2 .6-3.8 1.8-4.8 3.5M40 23.5c-2 0-3.8.6-5 2M38.5 29.5c-2-.8-3.8-.8-5.2 0M35.5 34c-1.8-1.2-3.6-1.5-5-.8" stroke="#C49520" stroke-width="1.2" stroke-linecap="round"/>
-                                        <!-- Base Ribbon -->
-                                        <path d="M19 36c3 1.2 7 1.2 10 0" stroke="#C49520" stroke-width="1.3" stroke-linecap="round"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 style="font-family:ui-serif,Georgia,Cambria,serif;font-size:22px;font-weight:700;color:#1E1915;letter-spacing:-0.01em;line-height:1.2;margin:0;">
-                                        Top Rated Shops & Artisans
-                                    </h3>
-                                    <p style="font-size:13px;color:#78716C;margin-top:3px;margin-bottom:0;">
-                                        Verified master embroiderers & top-performing Lumban ateliers
-                                    </p>
-                                </div>
-                            </div>
-                            <button 
-                                type="button"
-                                @click="topShopsModalOpen = false"
-                                style="width:40px;height:40px;border-radius:50%;border:1px solid #E2D9C8;background-color:#FFFFFF;display:flex;align-items:center;justify-content:center;color:#8C827A;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;"
-                            >
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Star Divider -->
-                        <div style="position:relative;margin:16px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <div style="width:100%;border-top:1px solid #EAE1D0;"></div>
-                            <span style="position:absolute;background-color:#FDFBF7;padding:0 12px;color:#C49520;display:flex;align-items:center;justify-content:center;"><x-lucide name="sparkles" class="w-3.5 h-3.5" /></span>
-                        </div>
-
-                        <!-- Modal Body (Grid of Top Rated Shops) -->
-                        <div class="overflow-y-auto no-scrollbar pr-1 grow space-y-4" style="overflow-y:auto;">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
-                                @foreach($topShops as $shop)
-                                    <div style="background-color:#FFFFFF !important;border:1px solid #ECE3D2 !important;border-radius:18px !important;padding:18px !important;box-shadow:0 2px 6px rgba(0,0,0,0.03) !important;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.2s;">
-                                        <div>
-                                            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                                                <div style="display:flex;align-items:flex-start;gap:14px;min-width:0;">
-                                                    <!-- Gold Ringed Circular Avatar -->
-                                                    <div style="width:58px;height:58px;min-width:58px;max-width:58px;min-height:58px;max-height:58px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#996515,#E6CA65,#996515);box-shadow:0 2px 6px rgba(0,0,0,0.08);flex-shrink:0;">
-                                                        <img src="{{ $shop->avatar }}" 
-                                                             onerror="this.onerror=null;this.src='/images/logo-icon.png';" 
-                                                             style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#FAF8F5;display:block;"
-                                                             alt="{{ $shop->name }}">
-                                                    </div>
-                                                    <div style="min-width:0;">
-                                                        <h4 style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:700;color:#1E1915;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                                            {{ $shop->name }}
-                                                        </h4>
-                                                        <p class="line-clamp-2" style="font-size:11px;color:#78716C;margin-top:4px;margin-bottom:0;line-height:1.4;">
-                                                            {{ $shop->description }}
-                                                        </p>
-                                                        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8C827A;font-weight:500;margin-top:6px;">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B88728" stroke-width="2" style="flex-shrink:0;">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                            </svg>
-                                                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $shop->location }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Rating Pill Badge -->
-                                                <div style="background-color:#FDF8EE;border:1px solid #EEDBBA;color:#7A5505;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;flex-shrink:0;">
-                                                    <svg width="13" height="13" viewBox="0 0 20 20" fill="#C49520">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                    </svg>
-                                                    <span>{{ $shop->rating }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Card Bottom Stats & Action -->
-                                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #F2ECE1;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                                            <div style="display:flex;align-items:center;gap:18px;">
-                                                <!-- Total Sold -->
-                                                <div style="display:flex;align-items:center;gap:6px;">
-                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                                    </svg>
-                                                    <div>
-                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Total Sold</span>
-                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
-                                                            {{ $shop->total_sold }} {{ $shop->total_sold == 1 ? 'barong' : 'barongs' }}
-                                                        </strong>
-                                                    </div>
-                                                </div>
-                                                <!-- Products Count -->
-                                                <div style="display:flex;align-items:center;gap:6px;">
-                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C827A" stroke-width="1.8" style="flex-shrink:0;">
-                                                        <rect x="3" y="8" width="18" height="13" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        <path d="M3 13h18M10 13v2a2 2 0 004 0v-2M8 8V5a2 2 0 012-2h4a2 2 0 012 2v3" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    </svg>
-                                                    <div>
-                                                        <span style="font-size:9px;color:#8C827A;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;display:block;line-height:1;margin-bottom:2px;">Products</span>
-                                                        <strong style="font-size:12px;font-weight:800;color:#1E1915;display:block;line-height:1;">
-                                                            {{ $shop->products_count }} {{ $shop->products_count == 1 ? 'item' : 'items' }}
-                                                        </strong>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- View Shop Button -->
-                                            <a href="/shops/{{ $shop->id }}#shop-catalogue" 
-                                               @click="topShopsModalOpen = false"
-                                               style="padding:7px 14px;background-color:#1C160E;color:#FAF6F0;font-size:12px;font-weight:600;border-radius:12px;text-decoration:none;display:flex;align-items:center;gap:4px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:background-color 0.2s;">
-                                                <span>View Shop</span>
-                                                <span style="font-size:13px;line-height:1;">→</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            <!-- Verified & Trusted Footer Banner -->
-                            <div style="margin-top:16px;padding:14px 18px;border-radius:18px;background:linear-gradient(90deg,#F6F0E4 0%,#F2EADA 50%,#EAE0CD 100%);border:1px solid #E2D6C0;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-                                <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:10;">
-                                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid #B88728;background-color:#FAF4EA;display:flex;align-items:center;justify-content:center;color:#B88728;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h5 style="font-size:13px;font-weight:700;color:#1E1915;margin:0;line-height:1.2;">All shops are verified and trusted</h5>
-                                        <p style="font-size:11px;color:#78716C;margin:2px 0 0 0;">Quality craftsmanship. Authentic Filipino heritage.</p>
-                                    </div>
-                                </div>
-                                <!-- Background Embroidery Flourish Watermark -->
-                                <svg width="120" height="70" viewBox="0 0 120 80" fill="#C49520" style="position:absolute;right:8px;bottom:-10px;opacity:0.18;pointer-events:none;">
-                                    <path d="M60 10C40 10 30 30 10 35C30 40 40 60 60 60C80 60 90 40 110 35C90 30 80 10 60 10ZM60 25C65 25 70 30 70 35C70 40 65 45 60 45C55 45 50 40 50 35C50 30 55 25 60 25Z"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-    {{-- ====== Product Catalogue Section ====== --}}
+        {{-- ====== Product Catalogue Section ====== --}}
     <div id="catalogue-section" class="scroll-mt-20 sm:scroll-mt-24 space-y-4 sm:space-y-8 transition-opacity duration-300">
         @if(request('sort') === 'best_sellers' || request('sort') === 'trending')
             <div class="text-xs text-amber-950 font-medium flex items-center justify-between bg-amber-50/90 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-xs">
