@@ -200,29 +200,31 @@
 
             .lb-eyebrow-wrap {
                 display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                margin-bottom: 18px;
             }
 
             .lb-eyebrow-rule {
-                width: 32px;
+                width: 44px;
                 height: 1.5px;
-                background: #9E7D3B;
+                background: linear-gradient(90deg, #8E703C 0%, #D4A32A 100%);
+                border-radius: 1px;
             }
 
             .lb-eyebrow-text {
                 font-family: 'Inter', sans-serif;
                 font-size: 11px;
                 font-weight: 600;
-                letter-spacing: 0.22em;
+                letter-spacing: 0.24em;
                 text-transform: uppercase;
-                color: #9E7D3B;
+                color: #8E703C;
             }
 
             .lb-hero-title {
                 font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-                font-size: clamp(32px, 3.8vw, 54px);
+                font-size: clamp(34px, 4vw, 56px);
                 font-weight: 500;
                 line-height: 1.08;
                 letter-spacing: 0.02em;
@@ -242,7 +244,7 @@
                 font-size: clamp(16px, 1.4vw, 19px);
                 font-weight: 400;
                 line-height: 1.45;
-                color: #554A3E;
+                color: #584B3D;
                 margin: 0 0 28px 0;
                 max-width: 420px;
             }
@@ -262,23 +264,23 @@
                 height: 44px;
                 padding: 0 28px;
                 border-radius: 9999px;
-                background: #8E6D38;
+                background: linear-gradient(135deg, #8E6D38 0%, #785A28 100%);
+                border: 1px solid rgba(255, 255, 255, 0.22);
                 color: #FFFFFF;
                 font-family: 'Inter', sans-serif;
                 font-size: 11px;
                 font-weight: 600;
                 letter-spacing: 0.16em;
                 text-transform: uppercase;
-                box-shadow: 0 8px 18px -4px rgba(120, 85, 30, 0.32);
+                box-shadow: 0 8px 18px -4px rgba(110, 80, 25, 0.35);
                 transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
                 cursor: pointer;
                 text-decoration: none;
             }
 
             .lb-btn-primary:hover {
-                background: #785A28;
-                transform: translateY(-1px);
-                box-shadow: 0 12px 24px -4px rgba(120, 85, 30, 0.42);
+                transform: translateY(-1.5px);
+                box-shadow: 0 12px 24px -4px rgba(110, 80, 25, 0.45);
             }
 
             .lb-btn-secondary {
@@ -288,33 +290,33 @@
                 height: 44px;
                 padding: 0 26px;
                 border-radius: 9999px;
-                background: rgba(255, 255, 255, 0.4);
-                border: 1px solid rgba(120, 108, 94, 0.35);
+                background: rgba(255, 255, 255, 0.50);
+                border: 1px solid rgba(130, 112, 92, 0.45);
                 color: #2C231B;
                 font-family: 'Inter', sans-serif;
                 font-size: 11px;
                 font-weight: 600;
                 letter-spacing: 0.16em;
                 text-transform: uppercase;
-                backdrop-filter: blur(4px);
-                -webkit-backdrop-filter: blur(4px);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
                 transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
                 cursor: pointer;
                 text-decoration: none;
             }
 
             .lb-btn-secondary:hover {
-                background: rgba(255, 255, 255, 0.85);
+                background: rgba(255, 255, 255, 0.90);
                 border-color: #2C231B;
-                transform: translateY(-1px);
+                transform: translateY(-1.5px);
             }
 
-            /* 4. Center-Right Featured Garment Presentation (Standardized Fashion Portrait Dimensions) */
+            /* 4. Center-Right Architectural Arch Portal (Spanish Colonial Atelier Window) */
             .lb-featured-stage {
                 position: relative;
                 flex-shrink: 0;
                 width: 320px;
-                height: 380px;
+                height: 400px;
                 z-index: 5;
                 display: flex;
                 align-items: center;
@@ -323,20 +325,58 @@
 
             @media (min-width: 1024px) {
                 .lb-featured-stage {
-                    width: 380px;
-                    height: 440px;
+                    width: 390px;
+                    height: 480px;
                 }
             }
 
             @media (min-width: 1280px) {
                 .lb-featured-stage {
-                    width: 420px;
-                    height: 480px;
+                    width: 430px;
+                    height: 520px;
                 }
             }
 
-            /* Garment container */
-            .lb-featured-wrapper {
+            /* Outer Stone Arch Portal Frame */
+            .lb-arch-portal {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border-radius: 215px 215px 10px 10px;
+                padding: 10px 10px 0 10px;
+                background: linear-gradient(180deg, #EFE7DB 0%, #E2D6C3 100%);
+                border: 1px solid rgba(200, 184, 162, 0.85);
+                box-shadow: 
+                    0 20px 44px -12px rgba(60, 40, 20, 0.22),
+                    0 6px 16px rgba(60, 40, 20, 0.10),
+                    inset 0 2px 3px rgba(255, 255, 255, 0.85);
+                display: flex;
+                flex-direction: column;
+                transition: transform 0.4s ease, box-shadow 0.4s ease;
+            }
+
+            @media (min-width: 1024px) {
+                .lb-arch-portal {
+                    border-radius: 215px 215px 12px 12px;
+                    padding: 12px 12px 0 12px;
+                }
+            }
+
+            /* Inner Arch Viewport Window (Clipped) */
+            .lb-arch-window {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border-radius: 203px 203px 4px 4px;
+                overflow: hidden;
+                background: #EBE1D3;
+                box-shadow: 
+                    inset 0 8px 24px rgba(45, 30, 15, 0.24),
+                    inset 0 0 0 1px rgba(90, 68, 42, 0.18);
+            }
+
+            /* Slide Container */
+            .lb-arch-slide {
                 position: absolute;
                 inset: 0;
                 width: 100%;
@@ -346,18 +386,46 @@
                 justify-content: center;
             }
 
-            /* The garment image fills the standardized portrait frame with full garment visibility */
-            .lb-featured-img {
+            /* Uploaded Image Clipped Inside the Arch */
+            .lb-arch-img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
                 object-position: center 15%;
                 display: block;
-                border-radius: 28px;
-                filter: drop-shadow(0 14px 28px rgba(50, 35, 15, 0.14));
-                pointer-events: none;
                 user-select: none;
-                transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+                pointer-events: none;
+                transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            .lb-arch-portal:hover .lb-arch-img {
+                transform: scale(1.03);
+            }
+
+            /* Subtle Depth Vignette & Ambient Interior Shadow */
+            .lb-arch-vignette {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: 
+                    radial-gradient(ellipse at center 40%, transparent 62%, rgba(40, 26, 12, 0.20) 100%),
+                    linear-gradient(180deg, rgba(30, 18, 8, 0.14) 0%, transparent 22%, transparent 75%, rgba(30, 18, 8, 0.22) 100%);
+            }
+
+            /* Carved Stone Sill / Pedestal Ledge at the Base */
+            .lb-arch-sill {
+                position: relative;
+                height: 14px;
+                width: calc(100% + 28px);
+                margin-left: -14px;
+                margin-bottom: -7px;
+                border-radius: 4px;
+                background: linear-gradient(180deg, #F0E8DC 0%, #D8CABE 100%);
+                border: 1px solid rgba(195, 180, 158, 0.9);
+                box-shadow: 
+                    0 6px 14px rgba(50, 35, 18, 0.18),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+                z-index: 3;
             }
 
             /* 5. Minimal Circular Navigation Arrows */
@@ -400,24 +468,24 @@
                 .lb-nav-arrow-next { right: 8px; }
             }
 
-            /* 6. Minimal Bottom Pagination Indicator */
+            /* 6. Continuous Bottom Hairline & Pagination Indicator */
             .lb-dots-bar {
                 position: absolute;
                 bottom: 6px;
                 left: 50%;
                 transform: translateX(-50%);
+                width: min(92%, 580px);
                 display: flex;
                 align-items: center;
-                gap: 7px;
+                justify-content: center;
+                gap: 8px;
                 z-index: 10;
             }
 
             .lb-dots-line {
-                width: 44px;
+                flex: 1 1 auto;
                 height: 1px;
-                background: #D4C6B2;
-                opacity: 0.7;
-                margin: 0 8px;
+                background: rgba(190, 175, 155, 0.50);
             }
 
             .lb-dot-btn {
@@ -431,7 +499,7 @@
             }
 
             .lb-dot-btn.is-active {
-                width: 22px;
+                width: 26px;
                 background: #8E6D38;
             }
 
@@ -449,7 +517,7 @@
                     flex-direction: column;
                     min-height: auto;
                     padding: 8px 16px 22px 16px;
-                    gap: 12px;
+                    gap: 14px;
                 }
 
                 .lb-side-card {
@@ -472,8 +540,8 @@
                 }
 
                 .lb-eyebrow-wrap {
-                    justify-content: center;
-                    margin-bottom: 6px;
+                    align-items: center;
+                    margin-bottom: 8px;
                 }
 
                 .lb-eyebrow-text {
@@ -486,7 +554,7 @@
                 }
 
                 .lb-hero-title {
-                    font-size: clamp(20px, 5.2vw, 24px);
+                    font-size: clamp(20px, 5.2vw, 26px);
                     line-height: 1.15;
                     margin: 0 0 6px 0;
                     min-height: 2.3em;
@@ -501,14 +569,10 @@
                 }
 
                 .lb-hero-desc {
-                    font-size: 13.5px;
+                    font-size: 14px;
                     line-height: 1.35;
-                    margin: 0 0 14px 0;
+                    margin: 0 0 16px 0;
                     max-width: 300px;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 1;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
                 }
 
                 .lb-hero-ctas {
@@ -526,12 +590,28 @@
                 .lb-featured-stage {
                     order: 1;
                     width: 100%;
-                    max-width: 295px;
-                    height: 325px;
+                    max-width: 285px;
+                    height: 355px;
+                }
+
+                .lb-arch-portal {
+                    border-radius: 142px 142px 8px 8px;
+                    padding: 8px 8px 0 8px;
+                }
+
+                .lb-arch-window {
+                    border-radius: 134px 134px 3px 3px;
+                }
+
+                .lb-arch-sill {
+                    height: 10px;
+                    width: calc(100% + 20px);
+                    margin-left: -10px;
+                    margin-bottom: -5px;
                 }
 
                 .lb-nav-arrow {
-                    top: 162px;
+                    top: 175px;
                     width: 34px;
                     height: 34px;
                 }
@@ -555,8 +635,8 @@
             <div class="lb-hero-copy">
                 {{-- Eyebrow --}}
                 <div class="lb-eyebrow-wrap">
-                    <span class="lb-eyebrow-rule"></span>
                     <span class="lb-eyebrow-text" x-text="current.subtitle || 'Featured Collection'">Featured Collection</span>
+                    <span class="lb-eyebrow-rule"></span>
                 </div>
 
                 {{-- Editorial Title --}}
@@ -581,24 +661,29 @@
                 </div>
             </div>
 
-            {{-- Center-Right: Featured Hero Garment (Seamless, Floating) --}}
+            {{-- Center-Right: Architectural Arch Portal (Spanish Colonial Atelier Window) --}}
             <div class="lb-featured-stage">
-                {{-- Active Garment --}}
-                <template x-for="(item, idx) in items" :key="'hero-' + item.id">
-                    <div class="lb-featured-wrapper"
-                         x-show="active === idx"
-                         x-transition:enter="transition ease-out duration-500"
-                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-300"
-                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 scale-95 -translate-y-2">
-                        <img :src="item.image_url"
-                             :alt="item.title"
-                             class="lb-featured-img"
-                             draggable="false">
+                <div class="lb-arch-portal">
+                    <div class="lb-arch-window">
+                        <template x-for="(item, idx) in items" :key="'hero-' + item.id">
+                            <div class="lb-arch-slide"
+                                 x-show="active === idx"
+                                 x-transition:enter="transition ease-out duration-600"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-300"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95">
+                                <img :src="item.image_url"
+                                     :alt="item.title"
+                                     class="lb-arch-img"
+                                     draggable="false">
+                                <div class="lb-arch-vignette"></div>
+                            </div>
+                        </template>
                     </div>
-                </template>
+                    <div class="lb-arch-sill"></div>
+                </div>
             </div>
 
             {{-- Far-Right: Next Product Preview Card (desktop/tablet) --}}
@@ -630,16 +715,18 @@
             </div>
         </template>
 
-        {{-- Minimalist Bottom Pagination Slider Bar --}}
+        {{-- Minimalist Continuous Bottom Pagination Slider Bar --}}
         <div class="lb-dots-bar" x-show="total > 1">
             <span class="lb-dots-line"></span>
-            <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
-                <button type="button"
-                        @click="goTo(dIdx)"
-                        class="lb-dot-btn"
-                        :class="active === dIdx && 'is-active'"
-                        :aria-label="'Go to slide ' + (dIdx + 1)"></button>
-            </template>
+            <div style="display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding: 0 10px;">
+                <template x-for="(dot, dIdx) in items" :key="'dot-' + dot.id">
+                    <button type="button"
+                            @click="goTo(dIdx)"
+                            class="lb-dot-btn"
+                            :class="active === dIdx && 'is-active'"
+                            :aria-label="'Go to slide ' + (dIdx + 1)"></button>
+                </template>
+            </div>
             <span class="lb-dots-line"></span>
         </div>
     </div>
