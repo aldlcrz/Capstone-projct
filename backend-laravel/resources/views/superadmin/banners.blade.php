@@ -323,6 +323,7 @@
                   method="POST"
                   enctype="multipart/form-data"
                   id="bannerForm"
+                  @submit.prevent="submitBannerForm($event)"
                   class="px-6 pb-6 space-y-4">
                 @csrf
                 <template x-if="isEditing">
@@ -469,36 +470,126 @@
                     </div>
                 </div>
 
-                {{-- ── 3. CLEAN LIVE PREVIEW CARD ── --}}
-                <div class="relative w-full rounded-2xl overflow-hidden bg-[#0D0D0D] border border-[#222] min-h-36 p-5 flex items-center justify-between shadow-inner">
-                    {{-- Studio backdrop --}}
-                    <div class="absolute inset-0 bg-[#0A0A0A]"></div>
-                    <div class="absolute inset-0 bg-radial from-[#1F1B16]/50 via-[#0D0D0D] to-[#050505]"></div>
+                {{-- Hidden input for framed/cropped image data --}}
+                <input type="hidden" name="cropped_image_data" x-model="croppedImageData">
+                <input type="hidden" name="cutout_image_data" :value="croppedImageData">
 
-                    {{-- Centered full picture preview --}}
-                    <div class="absolute inset-0 flex items-center justify-center p-2 pointer-events-none z-10">
-                        <template x-if="imagePreviewUrl">
-                            <img :src="imagePreviewUrl" class="max-h-full max-w-full w-auto h-auto object-contain rounded-lg drop-shadow-xl">
-                        </template>
+                {{-- ── 2.5 ARCHED MIRROR FRAMING & FIT STUDIO (PAN & ZOOM) ── --}}
+                <div class="p-3 bg-[#161616] border border-[#2B2B2B] rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Arched Mirror Framing Studio</span>
+                                <span class="text-[9px] text-gray-400">Zoom and center far-away or wide seller photos into the architectural mirror</span>
+                            </div>
+                        </div>
+
+                        {{-- Quick Framing Presets --}}
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" 
+                                    @click="setMirrorPreset('collar')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2.5 py-1 bg-[#262626] hover:bg-[#333] border border-[#3E3E3E] text-amber-300 text-[10px] font-medium rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                                    title="Zoom in on collar and barong chest embroidery">
+                                <span>👔 Focus Collar</span>
+                            </button>
+                            <button type="button" 
+                                    @click="setMirrorPreset('zoom13')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2 py-1 bg-[#262626] hover:bg-[#333] border border-[#3E3E3E] text-gray-300 hover:text-white text-[10px] rounded-lg transition-all cursor-pointer disabled:opacity-40"
+                                    title="Zoom 1.3x">
+                                <span>🔍 Zoom 1.3x</span>
+                            </button>
+                            <button type="button" 
+                                    @click="setMirrorPreset('reset')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2 py-1 bg-[#1F1F1F] hover:bg-[#2A2A2A] text-gray-400 hover:text-gray-200 text-[10px] rounded-lg transition-all cursor-pointer disabled:opacity-40"
+                                    title="Reset to default framing">
+                                <span>🔄 Reset</span>
+                            </button>
+                        </div>
                     </div>
 
-                    {{-- Left gradient overlay --}}
-                    <div class="absolute inset-0 bg-linear-to-r from-black/90 via-black/40 to-transparent z-15 pointer-events-none"></div>
-
-                    {{-- Foreground content on left --}}
-                    <div class="relative z-20 space-y-1 max-w-[55%]">
-                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider drop-shadow-xs" x-text="form.subtitle || 'LumBarong Shop'"></p>
-                        <h4 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight drop-shadow-md" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
-
-                        {{-- Action buttons simulation --}}
-                        <div class="flex items-center gap-2 pt-2">
-                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#C0422A] text-white text-[10px] font-bold rounded-lg shadow-sm">
-                                <span>Shop now</span>
+                    {{-- Framing Controls: Zoom, Pan Y, Pan X --}}
+                    <div class="pt-2 border-t border-[#242424] grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
+                                <span>Scale / Zoom</span>
+                                <span class="font-mono text-amber-400" x-text="mirrorZoom + '%'"></span>
                             </div>
-                            <div class="px-2.5 py-1.5 bg-black/40 border border-white/20 text-gray-200 text-[10px] font-medium rounded-lg backdrop-blur-xs">
+                            <input type="range" min="100" max="220" step="2" x-model.number="mirrorZoom"
+                                   class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
+                                <span>Pan Vertical (Y)</span>
+                                <span class="font-mono text-amber-400" x-text="(mirrorPanY > 0 ? '+' : '') + mirrorPanY + '%'"></span>
+                            </div>
+                            <input type="range" min="-40" max="40" step="1" x-model.number="mirrorPanY"
+                                   class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
+                                <span>Pan Horizontal (X)</span>
+                                <span class="font-mono text-amber-400" x-text="(mirrorPanX > 0 ? '+' : '') + mirrorPanX + '%'"></span>
+                            </div>
+                            <input type="range" min="-30" max="30" step="1" x-model.number="mirrorPanX"
+                                   class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── 3. ARCHWAY ATELIER LIVE PREVIEW (MATCHING HOMEPAGE HERO CAROUSEL) ── --}}
+                <div class="relative w-full rounded-2xl overflow-hidden bg-[#EFE9E0] border border-[#D5C9B8] min-h-48 p-5 flex items-center justify-between shadow-md">
+                    {{-- Soft architectural sunlight gradient --}}
+                    <div class="absolute inset-0 bg-linear-to-r from-[#F6F2EC] via-[#EFE8DE] to-[#E5DACD] pointer-events-none"></div>
+
+                    {{-- Editorial Copy Simulation (Left) --}}
+                    <div class="relative z-20 space-y-1.5 max-w-[54%]">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] font-bold text-[#8E703C] uppercase tracking-widest" x-text="form.subtitle || 'Featured Collection'"></span>
+                            <span class="w-4 h-0.5 bg-[#8E703C]/40"></span>
+                        </div>
+                        <h4 class="font-serif text-base sm:text-lg font-bold text-[#241D17] tracking-tight leading-tight" x-text="form.title || 'Handcrafted piña silk barong'"></h4>
+                        <p class="text-[10px] text-[#6E5D4B] leading-tight line-clamp-1">A modern take on a timeless Filipino tradition.</p>
+
+                        <div class="flex items-center gap-2 pt-2">
+                            <div class="flex items-center gap-1 px-3 py-1 bg-linear-to-r from-[#8E6D38] to-[#785A28] text-white text-[9px] font-bold rounded-full shadow-xs">
+                                <span>Shop now</span>
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </div>
+                            <div class="px-2.5 py-1 bg-white/70 border border-[#8E703C]/30 text-[#2C231B] text-[9px] font-semibold rounded-full">
                                 <span>Visit shop</span>
                             </div>
                         </div>
+                    </div>
+
+                    {{-- Spanish Archway Mirror Portal (Right) - Exactly matching homepage --}}
+                    <div class="relative z-20 shrink-0 w-36 h-48 rounded-t-[72px] rounded-b-md p-1.5 bg-linear-to-b from-[#FAF4EC] via-[#EFE5D7] to-[#DFD0BE] border border-[#C8B8A2] shadow-xl flex flex-col justify-between">
+                        {{-- Arch Mirror Viewport --}}
+                        <div class="relative w-full h-full rounded-t-[68px] rounded-b-xs overflow-hidden bg-[#2D241E] flex items-center justify-center shadow-inner">
+                            <template x-if="imagePreviewUrl">
+                                <img :src="imagePreviewUrl" 
+                                     class="w-full h-full object-cover transition-transform duration-75 select-none pointer-events-none"
+                                     :style="'transform: scale(' + (mirrorZoom / 100) + ') translate(' + mirrorPanX + '%, ' + mirrorPanY + '%); transform-origin: center center;'">
+                            </template>
+                            <template x-if="!imagePreviewUrl">
+                                <div class="flex flex-col items-center justify-center text-center p-2 text-stone-400">
+                                    <svg class="w-6 h-6 mb-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="text-[8px] uppercase tracking-wider font-semibold">Select Photo</span>
+                                </div>
+                            </template>
+
+                            {{-- Ambient glass reflection & shadow overlay --}}
+                            <div class="absolute inset-0 bg-linear-to-tr from-black/20 via-transparent to-white/15 pointer-events-none z-10"></div>
+                            <div class="absolute inset-0 ring-1 ring-inset ring-black/15 pointer-events-none z-10"></div>
+                        </div>
+
+                        {{-- Arch Base Sill --}}
+                        <div class="h-1.5 -mx-1.5 -mb-0.5 bg-linear-to-b from-[#F0E8DC] to-[#D8CABE] border border-[#C3B49E] rounded-xs shadow-xs z-20"></div>
                     </div>
                 </div>
 
@@ -541,8 +632,13 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="py-2.5 px-4 bg-white hover:bg-gray-100 text-black text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md">
-                        <span x-text="isEditing ? 'Save Changes' : 'Publish'"></span>
+                        :disabled="isSubmitting"
+                        class="py-2.5 px-4 bg-white hover:bg-gray-100 text-black text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md disabled:opacity-50">
+                        <span x-show="!isSubmitting" x-text="isEditing ? 'Save Changes' : 'Publish'"></span>
+                        <span x-show="isSubmitting" class="flex items-center justify-center gap-1.5" x-cloak>
+                            <span class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                            <span>Framing...</span>
+                        </span>
                     </button>
                 </div>
 
@@ -564,6 +660,12 @@ function promotionManager(initialData) {
         rejectRoute: '',
         rejectBannerTitle: '',
         imagePreviewUrl: '',
+        originalImageUrl: '',
+        croppedImageData: '',
+        mirrorZoom: 100,
+        mirrorPanY: 0,
+        mirrorPanX: 0,
+        isSubmitting: false,
         fileInfo: { name: '', dimensions: '' },
         
         categories: initialData.categories || [],
@@ -617,8 +719,85 @@ function promotionManager(initialData) {
         },
 
         selectVariantImage(imgUrl) {
-            this.imagePreviewUrl = imgUrl;
+            this.originalImageUrl = imgUrl;
             this.form.preset_image_url = imgUrl;
+            this.imagePreviewUrl = imgUrl;
+            this.croppedImageData = '';
+        },
+
+        setMirrorPreset(preset) {
+            if (preset === 'collar') {
+                this.mirrorZoom = 135;
+                this.mirrorPanY = 12;
+                this.mirrorPanX = 0;
+            } else if (preset === 'zoom13') {
+                this.mirrorZoom = 130;
+                this.mirrorPanY = 0;
+                this.mirrorPanX = 0;
+            } else {
+                this.mirrorZoom = 100;
+                this.mirrorPanY = 0;
+                this.mirrorPanX = 0;
+            }
+        },
+
+        bakeFramedImage() {
+            var self = this;
+            var src = this.imagePreviewUrl || this.originalImageUrl;
+            if (!src) return Promise.resolve();
+
+            return new Promise(function(resolve) {
+                var img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    try {
+                        var targetW = 600;
+                        var targetH = 750;
+                        var canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        var ctx = canvas.getContext('2d');
+
+                        var nw = img.naturalWidth || img.width;
+                        var nh = img.naturalHeight || img.height;
+
+                        var scaleCover = Math.max(targetW / nw, targetH / nh);
+                        var zoomFactor = (self.mirrorZoom || 100) / 100;
+                        var finalScale = scaleCover * zoomFactor;
+
+                        var drawW = nw * finalScale;
+                        var drawH = nh * finalScale;
+
+                        var panX = ((self.mirrorPanX || 0) / 100) * drawW;
+                        var panY = ((self.mirrorPanY || 0) / 100) * drawH;
+
+                        var drawX = (targetW - drawW) / 2 + panX;
+                        var drawY = (targetH - drawH) / 2 + panY;
+
+                        ctx.fillStyle = '#2D241E';
+                        ctx.fillRect(0, 0, targetW, targetH);
+                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+                        self.croppedImageData = canvas.toDataURL('image/jpeg', 0.92);
+                        resolve();
+                    } catch (e) {
+                        console.warn('Framing canvas export notice:', e);
+                        resolve();
+                    }
+                };
+                img.onerror = function() {
+                    resolve();
+                };
+                img.src = src;
+            });
+        },
+
+        submitBannerForm(event) {
+            var self = this;
+            self.isSubmitting = true;
+            this.bakeFramedImage().finally(function() {
+                event.target.submit();
+            });
         },
 
         form: {
@@ -690,8 +869,10 @@ function promotionManager(initialData) {
             
             var defaultImg = (product.all_images && product.all_images.length > 0) ? product.all_images[0] : (product.image_url || '');
             if (defaultImg) {
-                this.imagePreviewUrl = defaultImg;
+                this.originalImageUrl = defaultImg;
                 this.form.preset_image_url = defaultImg;
+                this.imagePreviewUrl = defaultImg;
+                this.croppedImageData = '';
             }
         },
 
@@ -700,6 +881,12 @@ function promotionManager(initialData) {
             this.mode = 'product';
             this.showSchedule = false;
             this.imagePreviewUrl = '';
+            this.originalImageUrl = '';
+            this.croppedImageData = '';
+            this.mirrorZoom = 100;
+            this.mirrorPanY = 0;
+            this.mirrorPanX = 0;
+            this.isSubmitting = false;
             this.fileInfo = { name: '', dimensions: '' };
 
             this.form = {
@@ -734,6 +921,12 @@ function promotionManager(initialData) {
             this.showSchedule = Boolean(banner.start_date || banner.end_date);
             var initialImg = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
             this.imagePreviewUrl = initialImg;
+            this.originalImageUrl = initialImg;
+            this.croppedImageData = '';
+            this.mirrorZoom = 100;
+            this.mirrorPanY = 0;
+            this.mirrorPanX = 0;
+            this.isSubmitting = false;
             this.fileInfo = { name: 'Current Image', dimensions: '' };
             
             var formatDt = function(dtStr) {
@@ -802,8 +995,13 @@ function promotionManager(initialData) {
 
             var reader = new FileReader();
             reader.onload = function(e) {
-                self.imagePreviewUrl = e.target.result;
+                self.originalImageUrl = e.target.result;
                 self.form.preset_image_url = '';
+                self.imagePreviewUrl = e.target.result;
+                self.croppedImageData = '';
+                self.mirrorZoom = 100;
+                self.mirrorPanY = 0;
+                self.mirrorPanX = 0;
                 var img = new Image();
                 img.onload = function() {
                     self.fileInfo.dimensions = img.width + 'x' + img.height + 'px';
