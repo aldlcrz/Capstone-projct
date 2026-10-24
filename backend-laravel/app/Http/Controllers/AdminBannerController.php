@@ -164,19 +164,20 @@ class AdminBannerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'preset_image_url'  => 'nullable|string',
-            'cutout_image_data' => 'nullable|string',
-            'title'             => 'nullable|string|max:60',
-            'subtitle'          => 'nullable|string|max:100',
-            'button_text_1'     => 'nullable|string|max:50',
-            'button_url_1'      => 'nullable|string|max:255',
-            'button_text_2'     => 'nullable|string|max:50',
-            'button_url_2'      => 'nullable|string|max:255',
-            'order_index'       => 'nullable|integer|min:1',
-            'start_date'        => 'nullable|date',
-            'end_date'          => 'nullable|date|after_or_equal:start_date',
-            'is_active'         => 'nullable|boolean',
+            'image'              => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url'   => 'nullable|string',
+            'cropped_image_data' => 'nullable|string',
+            'cutout_image_data'  => 'nullable|string',
+            'title'              => 'nullable|string|max:60',
+            'subtitle'           => 'nullable|string|max:100',
+            'button_text_1'      => 'nullable|string|max:50',
+            'button_url_1'       => 'nullable|string|max:255',
+            'button_text_2'      => 'nullable|string|max:50',
+            'button_url_2'       => 'nullable|string|max:255',
+            'order_index'        => 'nullable|integer|min:1',
+            'start_date'         => 'nullable|date',
+            'end_date'           => 'nullable|date|after_or_equal:start_date',
+            'is_active'          => 'nullable|boolean',
         ]);
 
         $isActive = $request->has('is_active') ? (bool)$request->is_active : true;
@@ -197,17 +198,18 @@ class AdminBannerController extends Controller
         }
 
         $imagePath = '';
-        if ($request->filled('cutout_image_data') && str_starts_with($request->cutout_image_data, 'data:image/')) {
-            $dataUrl = $request->cutout_image_data;
-            if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
-                $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+        $rawImageBase64 = $request->cropped_image_data ?: $request->cutout_image_data;
+        if ($rawImageBase64 && str_starts_with($rawImageBase64, 'data:image/')) {
+            if (preg_match('/^data:image\/(\w+);base64,/', $rawImageBase64, $m)) {
+                $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                $data = substr($rawImageBase64, strpos($rawImageBase64, ',') + 1);
                 $decoded = base64_decode($data);
                 if ($decoded !== false) {
                     $destinationPath = public_path('uploads/banners');
                     if (!File::isDirectory($destinationPath)) {
                         File::makeDirectory($destinationPath, 0755, true, true);
                     }
-                    $filename = time() . '_' . uniqid() . '_cutout.png';
+                    $filename = time() . '_' . uniqid() . '_framed.' . $ext;
                     File::put($destinationPath . '/' . $filename, $decoded);
                     $imagePath = 'uploads/banners/' . $filename;
                 }
@@ -267,19 +269,20 @@ class AdminBannerController extends Controller
         $banner = Banner::findOrFail($id);
 
         $request->validate([
-            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'preset_image_url'  => 'nullable|string',
-            'cutout_image_data' => 'nullable|string',
-            'title'             => 'nullable|string|max:60',
-            'subtitle'          => 'nullable|string|max:100',
-            'button_text_1'     => 'nullable|string|max:50',
-            'button_url_1'      => 'nullable|string|max:255',
-            'button_text_2'     => 'nullable|string|max:50',
-            'button_url_2'      => 'nullable|string|max:255',
-            'order_index'       => 'nullable|integer|min:1',
-            'start_date'        => 'nullable|date',
-            'end_date'          => 'nullable|date|after_or_equal:start_date',
-            'is_active'         => 'nullable|boolean',
+            'image'              => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'preset_image_url'   => 'nullable|string',
+            'cropped_image_data' => 'nullable|string',
+            'cutout_image_data'  => 'nullable|string',
+            'title'              => 'nullable|string|max:60',
+            'subtitle'           => 'nullable|string|max:100',
+            'button_text_1'      => 'nullable|string|max:50',
+            'button_url_1'       => 'nullable|string|max:255',
+            'button_text_2'      => 'nullable|string|max:50',
+            'button_url_2'       => 'nullable|string|max:255',
+            'order_index'        => 'nullable|integer|min:1',
+            'start_date'         => 'nullable|date',
+            'end_date'           => 'nullable|date|after_or_equal:start_date',
+            'is_active'          => 'nullable|boolean',
         ]);
 
         $isActive = $request->has('is_active') ? (bool)$request->is_active : false;
@@ -317,10 +320,11 @@ class AdminBannerController extends Controller
             'is_active'     => $isActive,
         ];
 
-        if ($request->filled('cutout_image_data') && str_starts_with($request->cutout_image_data, 'data:image/')) {
-            $dataUrl = $request->cutout_image_data;
-            if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
-                $b64 = substr($dataUrl, strpos($dataUrl, ',') + 1);
+        $rawImageBase64 = $request->cropped_image_data ?: $request->cutout_image_data;
+        if ($rawImageBase64 && str_starts_with($rawImageBase64, 'data:image/')) {
+            if (preg_match('/^data:image\/(\w+);base64,/', $rawImageBase64, $m)) {
+                $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                $b64 = substr($rawImageBase64, strpos($rawImageBase64, ',') + 1);
                 $decoded = base64_decode($b64);
                 if ($decoded !== false) {
                     // Delete old uploaded image if not default
@@ -335,7 +339,7 @@ class AdminBannerController extends Controller
                     if (!File::isDirectory($destinationPath)) {
                         File::makeDirectory($destinationPath, 0755, true, true);
                     }
-                    $filename = time() . '_' . uniqid() . '_cutout.png';
+                    $filename = time() . '_' . uniqid() . '_framed.' . $ext;
                     File::put($destinationPath . '/' . $filename, $decoded);
                     $data['image_path'] = 'uploads/banners/' . $filename;
                 }

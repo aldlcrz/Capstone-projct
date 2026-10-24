@@ -334,6 +334,7 @@
                   method="POST"
                   enctype="multipart/form-data"
                   id="bannerForm"
+                  @submit.prevent="submitBannerForm($event)"
                   class="px-6 pb-6 space-y-4">
                 @csrf
                 <template x-if="isEditing">
@@ -480,68 +481,73 @@
                     </div>
                 </div>
 
-                {{-- Hidden input for base64 cutout PNG data --}}
-                <input type="hidden" name="cutout_image_data" x-model="cutoutDataUrl">
+                {{-- Hidden input for framed/cropped image data --}}
+                <input type="hidden" name="cropped_image_data" x-model="croppedImageData">
+                <input type="hidden" name="cutout_image_data" :value="croppedImageData">
 
-                {{-- ── 2.5 ATELIER MANNEQUIN & BACKGROUND CUTOUT TOOLBAR ── --}}
-                <div class="p-3 bg-[#161616] border border-[#2B2B2B] rounded-2xl space-y-2.5">
+                {{-- ── 2.5 ARCHED MIRROR FRAMING & FIT STUDIO (PAN & ZOOM) ── --}}
+                <div class="p-3 bg-[#161616] border border-[#2B2B2B] rounded-2xl space-y-3">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div class="flex items-center gap-2">
                             <div class="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                             </div>
                             <div>
-                                <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Atelier Mannequin & Cutout</span>
-                                <span class="text-[9px] text-gray-400">Eliminate photo background and mount onto handcrafted tailor mannequin</span>
+                                <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Arched Mirror Framing Studio</span>
+                                <span class="text-[9px] text-gray-400">Zoom and center far-away or wide seller photos into the architectural mirror</span>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            {{-- Instant Studio Cutout --}}
+                        {{-- Quick Framing Presets --}}
+                        <div class="flex items-center gap-1.5">
                             <button type="button" 
-                                    @click="applyStudioCutout()"
-                                    :disabled="!imagePreviewUrl || isProcessingCutout"
-                                    class="px-3 py-1.5 bg-[#262626] hover:bg-[#333] border border-[#3E3E3E] text-amber-300 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40">
-                                <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span x-text="isCutoutActive ? 'Re-Apply Cutout' : '✨ Remove Background'"></span>
+                                    @click="setMirrorPreset('collar')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2.5 py-1 bg-[#262626] hover:bg-[#333] border border-[#3E3E3E] text-amber-300 text-[10px] font-medium rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                                    title="Zoom in on collar and barong chest embroidery">
+                                <span>👔 Focus Collar</span>
                             </button>
-
-                            {{-- AI Neural Cutout --}}
                             <button type="button" 
-                                    @click="applyAiCutout()"
-                                    :disabled="!imagePreviewUrl || isProcessingCutout"
-                                    class="px-2.5 py-1.5 bg-linear-to-r from-amber-600/30 to-orange-600/30 hover:from-amber-600/50 hover:to-orange-600/50 border border-amber-500/40 text-amber-200 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-                                    title="AI Neural Deep Background Removal">
-                                <span x-show="!isProcessingCutout">🤖 AI Cutout</span>
-                                <span x-show="isProcessingCutout" class="flex items-center gap-1"><span class="w-2.5 h-2.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span> Processing...</span>
+                                    @click="setMirrorPreset('zoom13')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2 py-1 bg-[#262626] hover:bg-[#333] border border-[#3E3E3E] text-gray-300 hover:text-white text-[10px] rounded-lg transition-all cursor-pointer disabled:opacity-40"
+                                    title="Zoom 1.3x">
+                                <span>🔍 Zoom 1.3x</span>
                             </button>
-
-                            {{-- Reset to Original --}}
                             <button type="button" 
-                                    x-show="isCutoutActive" 
-                                    @click="resetCutout()"
-                                    class="px-2 py-1.5 bg-[#1F1F1F] hover:bg-[#2A2A2A] text-gray-400 hover:text-gray-200 text-[10px] rounded-lg transition-all cursor-pointer">
-                                Reset
+                                    @click="setMirrorPreset('reset')"
+                                    :disabled="!imagePreviewUrl"
+                                    class="px-2 py-1 bg-[#1F1F1F] hover:bg-[#2A2A2A] text-gray-400 hover:text-gray-200 text-[10px] rounded-lg transition-all cursor-pointer disabled:opacity-40"
+                                    title="Reset to default framing">
+                                <span>🔄 Reset</span>
                             </button>
                         </div>
                     </div>
 
-                    {{-- Sliders when Cutout is active --}}
-                    <div x-show="isCutoutActive" class="pt-2 border-t border-[#242424] grid grid-cols-2 gap-3" x-cloak>
+                    {{-- Framing Controls: Zoom, Pan Y, Pan X --}}
+                    <div class="pt-2 border-t border-[#242424] grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
-                                <span>Cutout Cleanliness / Tolerance</span>
-                                <span class="font-mono text-amber-400" x-text="cutoutTolerance"></span>
+                                <span>Scale / Zoom</span>
+                                <span class="font-mono text-amber-400" x-text="mirrorZoom + '%'"></span>
                             </div>
-                            <input type="range" min="10" max="60" step="2" x-model="cutoutTolerance" @input="debouncedApplyCutout()"
+                            <input type="range" min="100" max="220" step="2" x-model.number="mirrorZoom"
                                    class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
                         </div>
                         <div>
                             <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
-                                <span>Mannequin Fit / Scale</span>
-                                <span class="font-mono text-amber-400" x-text="mannequinScale + '%'"></span>
+                                <span>Pan Vertical (Y)</span>
+                                <span class="font-mono text-amber-400" x-text="(mirrorPanY > 0 ? '+' : '') + mirrorPanY + '%'"></span>
                             </div>
-                            <input type="range" min="70" max="115" step="1" x-model="mannequinScale"
+                            <input type="range" min="-40" max="40" step="1" x-model.number="mirrorPanY"
+                                   class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[9px] text-gray-400 mb-1">
+                                <span>Pan Horizontal (X)</span>
+                                <span class="font-mono text-amber-400" x-text="(mirrorPanX > 0 ? '+' : '') + mirrorPanX + '%'"></span>
+                            </div>
+                            <input type="range" min="-30" max="30" step="1" x-model.number="mirrorPanX"
                                    class="w-full h-1 bg-[#2B2B2B] rounded-lg appearance-none cursor-pointer accent-amber-500">
                         </div>
                     </div>
@@ -572,33 +578,29 @@
                         </div>
                     </div>
 
-                    {{-- Spanish Archway & Tailor Mannequin Stage (Right) --}}
-                    <div class="relative z-20 shrink-0 w-36 h-44 rounded-t-[72px] rounded-b-md p-1.5 bg-linear-to-b from-[#EFE7DB] to-[#E2D6C3] border border-[#C8B8A2] shadow-lg flex flex-col justify-between">
-                        {{-- Arch Alcove Viewport --}}
-                        <div class="relative w-full h-full rounded-t-[68px] rounded-b-xs overflow-hidden bg-radial from-[#FAF5EE] via-[#EFE5D7] to-[#DFD0BE] flex items-center justify-center shadow-inner">
-                            {{-- Tailor Mannequin Neck (Visible in Cutout Mode) --}}
-                            <div x-show="isCutoutActive" class="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10" x-cloak>
-                                <div class="w-2 h-3.5 rounded-t-full bg-linear-to-b from-[#A87A48] via-[#7B5327] to-[#4A2F12] shadow-xs"></div>
-                                <div class="w-6 h-6 rounded-b-lg bg-linear-to-b from-[#FAF4EB] via-[#EBE0D0] to-[#D8C7B0] border border-[#C3B4A0]/60 -mt-0.5 shadow-xs"></div>
-                            </div>
-
-                            {{-- Garment Image --}}
+                    {{-- Spanish Archway Mirror Portal (Right) - Exactly matching homepage --}}
+                    <div class="relative z-20 shrink-0 w-36 h-48 rounded-t-[72px] rounded-b-md p-1.5 bg-linear-to-b from-[#FAF4EC] via-[#EFE5D7] to-[#DFD0BE] border border-[#C8B8A2] shadow-xl flex flex-col justify-between">
+                        {{-- Arch Mirror Viewport --}}
+                        <div class="relative w-full h-full rounded-t-[68px] rounded-b-xs overflow-hidden bg-[#2D241E] flex items-center justify-center shadow-inner">
                             <template x-if="imagePreviewUrl">
                                 <img :src="imagePreviewUrl" 
-                                     :class="isCutoutActive ? 'relative z-20 object-contain drop-shadow-lg' : 'w-full h-full object-cover'"
-                                     :style="isCutoutActive ? 'max-width: 88%; max-height: 78%; transform: scale(' + (mannequinScale / 100) + ') translateY(6px);' : ''">
+                                     class="w-full h-full object-cover transition-transform duration-75 select-none pointer-events-none"
+                                     :style="'transform: scale(' + (mirrorZoom / 100) + ') translate(' + mirrorPanX + '%, ' + mirrorPanY + '%); transform-origin: center center;'">
+                            </template>
+                            <template x-if="!imagePreviewUrl">
+                                <div class="flex flex-col items-center justify-center text-center p-2 text-stone-400">
+                                    <svg class="w-6 h-6 mb-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="text-[8px] uppercase tracking-wider font-semibold">Select Photo</span>
+                                </div>
                             </template>
 
-                            {{-- Tailor Mannequin Pole & Floor Shadow (Visible in Cutout Mode) --}}
-                            <div x-show="isCutoutActive" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-12 bg-linear-to-r from-[#444] via-[#AFA498] to-[#302A24] z-10 pointer-events-none" x-cloak></div>
-                            <div x-show="isCutoutActive" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-radial from-black/35 via-black/10 to-transparent rounded-full z-10 pointer-events-none" x-cloak></div>
-
-                            {{-- Arch Vignette --}}
-                            <div class="absolute inset-0 bg-radial from-transparent via-transparent to-black/10 pointer-events-none z-30"></div>
+                            {{-- Ambient glass reflection & shadow overlay --}}
+                            <div class="absolute inset-0 bg-linear-to-tr from-black/20 via-transparent to-white/15 pointer-events-none z-10"></div>
+                            <div class="absolute inset-0 ring-1 ring-inset ring-black/15 pointer-events-none z-10"></div>
                         </div>
 
                         {{-- Arch Base Sill --}}
-                        <div class="h-1.5 -mx-1.5 -mb-0.5 bg-linear-to-b from-[#F0E8DC] to-[#D8CABE] border border-[#C3B49E] rounded-xs shadow-xs z-30"></div>
+                        <div class="h-1.5 -mx-1.5 -mb-0.5 bg-linear-to-b from-[#F0E8DC] to-[#D8CABE] border border-[#C3B49E] rounded-xs shadow-xs z-20"></div>
                     </div>
                 </div>
 
@@ -641,8 +643,13 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="py-2.5 px-4 bg-white hover:bg-gray-100 text-black text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md">
-                        <span x-text="isEditing ? 'Save Changes' : 'Publish'"></span>
+                        :disabled="isSubmitting"
+                        class="py-2.5 px-4 bg-white hover:bg-gray-100 text-black text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md disabled:opacity-50">
+                        <span x-show="!isSubmitting" x-text="isEditing ? 'Save Changes' : 'Publish'"></span>
+                        <span x-show="isSubmitting" class="flex items-center justify-center gap-1.5" x-cloak>
+                            <span class="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                            <span>Framing...</span>
+                        </span>
                     </button>
                 </div>
 
@@ -664,12 +671,11 @@ function promotionManager(initialData) {
         rejectBannerTitle: '',
         imagePreviewUrl: '',
         originalImageUrl: '',
-        cutoutDataUrl: '',
-        isCutoutActive: false,
-        cutoutTolerance: 26,
-        mannequinScale: 92,
-        isProcessingCutout: false,
-        cutoutDebounceTimer: null,
+        croppedImageData: '',
+        mirrorZoom: 100,
+        mirrorPanY: 0,
+        mirrorPanX: 0,
+        isSubmitting: false,
         fileInfo: { name: '', dimensions: '' },
         
         categories: initialData.categories || [],
@@ -725,143 +731,83 @@ function promotionManager(initialData) {
         selectVariantImage(imgUrl) {
             this.originalImageUrl = imgUrl;
             this.form.preset_image_url = imgUrl;
-            if (this.isCutoutActive) {
-                this.applyStudioCutout();
+            this.imagePreviewUrl = imgUrl;
+            this.croppedImageData = '';
+        },
+
+        setMirrorPreset(preset) {
+            if (preset === 'collar') {
+                this.mirrorZoom = 135;
+                this.mirrorPanY = 12;
+                this.mirrorPanX = 0;
+            } else if (preset === 'zoom13') {
+                this.mirrorZoom = 130;
+                this.mirrorPanY = 0;
+                this.mirrorPanX = 0;
             } else {
-                this.imagePreviewUrl = imgUrl;
+                this.mirrorZoom = 100;
+                this.mirrorPanY = 0;
+                this.mirrorPanX = 0;
             }
         },
 
-        debouncedApplyCutout() {
-            clearTimeout(this.cutoutDebounceTimer);
+        bakeFramedImage() {
             var self = this;
-            this.cutoutDebounceTimer = setTimeout(function() {
-                self.applyStudioCutout();
-            }, 120);
-        },
+            var src = this.imagePreviewUrl || this.originalImageUrl;
+            if (!src) return Promise.resolve();
 
-        applyStudioCutout() {
-            var src = this.originalImageUrl || this.imagePreviewUrl;
-            if (!src) return;
+            return new Promise(function(resolve) {
+                var img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    try {
+                        var targetW = 600;
+                        var targetH = 750;
+                        var canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        var ctx = canvas.getContext('2d');
 
-            var self = this;
-            self.isProcessingCutout = true;
+                        var nw = img.naturalWidth || img.width;
+                        var nh = img.naturalHeight || img.height;
 
-            var img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.onload = function() {
-                try {
-                    var canvas = document.createElement('canvas');
-                    var w = img.naturalWidth || img.width;
-                    var h = img.naturalHeight || img.height;
+                        var scaleCover = Math.max(targetW / nw, targetH / nh);
+                        var zoomFactor = (self.mirrorZoom || 100) / 100;
+                        var finalScale = scaleCover * zoomFactor;
 
-                    var maxDim = 1200;
-                    if (w > maxDim || h > maxDim) {
-                        var r = Math.min(maxDim / w, maxDim / h);
-                        w = Math.round(w * r);
-                        h = Math.round(h * r);
+                        var drawW = nw * finalScale;
+                        var drawH = nh * finalScale;
+
+                        var panX = ((self.mirrorPanX || 0) / 100) * drawW;
+                        var panY = ((self.mirrorPanY || 0) / 100) * drawH;
+
+                        var drawX = (targetW - drawW) / 2 + panX;
+                        var drawY = (targetH - drawH) / 2 + panY;
+
+                        ctx.fillStyle = '#2D241E';
+                        ctx.fillRect(0, 0, targetW, targetH);
+                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+                        self.croppedImageData = canvas.toDataURL('image/jpeg', 0.92);
+                        resolve();
+                    } catch (e) {
+                        console.warn('Framing canvas export notice:', e);
+                        resolve();
                     }
-
-                    canvas.width = w;
-                    canvas.height = h;
-                    var ctx = canvas.getContext('2d', { willReadFrequently: true });
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    var imgData = ctx.getImageData(0, 0, w, h);
-                    var data = imgData.data;
-
-                    var samples = [
-                        [2, 2], [w - 3, 2], [2, h - 3], [w - 3, h - 3],
-                        [Math.floor(w / 2), 2], [2, Math.floor(h / 2)], [w - 3, Math.floor(h / 2)]
-                    ];
-
-                    var bgR = 0, bgG = 0, bgB = 0;
-                    samples.forEach(function(p) {
-                        var idx = (p[1] * w + p[0]) * 4;
-                        bgR += data[idx];
-                        bgG += data[idx + 1];
-                        bgB += data[idx + 2];
-                    });
-                    bgR = Math.round(bgR / samples.length);
-                    bgG = Math.round(bgG / samples.length);
-                    bgB = Math.round(bgB / samples.length);
-
-                    var tol = Number(self.cutoutTolerance || 26);
-                    var threshold = tol * 2.8;
-                    var feather = 16;
-
-                    for (var i = 0; i < data.length; i += 4) {
-                        var r = data[i];
-                        var g = data[i + 1];
-                        var b = data[i + 2];
-
-                        var dist = Math.sqrt(
-                            Math.pow(r - bgR, 2) + 
-                            Math.pow(g - bgG, 2) + 
-                            Math.pow(b - bgB, 2)
-                        );
-
-                        var brightness = (r * 0.299 + g * 0.587 + b * 0.114);
-                        var isNearWhite = (brightness > 235 && Math.abs(r - g) < 16 && Math.abs(g - b) < 16);
-
-                        if (dist < threshold || (isNearWhite && tol > 16)) {
-                            data[i + 3] = 0;
-                        } else if (dist < threshold + feather) {
-                            var factor = (dist - threshold) / feather;
-                            data[i + 3] = Math.round(data[i + 3] * factor);
-                        }
-                    }
-
-                    ctx.putImageData(imgData, 0, 0);
-                    var pngUrl = canvas.toDataURL('image/png');
-                    self.cutoutDataUrl = pngUrl;
-                    self.imagePreviewUrl = pngUrl;
-                    self.isCutoutActive = true;
-                } catch (e) {
-                    console.error('Cutout processing error', e);
-                } finally {
-                    self.isProcessingCutout = false;
-                }
-            };
-            img.onerror = function() {
-                self.isProcessingCutout = false;
-            };
-            img.src = src;
+                };
+                img.onerror = function() {
+                    resolve();
+                };
+                img.src = src;
+            });
         },
 
-        applyAiCutout() {
-            var src = this.originalImageUrl || this.imagePreviewUrl;
-            if (!src) return;
-
+        submitBannerForm(event) {
             var self = this;
-            self.isProcessingCutout = true;
-
-            import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.7/+esm')
-                .then(function(module) {
-                    return module.removeBackground(src);
-                })
-                .then(function(blob) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        self.cutoutDataUrl = e.target.result;
-                        self.imagePreviewUrl = e.target.result;
-                        self.isCutoutActive = true;
-                        self.isProcessingCutout = false;
-                    };
-                    reader.readAsDataURL(blob);
-                })
-                .catch(function(err) {
-                    console.warn('AI neural cutout unavailable or failed, falling back to studio cutout:', err);
-                    self.applyStudioCutout();
-                });
-        },
-
-        resetCutout() {
-            this.isCutoutActive = false;
-            this.cutoutDataUrl = '';
-            if (this.originalImageUrl) {
-                this.imagePreviewUrl = this.originalImageUrl;
-            }
+            self.isSubmitting = true;
+            this.bakeFramedImage().finally(function() {
+                event.target.submit();
+            });
         },
 
         form: {
@@ -936,11 +882,8 @@ function promotionManager(initialData) {
             if (defaultImg) {
                 this.originalImageUrl = defaultImg;
                 this.form.preset_image_url = defaultImg;
-                if (this.isCutoutActive) {
-                    this.applyStudioCutout();
-                } else {
-                    this.imagePreviewUrl = defaultImg;
-                }
+                this.imagePreviewUrl = defaultImg;
+                this.croppedImageData = '';
             }
         },
 
@@ -950,11 +893,11 @@ function promotionManager(initialData) {
             this.showSchedule = false;
             this.imagePreviewUrl = '';
             this.originalImageUrl = '';
-            this.cutoutDataUrl = '';
-            this.isCutoutActive = false;
-            this.cutoutTolerance = 26;
-            this.mannequinScale = 92;
-            this.isProcessingCutout = false;
+            this.croppedImageData = '';
+            this.mirrorZoom = 100;
+            this.mirrorPanY = 0;
+            this.mirrorPanX = 0;
+            this.isSubmitting = false;
             this.fileInfo = { name: '', dimensions: '' };
 
             this.form = {
@@ -990,12 +933,11 @@ function promotionManager(initialData) {
             var initialImg = banner.image_path ? (banner.image_path.startsWith('http') || banner.image_path.startsWith('/') ? banner.image_path : '/' + banner.image_path) : '';
             this.imagePreviewUrl = initialImg;
             this.originalImageUrl = initialImg;
-            this.cutoutDataUrl = '';
-            this.cutoutTolerance = 26;
-            this.mannequinScale = 92;
-            this.isProcessingCutout = false;
-            var isCut = initialImg && (initialImg.includes('cutout') || initialImg.endsWith('.png'));
-            this.isCutoutActive = Boolean(isCut);
+            this.croppedImageData = '';
+            this.mirrorZoom = 100;
+            this.mirrorPanY = 0;
+            this.mirrorPanX = 0;
+            this.isSubmitting = false;
             this.fileInfo = { name: 'Current Image', dimensions: '' };
             
             var formatDt = function(dtStr) {
@@ -1066,11 +1008,11 @@ function promotionManager(initialData) {
             reader.onload = function(e) {
                 self.originalImageUrl = e.target.result;
                 self.form.preset_image_url = '';
-                if (self.isCutoutActive) {
-                    self.applyStudioCutout();
-                } else {
-                    self.imagePreviewUrl = e.target.result;
-                }
+                self.imagePreviewUrl = e.target.result;
+                self.croppedImageData = '';
+                self.mirrorZoom = 100;
+                self.mirrorPanY = 0;
+                self.mirrorPanX = 0;
                 var img = new Image();
                 img.onload = function() {
                     self.fileInfo.dimensions = img.width + 'x' + img.height + 'px';

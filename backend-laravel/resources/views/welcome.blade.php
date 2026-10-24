@@ -79,11 +79,6 @@
             },
             stopTimer() {
                 if (this.timer) clearInterval(this.timer);
-            },
-            isCutout(url) {
-                if (!url) return false;
-                var lower = String(url).toLowerCase();
-                return lower.includes('cutout') || lower.includes('transparent') || lower.endsWith('.png');
             }
         }"
         x-init="startTimer()"
@@ -392,150 +387,30 @@
                 justify-content: center;
             }
 
-            /* Tailor Mannequin Stage Container */
-            .lb-mannequin-assembly {
-                position: relative;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-
-            /* Hide mannequin parts when rendering standard full-bleed non-cutout photos */
-            .lb-mannequin-assembly.is-full-mode .lb-mannequin-head,
-            .lb-mannequin-assembly.is-full-mode .lb-mannequin-pole,
-            .lb-mannequin-assembly.is-full-mode .lb-mannequin-floor-shadow {
-                display: none !important;
-            }
-
-            /* Turned Wood Finial & Tailored Linen Neck Collar */
-            .lb-mannequin-head {
-                position: absolute;
-                top: 13%;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                z-index: 1;
-                pointer-events: none;
-            }
-
-            @media (min-width: 1024px) {
-                .lb-mannequin-head {
-                    top: 11%;
-                }
-            }
-
-            .lb-mannequin-finial {
-                width: 13px;
-                height: 22px;
-                border-radius: 7px 7px 3px 3px;
-                background: linear-gradient(135deg, #B2834E 0%, #875C2F 45%, #523414 100%);
-                box-shadow: 0 3px 6px rgba(40, 25, 10, 0.35), inset 1px 1px 2px rgba(255, 255, 255, 0.45);
-                margin-bottom: -2px;
-            }
-
-            .lb-mannequin-collar {
-                width: 36px;
-                height: 42px;
-                border-radius: 8px 8px 16px 16px;
-                background: linear-gradient(180deg, #FBF6EE 0%, #EBE0D0 60%, #D8C7B0 100%);
-                border: 1px solid rgba(195, 180, 160, 0.65);
-                box-shadow: 
-                    inset 0 2px 4px rgba(255, 255, 255, 0.8),
-                    inset 0 -3px 6px rgba(60, 40, 20, 0.16),
-                    0 4px 10px rgba(40, 25, 10, 0.15);
-            }
-
-            /* Garment Frame */
-            .lb-garment-frame {
-                position: relative;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 2;
-            }
-
-            /* Cutout Garment Image (Mounted Seamlessly on Mannequin) */
-            .lb-arch-img.is-cutout {
-                width: auto;
-                height: auto;
-                max-width: 88%;
-                max-height: 77%;
-                object-fit: contain;
-                filter: 
-                    drop-shadow(0 16px 24px rgba(45, 28, 12, 0.28))
-                    drop-shadow(0 4px 8px rgba(45, 28, 12, 0.16));
-                transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
-                transform-origin: center center;
-                margin-top: 18px;
-            }
-
-            .lb-arch-portal:hover .lb-arch-img.is-cutout {
-                transform: scale(1.035) translateY(-3px);
-                filter: 
-                    drop-shadow(0 22px 30px rgba(45, 28, 12, 0.34))
-                    drop-shadow(0 6px 12px rgba(45, 28, 12, 0.20));
-            }
-
-            /* Standard Full Bleed Photo (When not cutout) */
-            .lb-arch-img.is-full {
+            /* Arched Mirror Image Clipped Inside the Window */
+            .lb-arch-img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
-                object-position: center 15%;
+                object-position: center 20%;
                 display: block;
                 user-select: none;
                 pointer-events: none;
                 transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
-            .lb-arch-portal:hover .lb-arch-img.is-full {
+            .lb-arch-portal:hover .lb-arch-img {
                 transform: scale(1.03);
             }
 
-            /* Mannequin Stand Pole */
-            .lb-mannequin-pole {
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 6px;
-                height: 110px;
-                background: linear-gradient(90deg, #444 0%, #AFA498 35%, #7D7062 70%, #302A24 100%);
-                border-radius: 2px;
-                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.25);
-                z-index: 1;
-                pointer-events: none;
-            }
-
-            /* Floor Contact Shadow */
-            .lb-mannequin-floor-shadow {
-                position: absolute;
-                bottom: 2px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 160px;
-                height: 18px;
-                background: radial-gradient(ellipse at center, rgba(35, 22, 10, 0.40) 0%, rgba(35, 22, 10, 0.15) 50%, transparent 75%);
-                border-radius: 50%;
-                z-index: 1;
-                pointer-events: none;
-            }
-
-            /* Subtle Depth Vignette & Ambient Interior Shadow */
+            /* Subtle Depth Vignette & Ambient Glass/Mirror Reflection */
             .lb-arch-vignette {
                 position: absolute;
                 inset: 0;
                 pointer-events: none;
                 background: 
-                    radial-gradient(ellipse at center 40%, transparent 62%, rgba(40, 26, 12, 0.20) 100%),
-                    linear-gradient(180deg, rgba(30, 18, 8, 0.14) 0%, transparent 22%, transparent 75%, rgba(30, 18, 8, 0.22) 100%);
+                    radial-gradient(ellipse at center 40%, transparent 60%, rgba(40, 26, 12, 0.16) 100%),
+                    linear-gradient(180deg, rgba(30, 18, 8, 0.12) 0%, transparent 20%, transparent 75%, rgba(30, 18, 8, 0.20) 100%);
             }
 
             /* Carved Stone Sill / Pedestal Ledge at the Base */
@@ -801,27 +676,10 @@
                                  x-transition:leave="transition ease-in duration-300"
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95">
-                                {{-- Atelier Tailor Mannequin Assembly --}}
-                                <div class="lb-mannequin-assembly" :class="isCutout(item.image_url) ? 'is-cutout-mode' : 'is-full-mode'">
-                                    {{-- Turned Wood Finial & Tailored Linen Collar Form --}}
-                                    <div class="lb-mannequin-head">
-                                        <div class="lb-mannequin-finial"></div>
-                                        <div class="lb-mannequin-collar"></div>
-                                    </div>
-
-                                    {{-- Garment Frame --}}
-                                    <div class="lb-garment-frame">
-                                        <img :src="item.image_url"
-                                             :alt="item.title"
-                                             class="lb-arch-img"
-                                             :class="isCutout(item.image_url) ? 'is-cutout' : 'is-full'"
-                                             draggable="false">
-                                    </div>
-
-                                    {{-- Polished Support Pole & Floor Contact Shadow --}}
-                                    <div class="lb-mannequin-pole"></div>
-                                    <div class="lb-mannequin-floor-shadow"></div>
-                                </div>
+                                <img :src="item.image_url"
+                                     :alt="item.title"
+                                     class="lb-arch-img"
+                                     draggable="false">
                                 <div class="lb-arch-vignette"></div>
                             </div>
                         </template>

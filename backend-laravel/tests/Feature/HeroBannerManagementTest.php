@@ -121,26 +121,26 @@ class HeroBannerManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_create_hero_banner_with_cutout_image()
+    public function test_admin_can_create_hero_banner_with_framed_mirror_image()
     {
         // 1x1 transparent PNG base64
         $dummyPngBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
         $response = $this->actingAs($this->admin)->post(route('admin.banners.store'), [
-            'title' => 'Floating Mannequin Barong',
+            'title' => 'Arched Mirror Barong',
             'subtitle' => 'Artisan Shop Alpha',
             'button_text_1' => 'Shop Now',
             'button_url_1' => '/products/' . $this->productA1->id,
-            'cutout_image_data' => $dummyPngBase64,
+            'cropped_image_data' => $dummyPngBase64,
             'is_active' => '1',
         ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $banner = Banner::where('title', 'Floating Mannequin Barong')->first();
+        $banner = Banner::where('title', 'Arched Mirror Barong')->first();
         $this->assertNotNull($banner);
-        $this->assertStringContainsString('_cutout.png', $banner->image_path);
+        $this->assertStringContainsString('_framed.', $banner->image_path);
         $this->assertFileExists(public_path($banner->image_path));
 
         // Clean up test file
