@@ -2,7 +2,7 @@
 
 @section('content')
 {{-- Invisible Preheader snippet for Gmail inbox preview --}}
-<span style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;">
+<span style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
     Your LumBarong verification code is {{ $code }}. Valid for 15 minutes.
 </span>
 

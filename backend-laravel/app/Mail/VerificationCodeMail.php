@@ -10,8 +10,8 @@ class VerificationCodeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $userName;
-    public $code;
+    public string $userName;
+    public string $code;
 
     public function __construct(string $userName, string $code)
     {
