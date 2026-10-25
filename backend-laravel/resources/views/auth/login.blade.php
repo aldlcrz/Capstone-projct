@@ -205,7 +205,7 @@
                             <span>Overdue Commission Settle Portal</span>
                         </div>
                         <p class="text-[11px] text-amber-900 leading-relaxed font-medium">
-                            Your shop is frozen due to unpaid marketplace commission. Settle the balance via GCash or Maya and submit your receipt to restore access.
+                            Your shop is frozen due to unpaid marketplace commission. Settle the balance via GCash or Maya to restore access.
                         </p>
                         <button type="button" 
                                 onclick="window.dispatchEvent(new CustomEvent('open-frozen-modal'))" 
@@ -386,7 +386,7 @@
                     <span class="inline-block px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-1">Financial Lock: Account Frozen</span>
                     <h3 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Settle Overdue Commission</h3>
                     <p class="text-[11px] sm:text-xs text-gray-600 max-w-sm mx-auto mt-1 leading-relaxed">
-                        Your shop is frozen due to unpaid marketplace commission. Scan the QR code or copy the account number below to settle and upload your receipt.
+                        Your shop is frozen due to unpaid marketplace commission. Scan the QR code or copy the account number below to settle your balance.
                     </p>
                 </div>
             </div>
@@ -461,42 +461,32 @@
                 @endif
             </div>
 
-            <!-- Submit Payment Proof Form -->
-            @auth
-            <form action="{{ route('commission.submit-payment') }}" method="POST" enctype="multipart/form-data" class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 text-left space-y-3">
-                @csrf
-                <input type="hidden" name="payment_method" :value="activeTab === 'gcash' ? 'GCash' : 'Maya'">
-                <div class="pb-1 border-b border-gray-200 flex items-center justify-between">
-                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-700">Submit Payment Proof</span>
-                    <span class="text-[9px] text-gray-400 font-medium">* Required fields</span>
+            <!-- Settlement Instructions & Account Restoration Notice -->
+            <div class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-center space-y-3.5">
+                <div class="flex items-center justify-center gap-1.5 text-amber-900 font-bold text-xs uppercase tracking-wider">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>How Account Restoration Works</span>
                 </div>
-                <div>
-                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Reference Number / Transaction ID *</label>
-                    <input type="text" name="reference_number" required placeholder="e.g. 100234859384" class="w-full h-10 sm:h-11 bg-white rounded-xl px-3.5 text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none shadow-2xs">
+                <div class="text-xs text-gray-700 font-medium leading-relaxed space-y-2 text-left bg-white p-3.5 rounded-2xl border border-[#E5DDD5]">
+                    <div class="flex items-start gap-2">
+                        <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <p class="text-[11px] text-gray-600">Send your overdue commission payment using the official <strong>GCash</strong> or <strong>Maya</strong> details shown above.</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <p class="text-[11px] text-gray-600">Save your transaction reference number and screenshot receipt for verification.</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <p class="text-[11px] text-gray-600">The <strong>Super Administrator</strong> verifies incoming payments and will unfreeze your account. Once restored to <strong>Active</strong> status, you can log in to your artisan dashboard immediately.</p>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Payment Proof (Screenshot) *</label>
-                    <input type="file" name="payment_proof" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[9px] sm:file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 cursor-pointer">
-                </div>
-                <div>
-                    <label class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Notes / Remarks (Optional)</label>
-                    <textarea name="notes" rows="2" placeholder="Any additional payment details..." class="w-full p-2.5 sm:p-3 bg-white rounded-xl text-xs font-medium border border-gray-200 focus:border-[#C0422A] outline-none resize-none shadow-2xs"></textarea>
-                </div>
-                <button type="submit" class="w-full py-3 sm:py-3.5 bg-green-600 hover:bg-green-700 active:scale-98 text-white rounded-xl font-bold uppercase tracking-wider text-[10px] sm:text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    <span>Submit Payment Proof</span>
-                </button>
-            </form>
-            @else
-            <div class="bg-[#F9F6F2] border border-[#E5DDD5] rounded-2xl sm:rounded-3xl p-5 text-center space-y-3">
-                <p class="text-xs text-gray-700 font-medium leading-relaxed">
-                    Please log in to your artisan account to securely submit your commission settlement proof.
-                </p>
-                <button type="button" @click="show = false" class="w-full py-2.5 bg-[#C0422A] hover:bg-[#A03520] text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-sm cursor-pointer">
+                <button type="button" @click="show = false" class="w-full py-2.5 bg-[#C0422A] hover:bg-[#A03520] active:scale-98 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-sm cursor-pointer">
                     Close Notice
                 </button>
             </div>
-            @endauth
         </div>
     </div>
     @endif

@@ -111,4 +111,41 @@ class FrozenSellerLoginTest extends TestCase
         $getLogin->assertSee('Payment Verification');
         $getLogin->assertSee('Admin Review');
     }
+
+    public function test_frozen_seller_modal_displays_restoration_instructions_and_avoids_contradictory_login_prompt(): void
+    {
+        SystemSetting::create(['key' => 'superadmin_gcash_number', 'value' => '09171234567']);
+        SystemSetting::create(['key' => 'superadmin_maya_number', 'value' => '09181234567']);
+
+        $seller = User::factory()->create([
+            'email' => 'frozen_instructions@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'seller',
+            'status' => 'frozen',
+            'isVerified' => true,
+        ]);
+
+        CommissionRecord::create([
+            'sellerId' => $seller->id,
+            'period' => '2026-10',
+            'totalSales' => 1000.00,
+            'commissionRate' => 5.0,
+            'commissionAmount' => 50.00,
+            'status' => 'unpaid',
+            'dueDate' => now()->subDay(),
+        ]);
+
+        $response = $this->from('/login')->post('/login', [
+            'email' => 'frozen_instructions@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect('/login');
+
+        $getLogin = $this->get('/login');
+        $getLogin->assertStatus(200);
+        $getLogin->assertSee('How Account Restoration Works');
+        $getLogin->assertSee('Close Notice');
+        $getLogin->assertDontSee('Please log in to your artisan account to securely submit your commission settlement proof');
+    }
 }
