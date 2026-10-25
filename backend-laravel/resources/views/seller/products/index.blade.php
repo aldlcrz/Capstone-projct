@@ -108,24 +108,97 @@ window.sellerProducts = function() {
         isLowStock(id, fallback) {
             return Number(this.getProductStock(id, fallback)) <= 5;
         },
-        openRestockModal(productOrId) {
+        openRestockModal(productOrId, triggerEl) {
             let product = typeof productOrId === 'object' && productOrId !== null ? productOrId : null;
-            if (!product && typeof productOrId === 'string') {
-                try {
-                    const parsed = JSON.parse(productOrId);
-                    if (parsed && typeof parsed === 'object') product = parsed;
-                } catch(e) {}
+
+            // 1. Direct ID lookup in productsData
+            if (!product && typeof productOrId === 'string' && productOrId.trim()) {
+                const cleanId = productOrId.trim();
+                product = (this.productsData || []).find(p => String(p.id) === cleanId);
+
+                // 2. If not found by ID and looks like JSON or contains HTML entities (from legacy dataset)
+                if (!product && (cleanId.startsWith('{') || cleanId.includes('&quot;') || cleanId.includes('{'))) {
+                    let jsonStr = cleanId;
+                    if (jsonStr.includes('&quot;') || jsonStr.includes('&amp;') || jsonStr.includes('&#')) {
+                        const txt = document.createElement('textarea');
+                        txt.innerHTML = jsonStr;
+                        jsonStr = txt.value;
+                    }
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed && typeof parsed === 'object') {
+                            product = parsed;
+                        }
+                    } catch(e) {}
+                }
             }
-            if (!product) {
-                const searchId = typeof productOrId === 'string' ? productOrId : '';
-                product = (this.productsData || []).find(p => String(p.id) === String(searchId));
+
+            // 3. Fallback: extract from trigger button's dataset attributes
+            if (!product && triggerEl && triggerEl.dataset) {
+                const pId = triggerEl.dataset.productId || (typeof productOrId === 'string' ? productOrId : '');
+                if (pId) {
+                    const pName = triggerEl.dataset.productName || 'Product';
+                    const pStock = Number(triggerEl.dataset.productStock || 0);
+                    let pSizes = [];
+                    let pSizeStocks = {};
+
+                    if (triggerEl.dataset.productSizes) {
+                        try {
+                            const parsedSizes = JSON.parse(triggerEl.dataset.productSizes);
+                            if (Array.isArray(parsedSizes)) pSizes = parsedSizes;
+                        } catch(e) {
+                            pSizes = String(triggerEl.dataset.productSizes).split(',').map(s => s.trim()).filter(Boolean);
+                        }
+                    }
+
+                    if (triggerEl.dataset.productSizeStocks) {
+                        try {
+                            const parsedSS = JSON.parse(triggerEl.dataset.productSizeStocks);
+                            if (parsedSS && typeof parsedSS === 'object') pSizeStocks = parsedSS;
+                        } catch(e) {}
+                    }
+
+                    product = {
+                        id: pId,
+                        name: pName,
+                        stock: pStock,
+                        sizes: pSizes,
+                        size_stocks: pSizeStocks
+                    };
+                }
             }
+
             if (!product) return;
+
+            // Normalize sizes array
+            let sizes = [];
+            if (Array.isArray(product.sizes)) {
+                sizes = product.sizes;
+            } else if (typeof product.sizes === 'string') {
+                try {
+                    const parsed = JSON.parse(product.sizes);
+                    if (Array.isArray(parsed)) sizes = parsed;
+                } catch(e) {
+                    sizes = product.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                }
+            }
+            product.sizes = sizes;
+
+            // Normalize size_stocks object
+            let sizeStocks = product.size_stocks;
+            if (typeof sizeStocks === 'string') {
+                try {
+                    sizeStocks = JSON.parse(sizeStocks);
+                } catch(e) {
+                    sizeStocks = {};
+                }
+            }
+            product.size_stocks = sizeStocks && typeof sizeStocks === 'object' ? sizeStocks : {};
+
             this.restockProductData = product;
             this.restockQty = '';
             this.restockError = '';
             this.restockSizeQtys = {};
-            const sizes = Array.isArray(product.sizes) ? product.sizes : [];
             sizes.forEach(s => {
                 this.restockSizeQtys[s] = '';
             });
@@ -531,8 +604,12 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
-                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
-                                            @click.stop="openRestockModal($el.dataset.product)"
+                                            data-product-id="{{ $product->id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-stock="{{ (int)$product->stock }}"
+                                            data-product-sizes="{{ json_encode(is_array($product->sizes) ? $product->sizes : []) }}"
+                                            data-product-size-stocks="{{ json_encode(is_array($product->size_stocks) ? $product->size_stocks : (object)[]) }}"
+                                            @click.stop="openRestockModal('{{ $product->id }}', $el)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -685,8 +762,12 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
-                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
-                                            @click.stop="openRestockModal($el.dataset.product)"
+                                            data-product-id="{{ $product->id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-stock="{{ (int)$product->stock }}"
+                                            data-product-sizes="{{ json_encode(is_array($product->sizes) ? $product->sizes : []) }}"
+                                            data-product-size-stocks="{{ json_encode(is_array($product->size_stocks) ? $product->size_stocks : (object)[]) }}"
+                                            @click.stop="openRestockModal('{{ $product->id }}', $el)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -836,8 +917,12 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                             @if(!$product->isPreorder())
                                 <div class="pt-2 border-t" style="border-color: #E8DECB;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                     <button type="button" 
-                                            data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
-                                            @click.stop="openRestockModal($el.dataset.product)"
+                                            data-product-id="{{ $product->id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-product-stock="{{ (int)$product->stock }}"
+                                            data-product-sizes="{{ json_encode(is_array($product->sizes) ? $product->sizes : []) }}"
+                                            data-product-size-stocks="{{ json_encode(is_array($product->size_stocks) ? $product->size_stocks : (object)[]) }}"
+                                            @click.stop="openRestockModal('{{ $product->id }}', $el)"
                                             class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                             style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                             onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
@@ -981,8 +1066,12 @@ document.addEventListener('DOMContentLoaded', initSellerProductsAlpine);
                                 @if(!$product->isPreorder())
                                     <div class="pt-2 border-t" style="border-color: #FECACA;" x-show="isLowStock('{{ $product->id }}', {{ (int)$product->stock }})">
                                         <button type="button" 
-                                                data-product="{{ htmlspecialchars(json_encode(['id' => (string)$product->id, 'name' => $product->name, 'stock' => (int)$product->stock, 'sizes' => is_array($product->sizes) ? $product->sizes : [], 'size_stocks' => is_array($product->size_stocks) ? $product->size_stocks : (object)[]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}"
-                                                @click.stop="openRestockModal($el.dataset.product)"
+                                                data-product-id="{{ $product->id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-product-stock="{{ (int)$product->stock }}"
+                                                data-product-sizes="{{ json_encode(is_array($product->sizes) ? $product->sizes : []) }}"
+                                                data-product-size-stocks="{{ json_encode(is_array($product->size_stocks) ? $product->size_stocks : (object)[]) }}"
+                                                @click.stop="openRestockModal('{{ $product->id }}', $el)"
                                                 class="w-full py-1.5 px-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                                 style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;"
                                                 onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'; this.style.borderColor='#DC2626';"
