@@ -91,7 +91,7 @@
         }
      }">
 
-    <div style="max-width:1040px;margin:0 auto;" class="space-y-6 sm:space-y-7">
+    <div style="max-width:1120px;margin:0 auto;" class="space-y-6 sm:space-y-7">
 
         {{-- Top Header with Heraldic Laurel Wreath and Home Button on Right --}}
         <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.04);padding:24px 28px;">
@@ -180,8 +180,8 @@
             @endforeach
         </div>
 
-        {{-- Orders List --}}
-        <div class="space-y-4 sm:space-y-6">
+        {{-- Orders List: 1-col on mobile/tablet, 2-col on laptop/desktop screens --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
             @forelse($orders as $order)
                 @php
                     $addr = $order->normalized_shipping_address;
@@ -249,7 +249,7 @@
                 @endphp
 
                 <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 4px 18px rgba(0,0,0,0.03);overflow:hidden;transition:all 0.25s;"
-                     class="group cursor-pointer hover:border-[#DFC97A] hover:shadow-md"
+                     class="group cursor-pointer hover:border-[#DFC97A] hover:shadow-md flex flex-col justify-between h-full"
                      x-show="matchesSearch('{{ $order->id }}', '{{ $orderData['shortId'] }}', '{{ addslashes($order->trackingNumber ?? '') }}')"
                      x-transition
                      onclick="window.location.href='/orders/{{ $order->id }}'">
@@ -331,7 +331,7 @@
                         $hasReviews = $order->reviews && $order->reviews->count() > 0;
                         $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
                     @endphp
-                    <div style="background-color:#FAF3E6;border-bottom:1px solid #F3EBDD;padding:16px 20px;" class="flex items-start justify-between gap-3">
+                    <div style="background-color:#FAF3E6;border-bottom:1px solid #F3EBDD;padding:16px 20px;" class="flex items-start justify-between gap-3 shrink-0">
                         <div>
                             {{-- Order Number --}}
                             <div class="text-[15px] sm:text-[16px] font-extrabold text-[#1E1915] tracking-tight">
@@ -383,7 +383,7 @@
                     </div>
 
                     {{-- Product Items --}}
-                    <div class="px-5 py-4 sm:px-6 sm:py-5 space-y-4 bg-white">
+                    <div class="px-5 py-4 sm:px-6 sm:py-5 space-y-4 bg-white flex-1">
                         @foreach($order->items as $item)
                             @php
                                 $variationLabel = $item->display_variation ?? $item->variation;
@@ -435,7 +435,7 @@
                     </div>
 
                     {{-- Card Footer --}}
-                    <div style="background-color:#FFFFFF;border-top:1px solid #F5EFE3;padding:14px 20px 18px 20px;" class="flex items-center justify-between gap-3 flex-wrap">
+                    <div style="background-color:#FFFFFF;border-top:1px solid #F5EFE3;padding:14px 20px 18px 20px;" class="flex items-center justify-between gap-3 flex-wrap shrink-0 mt-auto">
                         {{-- Bottom-Left Info: Displays Payment & Delivery (or Completed Status) --}}
                         <div>
                             @if($customerStatus === 'Completed')
@@ -614,7 +614,7 @@
 
                 </div>
             @empty
-                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;padding:48px 24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);max-width:520px;margin:32px auto;">
+                <div style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;padding:48px 24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);max-width:520px;margin:32px auto;" class="col-span-full w-full">
                     <div style="width:64px;height:64px;border-radius:50%;background-color:#FAF5EA;border:1px solid #E6D8BA;display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;color:#C49520;">
                         <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     </div>
