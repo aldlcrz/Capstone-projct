@@ -98,6 +98,7 @@
             $statusLower = strtolower(trim($order->status ?? ''));
             $isStorePickup = $order->isStorePickup();
             $isSpecialDelivery = $order->isSpecialDelivery();
+            $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
             $customerStatusDisplay = match(true) {
                 $statusLower === 'completed' => 'Completed',
                 $statusLower === 'delivered' => ($isStorePickup ? 'Picked Up / Claimed' : 'Delivered'),
