@@ -299,14 +299,24 @@
                         $isPending = ($customerStatus === 'Pending');
 
                         // Status Pill Badge Style & Icon
-                        $statusBadgeClass = match($customerStatus) {
-                            'Completed' => 'bg-[#DCFCE7] text-[#15803D]',
-                            'Delivered' => 'bg-[#CCFBF1] text-[#0F766E]',
-                            'To Receive' => 'bg-[#EDE9FE] text-[#6D28D9]',
-                            'To Ship' => 'bg-[#E0F2FE] text-[#0369A1]',
-                            'Cancelled' => 'bg-[#FEE2E2] text-[#991B1B]',
-                            'Cancellation Pending' => 'bg-[#FFEDD5] text-[#C2410C]',
-                            default => 'bg-[#FDE8B3] text-[#78350F]',
+                        $statusBadgeStyles = match($customerStatus) {
+                            'Completed' => 'background-color:#DCFCE7;color:#15803D;border:1px solid #BBF7D0;',
+                            'Delivered' => 'background-color:#CCFBF1;color:#0F766E;border:1px solid #99F6E4;',
+                            'To Receive' => 'background-color:#EDE9FE;color:#6D28D9;border:1px solid #DDD6FE;',
+                            'To Ship' => 'background-color:#E0F2FE;color:#0369A1;border:1px solid #BAE6FD;',
+                            'Cancelled' => 'background-color:#FEE2E2;color:#991B1B;border:1px solid #FECACA;',
+                            'Cancellation Pending' => 'background-color:#FFEDD5;color:#C2410C;border:1px solid #FED7AA;',
+                            default => 'background-color:#FDE8B3;color:#78350F;border:1px solid #FCD34D;',
+                        };
+
+                        $statusTextColor = match($customerStatus) {
+                            'Completed' => '#15803D',
+                            'Delivered' => '#0F766E',
+                            'To Receive' => '#6D28D9',
+                            'To Ship' => '#0369A1',
+                            'Cancelled' => '#991B1B',
+                            'Cancellation Pending' => '#C2410C',
+                            default => '#78350F',
                         };
 
                         $firstItem = $order->items->first();
@@ -340,29 +350,31 @@
                             </div>
                         </div>
 
-                        {{-- Header Top-Right Pill Badge --}}
-                        <div class="shrink-0 flex items-center gap-2">
+                        {{-- Header Top-Right Pill Badges --}}
+                        <div class="shrink-0 flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                            {{-- Special Delivery Badge --}}
                             @if($isSpecial)
-                                {{-- Special Delivery Badge (Image 1 Card 2) --}}
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#F1E5FF] text-[#6B21A8]">
-                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:9999px;font-size:11px;font-weight:700;background-color:#F1E5FF;color:#6B21A8;border:1px solid #E9D5FF;line-height:1;" class="shrink-0">
+                                    <svg style="width:13px;height:13px;fill:#6B21A8;" viewBox="0 0 24 24">
                                         <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
                                     <span>Special Delivery</span>
                                 </span>
-                            @else
-                                {{-- Status Badge (Image 1 Card 1) --}}
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold {{ $statusBadgeClass }}">
+                            @endif
+
+                            {{-- Status Badge (Omit if Special Delivery AND Completed, because bottom-left already shows Completed) --}}
+                            @if(!($isSpecial && $customerStatus === 'Completed'))
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:9999px;font-size:11px;font-weight:700;line-height:1;{{ $statusBadgeStyles }}" class="shrink-0">
                                     @if($customerStatus === 'Completed' || $customerStatus === 'Delivered')
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                     @elseif($customerStatus === 'Cancelled')
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                                     @elseif($customerStatus === 'To Receive')
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
                                     @elseif($customerStatus === 'To Ship')
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                     @else
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     @endif
                                     <span>{{ $customerStatus }}</span>
                                 </span>
@@ -424,67 +436,39 @@
 
                     {{-- Card Footer --}}
                     <div style="background-color:#FFFFFF;border-top:1px solid #F5EFE3;padding:14px 20px 18px 20px;" class="flex items-center justify-between gap-3 flex-wrap">
-                        {{-- Bottom-Left Info --}}
+                        {{-- Bottom-Left Info: Displays Payment & Delivery (or Completed Status) --}}
                         <div>
-                            @if($isSpecial)
-                                {{-- For Special Delivery: Status shown at bottom-left (Image 1 Card 2) --}}
-                                @if($customerStatus === 'Completed')
-                                    <div class="flex items-center gap-2 text-sm font-bold text-[#15803D]">
-                                        <svg class="w-4 h-4 text-[#15803D] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <span>Completed</span>
-                                    </div>
-                                @elseif($customerStatus === 'Delivered')
-                                    <div class="flex items-center gap-2 text-sm font-bold text-[#0F766E]">
-                                        <svg class="w-4 h-4 text-[#0F766E] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <span>Delivered</span>
-                                    </div>
-                                @elseif($customerStatus === 'Cancelled')
-                                    <div class="flex items-center gap-2 text-sm font-bold text-[#991B1B]">
-                                        <svg class="w-4 h-4 text-[#991B1B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span>Cancelled</span>
-                                    </div>
-                                @elseif($customerStatus === 'Cancellation Pending')
-                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#C2410C]">
-                                        <x-lucide name="clock" class="w-4 h-4 text-[#C2410C] shrink-0" />
-                                        <span>Cancellation Pending</span>
-                                    </div>
-                                @elseif($customerStatus === 'To Receive')
-                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#6D28D9]">
-                                        <x-lucide name="truck" class="w-4 h-4 text-[#6D28D9] shrink-0" />
-                                        <span>To Receive</span>
-                                    </div>
-                                @elseif($customerStatus === 'To Ship')
-                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#0369A1]">
-                                        <x-lucide name="package" class="w-4 h-4 text-[#0369A1] shrink-0" />
-                                        <span>To Ship</span>
-                                    </div>
-                                @else
-                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#78350F]">
-                                        <x-lucide name="clock" class="w-4 h-4 text-[#78350F] shrink-0" />
-                                        <span>Order Pending</span>
-                                    </div>
-                                @endif
+                            @if($customerStatus === 'Completed')
+                                {{-- Completed: Green icon + text as in Image 1 Card 2 --}}
+                                <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#15803D;">
+                                    <svg style="width:16px;height:16px;fill:#15803D;flex-shrink:0;" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span style="color:#15803D;">Completed</span>
+                                </div>
+                            @elseif($isPickup)
+                                {{-- Store Pickup: Store icon + Pay in Shop • Store Pickup as in Image 1 Card 1 --}}
+                                <div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#6E2B1E;">
+                                    <svg style="width:17px;height:17px;color:#6E2B1E;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                    <span style="color:#6E2B1E;">Pay in Shop &bull; Store Pickup</span>
+                                </div>
                             @else
-                                {{-- For Store Pickup or Standard Delivery: Fulfillment & Payment shown at bottom-left (Image 1 Card 1) --}}
-                                @if($isPickup)
-                                    <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E2B1E]">
-                                        <svg class="w-4 h-4 text-[#6E2B1E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                {{-- Delivery Order (Special or Standard): Payment Method • Delivery Type --}}
+                                <div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#6E2B1E;">
+                                    @if($isSpecial)
+                                        <svg style="width:16px;height:16px;fill:#6E2B1E;flex-shrink:0;" viewBox="0 0 24 24">
+                                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                         </svg>
-                                        <span>Pay in Shop &bull; Store Pickup</span>
-                                    </div>
-                                @else
-                                    <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E2B1E]">
-                                        <svg class="w-4 h-4 text-[#6E2B1E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <span style="color:#6E2B1E;">{{ $paymentLabel }} &bull; Special Delivery</span>
+                                    @else
+                                        <svg style="width:17px;height:17px;color:#6E2B1E;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
                                         </svg>
-                                        <span>{{ $paymentLabel }} &bull; {{ $deliveryLabel }}</span>
-                                    </div>
-                                @endif
+                                        <span style="color:#6E2B1E;">{{ $paymentLabel }} &bull; {{ $deliveryLabel }}</span>
+                                    @endif
+                                </div>
                             @endif
                         </div>
 
@@ -494,17 +478,21 @@
                                 <button type="button"
                                         onclick="event.stopPropagation();"
                                         @click.stop="confirmOrderId = '{{ $order->id }}'; confirmModal = true;"
-                                        class="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                    <span>Confirm Received</span>
+                                        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9999px;background-color:#059669;color:#FFFFFF !important;border:1px solid #059669;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(5,150,105,0.25);transition:all 0.2s;white-space:nowrap;"
+                                        onmouseover="this.style.backgroundColor='#047857';"
+                                        onmouseout="this.style.backgroundColor='#059669';">
+                                    <svg style="width:14px;height:14px;color:#FFFFFF;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span style="color:#FFFFFF !important;font-weight:700;">Confirm Received</span>
                                 </button>
                                 @if(!$activeReturn)
                                     <button type="button"
                                             onclick="event.stopPropagation();"
                                             @click.stop="openReturnModal('{{ $order->id }}')"
-                                            class="px-4 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                        <span>Request Return</span>
+                                            style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9999px;background-color:#FFFFFF;border:1px solid #D6D3D1;color:#44403C !important;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;white-space:nowrap;"
+                                            onmouseover="this.style.backgroundColor='#F5F5F4';"
+                                            onmouseout="this.style.backgroundColor='#FFFFFF';">
+                                        <svg style="width:14px;height:14px;color:#78716C;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        <span style="color:#44403C !important;font-weight:700;">Request Return</span>
                                     </button>
                                 @endif
                             @elseif($isCompleted)
@@ -514,15 +502,15 @@
                                         $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
                                     @endphp
                                     @if($retStatus === 'approved')
-                                        <span onclick="event.stopPropagation();" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                        <span onclick="event.stopPropagation();" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background-color:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-size:12px;font-weight:700;">
                                             <x-lucide name="check-circle" class="w-3.5 h-3.5 text-blue-600 shrink-0" /> Return Approved
                                         </span>
                                     @elseif($retStatus === 'rejected')
-                                        <span onclick="event.stopPropagation();" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                        <span onclick="event.stopPropagation();" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background-color:#FEF2F2;color:#991B1B;border:1px solid #FECACA;font-size:12px;font-weight:700;">
                                             <x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-600 shrink-0" /> Return Rejected
                                         </span>
                                     @else
-                                        <span onclick="event.stopPropagation();" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                        <span onclick="event.stopPropagation();" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background-color:#FFFBEB;color:#B45309;border:1px solid #FDE68A;font-size:12px;font-weight:700;">
                                             <x-lucide name="clock" class="w-3.5 h-3.5 text-amber-600 shrink-0" /> Return Pending
                                         </span>
                                     @endif
@@ -538,13 +526,14 @@
                                                 data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
                                                 data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
                                                 @click.stop="openReviewModal($el)"
-                                                style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                class="px-4 py-2.5 rounded-full hover:bg-[#8B2210] hover:border-[#8B2210] text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                                style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9999px;background-color:#1E1915;color:#FFFFFF !important;border:1px solid #1E1915;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.18);transition:all 0.2s;white-space:nowrap;"
+                                                onmouseover="this.style.backgroundColor='#8B2210';this.style.borderColor='#8B2210';"
+                                                onmouseout="this.style.backgroundColor='#1E1915';this.style.borderColor='#1E1915';">
                                             <x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                            <span>Rate Next Piece</span>
+                                            <span style="color:#FFFFFF !important;font-weight:700;">Rate Next Piece</span>
                                         </button>
                                     @else
-                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                        <span onclick="event.stopPropagation();" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background-color:#ECFDF5;color:#047857;border:1px solid #A7F3D0;font-size:12px;font-weight:700;">
                                             <x-lucide name="star" class="w-3.5 h-3.5 text-emerald-600 fill-emerald-600 shrink-0" /> {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
                                         </span>
                                     @endif
@@ -560,35 +549,40 @@
                                                 data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
                                                 data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
                                                 @click.stop="openReviewModal($el)"
-                                                style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                class="px-4 py-2.5 rounded-full hover:bg-[#8B2210] hover:border-[#8B2210] text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                                style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9999px;background-color:#1E1915;color:#FFFFFF !important;border:1px solid #1E1915;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.18);transition:all 0.2s;white-space:nowrap;"
+                                                onmouseover="this.style.backgroundColor='#8B2210';this.style.borderColor='#8B2210';"
+                                                onmouseout="this.style.backgroundColor='#1E1915';this.style.borderColor='#1E1915';">
                                             <x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                            <span>Rate Now</span>
+                                            <span style="color:#FFFFFF !important;font-weight:700;">Rate Now</span>
                                         </button>
                                     @endif
 
                                     <button type="button"
                                             onclick="event.stopPropagation();"
                                             @click.stop="openReturnModal('{{ $order->id }}')"
-                                            class="px-4 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                        <span>Request Return</span>
+                                            style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9999px;background-color:#FFFFFF;border:1px solid #D6D3D1;color:#44403C !important;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s;white-space:nowrap;"
+                                            onmouseover="this.style.backgroundColor='#F5F5F4';"
+                                            onmouseout="this.style.backgroundColor='#FFFFFF';">
+                                        <svg style="width:14px;height:14px;color:#78716C;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        <span style="color:#44403C !important;font-weight:700;">Request Return</span>
                                     </button>
                                 @endif
                             @elseif($isPending)
                                 <button type="button"
                                         onclick="event.stopPropagation();"
                                         @click.stop="cancelOrderId = '{{ $order->id }}'; cancellationReason = ''; cancellationOtherText = ''; cancelModal = true;"
-                                        class="px-4 py-2 rounded-full bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                    <x-lucide name="x" class="w-3.5 h-3.5" />
-                                    <span>Cancel</span>
+                                        style="display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:9999px;background-color:#FFFFFF;border:1.5px solid #FECACA;color:#DC2626 !important;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+                                        onmouseover="this.style.backgroundColor='#FEF2F2';"
+                                        onmouseout="this.style.backgroundColor='#FFFFFF';">
+                                    <x-lucide name="x" class="w-3.5 h-3.5" style="color:#DC2626;" />
+                                    <span style="color:#DC2626 !important;font-weight:700;">Cancel</span>
                                 </button>
                             @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
-                                <span style="background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold">
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;font-size:12px;font-weight:700;">
                                     <x-lucide name="clock" class="w-3.5 h-3.5 text-orange-600 shrink-0" /> Cancellation Pending
                                 </span>
                             @elseif($statusLower === 'cancelled')
-                                <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold">
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;font-size:12px;font-weight:700;">
                                     <x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-600 shrink-0" /> Cancelled
                                 </span>
                             @endif
@@ -598,17 +592,21 @@
                                 {{-- Outlined Pill for Completed (Image 1 Card 2) --}}
                                 <a href="/orders/{{ $order->id }}"
                                    onclick="event.stopPropagation();"
-                                   class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white border border-[#6E2B1E] text-[#6E2B1E] hover:bg-[#FAF4E8] text-xs sm:text-[13px] font-semibold transition-all no-underline">
-                                    <span>View Details</span>
-                                    <svg class="w-3.5 h-3.5 text-[#6E2B1E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:9999px;background-color:#FFFFFF !important;border:1.5px solid #6E2B1E !important;color:#6E2B1E !important;text-decoration:none !important;font-size:13px;font-weight:700;transition:all 0.2s;white-space:nowrap;"
+                                   onmouseover="this.style.backgroundColor='#FAF4E8';"
+                                   onmouseout="this.style.backgroundColor='#FFFFFF';">
+                                    <span style="color:#6E2B1E !important;font-weight:700;">View Details</span>
+                                    <svg style="width:14px;height:14px;color:#6E2B1E !important;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/></svg>
                                 </a>
                             @else
                                 {{-- Solid Dark Pill for Active Orders (Image 1 Card 1) --}}
                                 <a href="/orders/{{ $order->id }}"
                                    onclick="event.stopPropagation();"
-                                   class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#241A17] hover:bg-[#382B27] text-white text-xs sm:text-[13px] font-semibold shadow-sm transition-all no-underline">
-                                    <span>View Details</span>
-                                    <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:9999px;background-color:#261D19 !important;color:#FFFFFF !important;border:1px solid #261D19 !important;text-decoration:none !important;font-size:13px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.18);transition:all 0.2s;white-space:nowrap;"
+                                   onmouseover="this.style.backgroundColor='#3D2E28';"
+                                   onmouseout="this.style.backgroundColor='#261D19';">
+                                    <span style="color:#FFFFFF !important;font-weight:700;">View Details</span>
+                                    <svg style="width:14px;height:14px;color:#FFFFFF !important;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/></svg>
                                 </a>
                             @endif
                         </div>
