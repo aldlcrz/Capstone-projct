@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .order-badge-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 9999px; font-size: 11px; font-weight: 700; line-height: 1; flex-shrink: 0; }
+    .badge-status-completed { background-color: #DCFCE7 !important; color: #15803D !important; border: 1px solid #BBF7D0 !important; }
+    .badge-status-delivered { background-color: #CCFBF1 !important; color: #0F766E !important; border: 1px solid #99F6E4 !important; }
+    .badge-status-to-receive { background-color: #EDE9FE !important; color: #6D28D9 !important; border: 1px solid #DDD6FE !important; }
+    .badge-status-to-ship { background-color: #E0F2FE !important; color: #0369A1 !important; border: 1px solid #BAE6FD !important; }
+    .badge-status-cancelled { background-color: #FEE2E2 !important; color: #991B1B !important; border: 1px solid #FECACA !important; }
+    .badge-status-cancellation-pending { background-color: #FFEDD5 !important; color: #C2410C !important; border: 1px solid #FED7AA !important; }
+    .badge-status-pending { background-color: #FDE8B3 !important; color: #78350F !important; border: 1px solid #FCD34D !important; }
+    .badge-status-special { background-color: #F1E5FF !important; color: #6B21A8 !important; border: 1px solid #E9D5FF !important; }
+</style>
 <div style="min-height:calc(100vh - 80px);background-color:#FAF8F5;padding:24px 16px 48px 16px;"
      x-data="{
         detailsModal: false,
@@ -298,25 +309,15 @@
                         $isCompleted = ($statusLower === 'completed');
                         $isPending = ($customerStatus === 'Pending');
 
-                        // Status Pill Badge Style & Icon
-                        $statusBadgeStyles = match($customerStatus) {
-                            'Completed' => 'background-color:#DCFCE7;color:#15803D;border:1px solid #BBF7D0;',
-                            'Delivered' => 'background-color:#CCFBF1;color:#0F766E;border:1px solid #99F6E4;',
-                            'To Receive' => 'background-color:#EDE9FE;color:#6D28D9;border:1px solid #DDD6FE;',
-                            'To Ship' => 'background-color:#E0F2FE;color:#0369A1;border:1px solid #BAE6FD;',
-                            'Cancelled' => 'background-color:#FEE2E2;color:#991B1B;border:1px solid #FECACA;',
-                            'Cancellation Pending' => 'background-color:#FFEDD5;color:#C2410C;border:1px solid #FED7AA;',
-                            default => 'background-color:#FDE8B3;color:#78350F;border:1px solid #FCD34D;',
-                        };
-
-                        $statusTextColor = match($customerStatus) {
-                            'Completed' => '#15803D',
-                            'Delivered' => '#0F766E',
-                            'To Receive' => '#6D28D9',
-                            'To Ship' => '#0369A1',
-                            'Cancelled' => '#991B1B',
-                            'Cancellation Pending' => '#C2410C',
-                            default => '#78350F',
+                        // Status Pill Badge Class
+                        $statusBadgeClass = match($customerStatus) {
+                            'Completed' => 'badge-status-completed',
+                            'Delivered' => 'badge-status-delivered',
+                            'To Receive' => 'badge-status-to-receive',
+                            'To Ship' => 'badge-status-to-ship',
+                            'Cancelled' => 'badge-status-cancelled',
+                            'Cancellation Pending' => 'badge-status-cancellation-pending',
+                            default => 'badge-status-pending',
                         };
 
                         $firstItem = $order->items->first();
@@ -354,8 +355,8 @@
                         <div class="shrink-0 flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                             {{-- Special Delivery Badge --}}
                             @if($isSpecial)
-                                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:9999px;font-size:11px;font-weight:700;background-color:#F1E5FF;color:#6B21A8;border:1px solid #E9D5FF;line-height:1;" class="shrink-0">
-                                    <svg style="width:13px;height:13px;fill:#6B21A8;" viewBox="0 0 24 24">
+                                <span class="order-badge-pill badge-status-special">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                                         <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
                                     <span>Special Delivery</span>
@@ -364,17 +365,17 @@
 
                             {{-- Status Badge (Omit if Special Delivery AND Completed, because bottom-left already shows Completed) --}}
                             @if(!($isSpecial && $customerStatus === 'Completed'))
-                                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:9999px;font-size:11px;font-weight:700;line-height:1;{{ $statusBadgeStyles }}" class="shrink-0">
+                                <span class="order-badge-pill {{ $statusBadgeClass }}">
                                     @if($customerStatus === 'Completed' || $customerStatus === 'Delivered')
-                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                     @elseif($customerStatus === 'Cancelled')
-                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                                     @elseif($customerStatus === 'To Receive')
-                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
                                     @elseif($customerStatus === 'To Ship')
-                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                     @else
-                                        <svg style="width:13px;height:13px;color:{{ $statusTextColor }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     @endif
                                     <span>{{ $customerStatus }}</span>
                                 </span>
