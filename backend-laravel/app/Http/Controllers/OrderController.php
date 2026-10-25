@@ -997,42 +997,54 @@ class OrderController extends Controller
             }
 
             $order->status = 'Cancelled';
-            $order->paymentStatus = 'Payment Rejected';
-            $order->paymentRejectionReason = $reason;
-            $order->cancellationReason = "Payment rejected: {$reason}";
+            $isDigitalPayment = in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA', 'PAYMAYA']) && (!empty($order->paymentProof) || !empty($order->payment_proof));
+
+            if ($isDigitalPayment) {
+                $order->paymentStatus = 'Payment Rejected';
+                $order->paymentRejectionReason = $reason;
+                $order->cancellationReason = "Payment rejected: {$reason}";
+            } else {
+                $order->cancellationReason = $reason;
+            }
             $order->save();
 
             if ($order->shipping) {
                 $order->shipping->update(['shipping_status' => 'Cancelled']);
             }
 
-            // Release active reference claim by transitioning PaymentTransaction to REJECTED
+            // Release active reference claim by transitioning PaymentTransaction to REJECTED / VOID
             try {
                 $tx = $order->latestPaymentTransaction;
                 if ($tx) {
                     $tx->update([
-                        'status' => 'REJECTED',
+                        'status' => $isDigitalPayment ? 'REJECTED' : 'VOID',
                         'active_reference' => null,
-                        'notes' => "Rejected by seller. Reason: {$reason}",
+                        'notes' => $isDigitalPayment ? "Rejected by seller. Reason: {$reason}" : "Order cancelled by seller. Reason: {$reason}",
                     ]);
                 }
             } catch (\Throwable $e) {
-                Log::warning("Could not update PaymentTransaction to REJECTED for order {$order->id}: " . $e->getMessage());
+                Log::warning("Could not update PaymentTransaction status for order {$order->id}: " . $e->getMessage());
             }
 
+            $orderNotes = $isDigitalPayment ? "Order cancelled due to rejected payment. Reason: {$reason}" : "Order cancelled by artisan. Reason: {$reason}";
             OrderStatusHistory::create([
                 'orderId' => $order->id,
                 'previousStatus' => $prevStatus,
                 'newStatus' => 'Cancelled',
                 'updatedBy' => $user->id,
                 'userRole' => $user->role,
-                'notes' => "Order cancelled due to rejected payment. Reason: {$reason}",
+                'notes' => $orderNotes,
             ]);
+
+            $notificationTitle = $isDigitalPayment ? 'Order Cancelled (Payment Rejected)' : 'Order Cancelled by Artisan';
+            $notificationBody = $isDigitalPayment
+                ? "Your order #" . substr($order->id, 0, 8) . " was cancelled because the payment proof was rejected: {$reason}. Product stock has been returned to inventory."
+                : "Your order #" . substr($order->id, 0, 8) . " was cancelled by the artisan: {$reason}. Product stock has been returned to inventory.";
 
             $this->sendNotification(
                 $order->customerId,
-                'Order Cancelled (Payment Rejected)',
-                "Your order #" . substr($order->id, 0, 8) . " was cancelled because the payment proof was rejected: {$reason}. Product stock has been returned to inventory.",
+                $notificationTitle,
+                $notificationBody,
                 'order',
                 '/orders/' . $order->id,
                 'customer'
@@ -1040,26 +1052,30 @@ class OrderController extends Controller
 
             $customerUser = User::find($order->customerId);
             if ($customerUser && $customerUser->email) {
+                $mailMsg = $isDigitalPayment
+                    ? "Your order #" . substr($order->id, 0, 8) . " was cancelled because your payment proof was rejected by the artisan. Reason: {$reason}."
+                    : "Your order #" . substr($order->id, 0, 8) . " was cancelled by the artisan. Reason: {$reason}.";
                 $mail = new \App\Mail\OrderStatusUpdatedMail(
                     $customerUser->name,
                     $order->id,
                     'Order Cancelled',
-                    "Your order #" . substr($order->id, 0, 8) . " was cancelled because your payment proof was rejected by the artisan. Reason: {$reason}."
+                    $mailMsg
                 );
                 \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mail, 'order_status_updated', $customerUser->id, 'Order', $order->id);
             }
 
             // Send official LumBarong inbox message
+            $systemMsgReason = $isDigitalPayment ? "Payment rejected: {$reason}" : "Order cancelled: {$reason}";
             LumbarongSystemMessageService::sendOrderCancelledMessage(
                 $order,
-                "Payment rejected: {$reason}",
+                $systemMsgReason,
                 $user->role === 'seller' ? ($user->shopName ?: 'Artisan Seller') : ($user->name ?: 'LumBarong Administration')
             );
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Payment rejected. Order has been cancelled and stock restored.',
+                'message' => $isDigitalPayment ? 'Payment rejected. Order has been cancelled and stock restored.' : 'Order declined and cancelled. Stock restored.',
                 'order' => $order->load(['seller', 'items.product', 'statusHistories'])
             ]);
         } catch (\Exception $e) {

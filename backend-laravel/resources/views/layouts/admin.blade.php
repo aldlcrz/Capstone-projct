@@ -339,7 +339,7 @@
                 <div class="hidden lg:block"></div>
                 <div class="flex items-center gap-4">
                     <!-- Admin / Superadmin Notifications -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
+                    <div x-data="{ open: false }" class="relative" @click.away="open = false">
                         @php
                             $unreadCount = 0;
                             $recentNotifications = collect([]);
@@ -352,7 +352,10 @@
                                                   ->whereIn('targetRole', $targetRoles);
                                           });
                                     })
-                                    ->whereIn('targetRole', $targetRoles)
+                                    ->where(function($q) use ($targetRoles) {
+                                        $q->whereIn('targetRole', $targetRoles)
+                                          ->orWhereNull('targetRole');
+                                    })
                                     ->where('isRead', false)
                                     ->count();
                                 $recentNotifications = \App\Models\Notification::where(function($q) use ($targetRoles) {
@@ -362,13 +365,16 @@
                                                   ->whereIn('targetRole', $targetRoles);
                                           });
                                     })
-                                    ->whereIn('targetRole', $targetRoles)
+                                    ->where(function($q) use ($targetRoles) {
+                                        $q->whereIn('targetRole', $targetRoles)
+                                          ->orWhereNull('targetRole');
+                                    })
                                     ->orderBy('createdAt', 'desc')
-                                    ->limit(5)
+                                    ->limit(10)
                                     ->get();
                             } catch (\Throwable $e) {}
                         @endphp
-                        <button class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F7F4] text-[#4B5563] hover:text-[#C0420A] transition-all border border-gray-200">
+                        <button type="button" @click="open = !open" class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F7F4] text-[#4B5563] hover:text-[#C0420A] transition-all border border-gray-200 cursor-pointer">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
@@ -391,20 +397,20 @@
                             <div class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
                                 <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ $isSuperAdmin ? 'Super Admin Notifications' : 'Admin Notifications' }}</span>
                                 @if($unreadCount > 0)
-                                    <form action="{{ route('admin.notifications.read-all') }}" method="POST" class="inline">
+                                    <form action="{{ route($isSuperAdmin ? 'superadmin.notifications.read-all' : 'admin.notifications.read-all') }}" method="POST" class="inline">
                                         @csrf
-                                        <button type="submit" class="text-[9px] font-bold uppercase tracking-widest text-[#C0420A] hover:text-black transition-colors">Mark all read</button>
+                                        <button type="submit" class="text-[9px] font-bold uppercase tracking-widest text-[#C0420A] hover:text-black transition-colors cursor-pointer">Mark all read</button>
                                     </form>
                                 @endif
                             </div>
                             <div class="max-h-96 overflow-y-auto no-scrollbar">
                                 @forelse($recentNotifications as $notif)
-                                    <a href="{{ $notif->link ?? '#' }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0">
+                                    <a href="{{ route('notifications.read-and-redirect', $notif->id) }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0 cursor-pointer">
                                         <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
                                         <div class="space-y-0.5">
                                             <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
                                             <div class="text-[10px] text-gray-500 text-left leading-relaxed">{{ Str::limit($notif->message, 80) }}</div>
-                                            <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt->diffForHumans() }}</div>
+                                            <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
                                         </div>
                                     </a>
                                 @empty
@@ -413,7 +419,7 @@
                                     </div>
                                 @endforelse
                             </div>
-                            <a href="{{ route('admin.notifications.index') }}" class="block w-full py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 border-t border-gray-100 transition-all">View All</a>
+                            <a href="{{ route($isSuperAdmin ? 'superadmin.notifications.index' : 'admin.notifications.index') }}" class="block w-full py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 border-t border-gray-100 transition-all">View All</a>
                         </div>
                     </div>
                     
@@ -511,6 +517,11 @@
                                 @endif
                                 @if(session('info'))
                                     this.addToast('{{ addslashes(session('info')) }}', 'info');
+                                @endif
+                                @if(isset($errors) && $errors->any())
+                                    @foreach($errors->all() as $err)
+                                        this.addToast('{{ addslashes($err) }}', 'error');
+                                    @endforeach
                                 @endif
                             },
                             addToast(message, type = 'success') {

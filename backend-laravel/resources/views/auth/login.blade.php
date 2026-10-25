@@ -42,6 +42,7 @@
         };
 
         $gcashQr     = $resolveQr($gcashQrRaw);
+        $mayaQr      = $resolveQr($mayaQrRaw);
         $errMsg          = $errors->first();
         $isFrozenPending = session('commission_payment_pending') || (
             $errors->any() && (
@@ -491,8 +492,8 @@
                 <p class="text-xs text-gray-700 font-medium leading-relaxed">
                     Please log in to your artisan account to securely submit your commission settlement proof.
                 </p>
-                <button type="button" @click="showSettlementModal = false" class="w-full py-2.5 bg-[#C0422A] hover:bg-[#A03520] text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-sm cursor-pointer">
-                    Log In to Settle
+                <button type="button" @click="show = false" class="w-full py-2.5 bg-[#C0422A] hover:bg-[#A03520] text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-sm cursor-pointer">
+                    Close Notice
                 </button>
             </div>
             @endauth

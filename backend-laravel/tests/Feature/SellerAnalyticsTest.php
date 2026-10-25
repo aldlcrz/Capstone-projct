@@ -146,4 +146,39 @@ class SellerAnalyticsTest extends TestCase
             $response->assertStatus(200);
         }
     }
+
+    public function test_add_to_cart_increments_customer_funnel_and_product_analytics(): void
+    {
+        $customer = User::factory()->create([
+            'role' => 'customer',
+            'status' => 'approved',
+            'isVerified' => true,
+        ]);
+
+        // Initial analytics call
+        $initialRes = $this->actingAs($this->seller)->get(route('seller.analytics', ['format' => 'json']));
+        $initialRes->assertStatus(200);
+        $initialCarts = $initialRes->json('customerAnalytics.funnel.addToCart');
+
+        // Customer adds item to cart
+        $cartAddRes = $this->actingAs($customer)->post(route('cart.add'), [
+            'productId' => $this->product->id,
+            'quantity' => 1,
+            'size' => 'M',
+        ]);
+        $cartAddRes->assertSessionHasNoErrors();
+
+        // Check analytics again
+        $updatedRes = $this->actingAs($this->seller)->get(route('seller.analytics', ['format' => 'json']));
+        $updatedRes->assertStatus(200);
+        $updatedCarts = $updatedRes->json('customerAnalytics.funnel.addToCart');
+
+        $this->assertGreaterThan($initialCarts, $updatedCarts);
+
+        // Also check product table metrics
+        $products = collect($updatedRes->json('productAnalytics.all'));
+        $targetProduct = $products->firstWhere('id', $this->product->id);
+        $this->assertNotNull($targetProduct);
+        $this->assertGreaterThanOrEqual(1, $targetProduct['addToCart']);
+    }
 }

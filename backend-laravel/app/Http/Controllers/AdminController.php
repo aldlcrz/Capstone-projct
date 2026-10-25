@@ -1927,7 +1927,10 @@ class AdminController extends Controller
                           ->whereIn('targetRole', $targetRoles);
                   });
             })
-            ->whereIn('targetRole', $targetRoles)
+            ->where(function($q) use ($targetRoles) {
+                $q->whereIn('targetRole', $targetRoles)
+                  ->orWhereNull('targetRole');
+            })
             ->orderBy('createdAt', 'desc')
             ->paginate(15);
 
@@ -1939,14 +1942,20 @@ class AdminController extends Controller
                           ->whereIn('targetRole', $targetRoles);
                   });
             })
-            ->whereIn('targetRole', $targetRoles)
+            ->where(function($q) use ($targetRoles) {
+                $q->whereIn('targetRole', $targetRoles)
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
-            ->update(['isRead' => true]);
+            ->update([
+                'isRead' => true,
+                'is_dismissed' => true,
+            ]);
 
         return view('admin.notifications', compact('notifications'));
     }
 
-    public function readAllNotifications()
+    public function readAllNotifications(Request $request)
     {
         $user = Auth::user();
         $targetRoles = ($user && $user->role === 'superadmin') ? ['superadmin', 'admin'] : ['admin'];
@@ -1958,9 +1967,36 @@ class AdminController extends Controller
                           ->whereIn('targetRole', $targetRoles);
                   });
             })
-            ->whereIn('targetRole', $targetRoles)
+            ->where(function($q) use ($targetRoles) {
+                $q->whereIn('targetRole', $targetRoles)
+                  ->orWhereNull('targetRole');
+            })
             ->where('isRead', false)
-            ->update(['isRead' => true]);
+            ->update([
+                'isRead' => true,
+                'is_dismissed' => true,
+            ]);
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('notification_dismissals') && $user) {
+            $matchingIds = Notification::where(function($q) use ($user, $targetRoles) {
+                    $q->where('userId', $user->id)
+                      ->orWhere(function ($sub) use ($targetRoles) {
+                          $sub->whereNull('userId')
+                              ->whereIn('targetRole', $targetRoles);
+                      });
+                })->pluck('id');
+
+            foreach ($matchingIds as $nid) {
+                \App\Models\NotificationDismissal::firstOrCreate([
+                    'user_id' => $user->id,
+                    'notification_id' => $nid,
+                ], ['created_at' => now()]);
+            }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'All notifications marked as read.']);
+        }
 
         return redirect()->back()->with('success', 'All notifications marked as read.');
     }

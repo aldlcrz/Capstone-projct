@@ -9,7 +9,7 @@
 })">
 
     {{-- Page Header --}}
-    <div id="tour-admin-banners-header" class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div id="tour-admin-banners-header" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="text-[9px] font-black tracking-widest text-[#C0422A] uppercase flex items-center gap-1.5 mb-1.5">
                 <span>PROMOTIONS & HERO</span>
@@ -36,7 +36,7 @@
             </div>
             <p class="text-[11px] text-gray-500 mt-1 font-medium">Curate artisan spotlights, seasonal hero campaigns, and banner sequence across the marketplace homepage.</p>
         </div>
-        <div id="tour-admin-banners-new" class="flex items-center gap-3">
+        <div id="tour-admin-banners-new" class="flex items-center gap-3 shrink-0">
             <button @click="openAddModal()"
                 class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3D2B1F] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] shadow-xs hover:shadow-md transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,9 +117,18 @@
                 <p class="text-[11px] text-amber-800/80">Order <strong>#1</strong> appears first on the marketplace homepage. Use arrow buttons to reorder active slides in real time.</p>
             </div>
         </div>
-        <div class="flex items-center gap-1.5 self-end sm:self-auto text-[10px] font-black uppercase tracking-wider text-amber-800 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200/60 shadow-xs">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            <span>Instant Reordering</span>
+        <div class="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap">
+            <div class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200/60 shadow-xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span>Instant Reordering</span>
+            </div>
+            <button type="button" @click="openAddModal()"
+                class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#3D2B1F] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#C0422A] shadow-xs hover:shadow-md transition-all cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                + New Campaign
+            </button>
         </div>
     </div>
 
@@ -398,6 +407,28 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Notice: Selected shop has no approved products --}}
+                    <template x-if="selectedShopId && selectableProducts.length === 0">
+                        <div class="p-3 bg-red-950/60 border border-red-800/60 rounded-xl text-red-200 text-xs flex items-start gap-2.5">
+                            <svg class="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <div>
+                                <div class="font-bold text-red-300">Walang Approved Products</div>
+                                <div class="text-[11px] text-red-300/80 mt-0.5">Walang approved na produkto ang napiling shop. Siguraduhing na-approve muna ang mga bagong produkto sa <a href="{{ route('admin.products') }}" class="underline font-bold text-white hover:text-amber-200">Product Moderation</a> bago ito puwedeng piliin sa banner.</div>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Notice: Shop already has an active banner (Strict 1 banner per shop policy) --}}
+                    <template x-if="!isEditing && selectedShopId && hasActiveBannerForShop(selectedShopId)">
+                        <div class="p-3 bg-amber-950/60 border border-amber-800/60 rounded-xl text-amber-200 text-xs flex items-start gap-2.5">
+                            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <div>
+                                <div class="font-bold text-amber-300">Paunawa: Mayroon nang live banner ang shop na ito</div>
+                                <div class="text-[11px] text-amber-200/80 mt-0.5">1 active banner lang bawat shop ang pinapayagan sa Hero Carousel. Para palitan ang ibinabandang produkto ng shop na ito, i-edit ang existing banner gamit ang <strong>Pencil icon (✎)</strong> sa table sa halip na gumawa ng bago.</div>
+                            </div>
+                        </div>
+                    </template>
 
                     {{-- Variant / Image Selector if product has multiple photos/variants --}}
                     <template x-if="currentProductVariants.length > 1">
@@ -726,6 +757,29 @@ function promotionManager(initialData) {
             var prod = this.currentProduct;
             if (!prod) return [];
             return (prod.all_images && prod.all_images.length > 0) ? prod.all_images : (prod.image_url ? [prod.image_url] : []);
+        },
+
+        hasActiveBannerForShop(shopId) {
+            if (!shopId) return false;
+            var self = this;
+            return this.bannersList.some(function(b) {
+                if (!b.is_active) return false;
+                if (self.isEditing && String(b.id) === String(self.form.id)) return false;
+                if (b.button_url_2 && b.button_url_2.includes('/shops/' + shopId)) return true;
+                if (b.button_url_1 && b.button_url_1.includes('/products/')) {
+                    var pId = b.button_url_1.replace('/products/', '').split('?')[0];
+                    var prod = self.allProducts.find(p => String(p.id) === String(pId));
+                    if (prod && String(prod.seller_id) === String(shopId)) return true;
+                }
+                var shop = self.sellers.find(s => String(s.id) === String(shopId));
+                if (shop && b.subtitle) {
+                    var sub = b.subtitle.trim().toLowerCase();
+                    if (sub === (shop.shop_name || '').trim().toLowerCase() || sub === (shop.name || '').trim().toLowerCase()) {
+                        return true;
+                    }
+                }
+                return false;
+            });
         },
 
         selectVariantImage(imgUrl) {

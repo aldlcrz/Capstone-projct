@@ -9,9 +9,9 @@
         </div>
         @if($notifications->count() > 0)
             <div class="flex items-center gap-3">
-                <form action="{{ route('admin.notifications.read-all') }}" method="POST">
+                <form action="{{ route((auth()->user() && auth()->user()->role === 'superadmin') ? 'superadmin.notifications.read-all' : 'admin.notifications.read-all') }}" method="POST">
                     @csrf
-                    <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
+                    <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-all shadow-sm cursor-pointer">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         Mark All as Read
                     </button>
@@ -35,7 +35,7 @@
                                     {{ $notification->title }}
                                 </h3>
                                 <span class="text-[10px] font-bold text-gray-500">
-                                    {{ $notification->createdAt->diffForHumans() }}
+                                    {{ $notification->createdAt ? \Carbon\Carbon::parse($notification->createdAt)->diffForHumans() : '' }}
                                 </span>
                             </div>
                             <p class="text-xs text-gray-600 font-medium leading-relaxed">
@@ -43,7 +43,7 @@
                             </p>
                             
                             @if($notification->link)
-                                <a href="{{ $notification->link }}" class="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-[#C0420A] hover:text-black transition-colors">
+                                <a href="{{ route('notifications.read-and-redirect', $notification->id) }}" class="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-[#C0420A] hover:text-black transition-colors cursor-pointer">
                                     View Details
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                 </a>

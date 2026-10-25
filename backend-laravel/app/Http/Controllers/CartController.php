@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Models\SellerFunnelEvent;
 use App\Support\CartHelper;
 use App\Support\VariationFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -56,6 +59,23 @@ class CartController extends Controller
 
             session(['pending_intent' => $intent]);
             session()->put('url.intended', $redirectTarget);
+
+            // Record guest add to cart intent event
+            try {
+                if (class_exists(SellerFunnelEvent::class) && Schema::hasTable('seller_funnel_events') && !empty($intent['productId'])) {
+                    $targetProduct = Product::find($intent['productId']);
+                    if ($targetProduct) {
+                        SellerFunnelEvent::create([
+                            'seller_id'          => $targetProduct->sellerId,
+                            'product_id'         => $targetProduct->id,
+                            'customer_id'        => null,
+                            'visitor_session_id' => session()->getId(),
+                            'ip_address'         => $request->ip(),
+                            'event_type'         => 'add_to_cart',
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {}
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -195,6 +215,22 @@ class CartController extends Controller
         $user = Auth::user();
         if ($user instanceof User) {
             $user->update(['cart' => json_encode($cart)]);
+        }
+
+        // Record seller conversion funnel event
+        try {
+            if (class_exists(SellerFunnelEvent::class) && Schema::hasTable('seller_funnel_events')) {
+                SellerFunnelEvent::create([
+                    'seller_id'          => $product->sellerId,
+                    'product_id'         => $product->id,
+                    'customer_id'        => Auth::id(),
+                    'visitor_session_id' => session()->getId(),
+                    'ip_address'         => $request->ip(),
+                    'event_type'         => 'add_to_cart',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not record seller funnel event: ' . $e->getMessage());
         }
 
         if ($request->wantsJson() || $request->ajax()) {

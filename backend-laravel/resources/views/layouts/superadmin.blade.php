@@ -306,6 +306,91 @@
                     </div>
                     @endif
 
+                    <!-- Super Admin Notifications Dropdown -->
+                    <div x-data="{ open: false }" class="relative" @click.away="open = false">
+                        @php
+                            $unreadCount = 0;
+                            $recentNotifications = collect([]);
+                            try {
+                                $targetRoles = ['superadmin', 'admin'];
+                                $unreadCount = \App\Models\Notification::where(function($q) use ($targetRoles) {
+                                        $q->where('userId', Auth::id())
+                                          ->orWhere(function ($sub) use ($targetRoles) {
+                                              $sub->whereNull('userId')
+                                                  ->whereIn('targetRole', $targetRoles);
+                                          });
+                                    })
+                                    ->where(function($q) use ($targetRoles) {
+                                        $q->whereIn('targetRole', $targetRoles)
+                                          ->orWhereNull('targetRole');
+                                    })
+                                    ->where('isRead', false)
+                                    ->count();
+                                $recentNotifications = \App\Models\Notification::where(function($q) use ($targetRoles) {
+                                        $q->where('userId', Auth::id())
+                                          ->orWhere(function ($sub) use ($targetRoles) {
+                                              $sub->whereNull('userId')
+                                                  ->whereIn('targetRole', $targetRoles);
+                                          });
+                                    })
+                                    ->where(function($q) use ($targetRoles) {
+                                        $q->whereIn('targetRole', $targetRoles)
+                                          ->orWhereNull('targetRole');
+                                    })
+                                    ->orderBy('createdAt', 'desc')
+                                    ->limit(10)
+                                    ->get();
+                            } catch (\Throwable $e) {}
+                        @endphp
+                        <button type="button" @click="open = !open" class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F7F4] text-[#4B5563] hover:text-[#C0420A] transition-all border border-gray-200 cursor-pointer" title="Notifications">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            @if($unreadCount > 0)
+                                <span class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">{{ $unreadCount }}</span>
+                            @endif
+                        </button>
+
+                        <!-- Dropdown panel -->
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 translate-y-1"
+                             class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+                             style="display: none;"
+                             x-cloak>
+                            <div class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Super Admin Notifications</span>
+                                @if($unreadCount > 0)
+                                    <form action="{{ route('superadmin.notifications.read-all') }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-[9px] font-bold uppercase tracking-widest text-[#C0420A] hover:text-black transition-colors cursor-pointer">Mark all read</button>
+                                    </form>
+                                @endif
+                            </div>
+                            <div class="max-h-96 overflow-y-auto no-scrollbar">
+                                @forelse($recentNotifications as $notif)
+                                    <a href="{{ route('notifications.read-and-redirect', $notif->id) }}" class="flex items-start gap-3 p-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0 cursor-pointer">
+                                        <div class="w-2 h-2 mt-1.5 rounded-full {{ $notif->isRead ? 'bg-gray-200' : 'bg-red-500' }} shrink-0"></div>
+                                        <div class="space-y-0.5">
+                                            <div class="text-[11px] font-bold text-black text-left">{{ $notif->title }}</div>
+                                            <div class="text-[10px] text-gray-500 text-left leading-relaxed">{{ Str::limit($notif->message, 80) }}</div>
+                                            <div class="text-[8px] text-gray-400 text-left">{{ $notif->createdAt ? \Carbon\Carbon::parse($notif->createdAt)->diffForHumans() : '' }}</div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-8 text-center">
+                                        <div class="text-xs text-gray-400 italic">No notifications yet</div>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <a href="{{ route('superadmin.notifications.index') }}" class="block w-full py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 border-t border-gray-100 transition-all">View All</a>
+                        </div>
+                    </div>
+
                     <!-- Super Admin Profile Dropdown -->
                     <div x-data="{ superProfileOpen: false }" class="relative" @click.away="superProfileOpen = false">
                         <button @click="superProfileOpen = !superProfileOpen" class="flex items-center gap-3 hover:opacity-80 transition-all cursor-pointer focus:outline-none" title="Super Admin Profile">
@@ -396,6 +481,11 @@
                                 @endif
                                 @if(session('info'))
                                     this.addToast('{{ addslashes(session('info')) }}', 'info');
+                                @endif
+                                @if(isset($errors) && $errors->any())
+                                    @foreach($errors->all() as $err)
+                                        this.addToast('{{ addslashes($err) }}', 'error');
+                                    @endforeach
                                 @endif
                             },
                             addToast(message, type = 'success') {

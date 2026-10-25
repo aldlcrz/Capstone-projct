@@ -321,6 +321,14 @@ function sellerOrdersManager() {
             return this.isStorePickup(order) || this.isSpecialDelivery(order) || pm === 'cod' || pm === 'cash on delivery' || ps.includes('pickup') || ps.includes('special') || ps.includes('cod');
         },
 
+        isDigitalPaymentOrder(order) {
+            if (!order) return false;
+            const pm = String(order.paymentMethod || '').trim().toUpperCase();
+            const hasDigitalMethod = ['GCASH', 'MAYA', 'PAYMAYA'].includes(pm);
+            const hasProof = !!(order.paymentProof || order.payment_proof || String(order.paymentStatus || '').toLowerCase().includes('submitted'));
+            return hasDigitalMethod && hasProof;
+        },
+
         canRecordPayment(order) {
             if (!order) return false;
             if (this.isStorePickup(order) || this.isSpecialDelivery(order)) return false;
@@ -698,8 +706,23 @@ function sellerOrdersManager() {
         },
 
         openRejectPaymentModal(order) {
-            this.rejectOrderTarget = order || this.detailsOrder;
-            this.rejectReason = 'Reference number does not match';
+            const target = order || this.detailsOrder;
+            this.rejectOrderTarget = target;
+
+            // If the order has no digital payment proof (e.g. Special Delivery direct settlement, Store Pickup, COD),
+            // seamlessly route to the dedicated cancellation modal populated with fulfillment reasons!
+            if (!this.isDigitalPaymentOrder(target)) {
+                this.openCancelOrderModal(target);
+                return;
+            }
+
+            if (this.isSpecialDelivery(target)) {
+                this.rejectReason = 'Delivery address is too far / beyond rider reachable route';
+            } else if (this.isStorePickup(target)) {
+                this.rejectReason = 'Customer did not claim within designated pickup window';
+            } else {
+                this.rejectReason = 'Reference number does not match';
+            }
             this.rejectCustomReason = '';
             this.rejectError = '';
             this.rejectLoading = false;
@@ -710,21 +733,53 @@ function sellerOrdersManager() {
             if (!this.rejectOrderTarget || this.rejectLoading) return;
             const finalReason = this.rejectReason === 'Other' ? this.rejectCustomReason.trim() : this.rejectReason;
             if (!finalReason) {
-                this.rejectError = 'Please provide a reason for rejecting the payment.';
+                this.rejectError = 'Please provide a reason.';
                 return;
             }
             this.rejectLoading = true;
             this.rejectError = '';
             try {
                 const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
-                const res = await fetch('/seller/api/orders/' + this.rejectOrderTarget.id + '/reject-payment', {
+
+                // If the selected reason is a delivery / fulfillment cancellation rather than payment proof rejection,
+                // submit to the cancel endpoint to keep customer notifications accurate.
+                const isFulfillmentReason = [
+                    'Delivery address is too far / beyond rider reachable route',
+                    'Severe weather / impassable roads for local rider',
+                    'Local delivery rider unavailable or fully booked',
+                    'Buyer unreachable for delivery schedule / appointment',
+                    'Unable to fulfill requested special delivery date / schedule',
+                    'Out of stock / artisan fabric unavailable',
+                    'Incorrect delivery address / outside service municipality',
+                    'Customer did not claim within designated pickup window',
+                    'Unable to coordinate pickup schedule / appointment with buyer',
+                    'Workshop temporarily closed / artisan unavailable for handover',
+                    'Out of stock / garment piece unavailable',
+                    'Out of stock / fabric unavailable',
+                    'Delivery address is outside courier serviceable area',
+                    'Customization cannot be fulfilled',
+                    'Garment package exceeds courier weight/dimension limits',
+                    'Unreachable / unresponsive buyer',
+                    'Buyer requested cancellation',
+                    'Incorrect pricing or listing error'
+                ].includes(finalReason) || !this.isDigitalPaymentOrder(this.rejectOrderTarget);
+
+                const endpoint = isFulfillmentReason
+                    ? '/seller/api/orders/' + this.rejectOrderTarget.id + '/cancel'
+                    : '/seller/api/orders/' + this.rejectOrderTarget.id + '/reject-payment';
+
+                const bodyPayload = isFulfillmentReason
+                    ? { cancellationReason: finalReason }
+                    : { reason: finalReason };
+
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': token
                     },
-                    body: JSON.stringify({ reason: finalReason })
+                    body: JSON.stringify(bodyPayload)
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -736,14 +791,14 @@ function sellerOrdersManager() {
                             this.detailsOrder = data.order || data;
                         }
                     }
-                    this.showToast('Payment rejected. Customer has been notified.');
+                    this.showToast(isFulfillmentReason ? 'Order declined and cancelled. Customer notified.' : 'Payment rejected. Customer has been notified.');
                     this.showRejectModal = false;
                     this.detailsModal = false;
                 } else {
-                    this.rejectError = data.message || 'Failed to reject payment.';
+                    this.rejectError = data.message || 'Failed to process rejection.';
                 }
             } catch(e) {
-                this.rejectError = 'Network error while rejecting payment.';
+                this.rejectError = 'Network error while processing rejection.';
             } finally {
                 this.rejectLoading = false;
             }
@@ -2956,10 +3011,15 @@ if (window.Alpine) {
                 <template x-if="detailsOrder && !hasPendingReturn(detailsOrder) && normalizeStatus(detailsOrder.status) === 'pending'">
                     <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5">
                         <button type="button" 
-                            @click="openRejectPaymentModal(detailsOrder)"
+                            @click="isDigitalPaymentOrder(detailsOrder) ? openRejectPaymentModal(detailsOrder) : openCancelOrderModal(detailsOrder)"
                             style="border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626;"
                             class="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap hover:bg-rose-50 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
-                            <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" /> Reject & Cancel
+                            <x-lucide name="x" class="w-3.5 h-3.5 inline mr-1" />
+                            <span x-text="isDigitalPaymentOrder(detailsOrder) ? 'Reject Payment & Cancel' : (
+                                isSpecialDelivery(detailsOrder) ? 'Decline Special Delivery' : (
+                                    isStorePickup(detailsOrder) ? 'Decline Store Pickup' : 'Decline & Cancel Order'
+                                )
+                            )"></span>
                         </button>
                         <button type="button" 
                             @click="openVerifyPaymentModal(detailsOrder)"
@@ -3593,8 +3653,18 @@ if (window.Alpine) {
             <div class="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0"><x-lucide name="x-circle" class="w-5 h-5 text-red-600" /></div>
                 <div>
-                    <h3 class="text-sm font-black text-black uppercase tracking-tight">Reject Payment & Cancel Order</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Rejecting this payment will cancel the order and return stock to inventory.</p>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-black text-black uppercase tracking-tight"
+                            x-text="isSpecialDelivery(rejectOrderTarget) ? 'Decline Special Delivery' : (isStorePickup(rejectOrderTarget) ? 'Decline Store Pickup' : (isDigitalPaymentOrder(rejectOrderTarget) ? 'Reject Payment & Cancel' : 'Decline & Cancel Order'))"></h3>
+                        <template x-if="isSpecialDelivery(rejectOrderTarget)">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200">Special Delivery</span>
+                        </template>
+                        <template x-if="isStorePickup(rejectOrderTarget)">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-sky-100 text-sky-700 border border-sky-200">Store Pickup</span>
+                        </template>
+                    </div>
+                    <p class="text-[10px] text-gray-500 font-medium"
+                       x-text="isSpecialDelivery(rejectOrderTarget) ? 'Declining this special delivery order will cancel the order and return stock to inventory.' : (isStorePickup(rejectOrderTarget) ? 'Declining this store pickup order will cancel the order and return stock to inventory.' : 'Rejecting will cancel the order and return stock to inventory.')"></p>
                 </div>
             </div>
 
@@ -3605,15 +3675,76 @@ if (window.Alpine) {
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Rejection Reason <span class="text-red-500">*</span></label>
-                    <select x-model="rejectReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
-                        <option value="Reference number does not match">Reference number does not match receipt</option>
-                        <option value="Amount does not match">Amount paid does not match order total</option>
-                        <option value="Receipt unclear or unreadable">Receipt screenshot is blurry or cropped</option>
-                        <option value="Payment not received in wallet">Transaction not received in artisan account/wallet</option>
-                        <option value="Duplicate reference number">Duplicate or recycled transaction reference</option>
-                        <option value="Sent to wrong account / QR">Payment sent to wrong recipient/QR</option>
-                        <option value="Other">Other / Custom reason</option>
-                    </select>
+                    
+                    {{-- Special Delivery Contextual Reasons --}}
+                    <template x-if="isSpecialDelivery(rejectOrderTarget)">
+                        <select x-model="rejectReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-purple-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-purple-500 focus:bg-white transition-all">
+                            <optgroup label="Special Delivery Fulfillment Reasons">
+                                <option value="Delivery address is too far / beyond rider reachable route">Delivery address is too far / beyond rider reachable route</option>
+                                <option value="Severe weather / impassable roads for local rider">Severe weather / impassable roads for local rider</option>
+                                <option value="Local delivery rider unavailable or fully booked">Local delivery rider unavailable or fully booked</option>
+                                <option value="Buyer unreachable for delivery schedule / appointment">Buyer unreachable for delivery schedule / appointment</option>
+                                <option value="Unable to fulfill requested special delivery date / schedule">Unable to fulfill requested special delivery date / schedule</option>
+                                <option value="Out of stock / artisan fabric unavailable">Out of stock / artisan fabric unavailable</option>
+                                <option value="Incorrect delivery address / outside service municipality">Incorrect delivery address / outside service municipality</option>
+                                <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            </optgroup>
+                            <optgroup label="GCash / Digital Payment Reasons" x-show="isDigitalPaymentOrder(rejectOrderTarget)">
+                                <option value="Reference number does not match">Reference number does not match receipt</option>
+                                <option value="Amount does not match">Amount paid does not match order total</option>
+                                <option value="Receipt unclear or unreadable">Receipt screenshot is blurry or cropped</option>
+                                <option value="Payment not received in wallet">Transaction not received in artisan account/wallet</option>
+                                <option value="Duplicate reference number">Duplicate or recycled transaction reference</option>
+                                <option value="Sent to wrong account / QR">Payment sent to wrong recipient/QR</option>
+                            </optgroup>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
+
+                    {{-- Store Pickup Contextual Reasons --}}
+                    <template x-if="isStorePickup(rejectOrderTarget)">
+                        <select x-model="rejectReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-sky-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-sky-500 focus:bg-white transition-all">
+                            <optgroup label="Store Pickup Fulfillment Reasons">
+                                <option value="Customer did not claim within designated pickup window">Customer did not claim within designated pickup window</option>
+                                <option value="Unable to coordinate pickup schedule / appointment with buyer">Unable to coordinate pickup schedule / appointment with buyer</option>
+                                <option value="Workshop temporarily closed / artisan unavailable for handover">Workshop temporarily closed / artisan unavailable for handover</option>
+                                <option value="Out of stock / garment piece unavailable">Out of stock / garment piece unavailable</option>
+                                <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            </optgroup>
+                            <optgroup label="GCash / Digital Payment Reasons" x-show="isDigitalPaymentOrder(rejectOrderTarget)">
+                                <option value="Reference number does not match">Reference number does not match receipt</option>
+                                <option value="Amount does not match">Amount paid does not match order total</option>
+                                <option value="Receipt unclear or unreadable">Receipt screenshot is blurry or cropped</option>
+                                <option value="Payment not received in wallet">Transaction not received in artisan account/wallet</option>
+                                <option value="Duplicate reference number">Duplicate or recycled transaction reference</option>
+                                <option value="Sent to wrong account / QR">Payment sent to wrong recipient/QR</option>
+                            </optgroup>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
+
+                    {{-- Standard / Digital Payment Reasons --}}
+                    <template x-if="rejectOrderTarget && !isSpecialDelivery(rejectOrderTarget) && !isStorePickup(rejectOrderTarget)">
+                        <select x-model="rejectReason" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:border-red-500 focus:bg-white transition-all">
+                            <optgroup label="Digital Payment Proof Verification" x-show="isDigitalPaymentOrder(rejectOrderTarget)">
+                                <option value="Reference number does not match">Reference number does not match receipt</option>
+                                <option value="Amount does not match">Amount paid does not match order total</option>
+                                <option value="Receipt unclear or unreadable">Receipt screenshot is blurry or cropped</option>
+                                <option value="Payment not received in wallet">Transaction not received in artisan account/wallet</option>
+                                <option value="Duplicate reference number">Duplicate or recycled transaction reference</option>
+                                <option value="Sent to wrong account / QR">Payment sent to wrong recipient/QR</option>
+                            </optgroup>
+                            <optgroup label="Order Fulfillment Reasons">
+                                <option value="Out of stock / fabric unavailable">Out of stock / fabric unavailable</option>
+                                <option value="Delivery address is outside courier serviceable area">Delivery address is outside courier serviceable area</option>
+                                <option value="Customization cannot be fulfilled">Customization cannot be fulfilled</option>
+                                <option value="Garment package exceeds courier weight/dimension limits">Garment package exceeds courier weight/dimension limits</option>
+                                <option value="Unreachable / unresponsive buyer">Unreachable / unresponsive buyer</option>
+                                <option value="Buyer requested cancellation">Buyer requested cancellation</option>
+                            </optgroup>
+                            <option value="Other">Other / Custom reason</option>
+                        </select>
+                    </template>
                 </div>
 
                 <template x-if="rejectReason === 'Other'">
@@ -3642,7 +3773,7 @@ if (window.Alpine) {
                     <template x-if="rejectLoading">
                         <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </template>
-                    <span x-text="rejectLoading ? 'Submitting...' : 'Reject & Cancel Order'"></span>
+                    <span x-text="rejectLoading ? 'Submitting...' : (isSpecialDelivery(rejectOrderTarget) ? 'Decline Special Delivery' : (isStorePickup(rejectOrderTarget) ? 'Decline Store Pickup' : (isDigitalPaymentOrder(rejectOrderTarget) ? 'Reject Payment & Cancel' : 'Decline & Cancel Order')))"></span>
                 </button>
             </div>
         </div>

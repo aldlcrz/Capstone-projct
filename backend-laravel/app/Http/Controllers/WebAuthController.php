@@ -2101,6 +2101,19 @@ class WebAuthController extends Controller
                         session()->put('cart', $cart);
                         $user->update(['cart' => json_encode($cart)]);
 
+                        try {
+                            if (class_exists(\App\Models\SellerFunnelEvent::class) && \Illuminate\Support\Facades\Schema::hasTable('seller_funnel_events')) {
+                                \App\Models\SellerFunnelEvent::create([
+                                    'seller_id'          => $product->sellerId,
+                                    'product_id'         => $product->id,
+                                    'customer_id'        => $user->id,
+                                    'visitor_session_id' => session()->getId(),
+                                    'ip_address'         => $request->ip(),
+                                    'event_type'         => 'add_to_cart',
+                                ]);
+                            }
+                        } catch (\Throwable $e) {}
+
                         if ($action === 'buy_now') {
                             session()->put('buy_now_item', $newItem);
                             session()->flash('success', "Welcome back, {$user->name}! Restored your selection for \"{$product->name}\". Proceeding to checkout.");
