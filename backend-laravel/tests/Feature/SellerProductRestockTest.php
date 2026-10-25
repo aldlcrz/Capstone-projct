@@ -129,6 +129,7 @@ class SellerProductRestockTest extends TestCase
      */
     public function test_other_seller_cannot_restock_foreign_product(): void
     {
+        /** @var User $otherSeller */
         $otherSeller = User::factory()->create([
             'role' => 'seller',
             'status' => 'approved',
