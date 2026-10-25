@@ -64,7 +64,11 @@
                                 {{ $report->getReportCode() }}
                             </span>
                             <span class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
-                                {!! $rType === 'product' ? '<span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-stone-600" /> Product</span>' : '<span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-stone-600" /> Account</span>' !!}
+                                @if($rType === 'product')
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-blue-600" /> Product</span>
+                                @else
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-amber-700" /> Account</span>
+                                @endif
                             </span>
                         </div>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shrink-0 {{ $statusConfig['class'] }}">
@@ -174,7 +178,11 @@
                     <div class="flex items-center justify-between gap-2 bg-white border border-[#E8DECB] p-3 rounded-xl shadow-2xs flex-wrap">
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md {{ $rType === 'product' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
-                                {!! $rType === 'product' ? '<span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-stone-600" /> Product Report</span>' : '<span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-stone-600" /> Account Report</span>' !!}
+                                @if($rType === 'product')
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="package" class="w-3.5 h-3.5 text-blue-600" /> Product Report</span>
+                                @else
+                                    <span class="inline-flex items-center gap-1"><x-lucide name="user" class="w-3.5 h-3.5 text-amber-700" /> Account Report</span>
+                                @endif
                             </span>
                         </div>
                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border {{ $statusConfig['class'] }}">
