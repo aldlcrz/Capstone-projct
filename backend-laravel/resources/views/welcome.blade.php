@@ -1274,7 +1274,11 @@
         @if(request('search'))
             <div class="text-xs text-gray-500 font-medium flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <span>Results for <strong class="text-black">"{{ request('search') }}"</strong></span>
-                <a href="{{ request('category') ? '/?category='.request('category').'#catalogue-section' : '/#catalogue-section' }}" class="ajax-filter-link text-[#C0422A] font-bold hover:underline ml-auto">Clear Search</a>
+                <a href="{{ request('category') ? '/?category='.request('category').'#catalogue-section' : '/#catalogue-section' }}" 
+                   class="ajax-filter-link text-[#C0422A] font-bold hover:underline ml-auto"
+                   onclick="window.dispatchEvent(new CustomEvent('catalogue-search-cleared')); document.querySelectorAll('input[name=\'search\']').forEach(i => { if (i.type !== 'hidden') i.value = ''; });">
+                    Clear Search
+                </a>
             </div>
         @endif
 
@@ -1595,7 +1599,11 @@
                 <p class="text-xs text-gray-400 mb-6">
                     {{ in_array(request('sort'), ['best_sellers', 'trending', 'most_sold']) ? 'Products will appear here in real-time once sales are completed.' : 'Try a different search term or browse all collections.' }}
                 </p>
-                <a href="/#catalogue-section" class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block">View All Products</a>
+                <a href="/#catalogue-section" 
+                   class="ajax-filter-link px-6 py-2.5 bg-black hover:bg-[#C0422A] text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md inline-block"
+                   onclick="window.dispatchEvent(new CustomEvent('catalogue-search-cleared')); document.querySelectorAll('input[name=\'search\']').forEach(i => { if (i.type !== 'hidden') i.value = ''; });">
+                    View All Products
+                </a>
             </div>
         @endif
         </div>{{-- End #catalogue-products-area --}}
@@ -1929,11 +1937,27 @@
 
             const currentSeq = ++catalogueRequestSeq;
 
-            // Sync category highlight immediately from requested URL
+            // Sync category highlight & search inputs immediately from requested URL
             try {
                 const parsedUrl = new URL(url, window.location.origin);
                 const urlCat = parsedUrl.searchParams.get('category');
                 updateCategoryHighlight(urlCat);
+
+                if (!isLiveTyping) {
+                    const urlSearch = parsedUrl.searchParams.get('search');
+                    if (!urlSearch) {
+                        document.querySelectorAll('input[name="search"]').forEach(inp => {
+                            if (inp.type !== 'hidden') inp.value = '';
+                        });
+                        window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
+                        window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                    } else {
+                        document.querySelectorAll('input[name="search"]').forEach(inp => {
+                            if (inp.type !== 'hidden') inp.value = urlSearch;
+                        });
+                        window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                    }
+                }
             } catch(e) {}
 
             if (!isLiveTyping) {
@@ -2010,11 +2034,25 @@
                             currentModalGrid.innerHTML = newModalGrid.innerHTML;
                         }
 
-                        // Re-sync highlight classes after DOM update
+                        // Re-sync highlight classes & search inputs after DOM update
                         try {
                             const parsedUrl = new URL(url, window.location.origin);
                             const urlCat = parsedUrl.searchParams.get('category');
                             updateCategoryHighlight(urlCat);
+
+                            const urlSearch = parsedUrl.searchParams.get('search');
+                            if (!urlSearch) {
+                                document.querySelectorAll('input[name="search"]').forEach(inp => {
+                                    if (inp.type !== 'hidden') inp.value = '';
+                                });
+                                window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
+                                window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                            } else {
+                                document.querySelectorAll('input[name="search"]').forEach(inp => {
+                                    if (inp.type !== 'hidden') inp.value = urlSearch;
+                                });
+                                window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                            }
                         } catch(e) {}
 
                         if (push) {

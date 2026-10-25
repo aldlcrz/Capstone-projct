@@ -118,7 +118,9 @@
                                   }
                               }
                           }"
-                          @shop-search-cleared.window="query = ''"
+                          @shop-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
+                          @catalogue-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
+                          @catalogue-search-updated.window="query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || '')"
                           @submit="handleSubmit($event)"
                           style="position: relative; width: 100%;">
                         <input type="text" name="search"
