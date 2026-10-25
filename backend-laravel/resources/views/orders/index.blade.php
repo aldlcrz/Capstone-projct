@@ -248,7 +248,7 @@
                     ];
                 @endphp
 
-                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.03);overflow:hidden;transition:all 0.25s;"
+                <div style="background-color:#FFFFFF;border:1px solid #ECE3D2;border-radius:24px;box-shadow:0 4px 18px rgba(0,0,0,0.03);overflow:hidden;transition:all 0.25s;"
                      class="group cursor-pointer hover:border-[#DFC97A] hover:shadow-md"
                      x-show="matchesSearch('{{ $order->id }}', '{{ $orderData['shortId'] }}', '{{ addslashes($order->trackingNumber ?? '') }}')"
                      x-transition
@@ -259,286 +259,358 @@
                         $isPickup = $order->is_store_pickup;
                         $isSpecial = $order->is_special_delivery;
                         
-                        // Delivery Type Label & Styling
+                        // Delivery Type Label
                         if ($isPickup) {
                             $deliveryLabel = 'Store Pickup';
-                            $deliveryClass = 'bg-amber-50 text-amber-900 border-amber-300';
                             $deliveryIcon = 'store';
                         } elseif ($isSpecial) {
                             $deliveryLabel = 'Special Delivery';
-                            $deliveryClass = 'bg-purple-50 text-purple-900 border-purple-300';
                             $deliveryIcon = 'bike';
                         } else {
                             $deliveryLabel = !empty($order->courierName) ? $order->courierName : 'Standard Delivery';
-                            $deliveryClass = 'bg-sky-50 text-sky-900 border-sky-300';
                             $deliveryIcon = 'truck';
                         }
 
-                        // Payment Method Label & Styling
+                        // Payment Method Label
                         $pmRaw = strtoupper(trim((string)$order->paymentMethod));
                         if ($pmRaw === 'GCASH') {
                             $paymentLabel = 'GCash';
-                            $paymentClass = 'bg-blue-50 text-blue-700 border-blue-200';
                         } elseif ($pmRaw === 'MAYA' || $pmRaw === 'PAYMAYA') {
                             $paymentLabel = 'Maya';
-                            $paymentClass = 'bg-teal-50 text-teal-700 border-teal-200';
                         } elseif ($pmRaw === 'CARD' || $pmRaw === 'CREDIT_CARD' || $pmRaw === 'DEBIT_CARD') {
                             $paymentLabel = 'Card';
-                            $paymentClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                         } else {
                             $paymentLabel = $isPickup ? 'Pay in Shop' : 'Cash on Delivery';
-                            $paymentClass = 'bg-stone-100 text-stone-700 border-stone-300';
                         }
+
+                        $statusLower = strtolower(trim($order->status ?? ''));
+                        $customerStatus = match($statusLower) {
+                            'completed' => 'Completed',
+                            'delivered' => 'Delivered',
+                            'in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery' => 'To Receive',
+                            'to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped' => 'To Ship',
+                            'cancelled' => 'Cancelled',
+                            'cancellation pending', 'cancellation requested' => 'Cancellation Pending',
+                            default => 'Pending',
+                        };
+
+                        $isDelivered = ($statusLower === 'delivered');
+                        $isCompleted = ($statusLower === 'completed');
+                        $isPending = ($customerStatus === 'Pending');
+
+                        // Status Pill Badge Style & Icon
+                        $statusBadgeClass = match($customerStatus) {
+                            'Completed' => 'bg-[#DCFCE7] text-[#15803D]',
+                            'Delivered' => 'bg-[#CCFBF1] text-[#0F766E]',
+                            'To Receive' => 'bg-[#EDE9FE] text-[#6D28D9]',
+                            'To Ship' => 'bg-[#E0F2FE] text-[#0369A1]',
+                            'Cancelled' => 'bg-[#FEE2E2] text-[#991B1B]',
+                            'Cancellation Pending' => 'bg-[#FFEDD5] text-[#C2410C]',
+                            default => 'bg-[#FDE8B3] text-[#78350F]',
+                        };
+
+                        $firstItem = $order->items->first();
+                        $unreviewedItem = null;
+                        $firstReview = null;
+                        if ($firstItem) {
+                            $unreviewedItem = $order->items->first(function($itm) use ($order) {
+                                return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
+                            });
+                            $firstReview = $order->reviews ? $order->reviews->first() : null;
+                        }
+                        $hasReviews = $order->reviews && $order->reviews->count() > 0;
+                        $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
                     @endphp
-                    <div style="background-color:#FAF6EE;border-bottom:1px solid #EAE1D0;padding:12px 18px;" class="flex flex-wrap items-center justify-between gap-2.5">
-                        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#78716C] min-w-0">
-                            <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:linear-gradient(135deg,#0F0C08 0%,#1C1609 100%);border:1px solid #A87B10;border-radius:10px;color:#DFC97A;font-weight:800;">
+                    <div style="background-color:#FAF3E6;border-bottom:1px solid #F3EBDD;padding:16px 20px;" class="flex items-start justify-between gap-3">
+                        <div>
+                            {{-- Order Number --}}
+                            <div class="text-[15px] sm:text-[16px] font-extrabold text-[#1E1915] tracking-tight">
                                 #LB-OR-{{ $orderData['shortId'] }}
-                            </span>
-                            <span class="w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
-                            <span class="text-[#8C827A] font-medium">{{ $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('M d, Y • g:i A') : \Carbon\Carbon::parse($order->createdAt)->format('M d, Y • g:i A')) : '' }}</span>
+                            </div>
 
-                            <span class="hidden sm:inline-block w-1 h-1 bg-[#D6CEBE] rounded-full shrink-0"></span>
-
-                            {{-- Payment Method Badge --}}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $paymentClass }}">
-                                @if($pmRaw === 'GCASH')
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#007DFE]"></span>
-                                @elseif($pmRaw === 'MAYA' || $pmRaw === 'PAYMAYA')
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#14B8A6]"></span>
-                                @else
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                @endif
-                                <span>{{ $paymentLabel }}</span>
-                            </span>
-
-                            {{-- Delivery Type Badge --}}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $deliveryClass }}">
-                                @if($deliveryIcon === 'store')
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                @elseif($deliveryIcon === 'bike')
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                @else
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
-                                @endif
-                                <span>{{ $deliveryLabel }}</span>
-                            </span>
+                            {{-- Date & Time with Calendar Icon --}}
+                            <div class="flex items-center gap-1.5 mt-1 text-xs text-[#78716C] font-medium">
+                                <svg class="w-3.5 h-3.5 text-[#8C827A] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+                                    <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+                                    <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+                                </svg>
+                                <span>{{ $order->createdAt ? (($order->createdAt instanceof \Carbon\Carbon) ? $order->createdAt->format('M d, Y • g:i A') : \Carbon\Carbon::parse($order->createdAt)->format('M d, Y • g:i A')) : '' }}</span>
+                            </div>
                         </div>
 
-                        @php
-                            $statusLower = strtolower(trim($order->status ?? ''));
-                            $customerStatus = match($statusLower) {
-                                'completed' => 'Completed',
-                                'delivered' => 'Delivered',
-                                'in transit', 'in_transit', 'to receive', 'out for delivery', 'out_for_delivery' => 'To Receive',
-                                'to ship', 'ready to ship', 'ready_to_ship', 'processing', 'shipped' => 'To Ship',
-                                'cancelled' => 'Cancelled',
-                                'cancellation pending' => 'Cancellation Pending',
-                                default => 'Pending',
-                            };
-                            $statusPillClass = match($customerStatus) {
-                                'Completed' => 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-                                'Delivered' => 'bg-teal-50 text-teal-700 border border-teal-200',
-                                'To Receive' => 'bg-purple-50 text-purple-700 border border-purple-200',
-                                'To Ship' => 'bg-sky-50 text-sky-700 border border-sky-200',
-                                'Cancelled' => 'bg-red-50 text-red-700 border border-red-200',
-                                'Cancellation Pending' => 'bg-orange-50 text-orange-700 border border-orange-200',
-                                default => 'bg-amber-50 text-amber-700 border border-amber-200',
-                            };
-                        @endphp
-                        <span class="shrink-0 px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {{ $statusPillClass }}">
-                            {{ $customerStatus }}
-                        </span>
+                        {{-- Header Top-Right Pill Badge --}}
+                        <div class="shrink-0 flex items-center gap-2">
+                            @if($isSpecial)
+                                {{-- Special Delivery Badge (Image 1 Card 2) --}}
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#F1E5FF] text-[#6B21A8]">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                        <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <span>Special Delivery</span>
+                                </span>
+                            @else
+                                {{-- Status Badge (Image 1 Card 1) --}}
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold {{ $statusBadgeClass }}">
+                                    @if($customerStatus === 'Completed' || $customerStatus === 'Delivered')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    @elseif($customerStatus === 'Cancelled')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    @elseif($customerStatus === 'To Receive')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+                                    @elseif($customerStatus === 'To Ship')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    @else
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    @endif
+                                    <span>{{ $customerStatus }}</span>
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Product Items --}}
-                    <div class="px-4 sm:px-6 py-4 space-y-3.5">
+                    <div class="px-5 py-4 sm:px-6 sm:py-5 space-y-4 bg-white">
                         @foreach($order->items as $item)
-                            <div class="flex items-center gap-3.5 sm:gap-4">
+                            @php
+                                $variationLabel = $item->display_variation ?? $item->variation;
+                                $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
+                                    ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
+                                $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Product');
+                                // Single-item orders show final totalAmount as price, multi-item orders show item subtotal
+                                $displayPrice = ($order->items->count() === 1) ? $order->totalAmount : ($item->price * $item->quantity);
+                            @endphp
+                            <div class="flex items-center gap-4 sm:gap-5">
                                 {{-- Thumbnail --}}
-                                <div class="w-14 h-16 sm:w-16 sm:h-20 bg-[#FAF8F5] rounded-xl overflow-hidden border border-[#ECE3D2] shrink-0"
+                                <div class="w-20 h-20 sm:w-22 sm:h-22 bg-[#FAF5EC] rounded-2xl overflow-hidden border border-[#EFE5D2] shrink-0 flex items-center justify-center cursor-pointer"
                                      onclick="event.stopPropagation(); window.location.href='/products/{{ $item->productId }}';">
-                                    @php
-                                        $variationLabel = $item->display_variation ?? $item->variation;
-                                        $imgSrc = \App\Support\VariationFormatter::getImageForVariation($item->variation, $item->product)
-                                            ?: ($item->product ? $item->product->getImageUrl() : asset('uploads/products/default.jpg'));
-                                    @endphp
                                     <img src="{{ $imgSrc }}" class="w-full h-full object-cover object-top"
                                          onerror="this.src='/uploads/products/default.jpg'"
-                                         alt="{{ $item->product->name ?? 'Product' }}">
+                                         alt="{{ $itemTitle }}">
                                 </div>
 
-                                {{-- Title & Meta --}}
+                                {{-- Title & Meta & Price stacked --}}
                                 <div class="flex-1 min-w-0 space-y-1">
-                                    @php
-                                        $itemTitle = (!empty($variationLabel) && strcasecmp($variationLabel, 'Original') !== 0) ? $variationLabel : ($item->product->name ?? 'Heritage Product');
-                                    @endphp
-                                    <h4 class="text-xs sm:text-base font-extrabold text-[#1E1915] truncate uppercase tracking-tight">
+                                    <h4 class="text-sm sm:text-base font-bold text-[#1E1915] truncate tracking-tight">
                                         <a href="/products/{{ $item->productId }}"
                                            onclick="event.stopPropagation();"
                                            @click.stop
-                                           class="hover:text-[#C0422A] transition-colors">
+                                           class="hover:text-[#8B2210] transition-colors">
                                             {{ $itemTitle }}
                                         </a>
                                     </h4>
-                                    <div class="flex flex-wrap items-center gap-2 text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider">
-                                        @if($item->size)<span class="px-2 py-0.5 bg-[#FAF8F5] rounded-md text-[#1E1915] border border-[#EAE2D2]">Size: {{ $item->size }}</span>@endif
-                                        <span>Qty: {{ $item->quantity }}</span>
+                                    <div class="text-xs sm:text-[13px] font-medium text-[#78716C]">
+                                        @if($item->size)
+                                            Size: {{ $item->size }} &bull; Qty: {{ $item->quantity }}
+                                        @else
+                                            Qty: {{ $item->quantity }}
+                                        @endif
                                     </div>
-                                </div>
-
-                                {{-- Item Price --}}
-                                <div class="text-right shrink-0">
-                                    <div class="text-xs sm:text-base font-black text-[#1E1915]">₱{{ number_format($item->price) }}</div>
-                                    <div class="text-[9px] text-[#8C827A] font-bold uppercase tracking-wider">each</div>
+                                    <div class="text-base sm:text-lg font-black text-[#8B2210] pt-0.5 tracking-tight">
+                                        ₱{{ number_format($displayPrice, 2) }}
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
+
+                        @if($order->items->count() > 1)
+                            <div class="flex justify-end items-center gap-2 pt-2 border-t border-[#F5EFE3] text-xs font-medium text-[#78716C]">
+                                <span>Order Total:</span>
+                                <span class="text-base font-black text-[#8B2210]">₱{{ number_format($order->totalAmount, 2) }}</span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Card Footer --}}
-                    <div style="background-color:#FAF8F5;border-top:1px solid #ECE3D2;padding:14px 20px;">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <div class="text-[9px] font-bold text-[#8C827A] uppercase tracking-widest">Total Amount</div>
-                                <div class="text-base sm:text-xl font-black text-[#C0422A]">₱{{ number_format($order->totalAmount, 2) }}</div>
-                            </div>
-
-                            @php
-                                $statusLower = strtolower(trim($order->status));
-                                $isDelivered = ($statusLower === 'delivered');
-                                $isCompleted = ($statusLower === 'completed');
-                                
-                                $firstItem = $order->items->first();
-                                $unreviewedItem = null;
-                                $firstReview = null;
-                                if ($firstItem) {
-                                    $unreviewedItem = $order->items->first(function($itm) use ($order) {
-                                        return !$order->reviews || !$order->reviews->where('orderItemId', $itm->id)->first();
-                                    });
-                                    $firstReview = $order->reviews ? $order->reviews->first() : null;
-                                }
-                                $activeReturn = $order->returnRequests ? $order->returnRequests->first() : null;
-                            @endphp
-
-                            <div class="flex flex-wrap items-center gap-2">
-                                @if($isDelivered)
-                                    <button type="button"
-                                            onclick="event.stopPropagation();"
-                                            @click.stop="confirmOrderId = '{{ $order->id }}'; confirmModal = true;"
-                                            class="px-5 sm:px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Confirm Received</span>
-                                    </button>
-                                    @if(!$activeReturn)
-                                        <button type="button"
-                                                onclick="event.stopPropagation();"
-                                                @click.stop="openReturnModal('{{ $order->id }}')"
-                                                class="px-4 sm:px-5 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                            <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                            <span>Request Return</span>
-                                        </button>
-                                    @endif
-                                @elseif($isCompleted)
-                                    @php
-                                        $hasReviews = $order->reviews && $order->reviews->count() > 0;
-                                    @endphp
-
-                                    {{-- 1. If Return Request exists: show Return badge only, hide Review button --}}
-                                    @if($activeReturn)
-                                        @php
-                                            $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
-                                        @endphp
-                                        @if($retStatus === 'approved')
-                                            <span onclick="event.stopPropagation();" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                <x-lucide name="check-circle" class="w-3 h-3 text-blue-600 shrink-0" /> Return Approved
-                                            </span>
-                                        @elseif($retStatus === 'rejected')
-                                            <span onclick="event.stopPropagation();" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                <x-lucide name="x-circle" class="w-3 h-3 text-red-600 shrink-0" /> Return Rejected
-                                            </span>
-                                        @else
-                                            <span onclick="event.stopPropagation();" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                <x-lucide name="clock" class="w-3 h-3 text-amber-600 shrink-0" /> Return Pending
-                                            </span>
-                                        @endif
-
-                                    {{-- 2. Else If Reviews exist: allow rating any remaining unreviewed items --}}
-                                    @elseif($hasReviews)
-                                        @if($unreviewedItem)
-                                            <button type="button"
-                                                    onclick="event.stopPropagation();"
-                                                    data-product-id="{{ $unreviewedItem->productId }}"
-                                                    data-order-id="{{ $order->id }}"
-                                                    data-order-item-id="{{ $unreviewedItem->id }}"
-                                                    data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
-                                                    data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
-                                                    @click.stop="openReviewModal($el)"
-                                                    style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                    class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                                <span class="flex items-center gap-1.5"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Rate Next Piece</span>
-                                            </button>
-                                        @else
-                                            <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                                <x-lucide name="star" class="w-3 h-3 text-emerald-600 fill-emerald-600 shrink-0" /> {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
-                                            </span>
-                                        @endif
-
-                                    {{-- 3. Else (Neither submitted yet): show both options so customer can choose --}}
-                                    @else
-                                        @if($unreviewedItem)
-                                            <button type="button"
-                                                    onclick="event.stopPropagation();"
-                                                    data-product-id="{{ $unreviewedItem->productId }}"
-                                                    data-order-id="{{ $order->id }}"
-                                                    data-order-item-id="{{ $unreviewedItem->id }}"
-                                                    data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
-                                                    data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
-                                                    @click.stop="openReviewModal($el)"
-                                                    style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
-                                                    class="px-4 sm:px-5 py-2.5 rounded-full hover:bg-[#C0422A] hover:border-[#C0422A] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                                <span class="flex items-center gap-1.5"><x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Rate Now</span>
-                                            </button>
-                                        @endif
-
-                                        <button type="button"
-                                                onclick="event.stopPropagation();"
-                                                @click.stop="openReturnModal('{{ $order->id }}')"
-                                                class="px-4 sm:px-5 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                                            <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                            <span>Request Return</span>
-                                        </button>
-                                    @endif
-                                @elseif($statusLower === 'pending')
-                                    <button type="button"
-                                            onclick="event.stopPropagation();"
-                                            @click.stop="cancelOrderId = '{{ $order->id }}'; cancellationReason = ''; cancellationOtherText = ''; cancelModal = true;"
-                                            class="px-3.5 py-1.5 rounded-full bg-white hover:bg-red-50 text-red-600 border border-red-200 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1 cursor-pointer">
-                                        <span class="flex items-center gap-1"><x-lucide name="x" class="w-3 h-3" /> Cancel</span>
-                                    </button>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
-                                        <span>View Details</span>
-                                        <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                    </span>
-                                @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
-                                    <span style="background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                        <x-lucide name="clock" class="w-3 h-3 text-orange-600 shrink-0" /> Cancellation Pending
-                                    </span>
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
-                                        <span>View Details</span>
-                                        <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                    </span>
-                                @elseif($statusLower === 'cancelled')
-                                    <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                                        <x-lucide name="x-circle" class="w-3 h-3 text-red-600 shrink-0" /> Cancelled
-                                    </span>
+                    <div style="background-color:#FFFFFF;border-top:1px solid #F5EFE3;padding:14px 20px 18px 20px;" class="flex items-center justify-between gap-3 flex-wrap">
+                        {{-- Bottom-Left Info --}}
+                        <div>
+                            @if($isSpecial)
+                                {{-- For Special Delivery: Status shown at bottom-left (Image 1 Card 2) --}}
+                                @if($customerStatus === 'Completed')
+                                    <div class="flex items-center gap-2 text-sm font-bold text-[#15803D]">
+                                        <svg class="w-4 h-4 text-[#15803D] shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Completed</span>
+                                    </div>
+                                @elseif($customerStatus === 'Delivered')
+                                    <div class="flex items-center gap-2 text-sm font-bold text-[#0F766E]">
+                                        <svg class="w-4 h-4 text-[#0F766E] shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Delivered</span>
+                                    </div>
+                                @elseif($customerStatus === 'Cancelled')
+                                    <div class="flex items-center gap-2 text-sm font-bold text-[#991B1B]">
+                                        <svg class="w-4 h-4 text-[#991B1B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span>Cancelled</span>
+                                    </div>
+                                @elseif($customerStatus === 'Cancellation Pending')
+                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#C2410C]">
+                                        <x-lucide name="clock" class="w-4 h-4 text-[#C2410C] shrink-0" />
+                                        <span>Cancellation Pending</span>
+                                    </div>
+                                @elseif($customerStatus === 'To Receive')
+                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#6D28D9]">
+                                        <x-lucide name="truck" class="w-4 h-4 text-[#6D28D9] shrink-0" />
+                                        <span>To Receive</span>
+                                    </div>
+                                @elseif($customerStatus === 'To Ship')
+                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#0369A1]">
+                                        <x-lucide name="package" class="w-4 h-4 text-[#0369A1] shrink-0" />
+                                        <span>To Ship</span>
+                                    </div>
                                 @else
-                                    <span class="text-[9px] sm:text-[10px] font-bold text-[#8C827A] uppercase tracking-wider flex items-center gap-1">
-                                        <span>View Details</span>
-                                        <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                    </span>
+                                    <div class="flex items-center gap-2 text-sm font-semibold text-[#78350F]">
+                                        <x-lucide name="clock" class="w-4 h-4 text-[#78350F] shrink-0" />
+                                        <span>Order Pending</span>
+                                    </div>
                                 @endif
-                            </div>
+                            @else
+                                {{-- For Store Pickup or Standard Delivery: Fulfillment & Payment shown at bottom-left (Image 1 Card 1) --}}
+                                @if($isPickup)
+                                    <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E2B1E]">
+                                        <svg class="w-4 h-4 text-[#6E2B1E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                        <span>Pay in Shop &bull; Store Pickup</span>
+                                    </div>
+                                @else
+                                    <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E2B1E]">
+                                        <svg class="w-4 h-4 text-[#6E2B1E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
+                                        </svg>
+                                        <span>{{ $paymentLabel }} &bull; {{ $deliveryLabel }}</span>
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+
+                        {{-- Bottom-Right Action Buttons --}}
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            @if($isDelivered)
+                                <button type="button"
+                                        onclick="event.stopPropagation();"
+                                        @click.stop="confirmOrderId = '{{ $order->id }}'; confirmModal = true;"
+                                        class="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Confirm Received</span>
+                                </button>
+                                @if(!$activeReturn)
+                                    <button type="button"
+                                            onclick="event.stopPropagation();"
+                                            @click.stop="openReturnModal('{{ $order->id }}')"
+                                            class="px-4 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        <span>Request Return</span>
+                                    </button>
+                                @endif
+                            @elseif($isCompleted)
+                                {{-- 1. If Return Request exists: show Return badge only, hide Review button --}}
+                                @if($activeReturn)
+                                    @php
+                                        $retStatus = strtolower(trim($activeReturn->status ?? 'pending'));
+                                    @endphp
+                                    @if($retStatus === 'approved')
+                                        <span onclick="event.stopPropagation();" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                            <x-lucide name="check-circle" class="w-3.5 h-3.5 text-blue-600 shrink-0" /> Return Approved
+                                        </span>
+                                    @elseif($retStatus === 'rejected')
+                                        <span onclick="event.stopPropagation();" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                            <x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-600 shrink-0" /> Return Rejected
+                                        </span>
+                                    @else
+                                        <span onclick="event.stopPropagation();" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                            <x-lucide name="clock" class="w-3.5 h-3.5 text-amber-600 shrink-0" /> Return Pending
+                                        </span>
+                                    @endif
+
+                                {{-- 2. Else If Reviews exist: allow rating any remaining unreviewed items --}}
+                                @elseif($hasReviews)
+                                    @if($unreviewedItem)
+                                        <button type="button"
+                                                onclick="event.stopPropagation();"
+                                                data-product-id="{{ $unreviewedItem->productId }}"
+                                                data-order-id="{{ $order->id }}"
+                                                data-order-item-id="{{ $unreviewedItem->id }}"
+                                                data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
+                                                data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
+                                                @click.stop="openReviewModal($el)"
+                                                style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
+                                                class="px-4 py-2.5 rounded-full hover:bg-[#8B2210] hover:border-[#8B2210] text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                            <x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                            <span>Rate Next Piece</span>
+                                        </button>
+                                    @else
+                                        <span onclick="event.stopPropagation();" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-bold">
+                                            <x-lucide name="star" class="w-3.5 h-3.5 text-emerald-600 fill-emerald-600 shrink-0" /> {{ $firstReview ? $firstReview->rating . '/5 ' : '' }}Reviewed
+                                        </span>
+                                    @endif
+
+                                {{-- 3. Else (Neither submitted yet): show both options so customer can choose --}}
+                                @else
+                                    @if($unreviewedItem)
+                                        <button type="button"
+                                                onclick="event.stopPropagation();"
+                                                data-product-id="{{ $unreviewedItem->productId }}"
+                                                data-order-id="{{ $order->id }}"
+                                                data-order-item-id="{{ $unreviewedItem->id }}"
+                                                data-product-name="{{ $unreviewedItem->product->name ?? 'Product' }}"
+                                                data-product-image="{{ $unreviewedItem->product ? $unreviewedItem->product->getImageUrl() : asset('uploads/products/default.jpg') }}"
+                                                @click.stop="openReviewModal($el)"
+                                                style="background-color:#1E1915;color:#FFFFFF;border:1px solid #1E1915;"
+                                                class="px-4 py-2.5 rounded-full hover:bg-[#8B2210] hover:border-[#8B2210] text-xs font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                            <x-lucide name="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                            <span>Rate Now</span>
+                                        </button>
+                                    @endif
+
+                                    <button type="button"
+                                            onclick="event.stopPropagation();"
+                                            @click.stop="openReturnModal('{{ $order->id }}')"
+                                            class="px-4 py-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold transition-all whitespace-nowrap shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        <span>Request Return</span>
+                                    </button>
+                                @endif
+                            @elseif($isPending)
+                                <button type="button"
+                                        onclick="event.stopPropagation();"
+                                        @click.stop="cancelOrderId = '{{ $order->id }}'; cancellationReason = ''; cancellationOtherText = ''; cancelModal = true;"
+                                        class="px-4 py-2 rounded-full bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                    <x-lucide name="x" class="w-3.5 h-3.5" />
+                                    <span>Cancel</span>
+                                </button>
+                            @elseif(in_array($statusLower, ['cancellation pending', 'cancellation requested']))
+                                <span style="background:#FFF7ED;color:#C2410C;border:1px solid #FFEDD5;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold">
+                                    <x-lucide name="clock" class="w-3.5 h-3.5 text-orange-600 shrink-0" /> Cancellation Pending
+                                </span>
+                            @elseif($statusLower === 'cancelled')
+                                <span style="background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold">
+                                    <x-lucide name="x-circle" class="w-3.5 h-3.5 text-red-600 shrink-0" /> Cancelled
+                                </span>
+                            @endif
+
+                            {{-- View Details Button --}}
+                            @if($isCompleted)
+                                {{-- Outlined Pill for Completed (Image 1 Card 2) --}}
+                                <a href="/orders/{{ $order->id }}"
+                                   onclick="event.stopPropagation();"
+                                   class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white border border-[#6E2B1E] text-[#6E2B1E] hover:bg-[#FAF4E8] text-xs sm:text-[13px] font-semibold transition-all no-underline">
+                                    <span>View Details</span>
+                                    <svg class="w-3.5 h-3.5 text-[#6E2B1E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            @else
+                                {{-- Solid Dark Pill for Active Orders (Image 1 Card 1) --}}
+                                <a href="/orders/{{ $order->id }}"
+                                   onclick="event.stopPropagation();"
+                                   class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#241A17] hover:bg-[#382B27] text-white text-xs sm:text-[13px] font-semibold shadow-sm transition-all no-underline">
+                                    <span>View Details</span>
+                                    <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            @endif
                         </div>
                     </div>
 
