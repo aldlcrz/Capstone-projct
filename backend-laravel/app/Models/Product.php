@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -261,7 +262,7 @@ class Product extends Model
     /**
      * Scope query to products with active valid sales/discounts (Lumban Special).
      */
-    public function scopeOnSale($query)
+    public function scopeOnSale(Builder $query): Builder
     {
         return $query->where('is_on_sale', true)
             ->where('discount_percentage', '>', 0)
@@ -274,7 +275,7 @@ class Product extends Model
     /**
      * Scope query for Lumban Special items.
      */
-    public function scopeLumbanSpecial($query)
+    public function scopeLumbanSpecial(Builder $query): Builder
     {
         return $this->scopeOnSale($query);
     }
@@ -645,7 +646,7 @@ class Product extends Model
     /**
      * Scope query to only purchasable approved products.
      */
-    public function scopePurchasable($query)
+    public function scopePurchasable(Builder $query): Builder
     {
         return $query->where('status', 'approved')
             ->where(function ($q) {
@@ -664,7 +665,7 @@ class Product extends Model
     /**
      * Scope query to search products flexibly by name, description, category, tags, and audience.
      */
-    public function scopeSearch($query, ?string $search, ?string $sort = null)
+    public function scopeSearch(Builder $query, ?string $search, ?string $sort = null): Builder
     {
         return \App\Services\ProductSearchService::apply($query, $search, $sort);
     }

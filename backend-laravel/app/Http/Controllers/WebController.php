@@ -32,6 +32,30 @@ class WebController extends Controller
             }
         }
 
+        [$products, $priceFilterError] = $this->buildCatalogueProducts($request);
+
+        try {
+            $categories = Category::withCount('products')->orderBy('name', 'asc')->get();
+        } catch (\Throwable $e) {
+            $categories = collect();
+        }
+
+        $banners = $this->fetchHeroBanners();
+        $topShops = $this->fetchTopShops();
+        $customerStats = $this->fetchCustomerStats();
+        $priceTiers = \App\Services\ProductFilterService::getPriceTiers();
+
+        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops', 'priceFilterError', 'priceTiers'));
+    }
+
+    /**
+     * Build the filtered, sorted, and paginated product catalogue collection.
+     *
+     * @param Request $request
+     * @return array{\Illuminate\Contracts\Pagination\LengthAwarePaginator, string|null}
+     */
+    private function buildCatalogueProducts(Request $request): array
+    {
         $priceFilterError = null;
         try {
             $query = Product::where('status', 'approved')
@@ -137,12 +161,16 @@ class WebController extends Controller
             $products = Product::where('status', 'approved')->paginate(100);
         }
 
-        try {
-            $categories = Category::withCount('products')->orderBy('name', 'asc')->get();
-        } catch (\Throwable $e) {
-            $categories = collect();
-        }
+        return [$products, $priceFilterError];
+    }
 
+    /**
+     * Fetch and deduplicate hero banners for the storefront.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    private function fetchHeroBanners(): \Illuminate\Support\Collection
+    {
         try {
             $banners = Banner::live()
                 ->orderBy('order_index', 'asc')
@@ -151,7 +179,8 @@ class WebController extends Controller
 
             // Enforce strictly one product per shop in hero banner display
             $seenSellerIds = [];
-            $banners = $banners->filter(function (Banner $banner) use (&$seenSellerIds) {
+            $banners = $banners->filter(function ($banner) use (&$seenSellerIds) {
+                /** @var Banner $banner */
                 $sellerId = $banner->getAssociatedSellerId();
                 if ($sellerId !== null) {
                     if (in_array($sellerId, $seenSellerIds, true)) {
@@ -177,11 +206,7 @@ class WebController extends Controller
             $banners = collect([$defaultBanner]);
         }
 
-        $topShops = $this->fetchTopShops();
-        $customerStats = $this->fetchCustomerStats();
-        $priceTiers = \App\Services\ProductFilterService::getPriceTiers();
-
-        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops', 'priceFilterError', 'priceTiers'));
+        return $banners;
     }
 
     /**
