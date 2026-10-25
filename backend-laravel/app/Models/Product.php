@@ -95,6 +95,14 @@ class Product extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+
+        static::saved(function ($model) {
+            \App\Services\ProductFilterService::clearPriceBoundsCache();
+        });
+
+        static::deleted(function ($model) {
+            \App\Services\ProductFilterService::clearPriceBoundsCache();
+        });
     }
 
     /**

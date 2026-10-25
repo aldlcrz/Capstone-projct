@@ -1380,14 +1380,7 @@
                 ['label' => 'Kids', 'param' => ['category' => 'Kids', 'search' => $isPureDemographicSearch ? null : $currentSearchParam], 'active' => $isKidsActive],
             ];
 
-            $priceTiers = [
-                ['label' => 'All Prices', 'html' => 'All Prices', 'val' => ''],
-                ['label' => 'Under ₱500', 'html' => 'Under <span class="font-bold">₱500</span>', 'val' => 'under_500'],
-                ['label' => '₱500 – ₱1,499', 'html' => '<span class="font-bold">₱500</span> – <span class="font-bold">₱1,499</span>', 'val' => '500_1499'],
-                ['label' => '₱1,500 – ₱3,499', 'html' => '<span class="font-bold">₱1,500</span> – <span class="font-bold">₱3,499</span>', 'val' => '1500_3499'],
-                ['label' => '₱3,500 – ₱5,999', 'html' => '<span class="font-bold">₱3,500</span> – <span class="font-bold">₱5,999</span>', 'val' => '3500_5999'],
-                ['label' => '₱6,000+', 'html' => '<span class="font-bold">₱6,000+</span>', 'val' => 'above_6000'],
-            ];
+            $priceTiers = $priceTiers ?? \App\Services\ProductFilterService::getPriceTiers();
         @endphp
 
         {{-- Clean Minimalist Collection & Curation Header --}}

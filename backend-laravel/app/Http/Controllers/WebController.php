@@ -179,8 +179,9 @@ class WebController extends Controller
 
         $topShops = $this->fetchTopShops();
         $customerStats = $this->fetchCustomerStats();
+        $priceTiers = \App\Services\ProductFilterService::getPriceTiers();
 
-        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops', 'priceFilterError'));
+        return view('welcome', compact('products', 'categories', 'banners', 'customerStats', 'topShops', 'priceFilterError', 'priceTiers'));
     }
 
     /**
