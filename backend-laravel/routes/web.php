@@ -147,6 +147,7 @@ Route::middleware('auth')->group(function () {
 
     // Orders
     Route::get('/orders', fn() => redirect()->route('orders'));
+    Route::get('/profile/orders', fn() => redirect()->route('orders'))->name('profile.orders');
     Route::get('/customer/orders', fn() => redirect()->route('orders'));
     Route::get('/customer/orders/{id}', fn($id) => redirect()->route('orders.show', $id));
     Route::get('/orders/my-orders', [WebController::class, 'orders'])->name('orders');

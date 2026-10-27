@@ -114,6 +114,8 @@ class ReturnRequestController extends Controller
             'userId'     => $order->sellerId,
             'title'      => 'New Return Request',
             'message'    => "Customer has requested a return for order #LB-OR-" . strtoupper(substr($order->id, -8)),
+            'type'       => 'return',
+            'link'       => "/seller/orders?status=return+requests&order_id={$order->id}",
             'targetRole' => 'seller',
         ]);
 
@@ -176,9 +178,11 @@ class ReturnRequestController extends Controller
 
         // Notify customer
         Notification::create([
-            'userId' => $returnRequest->order->customerId,
-            'title' => 'Return Request Update',
-            'message' => "Your return request for order #{$returnRequest->order->id} has been {$request->status}.",
+            'userId'     => $returnRequest->order->customerId,
+            'title'      => 'Return Request Update',
+            'message'    => "Your return request for order #{$returnRequest->order->id} has been {$request->status}.",
+            'type'       => 'return',
+            'link'       => "/orders/{$returnRequest->orderId}",
             'targetRole' => 'customer',
         ]);
 

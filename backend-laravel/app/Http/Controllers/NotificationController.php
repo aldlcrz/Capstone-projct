@@ -149,7 +149,7 @@ class NotificationController extends Controller
     /**
      * Dismiss a popup notification so it never shows as a popup again.
      */
-    public function dismiss(Request $request, $id)
+    public function dismiss(Request $request, string $id)
     {
         $user = $request->user();
         $query = Notification::where('id', $id);
@@ -191,7 +191,7 @@ class NotificationController extends Controller
     /**
      * Mark a specific notification as read.
      */
-    public function markAsRead(Request $request, $id)
+    public function markAsRead(Request $request, string $id)
     {
         $user = $request->user();
         $query = Notification::where('id', $id);
@@ -233,7 +233,7 @@ class NotificationController extends Controller
     /**
      * Mark a notification as read and redirect to its link.
      */
-    public function readAndRedirect(Request $request, $id)
+    public function readAndRedirect(Request $request, string $id)
     {
         $user = $request->user();
         $query = Notification::where('id', $id);
@@ -273,11 +273,15 @@ class NotificationController extends Controller
         }
 
         if ($user) {
-            if ($user->role === 'superadmin') return redirect()->route('superadmin.dashboard');
-            if ($user->role === 'admin') return redirect()->route('admin.dashboard');
-            if ($user->role === 'seller') return redirect()->route('seller.dashboard');
+            if ($user->role === 'superadmin' && \Illuminate\Support\Facades\Route::has('superadmin.dashboard')) return redirect()->route('superadmin.dashboard');
+            if ($user->role === 'admin' && \Illuminate\Support\Facades\Route::has('admin.dashboard')) return redirect()->route('admin.dashboard');
+            if ($user->role === 'seller' && \Illuminate\Support\Facades\Route::has('seller.dashboard')) return redirect()->route('seller.dashboard');
         }
 
-        return redirect()->route('profile.orders');
+        if (\Illuminate\Support\Facades\Route::has('orders')) {
+            return redirect()->route('orders');
+        }
+
+        return redirect('/orders/my-orders');
     }
 }

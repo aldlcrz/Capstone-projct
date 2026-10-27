@@ -63,9 +63,11 @@ class RefundController extends Controller
 
         // Notify Seller
         Notification::create([
-            'userId' => $order->sellerId,
-            'title' => 'New Refund Request',
-            'message' => "A customer has requested a refund for an item in Order #{$order->id}",
+            'userId'     => $order->sellerId,
+            'title'      => 'New Refund Request',
+            'message'    => "A customer has requested a refund for an item in Order #{$order->id}",
+            'type'       => 'refund',
+            'link'       => "/seller/orders?status=return+requests&order_id={$order->id}",
             'targetRole' => 'seller',
         ]);
 
@@ -108,7 +110,7 @@ class RefundController extends Controller
     /**
      * Update refund status.
      */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, string $id)
     {
         $refundRequest = RefundRequest::where('id', $id)->where('seller_id', Auth::id())->firstOrFail();
         
@@ -124,9 +126,11 @@ class RefundController extends Controller
 
         // Notify Customer
         Notification::create([
-            'userId' => $refundRequest->customer_id,
-            'title' => 'Refund Request Updated',
-            'message' => "Your refund request has been {$request->status}.",
+            'userId'     => $refundRequest->customer_id,
+            'title'      => 'Refund Request Updated',
+            'message'    => "Your refund request has been {$request->status}.",
+            'type'       => 'refund',
+            'link'       => "/orders/{$refundRequest->order_id}",
             'targetRole' => 'customer',
         ]);
 

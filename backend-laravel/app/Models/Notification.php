@@ -101,24 +101,24 @@ class Notification extends Model
     /**
      * Mutators for snake_case backwards compatibility
      */
-    public function setUserIdAttribute($value)
+    public function setUserIdAttribute(mixed $value)
     {
         if ($value !== null) {
             $this->attributes['userId'] = is_object($value) ? ($value->id ?? (string)$value) : (string)$value;
         }
     }
 
-    public function setTargetUrlAttribute($value)
+    public function setTargetUrlAttribute(mixed $value)
     {
         $this->attributes['link'] = $value;
     }
 
-    public function setTargetRoleAttribute($value)
+    public function setTargetRoleAttribute(mixed $value)
     {
         $this->attributes['targetRole'] = $value;
     }
 
-    public function setIsReadAttribute($value)
+    public function setIsReadAttribute(mixed $value)
     {
         $this->attributes['isRead'] = $value;
     }
@@ -133,20 +133,71 @@ class Notification extends Model
             return $candidate;
         }
 
-        // Contextual fallback: If notification is order-related, redirect to customer orders
-        if (in_array($this->type, ['order', 'order_status', 'delivery', 'special_delivery', 'pickup', 'return']) ||
-            str_contains(strtolower($this->title ?? ''), 'order') ||
-            str_contains(strtolower($this->message ?? ''), 'order')) {
+        $role = $this->targetRole ?? null;
+        $type = $this->type ?? '';
+        $text = strtolower(($this->title ?? '') . ' ' . ($this->message ?? ''));
+        $isReturn = $type === 'return' || $type === 'refund' || str_contains($text, 'return') || str_contains($text, 'refund') || str_contains($text, 'dispute');
+        $isOrder = in_array($type, ['order', 'order_status', 'delivery', 'special_delivery', 'pickup']) || str_contains($text, 'order');
+
+        // Extract order ID if present (UUID or 8-char short hex)
+        $orderId = null;
+        if (preg_match('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i', ($this->message ?? '') . ' ' . ($this->title ?? ''), $matches)) {
+            $orderId = $matches[0];
+        } elseif (preg_match('/(?:order|order #|#lb-or-|#lb-|#)\s*([0-9a-f]{8})/i', ($this->title ?? '') . ' ' . ($this->message ?? ''), $matches)) {
+            $orderId = $matches[1];
+        }
+
+        if ($role === 'seller') {
+            if ($isReturn) {
+                return $orderId 
+                    ? "/seller/orders?status=return+requests&order_id={$orderId}" 
+                    : (\Illuminate\Support\Facades\Route::has('seller.orders') ? route('seller.orders', ['status' => 'return requests']) : '/seller/orders?status=return+requests');
+            }
+            if ($isOrder) {
+                return $orderId 
+                    ? "/seller/orders?order_id={$orderId}" 
+                    : (\Illuminate\Support\Facades\Route::has('seller.orders') ? route('seller.orders') : '/seller/orders');
+            }
+            return \Illuminate\Support\Facades\Route::has('seller.dashboard') ? route('seller.dashboard') : '/seller/dashboard';
+        }
+
+        if ($role === 'admin') {
+            if ($isReturn && \Illuminate\Support\Facades\Route::has('admin.returns.index')) {
+                return route('admin.returns.index');
+            }
+            if ($isOrder && \Illuminate\Support\Facades\Route::has('admin.orders')) {
+                return route('admin.orders');
+            }
+            return \Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : '/admin/dashboard';
+        }
+
+        if ($role === 'superadmin') {
+            if ($isOrder && \Illuminate\Support\Facades\Route::has('superadmin.orders')) {
+                return route('superadmin.orders');
+            }
+            return \Illuminate\Support\Facades\Route::has('superadmin.dashboard') ? route('superadmin.dashboard') : '/superadmin/dashboard';
+        }
+
+        // Customer / default fallback
+        if ($orderId) {
+            return "/orders/{$orderId}";
+        }
+
+        if (\Illuminate\Support\Facades\Route::has('orders')) {
+            return route('orders');
+        }
+
+        if (\Illuminate\Support\Facades\Route::has('profile.orders')) {
             return route('profile.orders');
         }
 
-        return route('profile.orders');
+        return '/orders/my-orders';
     }
 
     /**
      * Send a notification to a specific user.
      */
-    public static function send($userId, string $title, string $message, string $type = 'system', ?string $link = null, string $targetRole = 'customer')
+    public static function send(mixed $userId, string $title, string $message, string $type = 'system', ?string $link = null, string $targetRole = 'customer')
     {
         $userIdStr = is_object($userId) ? ($userId->id ?? null) : $userId;
         if (empty($userIdStr)) {

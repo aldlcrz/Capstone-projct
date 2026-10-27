@@ -153,6 +153,8 @@ class ProcessPlatformRefundService
                 'userId'     => $order->sellerId,
                 'title'      => 'Platform Refund Disbursed',
                 'message'    => "Platform Admin disbursed a refund of ₱" . number_format($refundAmount, 2) . " for order #LB-OR-" . strtoupper(substr($order->id, -8)),
+                'type'       => 'return',
+                'link'       => "/seller/orders?status=return+requests&order_id={$order->id}",
                 'targetRole' => 'seller',
             ]);
 

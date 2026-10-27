@@ -62,6 +62,8 @@ class DisputeReturnRequestService
                     'userId'     => $adminUser->id,
                     'title'      => 'Return Case Disputed',
                     'message'    => "Customer escalated a rejected return for Order #LB-OR-" . strtoupper(substr($returnRequest->orderId, -8)),
+                    'type'       => 'return',
+                    'link'       => "/admin/returns/{$returnRequest->id}",
                     'targetRole' => 'admin',
                 ]);
             }
@@ -71,6 +73,8 @@ class DisputeReturnRequestService
                 'userId'     => $returnRequest->seller_id ?: $returnRequest->order->sellerId,
                 'title'      => 'Return Decision Disputed',
                 'message'    => "The customer has escalated your return rejection to platform administrators.",
+                'type'       => 'return',
+                'link'       => "/seller/orders?status=return+requests&order_id={$returnRequest->orderId}",
                 'targetRole' => 'seller',
             ]);
 

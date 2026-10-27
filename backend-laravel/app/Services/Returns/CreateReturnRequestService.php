@@ -85,6 +85,8 @@ class CreateReturnRequestService
                 'userId'     => $order->sellerId,
                 'title'      => 'New Return/Refund Request',
                 'message'    => "A customer requested a return/refund for Order #LB-OR-" . strtoupper(substr($order->id, -8)),
+                'type'       => 'return',
+                'link'       => "/seller/orders?status=return+requests&order_id={$order->id}",
                 'targetRole' => 'seller',
             ]);
 
