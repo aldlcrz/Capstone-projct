@@ -808,7 +808,7 @@
                                  class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-center"
                                  x-text="addressStepError"></div>
                             <button type="button" @click="validateStep1()" class="w-full bg-[#1E1915] text-[#DFC97A] hover:bg-black py-3.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-black/20 border border-[#D4AF37]/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
-                                <span>Proceed to Payment</span>
+                                <span>Check Out</span>
                                 <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </button>
                         </div>
@@ -943,7 +943,7 @@
                 <template x-if="step === 1">
                     <div class="flex flex-col items-end gap-1 shrink-0">
                         <button type="button" @click="validateStep1()" class="px-5 sm:px-7 py-2.5 sm:py-3 bg-[#1E1915] text-[#DFC97A] text-xs sm:text-sm font-bold uppercase tracking-widest rounded-xl shadow-md border border-[#D4AF37]/40 hover:bg-black active:scale-95 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5">
-                            <span>Proceed to Payment</span>
+                            <span>Check Out</span>
                             <svg class="w-4 h-4 text-[#DFC97A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                         <div x-show="addressStepError" x-cloak

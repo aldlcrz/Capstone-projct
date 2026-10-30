@@ -2127,7 +2127,7 @@ class AdminController extends Controller
             }])
             ->orderBy('name')
             ->get()
-            ->map(function (User $seller) use ($ledger, $period, $year, $month, $rate) {
+            ->map(function ($seller) use ($ledger, $period, $year, $month, $rate) {
                 $summary = $ledger->getSellerFinancialSummary($seller, $period);
                 $record = $summary['currentCommissionRecord'];
 
