@@ -21,6 +21,7 @@ database.sql latest
 database_latest.sql
 backend-laravel/storage/check_passwords.php
 backend-laravel/scratch/
+scratch/
 
 # Uploads & User Files
 backend-laravel/public/uploads/requirements/*

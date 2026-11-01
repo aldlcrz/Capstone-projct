@@ -366,7 +366,7 @@
                                 style="width:100%;background-color:#1E1915;color:#FFFFFF;padding:14px;border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;border:none;display:flex;align-items:center;justify-content:center;gap:6px;"
                                 onmouseover="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#C0422A';"
                                 onmouseout="if(this.getAttribute('disabled') === null) this.style.backgroundColor='#1E1915';">
-                            <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Proceed to Checkout</span>
+                            <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">Checkout</span>
                             <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Checkout One Shop at a Time</span>
                             <span x-show="selected.length > 0 && selectedShopCount <= 1" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                         </button>
@@ -429,7 +429,7 @@
                                 : 'background-color:#1E1915;color:#FFFFFF;padding:11px 18px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;border:none;cursor:pointer;opacity:1;box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:all 0.2s;'"
                             style="background-color:#1E1915;color:#FFFFFF;padding:11px 18px;border-radius:12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;border:none;"
                             class="shrink-0">
-                        <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:800;">Proceed to Checkout</span>
+                        <span x-show="selectedShopCount <= 1" style="color:#FFFFFF !important;font-weight:800;">Checkout</span>
                         <span x-show="selectedShopCount > 1" style="color:#FFFFFF !important;font-weight:800;">1 Shop Only</span>
                         <span x-show="selected.length > 0 && selectedShopCount <= 1" style="color:#DFC97A !important;font-weight:800;" x-text="'(' + selected.length + ')'"></span>
                     </button>
