@@ -1297,29 +1297,63 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Recipient Full Name <span class="text-[#8C6D1F]">*</span></label>
-                    <input type="text" x-model="editForm.recipientName" @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, '')" placeholder="e.g. John Doe (letters only)" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <input type="text"
+                           x-model="editForm.recipientName"
+                           @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, ''); if(addressErrors.recipientName) addressErrors.recipientName = ''"
+                           placeholder="e.g. John Doe (letters only)"
+                           :class="addressErrors.recipientName ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <p x-show="addressErrors.recipientName" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span x-text="addressErrors.recipientName"></span>
+                    </p>
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Phone Number <span class="text-[#8C6D1F]">*</span></label>
-                    <input type="text" x-model="editForm.phone" @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11)" placeholder="e.g. 09123456789 (11 digits)" inputmode="numeric" maxlength="11" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <input type="text"
+                           x-model="editForm.phone"
+                           @input="editForm.phone = editForm.phone.replace(/[^0-9]/g, '').slice(0, 11); if(addressErrors.phone) addressErrors.phone = ''"
+                           placeholder="e.g. 09123456789 (11 digits)"
+                           inputmode="numeric"
+                           maxlength="11"
+                           :class="addressErrors.phone ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <p x-show="addressErrors.phone" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span x-text="addressErrors.phone"></span>
+                    </p>
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">House / Building / Unit No. <span class="text-[#8C6D1F]">*</span></label>
-                    <input type="text" x-model="editForm.houseNo" placeholder="e.g. Block 1 Lot 2 Mango St." class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <input type="text"
+                           x-model="editForm.houseNo"
+                           @input="if(addressErrors.houseNo) addressErrors.houseNo = ''"
+                           placeholder="e.g. Block 1 Lot 2 Mango St."
+                           :class="addressErrors.houseNo ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <p x-show="addressErrors.houseNo" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span x-text="addressErrors.houseNo"></span>
+                    </p>
                 </div>
 
                 <!-- Region, Province, City, Barangay Dropdown Selector -->
                 <div class="col-span-1 sm:col-span-2 relative space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Region, Province, City, Barangay <span class="text-[#8C6D1F]">*</span></label>
-                    <div @click="toggleLocationDropdown()"
-                         class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
+                    <div @click="toggleLocationDropdown(); if(addressErrors.location) addressErrors.location = ''"
+                         :class="addressErrors.location ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                         class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
                         <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-bold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                         <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </div>
+                    <p x-show="addressErrors.location" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span x-text="addressErrors.location"></span>
+                    </p>
 
                     <!-- Location Dropdown Panel -->
                     <div x-show="locationDropdownOpen"
@@ -1450,7 +1484,18 @@
 
                 <div class="col-span-1 sm:col-span-2 space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Postal Code</label>
-                    <input type="text" x-model="editForm.postalCode" @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4)" placeholder="e.g. 4103 (4 digits)" inputmode="numeric" maxlength="4" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <input type="text"
+                           x-model="editForm.postalCode"
+                           @input="editForm.postalCode = editForm.postalCode.replace(/[^0-9]/g, '').slice(0, 4); if(addressErrors.postalCode) addressErrors.postalCode = ''"
+                           placeholder="e.g. 4103 (4 digits)"
+                           inputmode="numeric"
+                           maxlength="4"
+                           :class="addressErrors.postalCode ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
+                    <p x-show="addressErrors.postalCode" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span x-text="addressErrors.postalCode"></span>
+                    </p>
                 </div>
 
                 <div class="col-span-1 sm:col-span-2 pt-1">
@@ -1547,6 +1592,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         showEditAddressModal: false,
         savingAddress: false,
         addressError: '',
+        addressErrors: { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' },
         addressStepError: '',
         editForm: {
             id: null,
@@ -2281,6 +2327,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.activeTab = 'region';
             this.locationSearch = '';
             this.addressError = '';
+            this.addressErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.mapSearchQuery = '';
             this.searchNotFoundMsg = '';
             this.detectedLocationName = '';
@@ -2312,6 +2359,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.activeTab = 'region';
             this.locationSearch = '';
             this.addressError = '';
+            this.addressErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
             this.mapSearchQuery = '';
             this.searchNotFoundMsg = '';
             this.detectedLocationName = '';
@@ -2921,6 +2969,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         },
         async saveEditAddress() {
             this.addressError = '';
+            this.addressErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
 
             const name = (this.editForm.recipientName || '').trim();
             const phone = (this.editForm.phone || '').trim();
@@ -2929,28 +2978,50 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             const province = (this.editForm.province || '').trim();
             const postalCode = (this.editForm.postalCode || '').trim();
 
-            if (!name || !phone || !houseNo || !city || !province) {
-                this.addressError = 'Please fill in all required fields (*).';
-                return;
+            let hasError = false;
+
+            if (!name) {
+                this.addressErrors.recipientName = 'Recipient full name is required.';
+                hasError = true;
+            } else if (/[0-9]/.test(name)) {
+                this.addressErrors.recipientName = 'Recipient full name cannot contain numbers.';
+                hasError = true;
+            } else if (!/^[a-zA-Z\s\.\,\'\-]+$/.test(name)) {
+                this.addressErrors.recipientName = 'Recipient full name can only contain letters, spaces, hyphens, and periods.';
+                hasError = true;
             }
 
-            if (/[0-9]/.test(name)) {
-                this.addressError = 'Recipient full name cannot contain numbers.';
-                return;
+            if (!phone) {
+                this.addressErrors.phone = 'Phone number is required.';
+                hasError = true;
+            } else if (!/^(09|\+639)\d{9}$/.test(phone)) {
+                this.addressErrors.phone = 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g. 09123456789).';
+                hasError = true;
             }
 
-            if (!/^[a-zA-Z\s\.\,\'\-]+$/.test(name)) {
-                this.addressError = 'Recipient full name can only contain letters, spaces, hyphens, and periods.';
-                return;
+            if (!houseNo) {
+                this.addressErrors.houseNo = 'House / Building / Unit No. is required.';
+                hasError = true;
             }
 
-            if (!/^(09|\+639)\d{9}$/.test(phone)) {
-                this.addressError = 'Phone number must be a valid 11-digit mobile number starting with 09 (e.g. 09123456789).';
-                return;
+            if (!city || !province) {
+                this.addressErrors.location = 'Please select your Region, Province, City, and Barangay.';
+                hasError = true;
             }
 
             if (postalCode && !/^\d{4}$/.test(postalCode)) {
-                this.addressError = 'Postal code must contain exactly 4 numeric digits (e.g. 4103).';
+                this.addressErrors.postalCode = 'Postal code must contain exactly 4 numeric digits (e.g. 4103).';
+                hasError = true;
+            }
+
+            if (hasError) {
+                this.addressError = 'Please check the missing or invalid fields highlighted below (*).';
+                this.$nextTick(() => {
+                    const firstError = document.querySelector('.address-field-error');
+                    if (firstError) {
+                        firstError.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
                 return;
             }
 
@@ -2984,6 +3055,14 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     const errData = await res.json().catch(() => ({}));
                     let msg = errData.message || 'Failed to save address.';
                     if (errData.errors) {
+                        for (const [field, msgs] of Object.entries(errData.errors)) {
+                            const errText = Array.isArray(msgs) ? msgs[0] : msgs;
+                            if (field === 'recipientName' || field === 'recipient_name') this.addressErrors.recipientName = errText;
+                            else if (field === 'phone') this.addressErrors.phone = errText;
+                            else if (field === 'houseNo' || field === 'house_no') this.addressErrors.houseNo = errText;
+                            else if (field === 'city' || field === 'province' || field === 'barangay') this.addressErrors.location = errText;
+                            else if (field === 'postalCode' || field === 'postal_code') this.addressErrors.postalCode = errText;
+                        }
                         msg = Object.values(errData.errors).flat().join(' ');
                     }
                     throw new Error(msg);

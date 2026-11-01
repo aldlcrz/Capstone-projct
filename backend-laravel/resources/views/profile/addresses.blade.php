@@ -131,25 +131,35 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Full Name *</label>
-                            <input x-model="form.recipientName" type="text" placeholder="Recipient's full name"
-                                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <input x-model="form.recipientName"
+                                   @input="if(fieldErrors.recipientName) fieldErrors.recipientName = ''"
+                                   type="text" placeholder="Recipient's full name"
+                                   :class="fieldErrors.recipientName ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <p x-show="fieldErrors.recipientName" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.recipientName"></p>
                         </div>
                         <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Phone Number *</label>
-                            <input x-model="form.phone" type="text" placeholder="e.g. 09xxxxxxxxx"
-                                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <input x-model="form.phone"
+                                   @input="if(fieldErrors.phone) fieldErrors.phone = ''"
+                                   type="text" placeholder="e.g. 09xxxxxxxxx"
+                                   :class="fieldErrors.phone ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <p x-show="fieldErrors.phone" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.phone"></p>
                         </div>
 
                         <!-- Region, Province, City, Barangay Dropdown Selector -->
                         <div class="col-span-2 relative">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Region, Province, City, Barangay *</label>
-                            <div @click="toggleLocationDropdown()"
-                                 class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A] flex items-center justify-between cursor-pointer bg-white">
+                            <div @click="toggleLocationDropdown(); if(fieldErrors.location) fieldErrors.location = ''"
+                                 :class="fieldErrors.location ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                 class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A] flex items-center justify-between cursor-pointer bg-white">
                                 <span class="truncate" :class="getLocationSummary() ? 'text-gray-900' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </div>
+                            <p x-show="fieldErrors.location" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.location"></p>
 
                             <!-- Location Dropdown Panel -->
                             <div x-show="locationDropdownOpen"
@@ -276,8 +286,12 @@
 
                         <div class="col-span-1 sm:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">House / Unit / Bldg No. *</label>
-                            <input x-model="form.houseNo" type="text" placeholder="House no., building, unit"
-                                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <input x-model="form.houseNo"
+                                   @input="if(fieldErrors.houseNo) fieldErrors.houseNo = ''"
+                                   type="text" placeholder="House no., building, unit"
+                                   :class="fieldErrors.houseNo ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <p x-show="fieldErrors.houseNo" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.houseNo"></p>
                         </div>
                         <div class="col-span-1">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Street</label>
@@ -286,8 +300,12 @@
                         </div>
                         <div class="col-span-1">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Postal Code</label>
-                            <input x-model="form.postalCode" type="text" placeholder="Postal code"
-                                class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <input x-model="form.postalCode"
+                                   @input="if(fieldErrors.postalCode) fieldErrors.postalCode = ''"
+                                   type="text" placeholder="Postal code"
+                                   :class="fieldErrors.postalCode ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
+                            <p x-show="fieldErrors.postalCode" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.postalCode"></p>
                         </div>
                     </div>
 
@@ -325,6 +343,7 @@ function addressManager() {
         saving: false,
         editId: null,
         formError: '',
+        fieldErrors: { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' },
         form: { recipientName: "{{ addslashes($user->name ?? '') }}", phone: "{{ addslashes($user->mobileNumber ?? '') }}", houseNo:'', street:'', barangay:'', city:'', province:'', region:'', postalCode:'', isDefault: false },
 
         // Location picker variables
@@ -761,6 +780,7 @@ function addressManager() {
                 isDefault: this.addresses.length === 0 
             };
             this.formError = '';
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
 
             this.selectedRegion = null;
             this.selectedProvince = null;
@@ -777,6 +797,7 @@ function addressManager() {
             this.editId = addr.id;
             this.form = { ...addr, isDefault: Boolean(addr.isDefault) };
             this.formError = '';
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
 
             this.selectedRegion = addr.region ? { name: addr.region } : null;
             this.selectedProvince = addr.province ? { name: addr.province } : null;
@@ -790,11 +811,46 @@ function addressManager() {
         },
 
         async saveAddress() {
-            if (!this.form.recipientName || !this.form.phone || !this.form.houseNo || !this.form.city || !this.form.province) {
-                this.formError = 'Please fill in all required fields.';
+            this.formError = '';
+            this.fieldErrors = { recipientName: '', phone: '', location: '', houseNo: '', postalCode: '' };
+
+            let hasError = false;
+            const name = (this.form.recipientName || '').trim();
+            const phone = (this.form.phone || '').trim();
+            const houseNo = (this.form.houseNo || '').trim();
+            const city = (this.form.city || '').trim();
+            const province = (this.form.province || '').trim();
+            const postalCode = (this.form.postalCode || '').trim();
+
+            if (!name) {
+                this.fieldErrors.recipientName = 'Recipient full name is required.';
+                hasError = true;
+            }
+            if (!phone) {
+                this.fieldErrors.phone = 'Phone number is required.';
+                hasError = true;
+            } else if (!/^(09|\+639)\d{9}$/.test(phone)) {
+                this.fieldErrors.phone = 'Phone number must be a valid 11-digit mobile number.';
+                hasError = true;
+            }
+            if (!houseNo) {
+                this.fieldErrors.houseNo = 'House / Building / Unit No. is required.';
+                hasError = true;
+            }
+            if (!city || !province) {
+                this.fieldErrors.location = 'Please select Region, Province, City, and Barangay.';
+                hasError = true;
+            }
+            if (postalCode && !/^\d{4}$/.test(postalCode)) {
+                this.fieldErrors.postalCode = 'Postal code must be exactly 4 digits.';
+                hasError = true;
+            }
+
+            if (hasError) {
+                this.formError = 'Please check the highlighted missing or invalid fields below.';
                 return;
             }
-            this.formError = '';
+
             this.saving = true;
             const token = document.querySelector('meta[name="csrf-token"]').content;
             try {
@@ -809,9 +865,26 @@ function addressManager() {
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify(payload)
                 });
-                if (!r.ok) { const d = await r.json(); this.formError = d.message ?? 'Failed to save.'; }
-                else { this.modalOpen = false; await this.fetchAddresses(); }
-            } catch(e) { this.formError = 'Network error. Please try again.'; }
+                if (!r.ok) {
+                    const d = await r.json().catch(() => ({}));
+                    if (d.errors) {
+                        for (const [f, msgs] of Object.entries(d.errors)) {
+                            const m = Array.isArray(msgs) ? msgs[0] : msgs;
+                            if (f === 'recipientName') this.fieldErrors.recipientName = m;
+                            else if (f === 'phone') this.fieldErrors.phone = m;
+                            else if (f === 'houseNo') this.fieldErrors.houseNo = m;
+                            else if (f === 'city' || f === 'province') this.fieldErrors.location = m;
+                            else if (f === 'postalCode') this.fieldErrors.postalCode = m;
+                        }
+                    }
+                    this.formError = d.message ?? 'Failed to save address.';
+                } else {
+                    this.modalOpen = false;
+                    await this.fetchAddresses();
+                }
+            } catch(e) {
+                this.formError = 'Network error. Please try again.';
+            }
             this.saving = false;
         },
 
