@@ -464,10 +464,19 @@
                                         </svg>
                                         <span style="color:#6E2B1E;">{{ $paymentLabel }} &bull; Special Delivery</span>
                                     @else
-                                        <svg style="width:17px;height:17px;color:#6E2B1E;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
-                                        </svg>
-                                        <span style="color:#6E2B1E;">{{ $paymentLabel }} &bull; {{ $deliveryLabel }}</span>
+                                        <div class="space-y-0.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <svg style="width:17px;height:17px;color:#6E2B1E;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
+                                                </svg>
+                                                <span style="color:#6E2B1E;">{{ $paymentLabel }} &bull; {{ $deliveryLabel }}</span>
+                                            </div>
+                                            @if(!empty($order->trackingNumber))
+                                                <div class="text-[11px] font-mono font-extrabold text-[#C0420A] pl-6">
+                                                    Waybill #: {{ $order->trackingNumber }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                             @endif

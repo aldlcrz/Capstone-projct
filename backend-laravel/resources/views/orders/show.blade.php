@@ -226,9 +226,11 @@
             $sellerShopName = $order->seller?->shopName ?: ($order->seller?->name ?: 'Lumban Artisan Workshop');
             $directionsUrl = "https://www.google.com/maps/dir/?api=1&destination=" . urlencode("{$sellerWorkshopLat},{$sellerWorkshopLng}");
 
-            $displayCourier = $order->shipping?->fulfillment_provider_name 
-                ?? ($order->courierName ?? ($order->shipping?->pricing_provider_name ?? ($order->shipping?->provider_name ?? null)));
-            $hasCourierTracking = !$isStorePickup && !$isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status ?? '')), ['in transit', 'out for delivery', 'delivered', 'completed']) && !empty(trim($order->trackingNumber ?? ''));
+            $displayCourier = $order->courierName && !in_array(strtolower(trim($order->courierName)), ['standard delivery', 'standard courier'])
+                ? $order->courierName
+                : ($order->shipping?->fulfillment_provider_name ?? ($order->courierName ?? ($order->shipping?->pricing_provider_name ?? ($order->shipping?->provider_name ?? null))));
+            $effectiveTrackingNumber = trim($order->trackingNumber ?? ($order->shipping?->tracking_number ?? ''));
+            $hasCourierTracking = !$isStorePickup && !$isSpecialDelivery && !empty($effectiveTrackingNumber);
             $hasSpecialDeliveryActive = $isSpecialDelivery && in_array(strtolower(str_replace('_', ' ', $order->status ?? '')), ['shipped', 'in transit', 'out for delivery', 'delivered', 'completed']);
         @endphp
 
@@ -259,8 +261,9 @@
                                 Special delivery
                             </span>
                         @else
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200">
-                                Standard Shipping
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200 flex items-center gap-1">
+                                <x-lucide name="truck" class="w-3.5 h-3.5 inline text-stone-600" />
+                                <span>{{ ($displayCourier && !in_array(strtolower(trim($displayCourier)), ['standard delivery', 'standard courier'])) ? $displayCourier : 'Standard Shipping' }}</span>
                             </span>
                         @endif
 
@@ -657,42 +660,67 @@
                             @endif
                         </div>
 
-                        @if($hasCourierTracking && $order->trackingNumber)
-                            <div class="pt-2.5 border-t border-[#FAF4EB] space-y-3" x-data="{ expandedTimeline: true }">
+                        {{-- Logistics & Courier Tracking Block (Always visible for Standard Courier Orders) --}}
+                        <div class="pt-3 border-t border-[#FAF4EB] space-y-2.5" x-data="{ expandedTimeline: true }">
+                            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#ECE3D2] space-y-2">
                                 <div class="flex items-center justify-between gap-2">
-                                    <div class="min-w-0 flex-1">
-                                        <span class="text-[#8C827A] text-[10px] font-black uppercase tracking-wider block leading-none">
-                                            {{ $order->courierName ?: 'Standard Courier' }} Waybill #
-                                        </span>
-                                        <div class="flex items-center gap-1.5 mt-0.5">
-                                            <span class="font-mono text-[#C0422A] font-extrabold text-xs sm:text-sm tracking-tight truncate">{{ $order->trackingNumber }}</span>
-                                            <button type="button" 
-                                                    @click="copyText('{{ $order->trackingNumber }}', 'Tracking number copied!')"
-                                                    class="px-2 py-0.5 bg-[#FAF8F5] hover:bg-stone-100 text-[#1E1915] border border-[#ECE3D2] rounded-md text-[10px] font-extrabold uppercase transition-all cursor-pointer shadow-2xs shrink-0">
-                                                Copy
-                                            </button>
-                                        </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <x-lucide name="truck" class="w-3.5 h-3.5 text-[#C49520]" />
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-[#8C827A]">Logistics / Courier Provider</span>
                                     </div>
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        @if($order->trackingEvents && $order->trackingEvents->count() > 0)
-                                            <button type="button"
-                                                    @click="expandedTimeline = !expandedTimeline"
-                                                    class="px-2.5 py-1 bg-[#FAF8F5] hover:bg-stone-100 border border-[#ECE3D2] rounded-xl text-[10px] font-black uppercase tracking-wider text-[#1E1915] flex items-center gap-1 transition-all">
-                                                <span x-text="expandedTimeline ? 'Hide History' : 'Live Timeline'">Live Timeline</span>
-                                                <svg class="w-3 h-3 transition-transform duration-200" :class="expandedTimeline ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                                            </button>
-                                        @endif
-                                        @if($order->trackingLink)
-                                            <a href="{{ $order->trackingLink }}" target="_blank" rel="noopener noreferrer" 
-                                               style="background-color:#1E1915;color:#FFFFFF;"
-                                               class="inline-flex items-center gap-1 px-3 py-1.5 hover:bg-[#C0422A] rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
-                                                <span>Track Official</span>
-                                                <span>↗</span>
-                                            </a>
-                                        @endif
-                                    </div>
+                                    <span class="text-xs font-extrabold text-[#1E1915]">
+                                        {{ ($displayCourier && !in_array(strtolower(trim($displayCourier)), ['standard delivery', 'standard courier'])) ? $displayCourier : 'Standard Commercial Courier' }}
+                                    </span>
                                 </div>
 
+                                <div class="pt-2 border-t border-[#ECE3D2]/80 flex flex-wrap items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[#8C827A] text-[10px] font-black uppercase tracking-wider block leading-none">
+                                            Official Tracking / Waybill #
+                                        </span>
+                                        @if($hasCourierTracking && $effectiveTrackingNumber)
+                                            <div class="flex items-center gap-1.5 mt-1">
+                                                <span class="font-mono text-[#C0422A] font-extrabold text-xs sm:text-sm tracking-tight truncate">{{ $effectiveTrackingNumber }}</span>
+                                                <button type="button" 
+                                                        @click="copyText('{{ $effectiveTrackingNumber }}', 'Tracking number copied!')"
+                                                        class="px-2 py-0.5 bg-white hover:bg-stone-100 text-[#1E1915] border border-[#ECE3D2] rounded-md text-[10px] font-extrabold uppercase transition-all cursor-pointer shadow-2xs shrink-0">
+                                                    Copy
+                                                </button>
+                                            </div>
+                                        @else
+                                            <div class="text-xs font-semibold text-[#78716C] italic mt-1">
+                                                Awaiting courier waybill number from artisan
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    @if($hasCourierTracking && $effectiveTrackingNumber)
+                                        <div class="flex items-center gap-1.5 shrink-0">
+                                            @if($order->trackingEvents && $order->trackingEvents->count() > 0)
+                                                <button type="button"
+                                                        @click="expandedTimeline = !expandedTimeline"
+                                                        class="px-2.5 py-1 bg-white hover:bg-stone-100 border border-[#ECE3D2] rounded-xl text-[10px] font-black uppercase tracking-wider text-[#1E1915] flex items-center gap-1 transition-all">
+                                                    <span x-text="expandedTimeline ? 'Hide History' : 'Live Timeline'">Live Timeline</span>
+                                                    <svg class="w-3 h-3 transition-transform duration-200" :class="expandedTimeline ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                                </button>
+                                            @endif
+                                            @php
+                                                $resolvedTrackingUrl = $order->trackingLink ?: \App\Support\ValidationHelper::generateDirectTrackingLink($displayCourier ?: 'J&T Express', $effectiveTrackingNumber);
+                                            @endphp
+                                            @if($resolvedTrackingUrl)
+                                                <a href="{{ $resolvedTrackingUrl }}" target="_blank" rel="noopener noreferrer" 
+                                                   style="background-color:#1E1915;color:#FFFFFF;"
+                                                   class="inline-flex items-center gap-1 px-3 py-1.5 hover:bg-[#C0422A] rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shadow-xs shrink-0 cursor-pointer text-center">
+                                                    <span>Track Official</span>
+                                                    <span>↗</span>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            @if($hasCourierTracking && $effectiveTrackingNumber)
                                 {{-- Chronological Courier Tracking Stepper --}}
                                 @if($order->trackingEvents && $order->trackingEvents->count() > 0)
                                     <div x-show="expandedTimeline" x-transition.opacity.duration.200ms class="mt-2.5 pt-2.5 border-t border-[#FAF4EB]/80 space-y-2">
@@ -744,8 +772,8 @@
                                         <span class="text-[10px] font-mono font-bold text-stone-400">Standard Handover</span>
                                     </div>
                                 @endif
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Right Column: Artisan Inspection Proof --}}

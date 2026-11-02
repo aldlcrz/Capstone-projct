@@ -512,10 +512,12 @@ class OrderController extends Controller
                 'Completed' => 'Your special delivery order has been marked as completed.',
             ];
         } else {
+            $courierLabel = $order->courierName ?: 'standard courier';
+            $trackingInfo = !empty($order->trackingNumber) ? " (Tracking #: {$order->trackingNumber})" : '';
             $statusMsgMap = [
                 'To Ship' => 'Your order is being processed and prepared for shipping.',
-                'Shipped' => "Your order has been shipped via {$order->courierName} (Tracking: {$order->trackingNumber}).",
-                'In Transit' => 'Your order is in transit with the courier.',
+                'Shipped' => "Your order has been packed and shipped via {$courierLabel}{$trackingInfo}.",
+                'In Transit' => "Your order is now in transit via {$courierLabel}{$trackingInfo}.",
                 'Out for Delivery' => 'Your order is out for delivery today!',
                 'Delivered' => 'Your order has been delivered. Please inspect your item and rate your purchase.',
                 'Completed' => 'Your order has been marked as completed.',

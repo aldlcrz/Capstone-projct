@@ -101,11 +101,25 @@
                     <div class="flex-1 overflow-y-auto p-6 space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-3">
-                                <div class="flex items-center gap-2 text-[10px] font-extrabold text-[#C0420A] uppercase tracking-widest">SHIPPING ADDRESS</div>
-                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                    <div class="font-bold text-[#2A2A2A] text-sm mb-1" x-text="getParsedAddress(selectedOrder.shippingAddress).name"></div>
-                                    <div class="text-[10px] font-bold text-[#C0420A] mb-2" x-text="getParsedAddress(selectedOrder.shippingAddress).phone"></div>
-                                    <div class="text-xs text-gray-500 leading-relaxed" x-text="formatAddress(getParsedAddress(selectedOrder.shippingAddress))"></div>
+                                <div class="flex items-center gap-2 text-[10px] font-extrabold text-[#C0420A] uppercase tracking-widest">SHIPPING ADDRESS &amp; LOGISTICS</div>
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2">
+                                    <div>
+                                        <div class="font-bold text-[#2A2A2A] text-sm mb-1" x-text="getParsedAddress(selectedOrder.shippingAddress).name"></div>
+                                        <div class="text-[10px] font-bold text-[#C0420A] mb-2" x-text="getParsedAddress(selectedOrder.shippingAddress).phone"></div>
+                                        <div class="text-xs text-gray-500 leading-relaxed" x-text="formatAddress(getParsedAddress(selectedOrder.shippingAddress))"></div>
+                                    </div>
+                                    <div class="pt-2 border-t border-gray-200/70 space-y-1">
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-500 font-semibold">Logistics / Courier:</span>
+                                            <span class="font-bold text-[#2A2A2A]" x-text="selectedOrder.courierName || selectedOrder.shipping?.provider_name || 'Standard Delivery'"></span>
+                                        </div>
+                                        <template x-if="selectedOrder.trackingNumber || selectedOrder.shipping?.tracking_number">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="text-gray-500 font-semibold">Tracking / Waybill #:</span>
+                                                <span class="font-mono font-black text-[#C0420A]" x-text="selectedOrder.trackingNumber || selectedOrder.shipping?.tracking_number"></span>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
 
