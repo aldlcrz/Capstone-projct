@@ -1938,17 +1938,22 @@
 
                 if (!isLiveTyping) {
                     const urlSearch = parsedUrl.searchParams.get('search');
+                    const isFocusedSearch = document.activeElement && document.activeElement.getAttribute('name') === 'search';
                     if (!urlSearch) {
                         document.querySelectorAll('input[name="search"]').forEach(inp => {
-                            if (inp.type !== 'hidden') inp.value = '';
+                            if (inp.type === 'hidden' || document.activeElement !== inp) inp.value = '';
                         });
-                        window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
-                        window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                        if (!isFocusedSearch) {
+                            window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
+                            window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                        }
                     } else {
                         document.querySelectorAll('input[name="search"]').forEach(inp => {
-                            if (inp.type !== 'hidden') inp.value = urlSearch;
+                            if (inp.type === 'hidden' || document.activeElement !== inp) inp.value = urlSearch;
                         });
-                        window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                        if (!isFocusedSearch) {
+                            window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                        }
                     }
                 }
             } catch(e) {}
@@ -2034,22 +2039,29 @@
                             updateCategoryHighlight(urlCat);
 
                             const urlSearch = parsedUrl.searchParams.get('search');
+                            const isFocusedSearch = document.activeElement && document.activeElement.getAttribute('name') === 'search';
                             if (!urlSearch) {
                                 document.querySelectorAll('input[name="search"]').forEach(inp => {
-                                    if (inp.type !== 'hidden') inp.value = '';
+                                    if (inp.type === 'hidden' || document.activeElement !== inp) inp.value = '';
                                 });
-                                window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
-                                window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                                if (!isFocusedSearch) {
+                                    window.dispatchEvent(new CustomEvent('catalogue-search-cleared'));
+                                    window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+                                }
                             } else {
                                 document.querySelectorAll('input[name="search"]').forEach(inp => {
-                                    if (inp.type !== 'hidden') inp.value = urlSearch;
+                                    if (inp.type === 'hidden' || document.activeElement !== inp) inp.value = urlSearch;
                                 });
-                                window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                                if (!isFocusedSearch) {
+                                    window.dispatchEvent(new CustomEvent('catalogue-search-updated', { detail: urlSearch }));
+                                }
                             }
                         } catch(e) {}
 
                         if (push) {
                             history.pushState(null, '', url);
+                        } else {
+                            history.replaceState(null, '', url);
                         }
 
                         if (shouldScroll) {
@@ -2130,7 +2142,7 @@
             const formData = new FormData(form);
             const searchParams = new URLSearchParams();
             for (const [key, value] of formData.entries()) {
-                let trimmed = typeof value === 'string' ? value.trim() : value;
+                let trimmed = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : value;
                 if ((key === 'min_price' || key === 'max_price') && typeof trimmed === 'string') {
                     trimmed = trimmed.replace(/^0+(?=\d)/, '');
                 }
@@ -2142,15 +2154,26 @@
             return baseUrl + (queryString ? '?' + queryString : '') + '#catalogue-section';
         }
 
+        let lastLiveSearchTrimmed = (function() {
+            try {
+                return (new URL(window.location.href).searchParams.get('search') || '').replace(/\s+/g, ' ').trim();
+            } catch(e) { return ''; }
+        })();
+
         document.addEventListener('input', function(e) {
             // Live Search input in header
             const searchInput = e.target.closest('.ajax-search-form input[name="search"], input[name="search"]');
             if (searchInput) {
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
+                    const currentNormalized = (searchInput.value || '').replace(/\s+/g, ' ').trim();
+                    if (currentNormalized === lastLiveSearchTrimmed) {
+                        return;
+                    }
+                    lastLiveSearchTrimmed = currentNormalized;
                     const form = searchInput.closest('form');
                     if (form) {
-                        loadCatalogue(buildFormCatalogueUrl(form), true, true);
+                        loadCatalogue(buildFormCatalogueUrl(form), false, false, false);
                     }
                 }, 280);
                 return;

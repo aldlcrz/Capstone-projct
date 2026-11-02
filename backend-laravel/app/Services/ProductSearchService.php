@@ -60,9 +60,10 @@ class ProductSearchService
     protected const CANONICAL_TERMS = [
         'barong', 'polo', 'jusi', 'jusilyn', 'organza', 'filipiniana', 'mestiza',
         'bolero', 'terno', 'calado', 'embroidery', 'embroidered', 'lumban',
-        'monochrome', 'mandarin', 'cocoon', 'linen', 'cotton', 'silk',
+        'monochrome', 'monochromatic', 'mandarin', 'cocoon', 'linen', 'cotton', 'silk',
         'dress', 'gown', 'blouse', 'suit', 'coat', 'jacket', 'tagalog',
-        'white', 'natural', 'cream', 'pink', 'blue', 'green', 'black', 'maroon', 'gold', 'sage', 'emerald'
+        'handpainted', 'pintuck', 'pintax', 'duchess', 'lace', 'vest', 'piping',
+        'white', 'natural', 'cream', 'beige', 'tan', 'pink', 'blue', 'green', 'black', 'maroon', 'gold', 'sage', 'emerald'
     ];
 
     /**
@@ -128,9 +129,9 @@ class ProductSearchService
 
         // Brown / Tan / Beige
         'brown'      => ['brown', 'tan', 'chocolate', 'coffee', 'kayumanggi'],
-        'kayumanggi' => ['brown', 'tan', 'natural', 'beige', 'kayumanggi'],
-        'tan'        => ['tan', 'beige', 'natural', 'kayumanggi'],
-        'beige'      => ['beige', 'natural', 'cream', 'tan', 'kayumanggi'],
+        'kayumanggi' => ['brown', 'tan', 'beige', 'kayumanggi'],
+        'tan'        => ['tan', 'beige', 'champagne', 'kayumanggi'],
+        'beige'      => ['beige', 'tan', 'champagne', 'kayumanggi'],
 
         // Gray
         'gray'       => ['gray', 'grey', 'silver', 'charcoal', 'abo'],
@@ -238,10 +239,14 @@ class ProductSearchService
         'embroideri'  => 'embroidery',
         'embroidred'  => 'embroidered',
         'embroiderd'  => 'embroidered',
+        'embroided'   => 'embroidered',
         'lumbang'     => 'lumban',
         'lumbann'     => 'lumban',
         'monocrome'   => 'monochrome',
         'monochome'   => 'monochrome',
+        'monocromatic'=> 'monochromatic',
+        'pintucks'    => 'pintuck',
+        'pintax'      => 'pintuck',
         'manderin'    => 'mandarin',
         'chinesse'    => 'chinese',
         'artezan'     => 'artisan',
@@ -330,6 +335,7 @@ class ProductSearchService
         $clean = preg_replace('/\bbar\s+ong\b/u', 'barong', $clean);
         $clean = preg_replace('/\bpo\s+lo\b/u', 'polo', $clean);
         $clean = preg_replace('/\bju\s+si\b/u', 'jusi', $clean);
+        $clean = preg_replace('/\bhand[-\s]+painted\b/u', 'handpainted', $clean);
         // Normalize Tagalog 'kulay' color prefix (e.g. 'kulay asul' -> 'asul', 'kulay-puti' -> 'puti')
         $clean = preg_replace('/\bkulay[-\s]+/u', '', $clean);
         // Replace non-alphanumeric (except accented letters) with spaces
@@ -344,6 +350,8 @@ class ProductSearchService
     public static function detectTargetAudience(string $normalized): ?string
     {
         $words = preg_split('/\s+/', $normalized);
+
+        // Pass 1: Explicit demographic terms take priority over garment-implied gender
         foreach ($words as $w) {
             if (in_array($w, ['boy', 'boys', 'byo', 'byos'], true)) {
                 return 'Boys';
@@ -357,10 +365,26 @@ class ProductSearchService
             if (in_array($w, ['men', 'male', 'man', 'gentleman', 'gentlemen', 'mne'], true)) {
                 return 'Men';
             }
-            if (in_array($w, ['women', 'woman', 'female', 'ladies', 'lady', 'filipiniana', 'mestiza', 'terno', 'wmen', 'womn'], true)) {
+            if (in_array($w, ['women', 'woman', 'female', 'ladies', 'lady', 'wmen', 'womn'], true)) {
                 return 'Women';
             }
         }
+
+        // Pass 2: Female-specific garment terms imply Women audience when no explicit demographic was given
+        foreach ($words as $w) {
+            if (in_array($w, [
+                'filipiniana', 'filipinianas', 'filipina', 'filipinana', 'flipiniana', 'filipinyana', 'philipiniana',
+                'mestiza', 'mestizas', 'mestisa', 'mestizaa',
+                'terno', 'ternos', 'ternoo', 'treno',
+                'gown', 'gowns', 'gowne', 'gwon',
+                'dress', 'dresses', 'dres', 'dresse',
+                'blouse', 'blouses', 'blowse',
+                'bolero', 'boleros', 'bolro', 'bleror', 'bollero'
+            ], true)) {
+                return 'Women';
+            }
+        }
+
         return null;
     }
 
@@ -431,6 +455,26 @@ class ProductSearchService
             if (str_contains($effectiveWord, 'pina') || str_contains($effectiveWord, 'piña')) {
                 if (!in_array('piña', $variants, true)) $variants[] = 'piña';
                 if (!in_array('pina', $variants, true)) $variants[] = 'pina';
+            }
+
+            // 4b. Craftsmanship & style morphological bridges (monochrome/monochromatic, embroidery/embroidered, pintuck/pintax, handpainted)
+            if (in_array($effectiveWord, ['monochrome', 'monochromatic', 'monocromatic'], true)) {
+                foreach (['monochrome', 'monochromatic', 'monocromatic'] as $mVar) {
+                    if (!in_array($mVar, $variants, true)) $variants[] = $mVar;
+                }
+            }
+            if (in_array($effectiveWord, ['embroidery', 'embroidered', 'embroided'], true)) {
+                foreach (['embroidery', 'embroidered', 'embroided'] as $eVar) {
+                    if (!in_array($eVar, $variants, true)) $variants[] = $eVar;
+                }
+            }
+            if (in_array($effectiveWord, ['pintuck', 'pintucks', 'pintax'], true)) {
+                foreach (['pintuck', 'pintucks', 'pintax'] as $pVar) {
+                    if (!in_array($pVar, $variants, true)) $variants[] = $pVar;
+                }
+            }
+            if ($effectiveWord === 'handpainted') {
+                if (!in_array('hand painted', $variants, true)) $variants[] = 'hand painted';
             }
 
             // 5. Generic apparel & culture synonyms respecting target audience
@@ -691,6 +735,18 @@ class ProductSearchService
 
         $searchTokens = !empty($attributeTokens) ? $attributeTokens : $tokens;
 
+        // When searching 'barong' without a female audience modifier, prevent Women's items
+        // without 'barong' in their product name (e.g. Mestiza Balloon Dress / Filipiniana)
+        // from matching solely via description or seller name.
+        $hasBarongToken = collect($searchTokens)->contains(fn ($t) => ($t['resolved'] ?? '') === 'barong');
+        if ($hasBarongToken && !in_array($detectedAudience, ['Women', 'Girls'], true)) {
+            $query->where(function (Builder $q) {
+                $q->where('target_group', 'not like', '%women%')
+                  ->orWhere('name', 'like', '%barong%')
+                  ->orWhereNull('target_group');
+            });
+        }
+
         // Check if query is already scoped to a specific seller (e.g. browsing an artisan shop)
         $hasSellerScope = collect($query->getQuery()->wheres)->contains(function ($where) {
             return isset($where['column']) && $where['column'] === 'sellerId';
@@ -724,6 +780,15 @@ class ProductSearchService
             // Each meaningful token must match AT LEAST ONE searchable field
             $tokenCondition = function (Builder $tokenQuery) use ($searchTokens, $detectedAudience, $hasSellerScope) {
                 $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
+                $genericShopWords = [
+                    'barong', 'barongs', 'polo', 'polos', 'gown', 'gowns', 'dress', 'dresses',
+                    'filipiniana', 'filipinianas', 'mestiza', 'mestizas', 'bolero', 'boleros',
+                    'terno', 'ternos', 'blouse', 'blouses', 'suit', 'suits', 'coat', 'coats',
+                    'jacket', 'jackets', 'shirt', 'shirts', 'embroidery', 'embroidered',
+                    'embroideries', 'embroided', 'lumban', 'tagalog', 'shop', 'shops',
+                    'store', 'stores', 'online', 'artisan', 'artisans', 'wear', 'attire',
+                    'formal', 'classic', 'modern', 'traditional'
+                ];
 
                 foreach ($searchTokens as $tokenData) {
                     $orig = $tokenData['original'];
@@ -732,7 +797,7 @@ class ProductSearchService
                     $isColorToken = self::isColorToken($orig) || self::isColorToken($resolved);
 
                     // General attribute matching
-                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isColorToken, $isFemaleSearch, $hasSellerScope) {
+                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isColorToken, $isFemaleSearch, $hasSellerScope, $genericShopWords) {
                         if ($isColorToken) {
                             foreach ($variants as $v) {
                                 $v = strtolower(trim($v));
@@ -774,7 +839,7 @@ class ProductSearchService
                                              $cq->where('name', 'like', '%' . $v . '%');
                                          });
 
-                                if (!$hasSellerScope) {
+                                if (!$hasSellerScope && !in_array(strtolower($v), $genericShopWords, true)) {
                                     $subQuery->orWhereHas('seller', function ($sq) use ($v) {
                                         $sq->where('shopName', 'like', '%' . $v . '%')
                                            ->orWhere('name', 'like', '%' . $v . '%');

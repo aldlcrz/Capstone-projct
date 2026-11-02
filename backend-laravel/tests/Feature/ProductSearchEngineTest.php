@@ -1137,6 +1137,115 @@ class ProductSearchEngineTest extends TestCase
         $kulayResults = Product::query()->where('status', 'approved')->search('kulay rosas')->get();
         $this->assertTrue($kulayResults->contains('id', $pinkDress->id), 'Searching "kulay rosas" must match pink dress');
     }
+
+    public function test_shop_name_pollution_and_keyword_product_accuracy(): void
+    {
+        $xyreSeller = User::factory()->create([
+            'role' => 'seller',
+            'shopName' => "Xyre's Gown and Barong online shop",
+        ]);
+
+        $mensBarong = Product::create([
+            'sellerId' => $xyreSeller->id,
+            'name' => 'Sage Green Monochromatic Polo Barong with Lining',
+            'description' => 'Piña Organza with Lining formal barong for men',
+            'price' => 1199,
+            'stock' => 10,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Green',
+            'colors' => ['Green', 'Sage Green'],
+        ]);
+
+        $duchessGown = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Duchess Filipiniana Gown',
+            'description' => 'Elegant evening Filipiniana gown for women',
+            'price' => 3500,
+            'stock' => 5,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'White',
+            'colors' => ['White', 'Natural', 'Cream'],
+        ]);
+
+        $balloonDress = Product::create([
+            'sellerId' => $xyreSeller->id,
+            'name' => 'Mestiza Balloon Dress- Modern Filipiniana',
+            'description' => 'Modern Filipiniana balloon dress crafted with Piña Organza',
+            'price' => 899,
+            'stock' => 8,
+            'status' => 'approved',
+            'target_group' => 'Women',
+            'CategoryId' => $this->womenCategory->id,
+            'color' => 'White',
+            'colors' => ['White', 'Natural', 'Cream'],
+        ]);
+
+        $beigeBarong = Product::create([
+            'sellerId' => $xyreSeller->id,
+            'name' => 'Beige Polo Barong with Lining',
+            'description' => 'Piña Organza with Lining in warm beige tone',
+            'price' => 1199,
+            'stock' => 6,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'Beige',
+            'colors' => ['Beige', 'Tan'],
+        ]);
+
+        $pintuckBarong = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Piña Cocoon Monochrome with Pintax Barong',
+            'description' => 'Handpainted and embroided heritage details',
+            'price' => 2800,
+            'stock' => 4,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'color' => 'White',
+            'colors' => ['White', 'Natural', 'Cream'],
+        ]);
+
+        // 1. Searching "gown" must find Duchess Filipiniana Gown and MUST NOT return Men's Barongs from Xyre's Gown and Barong shop
+        $gownResults = Product::query()->where('status', 'approved')->search('gown')->get();
+        $this->assertTrue($gownResults->contains('id', $duchessGown->id), 'Searching "gown" must find Duchess Filipiniana Gown');
+        $this->assertFalse($gownResults->contains('id', $mensBarong->id), 'Searching "gown" must NOT return Men\'s Barong from Xyre\'s Gown and Barong shop');
+
+        // 2. Searching "barong" or "organza barong" must NOT return Women's Balloon Dress from Xyre's shop
+        $barongResults = Product::query()->where('status', 'approved')->search('organza barong')->get();
+        $this->assertTrue($barongResults->contains('id', $mensBarong->id));
+        $this->assertFalse($barongResults->contains('id', $balloonDress->id), 'Searching "organza barong" must NOT return Women\'s Balloon Dress');
+
+        // 3. Searching "beige" must ONLY return the Beige Polo Barong and NOT White/Natural/Cream items
+        $beigeResults = Product::query()->where('status', 'approved')->search('beige')->get();
+        $this->assertTrue($beigeResults->contains('id', $beigeBarong->id), 'Searching "beige" must return Beige Polo Barong');
+        $this->assertFalse($beigeResults->contains('id', $duchessGown->id), 'Searching "beige" must NOT return White/Natural/Cream products');
+        $this->assertFalse($beigeResults->contains('id', $pintuckBarong->id), 'Searching "beige" must NOT return White/Natural/Cream products');
+
+        // 4. Morphological & typo bridges: monochrome <-> monochromatic <-> monocromatic, pintuck <-> pintax, hand painted <-> handpainted
+        $monoResults = Product::query()->where('status', 'approved')->search('monochrome')->get();
+        $this->assertTrue($monoResults->contains('id', $mensBarong->id), 'Searching "monochrome" must match "Monochromatic" product');
+        $this->assertTrue($monoResults->contains('id', $pintuckBarong->id), 'Searching "monochrome" must match "Monochrome" product');
+
+        $monochromaticResults = Product::query()->where('status', 'approved')->search('monochromatic')->get();
+        $this->assertTrue($monochromaticResults->contains('id', $mensBarong->id));
+        $this->assertTrue($monochromaticResults->contains('id', $pintuckBarong->id), 'Searching "monochromatic" must also match "Monochrome" product');
+
+        $pintuckResults = Product::query()->where('status', 'approved')->search('pintuck')->get();
+        $this->assertTrue($pintuckResults->contains('id', $pintuckBarong->id), 'Searching "pintuck" must match "Pintax" barong');
+
+        $handPaintedResults = Product::query()->where('status', 'approved')->search('hand painted')->get();
+        $this->assertTrue($handPaintedResults->contains('id', $pintuckBarong->id), 'Searching "hand painted" must match "Handpainted" barong');
+
+        // 5. Multi-space query ("polo   barong   with   lining")
+        $multiSpaceResults = Product::query()->where('status', 'approved')->search('polo   barong   with   lining')->get();
+        $this->assertTrue($multiSpaceResults->contains('id', $mensBarong->id));
+        $this->assertTrue($multiSpaceResults->contains('id', $beigeBarong->id));
+    }
 }
 
 

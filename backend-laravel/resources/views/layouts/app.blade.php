@@ -119,9 +119,9 @@
                               }
                           }"
                           @shop-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
-                          @shop-search-updated.window="query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || '')"
+                          @shop-search-updated.window="if (document.activeElement !== $refs.searchInput) { query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || ''); }"
                           @catalogue-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
-                          @catalogue-search-updated.window="query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || '')"
+                          @catalogue-search-updated.window="if (document.activeElement !== $refs.searchInput) { query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || ''); }"
                           @submit="handleSubmit($event)"
                           style="position: relative; width: 100%;">
                         <input type="text" name="search"
@@ -131,7 +131,7 @@
                                value="{{ request('search') }}"
                                placeholder="{{ isset($seller) && !empty($seller->shopName) ? 'Search in ' . $seller->shopName . '...' : (request()->is('shop*') ? 'Search in this shop...' : 'Search Barongs, Sellers...') }}"
                                style="padding-left: 18px; padding-right: 70px;"
-                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs truncate">
+                               class="w-full bg-gray-50/90 hover:bg-white focus:bg-white border border-gray-200 hover:border-gray-300 focus:border-[#C49520] focus:ring-2 focus:ring-[#C49520]/25 rounded-full py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-none transition-all shadow-2xs focus:shadow-xs">
                         
                         <!-- Clear 'X' Button (Only visible when input has text) -->
                         <button type="button"

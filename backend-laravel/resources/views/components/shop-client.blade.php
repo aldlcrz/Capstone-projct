@@ -466,6 +466,7 @@ function shopClient(config) {
         activeTab: 'all',
         sortOrder: 'recommended',
         searchQuery: '',
+        _lastSearchedTrimmed: '',
         searchSeq: 0,
         _searchTimer: null,
         init() {
@@ -475,18 +476,24 @@ function shopClient(config) {
                 const initialSearch = urlParams.get('search');
                 if (initialSearch) {
                     this.searchQuery = initialSearch;
+                    this._lastSearchedTrimmed = initialSearch.replace(/\s+/g, ' ').trim();
                 }
             } catch (e) {}
 
             // Listen for global custom event 'shop-search' dispatched by header search bar
             window.addEventListener('shop-search', (e) => {
                 this.searchQuery = (e.detail || '').toString();
-                if (this.$refs.shopSearchInput) {
+                if (this.$refs.shopSearchInput && document.activeElement !== this.$refs.shopSearchInput) {
                     this.$refs.shopSearchInput.value = this.searchQuery;
                 }
-                if (this.searchQuery.trim().length > 0) {
+                const normalized = this.searchQuery.replace(/\s+/g, ' ').trim();
+                if (normalized.length > 0) {
                     this.activeTab = 'all';
                 }
+                if (normalized === this._lastSearchedTrimmed) {
+                    return;
+                }
+                this._lastSearchedTrimmed = normalized;
                 this.syncSearch();
             });
 
@@ -519,13 +526,21 @@ function shopClient(config) {
         },
         onSearchInput(e) {
             clearTimeout(this._searchTimer);
-            const val = this.searchQuery.trim();
+            const val = this.searchQuery.replace(/\s+/g, ' ').trim();
             if (val.length > 0 && this.activeTab === 'policies') {
                 this.activeTab = 'all';
             }
             window.dispatchEvent(new CustomEvent('shop-search-updated', { detail: this.searchQuery }));
+            if (val === this._lastSearchedTrimmed) {
+                return;
+            }
             this._searchTimer = setTimeout(() => {
-                if (this.searchQuery.trim().length > 0 && this.activeTab !== 'all') {
+                const currentTrimmed = this.searchQuery.replace(/\s+/g, ' ').trim();
+                if (currentTrimmed === this._lastSearchedTrimmed) {
+                    return;
+                }
+                this._lastSearchedTrimmed = currentTrimmed;
+                if (currentTrimmed.length > 0 && this.activeTab !== 'all') {
                     this.activeTab = 'all';
                 }
                 this.syncSearch();
@@ -536,7 +551,9 @@ function shopClient(config) {
             if (this.$refs.shopSearchInput) {
                 this.$refs.shopSearchInput.blur();
             }
-            if (this.searchQuery.trim().length > 0) {
+            const trimmed = this.searchQuery.replace(/\s+/g, ' ').trim();
+            this._lastSearchedTrimmed = trimmed;
+            if (trimmed.length > 0) {
                 this.activeTab = 'all';
             }
             window.dispatchEvent(new CustomEvent('shop-search-updated', { detail: this.searchQuery }));
@@ -545,6 +562,7 @@ function shopClient(config) {
         clearSearch() {
             clearTimeout(this._searchTimer);
             this.searchQuery = '';
+            this._lastSearchedTrimmed = '';
             if (this.$refs.shopSearchInput) {
                 this.$refs.shopSearchInput.value = '';
                 this.$refs.shopSearchInput.focus();
@@ -555,7 +573,8 @@ function shopClient(config) {
         },
         async syncSearch() {
             const seq = ++this.searchSeq;
-            const trimmed = this.searchQuery.trim();
+            const trimmed = this.searchQuery.replace(/\s+/g, ' ').trim();
+            this._lastSearchedTrimmed = trimmed;
 
             if (trimmed && this.activeTab === 'policies') {
                 this.activeTab = 'all';
