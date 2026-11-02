@@ -1301,7 +1301,7 @@
                            x-model="editForm.recipientName"
                            @input="editForm.recipientName = editForm.recipientName.replace(/[^a-zA-Z\s\.\,\'\-]/g, ''); if(addressErrors.recipientName) addressErrors.recipientName = ''"
                            placeholder="e.g. John Doe (letters only)"
-                           :class="addressErrors.recipientName ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           :class="addressErrors.recipientName ? 'border-red-500! bg-red-50/20! ring-1 ring-red-500' : 'border-gray-200'"
                            class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                     <p x-show="addressErrors.recipientName" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1317,7 +1317,7 @@
                            placeholder="e.g. 09123456789 (11 digits)"
                            inputmode="numeric"
                            maxlength="11"
-                           :class="addressErrors.phone ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           :class="addressErrors.phone ? 'border-red-500! bg-red-50/20! ring-1 ring-red-500' : 'border-gray-200'"
                            class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                     <p x-show="addressErrors.phone" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1331,7 +1331,7 @@
                            x-model="editForm.houseNo"
                            @input="if(addressErrors.houseNo) addressErrors.houseNo = ''"
                            placeholder="e.g. Block 1 Lot 2 Mango St."
-                           :class="addressErrors.houseNo ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           :class="addressErrors.houseNo ? 'border-red-500! bg-red-50/20! ring-1 ring-red-500' : 'border-gray-200'"
                            class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                     <p x-show="addressErrors.houseNo" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1343,7 +1343,7 @@
                 <div class="col-span-1 sm:col-span-2 relative space-y-1">
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Region, Province, City, Barangay <span class="text-[#8C6D1F]">*</span></label>
                     <div @click="toggleLocationDropdown(); if(addressErrors.location) addressErrors.location = ''"
-                         :class="addressErrors.location ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                         :class="addressErrors.location ? 'border-red-500! bg-red-50/20! ring-1 ring-red-500' : 'border-gray-200'"
                          class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-xs sm:text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white flex items-center justify-between cursor-pointer transition-all">
                         <span class="truncate" :class="getLocationSummary() ? 'text-gray-900 font-bold' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                         <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1490,7 +1490,7 @@
                            placeholder="e.g. 4103 (4 digits)"
                            inputmode="numeric"
                            maxlength="4"
-                           :class="addressErrors.postalCode ? '!border-red-500 !bg-red-50/20 ring-1 ring-red-500' : 'border-gray-200'"
+                           :class="addressErrors.postalCode ? 'border-red-500! bg-red-50/20! ring-1 ring-red-500' : 'border-gray-200'"
                            class="w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm font-semibold outline-none focus:border-[#D4AF37] focus:bg-white transition-all">
                     <p x-show="addressErrors.postalCode" x-cloak class="address-field-error text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>

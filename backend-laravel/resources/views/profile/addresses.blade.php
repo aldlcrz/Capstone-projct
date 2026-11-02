@@ -134,7 +134,7 @@
                             <input x-model="form.recipientName"
                                    @input="if(fieldErrors.recipientName) fieldErrors.recipientName = ''"
                                    type="text" placeholder="Recipient's full name"
-                                   :class="fieldErrors.recipientName ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   :class="fieldErrors.recipientName ? 'border-red-500! bg-red-50/20!' : 'border-gray-200'"
                                    class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
                             <p x-show="fieldErrors.recipientName" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.recipientName"></p>
                         </div>
@@ -143,7 +143,7 @@
                             <input x-model="form.phone"
                                    @input="if(fieldErrors.phone) fieldErrors.phone = ''"
                                    type="text" placeholder="e.g. 09xxxxxxxxx"
-                                   :class="fieldErrors.phone ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   :class="fieldErrors.phone ? 'border-red-500! bg-red-50/20!' : 'border-gray-200'"
                                    class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
                             <p x-show="fieldErrors.phone" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.phone"></p>
                         </div>
@@ -152,7 +152,7 @@
                         <div class="col-span-2 relative">
                             <label class="text-xs font-semibold text-gray-500 mb-1 block">Region, Province, City, Barangay *</label>
                             <div @click="toggleLocationDropdown(); if(fieldErrors.location) fieldErrors.location = ''"
-                                 :class="fieldErrors.location ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                 :class="fieldErrors.location ? 'border-red-500! bg-red-50/20!' : 'border-gray-200'"
                                  class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A] flex items-center justify-between cursor-pointer bg-white">
                                 <span class="truncate" :class="getLocationSummary() ? 'text-gray-900' : 'text-gray-400'" x-text="getLocationSummary() || 'Select Region, Province, City, Barangay'"></span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="locationDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +289,7 @@
                             <input x-model="form.houseNo"
                                    @input="if(fieldErrors.houseNo) fieldErrors.houseNo = ''"
                                    type="text" placeholder="House no., building, unit"
-                                   :class="fieldErrors.houseNo ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   :class="fieldErrors.houseNo ? 'border-red-500! bg-red-50/20!' : 'border-gray-200'"
                                    class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
                             <p x-show="fieldErrors.houseNo" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.houseNo"></p>
                         </div>
@@ -303,7 +303,7 @@
                             <input x-model="form.postalCode"
                                    @input="if(fieldErrors.postalCode) fieldErrors.postalCode = ''"
                                    type="text" placeholder="Postal code"
-                                   :class="fieldErrors.postalCode ? '!border-red-500 !bg-red-50/20' : 'border-gray-200'"
+                                   :class="fieldErrors.postalCode ? 'border-red-500! bg-red-50/20!' : 'border-gray-200'"
                                    class="w-full h-10 px-3 border rounded-lg text-sm outline-none focus:border-[#C0420A]">
                             <p x-show="fieldErrors.postalCode" x-cloak class="text-[11px] font-semibold text-red-600 mt-1" x-text="fieldErrors.postalCode"></p>
                         </div>
