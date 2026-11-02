@@ -1688,6 +1688,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         shippingQuote: null,
         shippingQuoteToken: '',
         selectedProviderId: '',
+        savedProviderCode: '',
         shippingQuotesList: [],
         isLocalCluster: false,
         availablePaymentMethods: ['GCash', 'Maya'],
@@ -1699,14 +1700,165 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         storePickupMap: null,
         storePickupMarker: null,
 
+        getStorageKey() {
+            return 'lumbarong_checkout_state_' + (userDefaults.mode || 'cart') + '_' + baseSubtotalAmount;
+        },
+
+        dataUrlToFile(dataUrl, fileName, mimeType) {
+            try {
+                const arr = dataUrl.split(',');
+                const mime = mimeType || (arr[0].match(/:(.*?);/)?.[1]) || 'image/jpeg';
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new File([u8arr], fileName || 'receipt.jpg', { type: mime });
+            } catch (e) {
+                return null;
+            }
+        },
+
+        saveCheckoutState() {
+            try {
+                const serializableReceipts = (this.receipts || []).map(r => ({
+                    id: r.id,
+                    fileName: r.fileName,
+                    mimeType: r.mimeType || (r.file ? r.file.type : 'image/jpeg'),
+                    dataUrl: r.dataUrl || '',
+                    detected_ref: r.detected_ref,
+                    detected_amount: r.detected_amount,
+                    reason_code: r.reason_code,
+                    screening: r.screening
+                }));
+                const state = {
+                    step: this.step,
+                    policyAccepted: this.policyAccepted,
+                    paymentMethod: this.paymentMethod,
+                    selectedProviderId: this.selectedProviderId,
+                    savedProviderCode: this.shippingQuote?.provider_code || this.savedProviderCode || '',
+                    addressId: this.address?.id || '',
+                    paymentRef: this.paymentRef || '',
+                    receipts: serializableReceipts,
+                    updatedAt: Date.now()
+                };
+                sessionStorage.setItem(this.getStorageKey(), JSON.stringify(state));
+
+                const url = new URL(window.location.href);
+                if (this.step === 2) {
+                    url.searchParams.set('step', '2');
+                } else {
+                    url.searchParams.delete('step');
+                }
+                window.history.replaceState({}, '', url.toString());
+            } catch (e) {
+                console.warn('Could not persist checkout state:', e);
+            }
+        },
+
+        restoreCheckoutState() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlStep = parseInt(urlParams.get('step') || '', 10);
+                const navEntries = (window.performance && window.performance.getEntriesByType) ? window.performance.getEntriesByType('navigation') : [];
+                const navType = (navEntries && navEntries.length > 0) ? navEntries[0].type : '';
+                const isFreshEntryFromOutside = navType === 'navigate' && urlStep !== 2 && document.referrer && !document.referrer.includes('/checkout');
+
+                if (isFreshEntryFromOutside) {
+                    sessionStorage.removeItem(this.getStorageKey());
+                    return;
+                }
+
+                const raw = sessionStorage.getItem(this.getStorageKey());
+                if (!raw) {
+                    if (urlStep === 2) {
+                        this.step = 2;
+                        this.policyAccepted = true;
+                    }
+                    return;
+                }
+                const saved = JSON.parse(raw);
+                if (!saved || (Date.now() - (saved.updatedAt || 0)) > 2 * 60 * 60 * 1000) {
+                    sessionStorage.removeItem(this.getStorageKey());
+                    return;
+                }
+
+                if (saved.addressId && Array.isArray(this.addresses) && this.addresses.length > 0) {
+                    const foundAddr = this.addresses.find(a => String(a.id) === String(saved.addressId));
+                    if (foundAddr) {
+                        this.address = foundAddr;
+                    }
+                }
+
+                if (saved.selectedProviderId) {
+                    this.selectedProviderId = saved.selectedProviderId;
+                }
+                if (saved.savedProviderCode) {
+                    this.savedProviderCode = saved.savedProviderCode;
+                }
+                if (saved.paymentMethod) {
+                    this.paymentMethod = saved.paymentMethod;
+                }
+                if (typeof saved.policyAccepted === 'boolean') {
+                    this.policyAccepted = saved.policyAccepted;
+                }
+                if (saved.step === 2 || urlStep === 2) {
+                    this.step = 2;
+                    this.policyAccepted = true;
+                }
+                if (saved.paymentRef) {
+                    this.paymentRef = saved.paymentRef;
+                }
+                if (Array.isArray(saved.receipts) && saved.receipts.length > 0) {
+                    const restored = [];
+                    saved.receipts.forEach(r => {
+                        const fileObj = r.dataUrl ? this.dataUrlToFile(r.dataUrl, r.fileName, r.mimeType) : null;
+                        const previewUrl = fileObj ? URL.createObjectURL(fileObj) : (r.dataUrl || '');
+                        restored.push({
+                            id: r.id,
+                            fileName: r.fileName,
+                            mimeType: r.mimeType || 'image/jpeg',
+                            dataUrl: r.dataUrl || '',
+                            filePreview: previewUrl,
+                            file: fileObj,
+                            detected_ref: r.detected_ref,
+                            detected_amount: r.detected_amount,
+                            reason_code: r.reason_code,
+                            screening: r.screening
+                        });
+                    });
+                    if (restored.length > 0) {
+                        this.receipts = restored;
+                        const last = restored[restored.length - 1];
+                        this.fileName = last.fileName || '';
+                        this.paymentRef = last.detected_ref || this.paymentRef;
+                        this.aiVerificationResult = last.screening || null;
+                        this.fileScanned = true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not restore checkout state:', e);
+            }
+        },
+
+        clearCheckoutState() {
+            try {
+                sessionStorage.removeItem(this.getStorageKey());
+            } catch (e) {}
+        },
+
         init() {
+            this.restoreCheckoutState();
             this.fetchShippingQuotes();
 
             this.$watch('address', () => {
+                this.saveCheckoutState();
                 this.fetchShippingQuotes();
             });
 
             this.$watch('paymentMethod', () => {
+                this.saveCheckoutState();
                 if (this.paymentMethod !== 'COD' && this.paymentMethod !== 'Pay at the Store' && this.paymentMethod !== 'Pay on Store' && this.paymentRef) {
                     this.validateRef();
                     this.checkServerReference();
@@ -1719,6 +1871,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 if (val === 2) {
                     this.policyAccepted = true;
                 }
+                this.saveCheckoutState();
             });
             if (this.step === 2) {
                 this.policyAccepted = true;
@@ -1728,6 +1881,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
         selectQuote(q) {
             this.shippingQuote = q;
             this.selectedProviderId = q.provider_id;
+            this.savedProviderCode = q.provider_code || '';
             this.currentShippingFee = Number(q.shipping_fee) || 0;
             if (q.provider_code === 'store_pickup') {
                 if (this.paymentMethod !== 'GCash' && this.paymentMethod !== 'Maya') {
@@ -1743,6 +1897,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.paymentMethod = 'COD';
                 }
             }
+            this.saveCheckoutState();
         },
 
         initStorePickupMap() {
@@ -1876,29 +2031,44 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 this.shippingQuotesList = data.quotes || [];
                 this.shippingQuoteToken = data.shipping_quote_token || '';
 
-                if (!this.isLocalCluster && this.paymentMethod === 'COD') {
-                    this.paymentMethod = 'GCash';
+                let matchedQuote = null;
+                if (this.selectedProviderId && this.shippingQuotesList.length > 0) {
+                    matchedQuote = this.shippingQuotesList.find(q => String(q.provider_id) === String(this.selectedProviderId));
+                }
+                if (!matchedQuote && this.savedProviderCode && this.shippingQuotesList.length > 0) {
+                    matchedQuote = this.shippingQuotesList.find(q => q.provider_code === this.savedProviderCode);
                 }
 
-                if (data.quote) {
-                    this.shippingQuote = data.quote;
-                    this.selectedProviderId = data.quote.provider_id;
-                    this.currentShippingFee = Number(data.quote.shipping_fee) || 0;
-                } else if (this.shippingQuotesList.length > 0) {
-                    this.shippingQuote = this.shippingQuotesList[0];
-                    this.selectedProviderId = this.shippingQuotesList[0].provider_id;
-                    this.currentShippingFee = Number(this.shippingQuotesList[0].shipping_fee) || 0;
+                const chosenQuote = matchedQuote || data.quote || (this.shippingQuotesList.length > 0 ? this.shippingQuotesList[0] : null);
+                if (chosenQuote) {
+                    this.shippingQuote = chosenQuote;
+                    this.selectedProviderId = chosenQuote.provider_id;
+                    this.savedProviderCode = chosenQuote.provider_code || '';
+                    this.currentShippingFee = Number(chosenQuote.shipping_fee) || 0;
                 } else {
                     this.currentShippingFee = 0;
                     this.quotesError = 'No courier rates are currently available for this delivery area.';
                 }
 
                 if (this.shippingQuote?.provider_code === 'store_pickup') {
-                    this.paymentMethod = 'Store Pickup';
+                    if (!['Pay at the Store', 'Pay on Store', 'Store Pickup', 'GCash', 'Maya'].includes(this.paymentMethod)) {
+                        this.paymentMethod = 'Pay at the Store';
+                    } else if (this.paymentMethod === 'Store Pickup') {
+                        this.paymentMethod = 'Pay at the Store';
+                    }
                     this.initStorePickupMap();
                 } else if (this.shippingQuote?.provider_code === 'seller_direct') {
-                    this.paymentMethod = 'Special Delivery';
+                    if (!['COD', 'GCash', 'Maya'].includes(this.paymentMethod)) {
+                        this.paymentMethod = 'COD';
+                    }
+                } else {
+                    if (['Pay at the Store', 'Pay on Store', 'Store Pickup', 'Special Delivery'].includes(this.paymentMethod)) {
+                        this.paymentMethod = this.isLocalCluster ? 'COD' : 'GCash';
+                    } else if (!this.isLocalCluster && this.paymentMethod === 'COD') {
+                        this.paymentMethod = 'GCash';
+                    }
                 }
+                this.saveCheckoutState();
             } catch (err) {
                 clearTimeout(timeoutId);
                 if (currentReqId !== this.shippingQuoteReqId) {
@@ -2225,20 +2395,35 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                 const previewUrl = file.type && file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
                 const detectedAmount = Number(data.detected_amount) || Number(this.remainingAmount > 0 ? this.remainingAmount : this.payableAmount);
 
-                this.receipts.push({
+                const newReceipt = {
                     id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                     fileName: file.name,
+                    mimeType: file.type || 'image/jpeg',
+                    dataUrl: '',
                     filePreview: previewUrl,
                     file: file,
                     detected_ref: cleanDetected,
                     detected_amount: detectedAmount,
                     reason_code: data.reason_code,
                     screening: data
-                });
+                };
+
+                this.receipts.push(newReceipt);
 
                 this.paymentRef = cleanDetected;
                 this.fileName = file.name;
                 this.screenshotError = '';
+
+                try {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        newReceipt.dataUrl = ev.target?.result || '';
+                        this.saveCheckoutState();
+                    };
+                    reader.readAsDataURL(file);
+                } catch (e) {
+                    this.saveCheckoutState();
+                }
 
                 // Reset file input so user can attach another receipt if balance remains
                 const input = document.getElementById('paymentScreenshotInput');
@@ -2281,6 +2466,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
                     this.fileName = last.fileName;
                     this.paymentRef = last.detected_ref;
                 }
+                this.saveCheckoutState();
             }
         },
 
@@ -2299,6 +2485,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             this.ocrExtracted = false;
             this.refError = '';
             this.isRefDuplicate = false;
+            this.saveCheckoutState();
         },
 
         selectAddress(addr) {
@@ -3233,6 +3420,7 @@ function checkoutApp(initialAddress, initialAddresses, defaultPaymentMethod, ini
             }
             this.isPlacingOrder = true;
             this.showConfirmModal = false;
+            this.clearCheckoutState();
             document.getElementById('checkout-form')?.submit();
         }
     };
