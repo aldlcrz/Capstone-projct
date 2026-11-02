@@ -240,6 +240,14 @@
             formatAiMessage(rawText) {
                 if (!rawText) return '';
                 let text = String(rawText);
+
+                // Escape HTML special characters for XSS protection
+                text = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
                 
                 // Convert markdown links [Text](url) -> <a href="url" target="_self" class="...">Text</a>
                 text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_self" class="text-[#C0422A] hover:underline font-bold transition-colors cursor-pointer inline-flex items-center gap-0.5">$1</a>');

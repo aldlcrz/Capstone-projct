@@ -103,11 +103,35 @@ class ReturnRequestController extends Controller
         }
 
         $returnRequest = ReturnRequest::create([
-            'orderId'     => $order->id,
-            'reason'      => $reasonText,
-            'proofImages' => json_encode($proofPaths),
-            'status'      => 'Pending',
+            'orderId'                => $order->id,
+            'customer_id'            => $order->customerId,
+            'seller_id'              => $order->sellerId,
+            'reason'                 => $reasonText,
+            'proofImages'            => json_encode($proofPaths),
+            'status'                 => 'Pending',
+            'return_status'          => 'submitted',
+            'physical_return_status' => 'pending',
+            'refund_status'          => 'pending',
+            'dispute_status'         => 'none',
+            'resolution_type'        => $request->input('resolution_type', 'refund'),
+            'requested_amount'       => (float) ($order->totalAmount ?? 0),
         ]);
+
+        // Also record evidence rows for the centralized Return & Refund Center
+        foreach ($proofPaths as $path) {
+            try {
+                \App\Models\ReturnRefundEvidence::create([
+                    'return_request_id' => $returnRequest->id,
+                    'uploaded_by'       => Auth::id(),
+                    'uploader_role'     => 'customer',
+                    'file_path'         => $path,
+                    'file_type'         => str_ends_with(strtolower($path), '.mp4') || str_ends_with(strtolower($path), '.mov') ? 'video' : 'image',
+                    'evidence_stage'    => 'initial_request',
+                ]);
+            } catch (\Throwable $e) {
+                // Ignore if evidence table is unavailable
+            }
+        }
 
         // Notify seller
         Notification::create([

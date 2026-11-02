@@ -40,6 +40,12 @@ class RecordCashRefundService
             ]);
         }
 
+        if ($order->isPlatformHeldPayment() && empty($paymentMethod)) {
+            throw ValidationException::withMessages([
+                'payment_method' => ['Unauthorized. Sellers cannot release platform-held online refunds.'],
+            ]);
+        }
+
         return DB::transaction(function () use ($returnRequest, $order, $seller, $refundAmount, $resolutionType, $notes, $proofFile, $refundDate, $paymentMethod) {
             $lockedRequest = ReturnRequest::where('id', $returnRequest->id)->lockForUpdate()->firstOrFail();
             $lockedOrder = Order::where('id', $lockedRequest->orderId)->lockForUpdate()->firstOrFail();

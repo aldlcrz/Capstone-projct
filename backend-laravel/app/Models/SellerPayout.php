@@ -46,15 +46,6 @@ class SellerPayout extends Model
         'processed_at',
     ];
 
-    protected $casts = [
-        'gross_sales'           => 'decimal:2',
-        'shipping_amount'       => 'decimal:2',
-        'discount_amount'       => 'decimal:2',
-        'commission_deducted'   => 'decimal:2',
-        'commission_rate'       => 'decimal:2',
-        'net_settlement_amount' => 'decimal:2',
-    ];
-
     public function getTransactionReferenceAttribute(): ?string
     {
         return $this->attributes['transfer_reference'] ?? null;
@@ -82,6 +73,7 @@ class SellerPayout extends Model
             'shipping_amount'       => 'decimal:2',
             'discount_amount'       => 'decimal:2',
             'commission_deducted'   => 'decimal:2',
+            'commission_rate'       => 'decimal:2',
             'net_settlement_amount' => 'decimal:2',
             'processed_at'          => 'datetime',
             'created_at'            => 'datetime',

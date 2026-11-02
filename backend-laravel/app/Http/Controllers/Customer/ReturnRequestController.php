@@ -31,7 +31,7 @@ class ReturnRequestController extends Controller
             return redirect()->route('orders.show', $order->id)->with('error', $eval['reason'] ?? 'This order is not eligible for a return.');
         }
 
-        return redirect()->route('orders.show', ['order' => $order->id, 'action' => 'return']);
+        return redirect()->route('orders.show', ['id' => $order->id, 'action' => 'return']);
     }
 
     /**

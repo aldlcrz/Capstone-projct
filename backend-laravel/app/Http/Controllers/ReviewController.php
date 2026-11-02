@@ -182,11 +182,11 @@ class ReviewController extends Controller
         $reviews = Review::whereHas('product', function($query) use ($sellerId) {
                 $query->where('sellerId', $sellerId);
             })
-            ->with(['product:id,name,images', 'customer:id,name,profilePhoto'])
+            ->with(['product:id,name,image', 'customer:id,name,profilePhoto'])
             ->orderBy('createdAt', 'desc')
             ->get()
             ->map(function($review) {
-                $review->images = json_decode($review->images) ?: [];
+                $review->images = is_string($review->images) ? (json_decode($review->images, true) ?: []) : ($review->images ?: []);
                 return $review;
             });
 
@@ -222,7 +222,7 @@ class ReviewController extends Controller
                 'message' => (Auth::user()->name ?? 'The seller') . ' replied to your review on ' . ($review->product->name ?? 'a product') . ': "' . \Illuminate\Support\Str::limit($request->reply, 80) . '"',
                 'type' => 'review_reply',
                 'targetRole' => 'customer',
-                'redirectUrl' => '/products/' . $review->productId . '#reviews',
+                'link' => '/products/' . $review->productId . '#reviews',
                 'isRead' => false,
             ]);
         }

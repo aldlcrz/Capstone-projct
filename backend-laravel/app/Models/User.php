@@ -44,7 +44,7 @@ class User extends Authenticatable
         'sessionVersion', 'googleId',
         'hasPasswordSet', 'loginAttempts', 'loginLockedUntil', 'bio', 'username',
         'gender', 'birthday', 'resetPasswordToken', 'resetPasswordExpires',
-        'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart',
+        'shopName', 'shopDescription', 'cancellation_policy', 'refund_policy', 'businessPermit', 'cart', 'size_guides',
         'is_onboarded', 'has_seen_guide', 'deleted_at',
         'deletion_scheduled_at', 'permanent_deletion_at',
         'registration_expires_at', 'email_verified_at',

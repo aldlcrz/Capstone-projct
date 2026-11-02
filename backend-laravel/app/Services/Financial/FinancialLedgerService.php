@@ -190,7 +190,7 @@ class FinancialLedgerService
                 $rq->where('seller_id', $targetSellerId)
                    ->orWhereNull('seller_id');
             })
-            ->whereIn('return_status', ['pending', 'requested', 'in_review', 'under_review', 'disputed', 'escalated', 'approved'])
+            ->whereIn('return_status', ['pending', 'requested', 'submitted', 'in_review', 'under_review', 'disputed', 'escalated', 'approved', 'awaiting_return', 'return_received', 'item_shipped', 'item_received'])
             ->exists();
 
         // Check completed refunds attributable to this seller

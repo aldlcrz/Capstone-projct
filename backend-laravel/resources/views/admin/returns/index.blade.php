@@ -519,7 +519,7 @@
                                     $status = strtolower($ret->return_status ?? $ret->status ?? 'pending');
                                     $isDisputedCase = in_array($status, ['disputed', 'escalated']);
                                     $isRefundedCase = in_array($status, ['refunded', 'completed', 'resolved']);
-                                    $isApprovedCase = in_array($status, ['approved', 'item_shipped', 'item_received']);
+                                    $isApprovedCase = in_array($status, ['approved', 'awaiting_return', 'return_received', 'item_shipped', 'item_received']);
                                     $isRejectedCase = in_array($status, ['rejected', 'declined']);
                                 @endphp
                                 <tr class="hover:bg-amber-50/20 transition-colors group">
@@ -626,7 +626,7 @@
                                                 </button>
                                             @endif
 
-                                            @if(!$isRefundedCase && ($isApprovedCase || $isDisputedCase) && auth()->user()?->role === 'superadmin')
+                                            @if(!$isRefundedCase && ($isApprovedCase || $isDisputedCase) && in_array(auth()->user()?->role, ['admin', 'superadmin']))
                                                 <button type="button" 
                                                         @click="openTransfer({{ json_encode($ret) }})"
                                                         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs hover:shadow transition-all cursor-pointer">

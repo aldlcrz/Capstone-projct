@@ -12,11 +12,14 @@
         returnReason: 'Damaged / Defective item',
         returnMessage: '',
         returnLoading: false,
+        disputeModal: false,
+        disputeReason: '',
+        disputeLoading: false,
         reviewModal: false, 
-        reviewProductId: null, 
-        reviewProductName: '', 
-        reviewOrderItemId: null, 
-        reviewProductImage: '', 
+        reviewProductId: {{ Js::from($order->items?->first()?->productId) }}, 
+        reviewProductName: {{ Js::from($order->items?->first()?->product?->name ?? 'Product') }}, 
+        reviewOrderItemId: {{ Js::from($order->items?->first()?->id) }}, 
+        reviewProductImage: {{ Js::from($order->items?->first()?->product ? $order->items->first()->product->getImageUrl() : '/uploads/products/default.jpg') }}, 
         copiedToast: false, 
         copiedMessage: 'Copied to clipboard!',
         packingModal: false, 
@@ -462,6 +465,13 @@
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-900 border border-blue-200">
                                     Return: {{ ucfirst($activeReturn->status ?? 'Pending') }}
                                 </span>
+                                @if(in_array(strtolower($activeReturn->return_status ?? $activeReturn->status ?? ''), ['rejected', 'declined']) && strtolower($activeReturn->dispute_status ?? 'none') !== 'disputed')
+                                    <button type="button"
+                                        @click="disputeModal = true"
+                                        class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer">
+                                        Dispute Decision
+                                    </button>
+                                @endif
                             @elseif($hasReviews)
                                 @if($unreviewedItem)
                                     @php
@@ -1395,6 +1405,45 @@
             </form>
         </div>
     </div>
+
+    @if($activeReturn)
+    {{-- Dispute Return Decision Modal --}}
+    <div x-show="disputeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="z-index: 9999; display: none;" x-cloak>
+        <div @click.away="disputeModal = false" style="background-color:#FDFBF7;border:1px solid #EAE2D2;border-radius:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);" class="w-full max-w-md p-6 space-y-4 text-gray-900">
+            <div class="flex items-center gap-3 pb-3 border-b border-[#EAE1D0]">
+                <div class="w-10 h-10 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
+                    !
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-[#1E1915] uppercase tracking-tight">Dispute Return Decision</h3>
+                    <p class="text-[10px] text-[#78716C] font-medium">Escalate this declined return to LumBarong Administration for arbitration.</p>
+                </div>
+            </div>
+
+            <form action="{{ route('customer.returns.dispute', ['order' => $order->id, 'returnRequest' => $activeReturn->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-3.5" @submit="disputeLoading = true">
+                @csrf
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C]">Dispute Explanation <span class="text-red-500">*</span></label>
+                    <textarea name="dispute_reason" x-model="disputeReason" required minlength="5" rows="3" placeholder="Explain why you are disputing the artisan's decision..." class="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs font-medium outline-none focus:border-rose-500 focus:bg-white resize-none"></textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#78716C]">Supporting Evidence (Optional)</label>
+                    <input type="file" name="evidence_files[]" multiple accept="image/*,video/*" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#ECE3D2] rounded-xl text-xs text-stone-600 file:mr-3 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-[#1E1915] file:text-white hover:file:bg-rose-600 cursor-pointer">
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" @click="disputeModal = false" :disabled="disputeLoading" class="flex-1 py-2.5 rounded-full border border-[#ECE3D2] text-xs font-bold text-[#78716C] hover:bg-[#FAF8F5] transition-all cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="disputeLoading" class="flex-1 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                        <span x-text="disputeLoading ? 'Escalating...' : 'Submit Dispute'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 
 </div>
 

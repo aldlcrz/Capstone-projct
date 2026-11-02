@@ -747,7 +747,7 @@ class CheckoutController extends Controller
             $sellerId = $request->input('seller_id');
         }
         if (!$sellerId) {
-            $sellerId = User::where('role', 'artisan')->value('id') ?? User::whereIn('role', ['admin', 'superadmin'])->value('id');
+            $sellerId = User::where('role', 'seller')->value('id') ?? User::whereIn('role', ['admin', 'superadmin'])->value('id');
         }
 
         return DB::transaction(function () use (
@@ -784,19 +784,36 @@ class CheckoutController extends Controller
 
             // Create cancelled order record so history and refund can be tracked
             $order = Order::create([
-                'id'                   => $orderId,
-                'customerId'           => $customer ? $customer->id : null,
-                'sellerId'             => $sellerId,
-                'shippingAddress'      => $shippingAddressStr,
-                'totalAmount'          => $refundAmount,
-                'status'               => 'cancelled',
-                'paymentStatus'        => 'Refund Requested',
-                'paymentMethod'        => $refundMethod,
-                'paymentReference'     => $refundReference ?: null,
-                'paymentProof'         => $paymentProofPath,
-                'refund_mobile_number' => $refundMobile,
-                'cancellationReason'   => "Customer cancelled during checkout and requested refund to {$refundMethod} ({$refundMobile}). Reason: {$reason}",
-                'createdAt'            => now(),
+                'id'                      => $orderId,
+                'customerId'              => $customer ? $customer->id : null,
+                'sellerId'                => $sellerId,
+                'shippingAddress'         => $shippingAddressStr,
+                'totalAmount'             => $refundAmount,
+                'total_verified_payments' => $refundAmount,
+                'fund_holder'             => 'platform',
+                'status'                  => 'cancelled',
+                'paymentStatus'           => 'Refund Requested',
+                'paymentMethod'           => $refundMethod,
+                'paymentReference'        => $refundReference ?: null,
+                'paymentProof'            => $paymentProofPath,
+                'refund_mobile_number'    => $refundMobile,
+                'cancellationReason'      => "Customer cancelled during checkout and requested refund to {$refundMethod} ({$refundMobile}). Reason: {$reason}",
+                'createdAt'               => now(),
+            ]);
+
+            // Create verified PaymentTransaction record so cancellation refund service recognizes the collected payment
+            \App\Models\PaymentTransaction::create([
+                'id'               => (string) Str::uuid(),
+                'order_id'         => $order->id,
+                'customer_id'      => $customer ? $customer->id : null,
+                'payment_method'   => $refundMethod,
+                'reference_number' => $refundReference ?: ('CHK-CANCEL-' . strtoupper(substr($order->id, 0, 8))),
+                'expected_amount'  => $refundAmount,
+                'detected_amount'  => $refundAmount,
+                'receipt_path'     => $paymentProofPath,
+                'status'           => 'VERIFIED',
+                'fund_holder'      => 'platform',
+                'verified_at'      => now(),
             ]);
 
             // Record status history
@@ -821,9 +838,10 @@ class CheckoutController extends Controller
                 'seller_id'        => $sellerId,
                 'reason'           => $returnReason,
                 'status'           => 'pending',
-                'return_status'    => 'requested',
-                'refund_status'    => 'pending',
+                'return_status'    => 'approved',
+                'refund_status'    => 'pending_payout',
                 'requested_amount' => $refundAmount,
+                'approved_amount'  => $refundAmount,
                 'createdAt'        => now(),
             ]);
 
@@ -851,7 +869,7 @@ class CheckoutController extends Controller
                     'title'      => 'Checkout Refund Request',
                     'message'    => "Customer " . ($customer ? $customer->name : 'Buyer') . " cancelled checkout after paying ₱" . number_format($refundAmount, 2) . " via {$refundMethod}. Please disburse refund to {$refundMobile} ({$refundAccountName}).",
                     'type'       => 'refund_requested',
-                    'read'       => false,
+                    'isRead'     => false,
                     'link'       => route('admin.returns.index', ['search' => $order->id]),
                     'createdAt'  => now(),
                 ]);
@@ -866,7 +884,7 @@ class CheckoutController extends Controller
                     'title'      => 'Cancellation & Refund Request Received',
                     'message'    => "Your request to cancel and refund ₱" . number_format($refundAmount, 2) . " has been submitted to the Admin. The funds will be sent to your {$refundMethod} number ({$refundMobile}) once verified.",
                     'type'       => 'refund_requested',
-                    'read'       => false,
+                    'isRead'     => false,
                     'link'       => route('orders'),
                     'createdAt'  => now(),
                 ]);

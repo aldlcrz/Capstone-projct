@@ -126,7 +126,6 @@ class Product extends Model
             'variations'              => 'array',
             'has_variants'            => 'boolean',
             'is_on_sale'              => 'boolean',
-            'sale_starts_at'          => 'datetime',
             'sale_ends_at'            => 'datetime',
             'is_gcash_available'      => 'boolean',
             'is_maya_available'       => 'boolean',

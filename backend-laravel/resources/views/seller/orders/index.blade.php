@@ -1146,6 +1146,50 @@ function sellerOrdersManager() {
             this.showProofLightboxModal = true;
         },
 
+        async confirmReturnReceived(order) {
+            const target = order || this.detailsOrder;
+            if (!target) return;
+            const returnReq = this.getReturnRequest(target);
+            if (!returnReq) return;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const res = await fetch('/seller/returns/' + returnReq.id + '/receive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ notes: 'Physical return item received by artisan.' })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.returnRequest)) {
+                    const updatedReturn = data.returnRequest || data.return_request;
+                    const idx = this.orders.findIndex(o => o.id === target.id);
+                    if (idx !== -1) {
+                        const updatedOrder = { ...this.orders[idx] };
+                        const reqs = [...(updatedOrder.return_requests || updatedOrder.returnRequests || [])];
+                        const rIdx = reqs.findIndex(r => String(r.id) === String(returnReq.id));
+                        if (rIdx !== -1) {
+                            reqs[rIdx] = updatedReturn;
+                        }
+                        updatedOrder.return_requests = reqs;
+                        updatedOrder.returnRequests = reqs;
+                        this.orders.splice(idx, 1, updatedOrder);
+                        this.orders = [...this.orders];
+                        if (this.detailsOrder && this.detailsOrder.id === target.id) {
+                            this.detailsOrder = updatedOrder;
+                        }
+                    }
+                    this.showToast('Physical return item confirmed as received.');
+                } else {
+                    this.showToast(data.message || 'Failed to confirm return receipt.');
+                }
+            } catch (e) {
+                this.showToast('Network error while confirming return receipt.');
+            }
+        },
+
         closeProofLightbox() {
             this.showProofLightboxModal = false;
             this.activeProofImage = '';
@@ -2578,6 +2622,17 @@ if (window.Alpine) {
                                         </button>
                                     </div>
                                 </template>
+
+                                {{-- Action button to confirm physical return receipt when approved & awaiting return --}}
+                                <template x-if="!hasPendingReturn(detailsOrder) && (getReturnRequest(detailsOrder).return_status === 'awaiting_return' || (getReturnRequest(detailsOrder).status === 'Approved' && getReturnRequest(detailsOrder).return_status !== 'return_received' && getReturnRequest(detailsOrder).return_status !== 'refunded'))">
+                                    <div class="pt-2 border-t border-blue-200/80 flex items-center justify-end gap-2">
+                                        <button type="button"
+                                                @click="confirmReturnReceived(detailsOrder)"
+                                                class="px-3.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1">
+                                            <x-lucide name="check" class="w-3.5 h-3.5 inline mr-1" /> Confirm Item Received
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </template>
 
@@ -3104,6 +3159,26 @@ if (window.Alpine) {
                                 <span style="color: #ffffff;" x-text="(statusUpdating || statusConfirmLoading) ? 'Updating...' : 'Out for special delivery'"></span>
                             </button>
                         </template>
+                        <template x-if="!isStorePickup(detailsOrder) && !isSpecialDelivery(detailsOrder)">
+                            <div class="flex items-center gap-2">
+                                <button type="button"
+                                    @click="requestStatusUpdate(detailsOrder, 'In Transit')"
+                                    :disabled="statusUpdating || statusConfirmLoading"
+                                    style="background-color: #1D4ED8; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-5 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                                    <x-lucide name="truck" class="w-4 h-4 text-white" style="color: #ffffff;" />
+                                    <span style="color: #ffffff;">Mark In Transit</span>
+                                </button>
+                                <button type="button"
+                                    @click="confirmMarkAsDelivered(detailsOrder)"
+                                    :disabled="statusUpdating || deliveryConfirmLoading"
+                                    style="background-color: #2E7D32; color: #ffffff;"
+                                    class="flex-1 sm:flex-none px-5 py-2.5 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+                                    <x-lucide name="check" class="w-4 h-4 text-white" style="color: #ffffff;" />
+                                    <span style="color: #ffffff;">Mark as Delivered</span>
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </template>
 
@@ -3158,63 +3233,6 @@ if (window.Alpine) {
                         <span class="font-normal text-xs text-red-600 truncate max-w-xs" x-text="detailsOrder.cancellationReason ? '(' + detailsOrder.cancellationReason + ')' : ''"></span>
                     </div>
                 </template>
-            </div>
-        </div>
-    </div>
-
-    {{-- Floating Receipt Image Modal --}}
-    <div x-show="receiptModal" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" x-cloak>
-        <div @click.away="receiptModal = false" class="relative max-w-lg w-full bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col items-center">
-            <div class="w-full flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-                <h3 class="font-serif text-lg font-bold text-black">Proof of Payment</h3>
-                <button type="button" @click="receiptModal = false"
-                    class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-400 transition-all shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            
-            <div class="w-full bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100 max-h-[70vh]">
-                <img :src="receiptUrl" class="max-w-full max-h-[60vh] object-contain" alt="Payment Proof">
-            </div>
-            
-            <div class="w-full mt-4 flex gap-3">
-                <a :href="receiptUrl" download="receipt" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
-                    Download
-                </a>
-                <button type="button" @click="receiptModal = false" class="flex-1 py-3 bg-black hover:bg-[#C0420A] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Live Camera Overlay Modal --}}
-    <div x-show="showCameraModal" @click.self="closeCameraModal()" class="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-cloak style="display: none;">
-        <div class="relative max-w-md w-full bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center border border-white/20 p-5 space-y-4">
-            <div class="w-full flex items-center justify-between text-white">
-                <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <span class="flex items-center gap-1.5"><x-lucide name="camera" class="w-3.5 h-3.5" /> Capture Packing Proof</span>
-                </h3>
-                <button type="button" @click="closeCameraModal()" class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            {{-- Live Video Stream Container --}}
-            <div class="w-full bg-gray-900 rounded-2xl overflow-hidden aspect-4/3 relative flex items-center justify-center border border-white/10 shadow-inner">
-                <video x-ref="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
-                <div class="absolute inset-0 border-2 border-emerald-500/30 rounded-2xl pointer-events-none"></div>
-            </div>
-
-            {{-- Capture & Cancel Actions --}}
-            <div class="w-full flex items-center justify-center gap-3 pt-1">
-                <button type="button" @click="closeCameraModal()" class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all text-center">
-                    Cancel
-                </button>
-                <button type="button" @click="takePhoto()" class="flex-2 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
-                    <span class="w-3 h-3 rounded-full bg-black"></span>
-                    Snap Photo
-                </button>
             </div>
         </div>
     </div>

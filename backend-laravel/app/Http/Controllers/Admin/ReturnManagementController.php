@@ -29,10 +29,6 @@ class ReturnManagementController extends Controller
      */
     public function index(Request $request)
     {
-        if (Auth::user()?->role === 'superadmin' && $request->is('admin/returns*')) {
-            return redirect()->route('superadmin.dashboard')->with('info', 'Returns and refunds are handled directly between buyers and sellers.');
-        }
-
         $tab = $request->query('tab', 'claims');
         if (!in_array($tab, ['claims', 'sukli', 'cancellations'], true)) {
             $tab = 'claims';
@@ -70,11 +66,11 @@ class ReturnManagementController extends Controller
 
             if ($status !== 'all' && !empty($status)) {
                 if ($status === 'pending') {
-                    $query->whereIn('return_status', ['pending', 'requested', 'in_review']);
+                    $query->whereIn('return_status', ['pending', 'requested', 'submitted', 'in_review', 'under_review']);
                 } elseif ($status === 'disputed') {
                     $query->whereIn('return_status', ['disputed', 'escalated']);
                 } elseif ($status === 'approved') {
-                    $query->whereIn('return_status', ['approved', 'item_shipped', 'item_received']);
+                    $query->whereIn('return_status', ['approved', 'awaiting_return', 'return_received', 'item_shipped', 'item_received']);
                 } elseif ($status === 'refunded') {
                     $query->whereIn('return_status', ['refunded', 'completed', 'resolved']);
                 } elseif ($status === 'rejected') {
@@ -89,8 +85,8 @@ class ReturnManagementController extends Controller
             $counts = [
                 'all'      => ReturnRequest::count(),
                 'disputed' => ReturnRequest::whereIn('return_status', ['disputed', 'escalated'])->count(),
-                'pending'  => ReturnRequest::whereIn('return_status', ['pending', 'requested', 'in_review'])->count(),
-                'approved' => ReturnRequest::whereIn('return_status', ['approved', 'item_shipped', 'item_received'])->count(),
+                'pending'  => ReturnRequest::whereIn('return_status', ['pending', 'requested', 'submitted', 'in_review', 'under_review'])->count(),
+                'approved' => ReturnRequest::whereIn('return_status', ['approved', 'awaiting_return', 'return_received', 'item_shipped', 'item_received'])->count(),
                 'refunded' => ReturnRequest::whereIn('return_status', ['refunded', 'completed', 'resolved'])->count(),
                 'rejected' => ReturnRequest::whereIn('return_status', ['rejected', 'declined'])->count(),
             ];
@@ -263,11 +259,18 @@ class ReturnManagementController extends Controller
     /**
      * Show detailed case view.
      */
-    public function show(ReturnRequest $returnRequest)
+    public function show(Request $request, ReturnRequest $returnRequest)
     {
         $returnRequest->load(['order.paymentTransactions', 'order.items', 'customer', 'seller', 'evidences', 'refundTransactions']);
-        
-        return response()->json($returnRequest);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($returnRequest);
+        }
+
+        return redirect()->route('admin.returns.index', [
+            'tab'    => 'claims',
+            'search' => $returnRequest->id,
+        ]);
     }
 
     /**
@@ -276,7 +279,7 @@ class ReturnManagementController extends Controller
     public function recordTransfer(Request $request, ReturnRequest $returnRequest)
     {
         if (Auth::user()?->role !== 'superadmin') {
-            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
+            abort(403, 'Unauthorized.');
         }
 
         $request->validate([
@@ -371,8 +374,8 @@ class ReturnManagementController extends Controller
         ]);
 
         $admin = Auth::user();
-        if (!$admin || $admin->role !== 'superadmin') {
-            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
+        if (!$admin || !in_array($admin->role, ['admin', 'superadmin'], true)) {
+            abort(403, 'Unauthorized.');
         }
 
         try {
@@ -421,8 +424,8 @@ class ReturnManagementController extends Controller
         ]);
 
         $admin = Auth::user();
-        if (!$admin || $admin->role !== 'superadmin') {
-            abort(403, 'Financial disbursements and refund recordings are restricted to Super Administrator. Admin has read-only access.');
+        if (!$admin || !in_array($admin->role, ['admin', 'superadmin'], true)) {
+            abort(403, 'Unauthorized.');
         }
 
         try {

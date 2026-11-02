@@ -461,7 +461,7 @@ class AdminBannerController extends Controller
                 'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" has been approved and is now live on the homepage!',
                 'targetRole' => 'seller',
                 'isRead'     => false,
-                'link'       => '/admin/banners',
+                'link'       => '/seller/dashboard',
             ]);
         }
 
@@ -488,7 +488,7 @@ class AdminBannerController extends Controller
                 'message'    => 'Your requested hero banner "' . ($banner->title ?: 'Untitled') . '" was rejected. Reason: ' . $request->rejection_reason,
                 'targetRole' => 'seller',
                 'isRead'     => false,
-                'link'       => '/admin/banners',
+                'link'       => '/seller/dashboard',
             ]);
         }
 

@@ -197,7 +197,7 @@ function ordersManagement() {
         async fetchOrders() {
             this.loading = true;
             try {
-                const res = await fetch('/api/v1/orders/my-orders');
+                const res = await fetch('/api/v1/orders');
                 if (res.ok) {
                     this.orders = await res.json();
                 }

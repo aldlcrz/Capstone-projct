@@ -19,7 +19,7 @@ class ReturnReviewController extends Controller
     /**
      * List returns for the authenticated seller.
      */
-    public function index()
+    public function index(Request $request)
     {
         $seller = Auth::user();
         $returns = ReturnRequest::where('seller_id', $seller->id)
@@ -28,7 +28,11 @@ class ReturnReviewController extends Controller
             ->orderBy('createdAt', 'desc')
             ->get();
 
-        return response()->json($returns);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($returns);
+        }
+
+        return redirect()->route('seller.orders', ['tab' => 'return_refund']);
     }
 
     /**
