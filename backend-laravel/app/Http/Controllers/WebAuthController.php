@@ -2102,7 +2102,7 @@ class WebAuthController extends Controller
                         $user->update(['cart' => json_encode($cart)]);
 
                         try {
-                            if (class_exists(\App\Models\SellerFunnelEvent::class) && \Illuminate\Support\Facades\Schema::hasTable('seller_funnel_events')) {
+                            if (class_exists(\App\Models\SellerFunnelEvent::class) && Schema::hasTable('seller_funnel_events')) {
                                 \App\Models\SellerFunnelEvent::create([
                                     'seller_id'          => $product->sellerId,
                                     'product_id'         => $product->id,

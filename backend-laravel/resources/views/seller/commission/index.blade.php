@@ -1,6 +1,35 @@
 @extends('layouts.seller')
 
 @section('content')
+@php
+    $gcashQrUrl = !empty($paymentSettings['gcash_qr']) 
+        ? (str_starts_with($paymentSettings['gcash_qr'], 'http') || str_starts_with($paymentSettings['gcash_qr'], '/') ? $paymentSettings['gcash_qr'] : asset('storage/' . $paymentSettings['gcash_qr'])) 
+        : '';
+    $mayaQrUrl = !empty($paymentSettings['maya_qr']) 
+        ? (str_starts_with($paymentSettings['maya_qr'], 'http') || str_starts_with($paymentSettings['maya_qr'], '/') ? $paymentSettings['maya_qr'] : asset('storage/' . $paymentSettings['maya_qr'])) 
+        : '';
+    $currentProofUrl = ($currentRecord && !empty($currentRecord->paymentProof)) 
+        ? (str_starts_with($currentRecord->paymentProof, 'http') || str_starts_with($currentRecord->paymentProof, '/') ? $currentRecord->paymentProof : asset('storage/' . ltrim($currentRecord->paymentProof, '/'))) 
+        : '';
+    $currentPeriodLabel = \Carbon\Carbon::parse($period . '-01')->format('F Y');
+
+    $commissionInitData = [
+        'selectedMethod'  => $currentRecord?->paymentMethod ?: 'GCash',
+        'referenceNumber' => (string) ($currentRecord?->referenceNumber ?: ''),
+        'notes'           => (string) ($currentRecord?->notes ?: ''),
+        'existingProof'   => $currentProofUrl,
+        'gcashNumber'     => (string) ($paymentSettings['gcash_number'] ?? ''),
+        'mayaNumber'      => (string) ($paymentSettings['maya_number'] ?? ''),
+        'gcashQr'         => $gcashQrUrl,
+        'mayaQr'          => $mayaQrUrl,
+        'periodLabel'     => $currentPeriodLabel,
+    ];
+@endphp
+
+<script id="seller-commission-data" type="application/json">
+    @json($commissionInitData)
+</script>
+
 <div class="space-y-6 sm:space-y-8 max-w-6xl pb-28 lg:pb-12 px-2 sm:px-6 font-sans"
      x-data="sellerCommissionApp()"
      x-cloak>
@@ -16,13 +45,13 @@
         </div>
     @endif
 
-    @if(session('error') || $errors->any())
+    @if(session('error') || (isset($errors) && $errors->any()))
         <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs sm:text-sm font-bold space-y-1 shadow-xs">
             <div class="flex items-center gap-2.5">
                 <x-lucide name="alert-triangle" class="w-5 h-5 text-rose-600 shrink-0" />
                 <span>{{ session('error') ?: 'Please check the form for errors and try again.' }}</span>
             </div>
-            @if($errors->any())
+            @if(isset($errors) && $errors->any())
                 <ul class="list-disc list-inside text-xs text-rose-700 pl-7 space-y-0.5">
                     @foreach($errors->all() as $err)
                         <li>{{ $err }}</li>
@@ -75,7 +104,7 @@
         <div id="tour-commission-summary" class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
             <div class="rounded-2xl p-4 sm:p-6 shadow-xs space-y-1 bg-[#FFFCF7] border border-[#E8DECB]">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-[#766C60]">Billing Period</div>
-                <div class="text-xl sm:text-2xl font-bold font-sans text-[#1E1915]">{{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
+                <div class="text-xl sm:text-2xl font-bold font-sans text-[#1E1915]">{{ $currentPeriodLabel }}</div>
                 <div class="text-xs text-[#766C60]">Due by the 10th of next month</div>
             </div>
 
@@ -124,7 +153,7 @@
             </div>
         </div>
 
-        {{-- Payment Accounts & Submit Form --}}
+        {{-- Payment Accounts & Governance Info --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8">
             {{-- Super Admin Payment Accounts --}}
             <div id="tour-commission-accounts" class="rounded-2xl p-5 sm:p-8 shadow-xs space-y-4 bg-[#FFFCF7] border border-[#E8DECB]">
@@ -147,18 +176,15 @@
                             <span class="text-sm font-black text-[#1E1915] select-all font-mono">{{ $paymentSettings['gcash_number'] ?: 'Not provided' }}</span>
                             @if($paymentSettings['gcash_number'])
                                 <button type="button" 
-                                        @click="copyToClipboard('{{ $paymentSettings['gcash_number'] }}', 'GCash Number copied!')"
+                                        @click="copyToClipboard(gcashNumber, 'GCash Number copied!')"
                                         class="px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-white border border-[#E8DECB] hover:bg-gray-50 text-[#766C60] cursor-pointer"
                                         title="Copy number">
                                     Copy
                                 </button>
                             @endif
                         </div>
-                        @if($paymentSettings['gcash_qr'])
-                            @php
-                                $gcashQrUrl = str_starts_with($paymentSettings['gcash_qr'], 'http') || str_starts_with($paymentSettings['gcash_qr'], '/') ? $paymentSettings['gcash_qr'] : asset('storage/' . $paymentSettings['gcash_qr']);
-                            @endphp
-                            <div class="relative group cursor-pointer" @click="openProofModal('{{ $gcashQrUrl }}', 'Official Superadmin GCash QR Code', '{{ $paymentSettings['gcash_number'] }}')">
+                        @if($gcashQrUrl)
+                            <div class="relative group cursor-pointer" @click="openProofModal(gcashQr, 'Official Superadmin GCash QR Code', gcashNumber)">
                                 <img src="{{ $gcashQrUrl }}" class="w-32 h-32 object-contain mx-auto rounded-xl border border-white shadow-xs group-hover:scale-105 transition-transform" onerror="this.style.display='none'">
                                 <div class="text-[9.5px] text-[#C49520] font-bold text-center mt-1 group-hover:underline">Tap to zoom QR</div>
                             </div>
@@ -177,18 +203,15 @@
                             <span class="text-sm font-black text-[#1E1915] select-all font-mono">{{ $paymentSettings['maya_number'] ?: 'Not provided' }}</span>
                             @if($paymentSettings['maya_number'])
                                 <button type="button" 
-                                        @click="copyToClipboard('{{ $paymentSettings['maya_number'] }}', 'Maya Number copied!')"
+                                        @click="copyToClipboard(mayaNumber, 'Maya Number copied!')"
                                         class="px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-white border border-[#E8DECB] hover:bg-gray-50 text-[#766C60] cursor-pointer"
                                         title="Copy number">
                                     Copy
                                 </button>
                             @endif
                         </div>
-                        @if($paymentSettings['maya_qr'])
-                            @php
-                                $mayaQrUrl = str_starts_with($paymentSettings['maya_qr'], 'http') || str_starts_with($paymentSettings['maya_qr'], '/') ? $paymentSettings['maya_qr'] : asset('storage/' . $paymentSettings['maya_qr']);
-                            @endphp
-                            <div class="relative group cursor-pointer" @click="openProofModal('{{ $mayaQrUrl }}', 'Official Superadmin Maya QR Code', '{{ $paymentSettings['maya_number'] }}')">
+                        @if($mayaQrUrl)
+                            <div class="relative group cursor-pointer" @click="openProofModal(mayaQr, 'Official Superadmin Maya QR Code', mayaNumber)">
                                 <img src="{{ $mayaQrUrl }}" class="w-32 h-32 object-contain mx-auto rounded-xl border border-white shadow-xs group-hover:scale-105 transition-transform" onerror="this.style.display='none'">
                                 <div class="text-[9.5px] text-[#C49520] font-bold text-center mt-1 group-hover:underline">Tap to zoom QR</div>
                             </div>
@@ -215,7 +238,7 @@
                     @if($currentRecord && $currentRecord->status === 'paid')
                         <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
                             <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto"><x-lucide name="check-circle" class="w-6 h-6 text-white" /></div>
-                            <div class="text-sm font-bold text-emerald-900">Commission Settled for {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</div>
+                            <div class="text-sm font-bold text-emerald-900">Commission Settled for {{ $currentPeriodLabel }}</div>
                             <div class="text-xs text-emerald-700 font-sans">
                                 Your platform commission of ₱{{ number_format($currentRecord->commissionAmount, 2) }} was verified as Paid by Super Administrator on {{ $currentRecord->paidAt ? $currentRecord->paidAt->format('M d, Y h:i A') : 'N/A' }}.
                             </div>
@@ -238,13 +261,10 @@
                             <div class="text-xs text-gray-700 border-t border-amber-200/60 pt-3 space-y-1.5 leading-relaxed font-sans">
                                 <p><strong>Method:</strong> {{ $currentRecord->paymentMethod }}</p>
                                 <p><strong>Reference Number:</strong> <span class="font-mono font-bold text-[#1E1915]">{{ $currentRecord->referenceNumber }}</span></p>
-                                @if($currentRecord->paymentProof)
-                                    @php
-                                        $currentProofUrl = str_starts_with($currentRecord->paymentProof, 'http') || str_starts_with($currentRecord->paymentProof, '/') ? $currentRecord->paymentProof : asset('storage/' . ltrim($currentRecord->paymentProof, '/'));
-                                    @endphp
+                                @if($currentProofUrl)
                                     <div class="pt-1">
                                         <button type="button" 
-                                                @click="openProofModal('{{ $currentProofUrl }}', 'Commission Remittance Proof ({{ \Carbon\Carbon::parse($period . '-01')->format('M Y') }})', '{{ $currentRecord->referenceNumber }}')"
+                                                @click="openProofModal(existingProof, 'Commission Remittance Proof ({{ $currentPeriodLabel }})', referenceNumber)"
                                                 class="inline-flex items-center gap-1.5 text-xs font-bold text-[#C49520] hover:underline cursor-pointer">
                                             <x-lucide name="image" class="w-3.5 h-3.5 text-[#C49520]" />
                                             <span>View Submitted Receipt</span>
@@ -256,7 +276,7 @@
                             <div class="pt-2">
                                 <button type="button" 
                                         @click="openPayModal()"
-                                        class="w-full py-2.5 px-4 rounded-xl bg-white border border-[#C49520] text-[#1E1915] hover:bg-[#FDF8EE] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
+                                        class="w-full py-2.5 px-4 rounded-xl bg-white border border-[#C49520] text-[#1E1915] hover:bg-[#FDF8EE] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs">
                                     <x-lucide name="pencil" class="w-3.5 h-3.5 text-[#C49520]" />
                                     <span>Update Remittance Details</span>
                                 </button>
@@ -268,7 +288,7 @@
                                 <span class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0"><x-lucide name="clock" class="w-5 h-5 text-white" /></span>
                                 <div>
                                     <div class="text-sm font-bold text-amber-900">Payment Due: ₱{{ number_format($commissionDue, 2) }}</div>
-                                    <div class="text-xs text-amber-700 font-sans">Billing Period: {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }} (Rate: {{ $rate }}%)</div>
+                                    <div class="text-xs text-amber-700 font-sans">Billing Period: {{ $currentPeriodLabel }} (Rate: {{ $rate }}%)</div>
                                 </div>
                             </div>
                             <div class="text-xs text-gray-600 border-t border-amber-200/60 pt-3 space-y-1.5 leading-relaxed font-sans">
@@ -299,7 +319,7 @@
                 <h3 class="text-xs sm:text-sm font-black uppercase tracking-widest text-[#1E1915]">Commission Settlement History</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left min-w-125">
+                <table class="w-full text-left min-w-[500px]">
                     <thead>
                         <tr class="border-b bg-[#FDF8EE] border-[#E8DECB]">
                             <th class="px-4 sm:px-6 py-3.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#766C60]">Period</th>
@@ -311,20 +331,24 @@
                     </thead>
                     <tbody class="divide-y divide-[#F0EAE1] text-xs font-sans text-[#1E1915]">
                         @forelse($pastRecords as $rec)
+                        @php
+                            $recProof = ($rec->paymentProof && !empty($rec->paymentProof)) 
+                                ? (str_starts_with($rec->paymentProof, 'http') || str_starts_with($rec->paymentProof, '/') ? $rec->paymentProof : asset('storage/' . ltrim($rec->paymentProof, '/'))) 
+                                : '';
+                            $recPeriodLabel = \Carbon\Carbon::parse($rec->period . '-01')->format('M Y');
+                            $recProofTitle = 'Commission Remittance Proof (' . $recPeriodLabel . ')';
+                        @endphp
                         <tr class="hover:bg-[#FAF7F2] transition-all">
-                            <td class="px-4 sm:px-6 py-3.5 font-bold">{{ \Carbon\Carbon::parse($rec->period . '-01')->format('M Y') }}</td>
+                            <td class="px-4 sm:px-6 py-3.5 font-bold">{{ $recPeriodLabel }}</td>
                             <td class="px-4 sm:px-6 py-3.5 font-semibold">₱{{ number_format($rec->totalSales, 2) }}</td>
                             <td class="px-4 sm:px-6 py-3.5 font-bold text-[#C49520]">₱{{ number_format($rec->commissionAmount, 2) }}</td>
                             <td class="px-4 sm:px-6 py-3.5">
                                 @if($rec->referenceNumber)
                                     <div class="font-bold">{{ $rec->paymentMethod }}</div>
                                     <div class="text-[10px] text-[#766C60]">Ref: {{ $rec->referenceNumber }}</div>
-                                    @if($rec->paymentProof)
-                                        @php
-                                            $recProofUrl = str_starts_with($rec->paymentProof, 'http') || str_starts_with($rec->paymentProof, '/') ? $rec->paymentProof : asset('storage/' . ltrim($rec->paymentProof, '/'));
-                                        @endphp
+                                    @if($recProof)
                                         <button type="button" 
-                                                @click="openProofModal('{{ $recProofUrl }}', 'Commission Remittance Proof ({{ \Carbon\Carbon::parse($rec->period . '-01')->format('M Y') }})', '{{ $rec->referenceNumber }}')"
+                                                @click="openProofModal(@js($recProof), @js($recProofTitle), @js($rec->referenceNumber))"
                                                 class="text-[10px] text-[#C49520] font-bold hover:underline inline-flex items-center gap-1 mt-0.5 cursor-pointer">
                                             <x-lucide name="image" class="w-3 h-3 text-[#C49520]" />
                                             <span>View Receipt</span>
@@ -363,7 +387,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
          @click.self="closePayModal()"
          style="display: none;"
          x-cloak>
@@ -382,7 +406,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-[#1E1915]">Remit Platform Commission</h3>
-                        <p class="text-[10px] text-[#766C60] font-medium">Billing Period: {{ \Carbon\Carbon::parse($period . '-01')->format('F Y') }}</p>
+                        <p class="text-[10px] text-[#766C60] font-medium">Billing Period: {{ $currentPeriodLabel }}</p>
                     </div>
                 </div>
                 <button type="button" 
@@ -433,7 +457,7 @@
                             </div>
                             @if($paymentSettings['gcash_number'])
                                 <button type="button" 
-                                        @click.stop="copyToClipboard('{{ $paymentSettings['gcash_number'] }}', 'GCash Number copied!')"
+                                        @click.stop="copyToClipboard(gcashNumber, 'GCash Number copied!')"
                                         class="w-full py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer">
                                     Copy Number
                                 </button>
@@ -455,7 +479,7 @@
                             </div>
                             @if($paymentSettings['maya_number'])
                                 <button type="button" 
-                                        @click.stop="copyToClipboard('{{ $paymentSettings['maya_number'] }}', 'Maya Number copied!')"
+                                        @click.stop="copyToClipboard(mayaNumber, 'Maya Number copied!')"
                                         class="w-full py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 cursor-pointer">
                                     Copy Number
                                 </button>
@@ -612,7 +636,7 @@
                 </button>
             </div>
             <div class="max-h-96 overflow-auto flex items-center justify-center bg-gray-50 rounded-2xl p-2 border">
-                <img :src="activeProofUrl" class="max-h-90 w-full object-contain rounded-xl" alt="Zoomed Receipt">
+                <img :src="activeProofUrl" class="max-h-80 w-full object-contain rounded-xl" alt="Zoomed Receipt">
             </div>
             <div class="flex items-center justify-between text-xs text-gray-500 font-mono">
                 <span x-text="activeProofRef ? 'Ref: ' + activeProofRef : ''"></span>
@@ -663,28 +687,41 @@
 @once
 <script>
 function sellerCommissionApp() {
+    let config = {};
+    try {
+        const el = document.getElementById('seller-commission-data');
+        if (el && el.textContent) {
+            config = JSON.parse(el.textContent.trim()) || {};
+        }
+    } catch (e) {
+        config = {};
+    }
+
     return {
         payModal: false,
         proofModal: false,
         activeProofUrl: '',
         activeProofTitle: '',
         activeProofRef: '',
-        selectedMethod: '{{ $currentRecord?->paymentMethod ?: 'GCash' }}',
-        referenceNumber: '{{ addslashes($currentRecord?->referenceNumber ?: '') }}',
-        notes: '{{ addslashes($currentRecord?->notes ?: '') }}',
+        selectedMethod: config.selectedMethod || 'GCash',
+        referenceNumber: config.referenceNumber || '',
+        notes: config.notes || '',
         photoPreview: null,
         photoFile: null,
-        existingProof: '{{ $currentRecord?->paymentProof ? (str_starts_with($currentRecord->paymentProof, 'http') || str_starts_with($currentRecord->paymentProof, '/') ? $currentRecord->paymentProof : asset('storage/' . ltrim($currentRecord->paymentProof, '/'))) : '' }}',
-        gcashNumber: '{{ addslashes($paymentSettings['gcash_number'] ?? '') }}',
-        mayaNumber: '{{ addslashes($paymentSettings['maya_number'] ?? '') }}',
-        gcashQr: '{{ $paymentSettings['gcash_qr'] ? (str_starts_with($paymentSettings['gcash_qr'], 'http') || str_starts_with($paymentSettings['gcash_qr'], '/') ? $paymentSettings['gcash_qr'] : asset('storage/' . $paymentSettings['gcash_qr'])) : '' }}',
-        mayaQr: '{{ $paymentSettings['maya_qr'] ? (str_starts_with($paymentSettings['maya_qr'], 'http') || str_starts_with($paymentSettings['maya_qr'], '/') ? $paymentSettings['maya_qr'] : asset('storage/' . $paymentSettings['maya_qr'])) : '' }}',
+        existingProof: config.existingProof || '',
+        gcashNumber: config.gcashNumber || '',
+        mayaNumber: config.mayaNumber || '',
+        gcashQr: config.gcashQr || '',
+        mayaQr: config.mayaQr || '',
+        periodLabel: config.periodLabel || '',
         submitting: false,
         copiedText: '',
 
         copyToClipboard(text, label) {
             if (!text) return;
-            navigator.clipboard.writeText(text);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            }
             this.copiedText = label;
             setTimeout(() => { this.copiedText = ''; }, 2500);
         },
@@ -698,6 +735,7 @@ function sellerCommissionApp() {
         },
 
         openProofModal(url, title, ref) {
+            if (!url) return;
             this.activeProofUrl = url;
             this.activeProofTitle = title || 'Receipt Proof';
             this.activeProofRef = ref || '';
