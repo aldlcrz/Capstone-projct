@@ -548,7 +548,7 @@ class OrderController extends Controller
             \App\Services\EmailNotificationService::sendNotification($customerUser->email, $mailable, 'order_status_updated', $customerUser->id, 'Order', $order->id);
         }
 
-        return response()->json($order->load(['customer', 'seller', 'items.product', 'statusHistories']));
+        return response()->json($order->load(['customer', 'seller', 'items.product', 'statusHistories', 'shipping.provider', 'returnRequests', 'reviews.customer']));
     }
 
     /**

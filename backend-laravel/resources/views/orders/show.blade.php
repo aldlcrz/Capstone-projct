@@ -895,14 +895,37 @@
                 </div>
 
                 {{-- Right Column: Payment and receipt --}}
+                @php
+                    $showPmUpper = strtoupper(trim((string) ($order->paymentMethod ?? '')));
+                    $showPsLower = strtolower(trim((string) ($order->paymentStatus ?? '')));
+                    $showIsOnline = str_contains($showPmUpper, 'GCASH') || str_contains($showPmUpper, 'MAYA');
+                    $showIsConfirmedPaid = in_array($showPsLower, ['paid', 'verified', 'paid (verified)', 'paid (direct to seller)', 'confirmed'], true)
+                        || ((float) ($order->total_verified_payments ?? 0) >= (float) ($order->totalAmount ?? 0) && (float) ($order->totalAmount ?? 0) > 0)
+                        || ($showIsOnline && in_array($statusLower, ['to ship', 'shipped', 'ready for pickup', 'in transit', 'in_transit', 'delivered', 'completed'], true));
+                    $showHasSubmittedProof = $showIsOnline && (!empty($order->paymentReference) || !empty($order->paymentProof));
+                    $showAmountPaid = ($showIsConfirmedPaid || $showHasSubmittedProof)
+                        ? max((float) ($order->total_verified_payments ?? 0), (float) ($order->totalAmount ?? 0))
+                        : (float) ($order->total_verified_payments ?? 0);
+                @endphp
                 <div class="p-4 sm:p-5 space-y-2.5 bg-[#FDFBF7]/30">
                     <div class="flex items-center justify-between pb-1.5" style="border-bottom:1px solid #FAF4EB;">
                         <span style="font-family:ui-serif,Georgia,serif;font-size:12px;font-weight:700;color:#1E1915;letter-spacing:0.02em;text-transform:uppercase;">
                             Payment and receipt
                         </span>
-                        <span class="text-[11px] font-bold text-[#78716C] px-2 py-0.5 bg-[#FAF8F5] rounded-md border border-[#ECE3D2]">
-                            {{ $order->formatted_payment_method }}
-                        </span>
+                        <div class="flex items-center gap-1.5">
+                            @if($showIsConfirmedPaid)
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-800 px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-200">
+                                    ✓ Paid
+                                </span>
+                            @elseif($showHasSubmittedProof)
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-800 px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-200">
+                                    ✓ Receipt Submitted
+                                </span>
+                            @endif
+                            <span class="text-[11px] font-bold text-[#78716C] px-2 py-0.5 bg-[#FAF8F5] rounded-md border border-[#ECE3D2]">
+                                {{ $order->formatted_payment_method }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="space-y-1.5 text-xs">
@@ -919,13 +942,35 @@
                             </span>
                         </div>
 
-                        @if(in_array(strtoupper($order->paymentMethod ?? ''), ['GCASH', 'MAYA']) && !empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-'))
+                        <div class="flex items-center justify-between text-[#78716C]">
+                            <span>Payment Status</span>
+                            @if($showIsConfirmedPaid)
+                                <span class="font-bold text-emerald-700">Paid via {{ $order->formatted_payment_method }}</span>
+                            @elseif($showHasSubmittedProof)
+                                <span class="font-bold text-emerald-700">Paid via {{ $order->formatted_payment_method }} (Receipt Attached)</span>
+                            @elseif($showAmountPaid > 0)
+                                <span class="font-bold text-amber-700">Partially Paid (₱{{ number_format($showAmountPaid, 2) }})</span>
+                            @else
+                                <span class="font-bold text-[#996515]">{{ $isStorePickup ? 'Pay at Shop upon Pickup' : 'Pay upon Delivery' }}</span>
+                            @endif
+                        </div>
+
+                        @if(!empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-'))
                             <div class="pt-0.5 flex items-center justify-between text-[#78716C]">
-                                <span class="text-[10px] uppercase tracking-wider">Ref:</span>
+                                <span class="text-[10px] uppercase tracking-wider">Ref #:</span>
                                 <div class="flex items-center gap-1 font-mono text-[11px] text-[#1E1915]">
                                     <span>{{ $order->paymentReference }}</span>
                                     <button type="button" @click="copyText('{{ $order->paymentReference }}', 'Reference copied!')" class="text-[10px] text-[#78716C] hover:text-[#1E1915] uppercase font-bold">Copy</button>
                                 </div>
+                            </div>
+                        @endif
+
+                        @if(!empty($order->paymentProof))
+                            <div class="pt-0.5 flex items-center justify-between text-[#78716C]">
+                                <span class="text-[10px] uppercase tracking-wider">Payment Proof:</span>
+                                <button type="button" @click="openLightbox('image', '{{ $order->payment_proof_url }}')" class="text-[11px] font-bold text-[#996515] hover:underline cursor-pointer">
+                                    View Uploaded Receipt ↗
+                                </button>
                             </div>
                         @endif
                     </div>

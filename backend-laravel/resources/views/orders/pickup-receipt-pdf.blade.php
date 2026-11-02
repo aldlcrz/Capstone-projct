@@ -286,6 +286,22 @@
         </tr>
     </table>
 
+    @php
+        $pmUpper = strtoupper(trim((string) ($order->paymentMethod ?? '')));
+        $psLower = strtolower(trim((string) ($order->paymentStatus ?? '')));
+        $statusLowerReceipt = strtolower(trim((string) ($order->status ?? '')));
+        $isOnlinePaidMethod = str_contains($pmUpper, 'GCASH') || str_contains($pmUpper, 'MAYA');
+        $isConfirmedPaid = in_array($psLower, ['paid', 'verified', 'paid (verified)', 'paid (direct to seller)', 'confirmed'], true)
+            || ((float) ($order->total_verified_payments ?? 0) >= (float) ($order->totalAmount ?? 0) && (float) ($order->totalAmount ?? 0) > 0)
+            || ($isOnlinePaidMethod && in_array($statusLowerReceipt, ['to ship', 'shipped', 'ready for pickup', 'delivered', 'completed'], true));
+        $hasSubmittedOnlineProof = $isOnlinePaidMethod && (!empty($order->paymentReference) || !empty($order->paymentProof));
+        $isPaidOrder = $isConfirmedPaid || $hasSubmittedOnlineProof;
+        $amountPaid = $isPaidOrder
+            ? max((float) ($order->total_verified_payments ?? 0), (float) ($order->totalAmount ?? 0))
+            : (float) ($order->total_verified_payments ?? 0);
+        $balanceDue = max(0.0, round((float) ($order->totalAmount ?? 0) - $amountPaid, 2));
+    @endphp
+
     {{-- Highlight Information Grid --}}
     <table class="highlight-table">
         <tr>
@@ -305,6 +321,21 @@
                 <div class="info-row"><strong>Collection Point:</strong> Lumban Workshop Studio, Lumban, Laguna</div>
                 <div class="info-row"><strong>Fulfillment Method:</strong> In-Shop Store Pickup (Free / ₱0.00)</div>
                 <div class="info-row"><strong>Payment Method:</strong> {{ $order->formatted_payment_method }}</div>
+                <div class="info-row">
+                    <strong>Payment Status:</strong>
+                    @if($isConfirmedPaid)
+                        <span style="color: #047857; font-weight: bold;">PAID &amp; VERIFIED ({{ $order->formatted_payment_method }})</span>
+                    @elseif($hasSubmittedOnlineProof)
+                        <span style="color: #047857; font-weight: bold;">PAID VIA {{ strtoupper($order->formatted_payment_method) }} (RECEIPT SUBMITTED)</span>
+                    @elseif($amountPaid > 0)
+                        <span style="color: #B45309; font-weight: bold;">PARTIALLY PAID (₱{{ number_format($amountPaid, 2) }})</span>
+                    @else
+                        <span style="color: #996515; font-weight: bold;">Pay at Shop upon Pickup</span>
+                    @endif
+                </div>
+                @if(!empty($order->paymentReference) && !str_starts_with($order->paymentReference, 'COD-'))
+                    <div class="info-row"><strong>Payment Reference #:</strong> <span style="font-family: monospace; font-weight: bold; color: #1E1915;">{{ $order->paymentReference }}</span></div>
+                @endif
             </td>
         </tr>
     </table>
@@ -377,6 +408,15 @@
 
                     <div style="margin-top: 6px;">
                         <span class="auth-badge">Verified LumBarong Artisan Pass</span>
+                        @if($isPaidOrder)
+                            <span class="auth-badge" style="background-color: #ECFDF5; border-color: #34D399; color: #065F46; margin-left: 4px;">
+                                ✓ PAID IN FULL ({{ strtoupper($order->formatted_payment_method) }})
+                            </span>
+                        @else
+                            <span class="auth-badge" style="background-color: #FFFBEB; border-color: #FCD34D; color: #92400E; margin-left: 4px;">
+                                PAY AT PICKUP: ₱{{ number_format($balanceDue, 2) }}
+                            </span>
+                        @endif
                     </div>
                 </div>
             </td>
@@ -398,6 +438,20 @@
                         <td class="text-right font-bold" style="color: #C0420A;">-₱{{ number_format(abs($order->totalAmount - $itemsSubtotal), 2) }}</td>
                     </tr>
                     @endif
+                    <tr style="border-top: 1px dashed #ECE3D2;">
+                        <td style="color: #8C827A;">Amount Paid ({{ $order->formatted_payment_method }}):</td>
+                        <td class="text-right font-bold" style="color: {{ $amountPaid > 0 ? '#059669' : '#78716C' }};">₱{{ number_format($amountPaid, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #8C827A;">Balance Due on Pickup:</td>
+                        <td class="text-right font-bold" style="color: {{ $balanceDue <= 0 ? '#059669' : '#B45309' }};">
+                            @if($balanceDue <= 0)
+                                ₱0.00 (PAID)
+                            @else
+                                ₱{{ number_format($balanceDue, 2) }}
+                            @endif
+                        </td>
+                    </tr>
                     <tr class="grand-total">
                         <td>FINAL TOTAL AMOUNT:</td>
                         <td class="text-right">₱{{ number_format($order->totalAmount, 2) }}</td>

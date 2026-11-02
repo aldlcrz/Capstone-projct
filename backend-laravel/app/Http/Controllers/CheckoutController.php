@@ -364,12 +364,16 @@ class CheckoutController extends Controller
         $providerCode = strtolower((string)($provider?->code ?? ''));
 
         $rawMethod = trim((string)$request->input('paymentMethod', ''));
+        $isExplicitOnlineMethod = in_array(strtoupper($rawMethod), ['GCASH', 'MAYA'], true);
+
         $isStorePickup = $providerCode === 'store_pickup'
-            || in_array(strtolower($rawMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true);
+            || in_array(strtolower($rawMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay at the store', 'pay on store', 'pay in shop', 'in-shop'], true);
         $isSpecialDelivery = in_array($providerCode, ['seller_direct', 'special_delivery'], true)
             || in_array(strtolower($rawMethod), ['special_delivery', 'special delivery', 'seller_direct'], true);
 
-        if ($isStorePickup) {
+        if ($isExplicitOnlineMethod) {
+            $paymentMethod = strcasecmp($rawMethod, 'Maya') === 0 ? 'Maya' : 'GCash';
+        } elseif ($isStorePickup) {
             $paymentMethod = 'Store Pickup';
         } elseif ($isSpecialDelivery) {
             $paymentMethod = 'Special Delivery';
@@ -381,8 +385,8 @@ class CheckoutController extends Controller
         $isGcash = strcasecmp($paymentMethod, 'GCash') === 0;
         $isMaya  = strcasecmp($paymentMethod, 'Maya') === 0;
 
-        $isDirectSellerPayment = $isStorePickup || $isSpecialDelivery;
-        $requiresOnlineReceipt = !$isDirectSellerPayment && !$isCod;
+        $isDirectSellerPayment = ($isStorePickup || $isSpecialDelivery) && !$isExplicitOnlineMethod;
+        $requiresOnlineReceipt = $isGcash || $isMaya;
 
         $validationRules = [
             'paymentMethod'   => 'nullable|string',
@@ -497,10 +501,12 @@ class CheckoutController extends Controller
                         $storePickupProvider = \App\Models\ShippingProvider::where('code', 'store_pickup')->first();
                         $specialDeliveryProvider = \App\Models\ShippingProvider::where('code', 'seller_direct')->first();
 
-                        $isExplicitStorePickup = in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay in shop', 'in-shop'], true)
+                        $isExplicitStorePickup = $isStorePickup
+                            || in_array(strtolower($paymentMethod), ['store_pickup', 'store pickup', 'pay at store', 'pay at the store', 'pay on store', 'pay in shop', 'in-shop'], true)
                             || ($shippingProviderId && $storePickupProvider && $shippingProviderId === $storePickupProvider->id);
 
-                        $isExplicitSpecialDelivery = in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)
+                        $isExplicitSpecialDelivery = $isSpecialDelivery
+                            || in_array(strtolower($paymentMethod), ['special_delivery', 'special delivery', 'seller_direct'], true)
                             || ($shippingProviderId && $specialDeliveryProvider && $shippingProviderId === $specialDeliveryProvider->id);
 
                         if ($isExplicitStorePickup && $storePickupProvider) {

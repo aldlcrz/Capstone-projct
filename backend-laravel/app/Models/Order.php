@@ -877,20 +877,24 @@ class Order extends Model
         $method = strtoupper(trim((string) ($this->paymentMethod ?? '')));
 
         if ($this->isStorePickup()) {
-            if ($method === 'STORE PICKUP' || $method === 'PAY AT STORE' || $method === 'PAY IN SHOP' || $method === '') {
+            if (in_array($method, ['STORE PICKUP', 'PAY AT STORE', 'PAY AT THE STORE', 'PAY ON STORE', 'PAY IN SHOP', ''], true)) {
                 return 'Store Pickup (Pay at Shop)';
             }
             if ($method === 'CASH') return 'Cash (In-Shop)';
+            if ($method === 'GCASH') return 'GCash';
+            if ($method === 'MAYA' || $method === 'PAYMAYA') return 'Maya';
             if (str_contains($method, 'GCASH')) return 'Direct GCash (To Artisan)';
             if (str_contains($method, 'MAYA')) return 'Direct Maya (To Artisan)';
             return $this->paymentMethod;
         }
 
         if ($this->isSpecialDelivery()) {
-            if ($method === 'SPECIAL DELIVERY' || $method === 'SELLER DIRECT' || $method === '') {
+            if (in_array($method, ['SPECIAL DELIVERY', 'SELLER DIRECT', ''], true)) {
                 return 'Pay to artisan rider';
             }
             if ($method === 'CASH' || $method === 'COD') return 'Pay to artisan rider';
+            if ($method === 'GCASH') return 'GCash';
+            if ($method === 'MAYA' || $method === 'PAYMAYA') return 'Maya';
             if (str_contains($method, 'GCASH')) return 'Direct GCash (To Artisan/Rider)';
             if (str_contains($method, 'MAYA')) return 'Direct Maya (To Artisan/Rider)';
             return $this->paymentMethod;

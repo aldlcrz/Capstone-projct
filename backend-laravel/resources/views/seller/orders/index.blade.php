@@ -2987,15 +2987,15 @@ if (window.Alpine) {
                         </template>
 
                         {{-- Order Status History Audit Trail --}}
-                        <template x-if="detailsOrder.status_histories && detailsOrder.status_histories.length > 0">
+                        <template x-if="(detailsOrder.status_histories || detailsOrder.statusHistories || []).length > 0">
                             <div class="rounded-2xl p-4 space-y-2.5 shadow-2xs border"
                                  style="background: #FFFCF7; border-color: #E8DECB;">
                                 <div class="text-[10px] font-black uppercase tracking-widest text-[#C0420A] flex items-center justify-between pb-1.5 border-b" style="border-color: #E8DECB;">
                                     <span>Status History Audit Trail</span>
-                                    <span class="text-[#766C60] text-[10px]" x-text="detailsOrder.status_histories.length + ' entry(ies)'"></span>
+                                    <span class="text-[#766C60] text-[10px]" x-text="(detailsOrder.status_histories || detailsOrder.statusHistories || []).length + ' entry(ies)'"></span>
                                 </div>
                                 <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                                    <template x-for="hist in detailsOrder.status_histories" :key="hist.id">
+                                    <template x-for="hist in (detailsOrder.status_histories || detailsOrder.statusHistories || [])" :key="hist.id">
                                         <div class="flex items-start justify-between text-xs py-1 border-b last:border-0" style="border-color: #E8DECB;">
                                             <div>
                                                 <span class="font-bold text-[#1E1915] text-xs" x-text="hist.newStatus"></span>
