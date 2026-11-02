@@ -385,7 +385,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay in person upon claiming and inspecting your item at the workshop</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="Pay at the Store" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_pickup" value="Pay at the Store" x-model="paymentMethod" :checked="paymentMethod === 'Pay at the Store' || paymentMethod === 'Pay on Store'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
 
@@ -401,7 +401,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_pickup" value="GCash" x-model="paymentMethod" :checked="paymentMethod === 'GCash'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
@@ -418,7 +418,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_pickup" value="Maya" x-model="paymentMethod" :checked="paymentMethod === 'Maya'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
@@ -437,7 +437,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay cash upon delivery by the local artisan rider</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_special" value="COD" x-model="paymentMethod" :checked="paymentMethod === 'COD'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
 
@@ -453,7 +453,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_special" value="GCash" x-model="paymentMethod" :checked="paymentMethod === 'GCash'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
@@ -470,7 +470,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Artisan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_special" value="Maya" x-model="paymentMethod" :checked="paymentMethod === 'Maya'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
@@ -490,7 +490,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Pay cash upon courier delivery</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="COD" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_courier" value="COD" x-model="paymentMethod" :checked="paymentMethod === 'COD'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
 
@@ -505,7 +505,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="GCash" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_courier" value="GCash" x-model="paymentMethod" :checked="paymentMethod === 'GCash'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
@@ -521,7 +521,7 @@
                                             <div class="text-[10px] lg:text-xs text-gray-500">Scan Shop QR Code to Pay</div>
                                         </div>
                                     </div>
-                                    <input type="radio" name="paymentMethodRadio" value="Maya" x-model="paymentMethod" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
+                                    <input type="radio" name="paymentMethodRadio_courier" value="Maya" x-model="paymentMethod" :checked="paymentMethod === 'Maya'" class="w-5 h-5 accent-[#1E1915] cursor-pointer">
                                 </label>
                             </div>
                             @endif
