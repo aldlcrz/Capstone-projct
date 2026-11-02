@@ -149,6 +149,12 @@
                                     'alt_path' => 'admin/orders',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>'
                                 ],
+                                [
+                                    'label' => 'Payment Gateways',
+                                    'route' => 'superadmin.payment-settings',
+                                    'path'  => 'superadmin/payment-settings',
+                                    'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>'
+                                ],
                             ],
                             'CATALOG & CONTENT' => [
                                 [
@@ -202,7 +208,9 @@
                             'SYSTEM GOVERNANCE' => [
                                 [
                                     'label' => 'Reports & Concerns',
-                                    'path'  => 'admin/reports',
+                                    'route' => 'superadmin.reports',
+                                    'path'  => 'superadmin/reports',
+                                    'alt_path' => 'admin/reports',
                                     'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>',
                                     'badge' => $pendingReportsCount
                                 ],

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(request()->is('superadmin*') ? 'layouts.superadmin' : 'layouts.admin')
 
 @section('content')
 <div class="space-y-5" x-data="{
