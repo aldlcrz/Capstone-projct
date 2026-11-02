@@ -296,7 +296,7 @@
         </template>
 
         <!-- Collection Sub-header & Piece Count Indicator -->
-        <div x-show="activeTab !== 'policies'" class="mb-4 flex items-center justify-between">
+        <div x-show="activeTab !== 'policies' && !loading" class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <div class="w-4 h-[1.5px] bg-[#C0420A]"></div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-stone-700" x-text="catalogueTitle"></span>
@@ -305,7 +305,7 @@
         </div>
 
         {{-- Products Grid (shown when not on policies tab) --}}
-        <div x-show="activeTab !== 'policies'" class="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <div x-show="activeTab !== 'policies' && !loading" class="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             <template x-for="product in displayedProducts" :key="product.id">
                 <a :href="'/products/' + product.id" class="group relative flex flex-col bg-white rounded-sm shadow-sm hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-[#C0420A] transition-all duration-300">
                     <div class="relative aspect-square overflow-hidden bg-stone-50 rounded-t-sm">
@@ -481,6 +481,12 @@ function shopClient(config) {
             // Listen for global custom event 'shop-search' dispatched by header search bar
             window.addEventListener('shop-search', (e) => {
                 this.searchQuery = (e.detail || '').toString();
+                if (this.$refs.shopSearchInput) {
+                    this.$refs.shopSearchInput.value = this.searchQuery;
+                }
+                if (this.searchQuery.trim().length > 0) {
+                    this.activeTab = 'all';
+                }
                 this.syncSearch();
             });
 
@@ -513,7 +519,15 @@ function shopClient(config) {
         },
         onSearchInput(e) {
             clearTimeout(this._searchTimer);
+            const val = this.searchQuery.trim();
+            if (val.length > 0 && this.activeTab === 'policies') {
+                this.activeTab = 'all';
+            }
+            window.dispatchEvent(new CustomEvent('shop-search-updated', { detail: this.searchQuery }));
             this._searchTimer = setTimeout(() => {
+                if (this.searchQuery.trim().length > 0 && this.activeTab !== 'all') {
+                    this.activeTab = 'all';
+                }
                 this.syncSearch();
             }, 280);
         },
@@ -522,6 +536,10 @@ function shopClient(config) {
             if (this.$refs.shopSearchInput) {
                 this.$refs.shopSearchInput.blur();
             }
+            if (this.searchQuery.trim().length > 0) {
+                this.activeTab = 'all';
+            }
+            window.dispatchEvent(new CustomEvent('shop-search-updated', { detail: this.searchQuery }));
             this.syncSearch();
         },
         clearSearch() {
@@ -532,11 +550,16 @@ function shopClient(config) {
                 this.$refs.shopSearchInput.focus();
             }
             window.dispatchEvent(new CustomEvent('shop-search-cleared'));
+            window.dispatchEvent(new CustomEvent('shop-search-updated', { detail: '' }));
             this.syncSearch();
         },
         async syncSearch() {
             const seq = ++this.searchSeq;
             const trimmed = this.searchQuery.trim();
+
+            if (trimmed && this.activeTab === 'policies') {
+                this.activeTab = 'all';
+            }
 
             // Sync URL query string without reloading page
             try {
@@ -553,10 +576,12 @@ function shopClient(config) {
             if (!trimmed && (this.sortOrder === 'recommended' || !this.sortOrder)) {
                 if (this.allProducts && this.allProducts.length) {
                     this.products = [...this.allProducts];
+                    this.loading = false;
                     return;
                 }
             }
 
+            this.loading = true;
             try {
                 const searchParam = trimmed ? `&search=${encodeURIComponent(trimmed)}` : '';
                 const sortParam = (this.sortOrder && this.sortOrder !== 'recommended') ? `&sort=${encodeURIComponent(this.sortOrder)}` : '';
@@ -571,6 +596,10 @@ function shopClient(config) {
             } catch (e) {
                 if (seq === this.searchSeq) {
                     console.error('Artisan search sync error:', e);
+                }
+            } finally {
+                if (seq === this.searchSeq) {
+                    this.loading = false;
                 }
             }
         },

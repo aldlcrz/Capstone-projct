@@ -119,6 +119,7 @@
                               }
                           }"
                           @shop-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
+                          @shop-search-updated.window="query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || '')"
                           @catalogue-search-cleared.window="query = ''; if ($refs.searchInput) $refs.searchInput.value = ''"
                           @catalogue-search-updated.window="query = $event.detail || ''; if ($refs.searchInput) $refs.searchInput.value = ($event.detail || '')"
                           @submit="handleSubmit($event)"

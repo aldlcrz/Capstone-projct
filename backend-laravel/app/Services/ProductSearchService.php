@@ -691,8 +691,13 @@ class ProductSearchService
 
         $searchTokens = !empty($attributeTokens) ? $attributeTokens : $tokens;
 
+        // Check if query is already scoped to a specific seller (e.g. browsing an artisan shop)
+        $hasSellerScope = collect($query->getQuery()->wheres)->contains(function ($where) {
+            return isset($where['column']) && $where['column'] === 'sellerId';
+        });
+
         // Apply WHERE clauses combining keywords across product attributes
-        $query->where(function (Builder $mainQuery) use ($rawSearch, $normalized, $searchTokens, $detectedAudience) {
+        $query->where(function (Builder $mainQuery) use ($rawSearch, $normalized, $searchTokens, $detectedAudience, $hasSellerScope) {
             $isPureColorSearch = self::isColorToken($normalized);
 
             // Path 1: Direct full phrase match on attributes (when attributes exist)
@@ -717,7 +722,7 @@ class ProductSearchService
 
             // Path 2: Token-based multi-attribute match
             // Each meaningful token must match AT LEAST ONE searchable field
-            $tokenCondition = function (Builder $tokenQuery) use ($searchTokens, $detectedAudience) {
+            $tokenCondition = function (Builder $tokenQuery) use ($searchTokens, $detectedAudience, $hasSellerScope) {
                 $isFemaleSearch = in_array($detectedAudience, ['Women', 'Girls'], true);
 
                 foreach ($searchTokens as $tokenData) {
@@ -727,7 +732,7 @@ class ProductSearchService
                     $isColorToken = self::isColorToken($orig) || self::isColorToken($resolved);
 
                     // General attribute matching
-                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isColorToken, $isFemaleSearch) {
+                    $tokenQuery->where(function (Builder $subQuery) use ($variants, $orig, $resolved, $isColorToken, $isFemaleSearch, $hasSellerScope) {
                         if ($isColorToken) {
                             foreach ($variants as $v) {
                                 $v = strtolower(trim($v));
@@ -767,11 +772,14 @@ class ProductSearchService
                                          ->orWhere('variations', 'like', '%' . $v . '%')
                                          ->orWhereHas('category', function ($cq) use ($v) {
                                              $cq->where('name', 'like', '%' . $v . '%');
-                                         })
-                                         ->orWhereHas('seller', function ($sq) use ($v) {
-                                             $sq->where('shopName', 'like', '%' . $v . '%')
-                                                ->orWhere('name', 'like', '%' . $v . '%');
                                          });
+
+                                if (!$hasSellerScope) {
+                                    $subQuery->orWhereHas('seller', function ($sq) use ($v) {
+                                        $sq->where('shopName', 'like', '%' . $v . '%')
+                                           ->orWhere('name', 'like', '%' . $v . '%');
+                                    });
+                                }
 
                                 // If 'barong' is searched in female context (e.g. 'barong for girl' or 'barong for women'),
                                 // also match Filipiniana / Lady Barong attire
