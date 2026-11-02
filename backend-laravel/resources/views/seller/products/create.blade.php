@@ -1253,11 +1253,11 @@ function addProductManager() {
 
     // Ensure all 12 categories from the screenshot exist in parsedCats for Men
     const referenceMenCategories = [
-        'Accessories',
+        'Polo Barong',
         'Camisa de Chino',
         'Casual',
         'Formal Barong',
-        'Heritage Accessories',
+        'Wedding Barong',
         'Jusi Classic Barong',
         'Lumban Specials',
         'Modern',

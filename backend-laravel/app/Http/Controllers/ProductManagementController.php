@@ -34,8 +34,8 @@ class ProductManagementController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Ensure all default Lumban heritage categories are present in database
-        \Database\Seeders\CategorySeeder::ensureDefaultCategories();
+        // Only seed default categories if the categories table is completely empty
+        \Database\Seeders\CategorySeeder::ensureDefaultCategories(true);
 
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
         foreach ($categories as $cat) {
@@ -492,8 +492,8 @@ class ProductManagementController extends Controller
     {
         $product = Product::where('id', $id)->where('sellerId', Auth::id())->firstOrFail();
 
-        // Ensure all default Lumban heritage categories are present in database
-        \Database\Seeders\CategorySeeder::ensureDefaultCategories();
+        // Only seed default categories if the categories table is completely empty
+        \Database\Seeders\CategorySeeder::ensureDefaultCategories(true);
 
         $categories = \App\Models\Category::orderBy('name', 'asc')->get();
         foreach ($categories as $cat) {

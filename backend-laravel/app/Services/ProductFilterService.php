@@ -654,8 +654,23 @@ class ProductFilterService
                 ['name' => 'Lady Barong', 'cat' => 'Lady Barong', 'group' => 'Women', 'section' => "Women's Filipiniana", 'img' => '/uploads/categories/women_lady_barong.png', 'count' => 0],
                 ['name' => "Boys' Barong", 'cat' => "Boys' Barong", 'group' => 'Kids', 'section' => 'Kids & Accessories', 'img' => '/uploads/categories/kids_boys.png', 'count' => 0],
                 ['name' => "Girls' Filipiniana", 'cat' => "Girls' Filipiniana", 'group' => 'Kids', 'section' => 'Kids & Accessories', 'img' => '/uploads/categories/kids_girls.png', 'count' => 0],
-                ['name' => 'Accessories', 'cat' => 'Accessories', 'group' => 'Accessories', 'section' => 'Kids & Accessories', 'img' => '/uploads/categories/accessories.png', 'count' => 0],
             ];
+        }
+
+        // Also check archived_records so deleted/archived categories never leak onto the storefront
+        $archivedNames = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('archived_records')) {
+                $archivedNames = \App\Models\ArchivedRecord::where('item_type', 'category')
+                    ->pluck('name')
+                    ->map(fn ($name) => mb_strtolower(trim((string) $name), 'UTF-8'))
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+        } catch (\Throwable $e) {
+            $archivedNames = [];
         }
 
         $namesPresent = $catCollection->map(fn ($c) => mb_strtolower(trim($c->name ?? ''), 'UTF-8'))->all();
@@ -688,7 +703,7 @@ class ProductFilterService
             $lowerName = mb_strtolower($dbName, 'UTF-8');
 
             // Skip redundant duplicate categories (their products are merged into the canonical category)
-            if ($lowerName === 'heritage accessories' && $hasAccessories) {
+            if ($lowerName === 'heritage accessories' && ($hasAccessories || in_array('accessories', $archivedNames, true))) {
                 continue;
             }
             if ($lowerName === 'traditional gowns' && $hasFilipinianaGown) {

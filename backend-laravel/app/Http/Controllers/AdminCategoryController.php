@@ -138,6 +138,8 @@ class AdminCategoryController extends Controller
             return redirect()->back()->with('error', 'Cannot delete category with active products.');
         }
 
+        $deletedNameLower = mb_strtolower(trim($category->name), 'UTF-8');
+
         // Archive before deleting
         try {
             \App\Models\ArchivedRecord::archive('category', $category, $request->input('reason', 'Administrative deletion'));
@@ -146,6 +148,23 @@ class AdminCategoryController extends Controller
         }
 
         $category->delete();
+
+        // Also clean up any empty duplicate twin category (e.g. Accessories <-> Heritage Accessories)
+        $twinMap = [
+            'accessories' => 'Heritage Accessories',
+            'heritage accessories' => 'Accessories',
+        ];
+        if (isset($twinMap[$deletedNameLower])) {
+            $twin = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($twinMap[$deletedNameLower], 'UTF-8')])->first();
+            if ($twin && $twin->products()->count() === 0) {
+                try {
+                    \App\Models\ArchivedRecord::archive('category', $twin, $request->input('reason', 'Administrative deletion (duplicate twin)'));
+                } catch (\Throwable $e) {
+                    // Ignore archive warning
+                }
+                $twin->delete();
+            }
+        }
 
         return redirect()->back()->with('success', 'Category deleted and archived successfully.');
     }
@@ -229,9 +248,25 @@ class AdminCategoryController extends Controller
             ->doesntHave('products')
             ->delete();
 
+        $archivedNames = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('archived_records')) {
+            $archivedNames = \App\Models\ArchivedRecord::where('item_type', 'category')
+                ->pluck('name')
+                ->map(fn ($name) => mb_strtolower(trim((string) $name), 'UTF-8'))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
         $added = 0;
 
         foreach ($defaults as $cat) {
+            $lowerName = mb_strtolower(trim($cat['name']), 'UTF-8');
+            if (in_array($lowerName, $archivedNames, true)) {
+                continue;
+            }
+
             $existing = Category::where('name', $cat['name'])->first();
             if (!$existing) {
                 Category::create([

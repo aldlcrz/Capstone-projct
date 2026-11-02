@@ -930,8 +930,8 @@ function editProductManager() {
 
     // Ensure all 12 reference categories exist in parsedCats
     const referenceMenCategories = [
-        'Accessories', 'Camisa de Chino', 'Casual', 'Formal Barong',
-        'Heritage Accessories', 'Jusi Classic Barong', 'Lumban Specials',
+        'Polo Barong', 'Camisa de Chino', 'Casual', 'Formal Barong',
+        'Wedding Barong', 'Jusi Classic Barong', 'Lumban Specials',
         'Modern', 'Piña Formal Barong', 'Semi-Formal', 'Special Occasion', 'Traditional'
     ];
     referenceMenCategories.forEach((catName) => {
