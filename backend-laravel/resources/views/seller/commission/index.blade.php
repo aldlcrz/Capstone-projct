@@ -273,14 +273,6 @@
                                 @endif
                                 <p class="text-[11px] text-gray-500 pt-0.5">Your remittance proof is currently undergoing financial verification by the platform Super Administrator.</p>
                             </div>
-                            <div class="pt-2">
-                                <button type="button" 
-                                        @click="openPayModal()"
-                                        class="w-full py-2.5 px-4 rounded-xl bg-white border border-[#C49520] text-[#1E1915] hover:bg-[#FDF8EE] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-                                    <x-lucide name="pencil" class="w-3.5 h-3.5 text-[#C49520]" />
-                                    <span>Update Remittance Details</span>
-                                </button>
-                            </div>
                         </div>
                     @else
                         <div class="p-5 sm:p-6 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3">
@@ -292,15 +284,7 @@
                                 </div>
                             </div>
                             <div class="text-xs text-gray-600 border-t border-amber-200/60 pt-3 space-y-1.5 leading-relaxed font-sans">
-                                <p><strong>Remittance Instructions:</strong> Please remit your platform fee to the official GCash or Maya accounts on the left, then click <strong>Pay Commission</strong> to attach your transaction reference number and proof receipt.</p>
-                            </div>
-                            <div class="pt-2">
-                                <button type="button" 
-                                        @click="openPayModal()"
-                                        class="w-full py-3 px-4 rounded-xl bg-[#C49520] hover:bg-[#A87B10] text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95">
-                                    <x-lucide name="credit-card" class="w-4 h-4 text-white" />
-                                    <span>Pay Commission Now</span>
-                                </button>
+                                <p><strong>Remittance Instructions:</strong> Please remit your platform fee to the official GCash or Maya accounts on the left, then click <strong>Pay Commission</strong> in the summary card above to attach your transaction reference number and proof receipt.</p>
                             </div>
                         </div>
                     @endif
