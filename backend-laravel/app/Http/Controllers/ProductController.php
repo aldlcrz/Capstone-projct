@@ -121,7 +121,7 @@ class ProductController extends Controller
         }
 
         if ($request->has('category') && $request->category !== 'All') {
-            $query->where('CategoryId', $request->category);
+            \App\Services\ProductFilterService::applyCategoryFilter($query, $request->category);
         }
 
         if ($request->filled('seller')) {

@@ -82,26 +82,7 @@ class WebController extends Controller
                 array_unshift($filteredCats, $catVal);
                 session()->put('saved_categories', array_slice(array_values($filteredCats), 0, 8));
 
-                $demographics = ['men', 'male', 'women', 'female', 'kids'];
-
-                if (in_array(strtolower($catVal), $demographics)) {
-                    $normalised = match(strtolower($catVal)) {
-                        'male', 'men'     => 'Men',
-                        'female', 'women' => 'Women',
-                        'kids'            => 'Kids',
-                        default           => $catVal,
-                    };
-                    $query->where('target_group', $normalised);
-                } else {
-                    $query->where(function($q) use ($catVal) {
-                        $q->where('CategoryId', $catVal)
-                          ->orWhereHas('category', function($cq) use ($catVal) {
-                              $cq->where('name', 'like', '%' . $catVal . '%')->orWhere('id', $catVal);
-                          })
-                          ->orWhere('name', 'like', '%' . $catVal . '%')
-                          ->orWhere('description', 'like', '%' . $catVal . '%');
-                    });
-                }
+                \App\Services\ProductFilterService::applyCategoryFilter($query, $catVal);
             }
 
             if ($request->filled('search')) {

@@ -29,20 +29,25 @@ class Category extends Model
      */
     public function getImageUrl(): string
     {
+        $nameLower = strtolower(trim($this->name ?? ''));
+
         if (!empty($this->image)) {
             $img = $this->image;
-            if (str_starts_with($img, 'http')) {
-                return $img;
-            }
-            $clean = ltrim($img, '/');
-            if (file_exists(public_path($clean))) {
-                return '/' . $clean;
-            }
-            if (file_exists(public_path('uploads/categories/' . basename($clean)))) {
-                return '/uploads/categories/' . basename($clean);
-            }
-            if (file_exists(storage_path('app/public/' . $clean))) {
-                return '/storage/' . $clean;
+            // Guard against legacy misassignment where Modern Filipiniana had polo_casual.png
+            if (!($nameLower === 'modern filipiniana' && str_contains($img, 'polo_casual'))) {
+                if (str_starts_with($img, 'http')) {
+                    return $img;
+                }
+                $clean = ltrim($img, '/');
+                if (file_exists(public_path($clean))) {
+                    return '/' . $clean;
+                }
+                if (file_exists(public_path('uploads/categories/' . basename($clean)))) {
+                    return '/uploads/categories/' . basename($clean);
+                }
+                if (file_exists(storage_path('app/public/' . $clean))) {
+                    return '/storage/' . $clean;
+                }
             }
         }
 

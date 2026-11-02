@@ -277,4 +277,66 @@ class DynamicPriceFilterTest extends TestCase
         // Apply submit button
         $res->assertSee('Apply', false);
     }
+
+    public function test_multi_category_uuid_filtering_and_smart_category_ordering(): void
+    {
+        $emptyCat = Category::create([
+            'name' => 'Accessories',
+            'target_group' => ['Men', 'Women'],
+        ]);
+        $dupEmptyCat = Category::create([
+            'name' => 'Heritage Accessories',
+            'target_group' => ['Men', 'Women'],
+        ]);
+        $specialOccasionCat = Category::create([
+            'name' => 'Special Occasion',
+            'target_group' => ['Men', 'Women'],
+        ]);
+        $jusiCat = Category::create([
+            'name' => 'Jusi Classic Barong',
+            'target_group' => ['Men'],
+        ]);
+
+        // Product has primary CategoryId = menCategory, but includes Special Occasion UUID in categories JSON array
+        $multiCatProduct = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Calado Formal Barong',
+            'description' => 'Handcrafted formal piece',
+            'price' => 2500.00,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'CategoryId' => $this->menCategory->id,
+            'categories' => [$this->menCategory->id, $specialOccasionCat->id],
+        ]);
+
+        $jusiProduct = Product::create([
+            'sellerId' => $this->seller->id,
+            'name' => 'Jusilyn Barong Tagalog',
+            'description' => 'Classic jusi weave',
+            'price' => 1800.00,
+            'status' => 'approved',
+            'target_group' => 'Men',
+            'fabric_type' => 'Jusi',
+            'CategoryId' => $this->menCategory->id,
+        ]);
+
+        // 1. Filtering by 'Special Occasion' finds product tagged via categories JSON UUID array
+        $resSpecial = $this->get('/?category=' . urlencode('Special Occasion'));
+        $resSpecial->assertStatus(200);
+        $this->assertTrue($resSpecial->viewData('products')->contains('id', $multiCatProduct->id));
+
+        // 2. Filtering by 'Jusi Classic Barong' finds Jusi/Jusilyn barongs via smart domain match
+        $resJusi = $this->get('/?category=' . urlencode('Jusi Classic Barong'));
+        $resJusi->assertStatus(200);
+        $this->assertTrue($resJusi->viewData('products')->contains('id', $jusiProduct->id));
+
+        // 3. Smart ordering places populated categories before 0-product categories and deduplicates 'Heritage Accessories'
+        $allCats = Category::orderBy('name', 'asc')->get();
+        $items = ProductFilterService::buildStorefrontCategoryItems($allCats);
+        $itemNames = array_column($items, 'name');
+
+        $this->assertNotContains('Heritage Accessories', $itemNames, 'Duplicate Heritage Accessories should be merged into Accessories');
+        $this->assertEquals('Accessories', end($itemNames), 'Empty 0-product category should be ordered last');
+        $this->assertGreaterThan(0, $items[0]['count'], 'First category must have products');
+    }
 }

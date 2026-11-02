@@ -971,64 +971,26 @@
             </div>
 
             @php
-                $getCatImage = function($name) {
-                    $nameLower = strtolower($name);
-                    if (str_contains($nameLower, 'wedding')) return '/uploads/categories/wedding_groom.png';
-                    if (str_contains($nameLower, 'pina') || str_contains($nameLower, 'piña') || str_contains($nameLower, 'formal barong')) return '/uploads/categories/pina_formal.png';
-                    if (str_contains($nameLower, 'jusi') || str_contains($nameLower, 'lumban')) return '/uploads/categories/jusi_classic.png';
-                    if (str_contains($nameLower, 'polo') || str_contains($nameLower, 'semi-formal') || str_contains($nameLower, 'casual')) return '/uploads/categories/polo_casual.png';
-                    if (str_contains($nameLower, 'camisa') || str_contains($nameLower, 'undershirt')) return '/uploads/categories/camisa_undershirt.png';
-                    if (str_contains($nameLower, 'terno') || str_contains($nameLower, 'modern filipiniana')) return '/uploads/categories/women_terno.png';
-                    if (str_contains($nameLower, 'traditional gown') || str_contains($nameLower, 'filipiniana') || str_contains($nameLower, 'gown')) return '/uploads/categories/women_filipiniana.png';
-                    if (str_contains($nameLower, 'lady') || str_contains($nameLower, 'blouse')) return '/uploads/categories/women_lady_barong.png';
-                    if (str_contains($nameLower, 'girl')) return '/uploads/categories/kids_girls.png';
-                    if (str_contains($nameLower, 'boy') || str_contains($nameLower, 'kid')) return '/uploads/categories/kids_boys.png';
-                    if (str_contains($nameLower, 'accessor') || str_contains($nameLower, 'cufflink') || str_contains($nameLower, 'heritage')) return '/uploads/categories/accessories.png';
-                    return '/uploads/categories/pina_formal.png';
-                };
-
-                $allCatItems = [];
-
-                if (isset($categories) && $categories->isNotEmpty()) {
-                    foreach ($categories as $dbCat) {
-                        $dbName = trim($dbCat->name ?? '');
-                        if (empty($dbName)) continue;
-
-                        $targetGroupStr = '';
-                        if (is_array($dbCat->target_group) && count($dbCat->target_group) > 0) {
-                            $targetGroupStr = implode(', ', $dbCat->target_group);
-                        } elseif (is_string($dbCat->target_group) && !empty($dbCat->target_group)) {
-                            $targetGroupStr = $dbCat->target_group;
-                        }
-
-                        $allCatItems[] = [
-                            'name'  => $dbCat->name,
-                            'cat'   => $dbCat->name,
-                            'group' => $targetGroupStr,
-                            'img'   => $dbCat->getImageUrl(),
-                        ];
-                    }
-                } else {
-                    $allCatItems = [
-                        ['name' => 'Wedding Barong', 'cat' => 'Wedding Barong', 'group' => 'Men', 'img' => '/uploads/categories/wedding_groom.png'],
-                        ['name' => 'Piña Formal Barong', 'cat' => 'Piña Formal Barong', 'group' => 'Men', 'img' => '/uploads/categories/pina_formal.png'],
-                        ['name' => 'Jusi Classic Barong', 'cat' => 'Jusi Classic Barong', 'group' => 'Men', 'img' => '/uploads/categories/jusi_classic.png'],
-                        ['name' => 'Polo Barong', 'cat' => 'Polo Barong', 'group' => 'Men', 'img' => '/uploads/categories/polo_casual.png'],
-                        ['name' => 'Camisa de Chino', 'cat' => 'Camisa de Chino', 'group' => 'Men', 'img' => '/uploads/categories/camisa_undershirt.png'],
-                        ['name' => 'Filipiniana Gown', 'cat' => 'Filipiniana Gown', 'group' => 'Women', 'img' => '/uploads/categories/women_filipiniana.png'],
-                        ['name' => 'Modern Terno Top', 'cat' => 'Modern Terno Top', 'group' => 'Women', 'img' => '/uploads/categories/women_terno.png'],
-                        ['name' => 'Lady Barong', 'cat' => 'Lady Barong', 'group' => 'Women', 'img' => '/uploads/categories/women_lady_barong.png'],
-                        ['name' => 'Boys\' Barong', 'cat' => 'Boys\' Barong', 'group' => 'Kids', 'img' => '/uploads/categories/kids_boys.png'],
-                        ['name' => 'Girls\' Filipiniana', 'cat' => 'Girls\' Filipiniana', 'group' => 'Kids', 'img' => '/uploads/categories/kids_girls.png'],
-                        ['name' => 'Accessories', 'cat' => 'Accessories', 'group' => 'Accessories', 'img' => '/uploads/categories/accessories.png'],
-                    ];
+                $allCatItems = \App\Services\ProductFilterService::buildStorefrontCategoryItems($categories ?? []);
+                $totalApprovedCount = 0;
+                try {
+                    $totalApprovedCount = \App\Models\Product::where('status', 'approved')->count();
+                } catch (\Throwable $e) {
+                    $totalApprovedCount = isset($products) && method_exists($products, 'total') ? $products->total() : 0;
                 }
 
                 $catItems = array_merge([
-                    ['name' => 'All Barongs', 'cat' => '__all__', 'img' => '/uploads/categories/featured_best_sellers.png']
+                    [
+                        'name'    => 'All Barongs',
+                        'cat'     => '__all__',
+                        'group'   => 'All',
+                        'section' => 'All',
+                        'img'     => '/uploads/categories/featured_best_sellers.png',
+                        'count'   => $totalApprovedCount,
+                    ]
                 ], $allCatItems);
 
-                // Saved categories logic applies ONLY for logged-in accounts
+                // Saved categories logic applies ONLY for logged-in accounts (and only promotes stocked categories or active selection)
                 $selectedCatParam = request('category');
                 $activeCatObj = isset($categories) && $selectedCatParam ? $categories->first(fn($c) => (string)$c->id === (string)$selectedCatParam || strtolower(trim($c->name)) === strtolower(trim($selectedCatParam))) : null;
                 $selectedCatName = $activeCatObj ? $activeCatObj->name : $selectedCatParam;
@@ -1043,7 +1005,9 @@
                         $savedItems = [];
                         foreach ($savedCategories as $savedCatName) {
                             foreach ($allCatItems as $aci) {
-                                if (strtolower($aci['cat']) === strtolower($savedCatName) || strtolower($aci['name']) === strtolower($savedCatName)) {
+                                $isMatchSaved = strtolower($aci['cat']) === strtolower($savedCatName) || strtolower($aci['name']) === strtolower($savedCatName);
+                                $isCurrentlyActive = $selectedCatParam && (strtolower($aci['cat']) === strtolower($selectedCatParam) || ($selectedCatName && strtolower($aci['cat']) === strtolower($selectedCatName)));
+                                if ($isMatchSaved && (($aci['count'] ?? 0) > 0 || $isCurrentlyActive)) {
                                     $alreadyAdded = false;
                                     foreach ($savedItems as $si) {
                                         if (strtolower($si['cat']) === strtolower($aci['cat'])) {
@@ -1090,6 +1054,21 @@
                         array_splice($catItems, 1, 0, [$foundItem]);
                     }
                 }
+
+                // Group categories by collection section for the "All Categories" modal
+                $groupedModalCategories = [
+                    "Men's Barong"        => [],
+                    "Women's Filipiniana" => [],
+                    'Style & Occasion'    => [],
+                    'Kids & Accessories'  => [],
+                ];
+                foreach ($allCatItems as $mItem) {
+                    $sec = $mItem['section'] ?? "Men's Barong";
+                    if (!isset($groupedModalCategories[$sec])) {
+                        $groupedModalCategories[$sec] = [];
+                    }
+                    $groupedModalCategories[$sec][] = $mItem;
+                }
             @endphp
 
             <div class="relative group/catnav" x-data="{
@@ -1134,6 +1113,8 @@
                     @foreach($catItems as $index => $item)
                         @php
                             $isAll = $item['cat'] === '__all__';
+                            $itemCount = (int) ($item['count'] ?? 0);
+                            $isEmptyCat = !$isAll && $itemCount === 0;
                             $isCurrentSelected = $isAll
                                 ? (!$selectedCatParam || $selectedCatParam === '__all__') && !request('search') && !request('sort')
                                 : ($selectedCatParam && (
@@ -1146,7 +1127,7 @@
                                 ));
                             $itemHref = $isAll ? '/#catalogue-section' : '/?category=' . urlencode($item['cat']) . '#catalogue-section';
                         @endphp
-                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2 shrink-0 w-18 sm:w-22 cursor-pointer">
+                        <a href="{{ $itemHref }}" data-category="{{ $item['cat'] }}" class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-1.5 shrink-0 w-18 sm:w-22 cursor-pointer {{ $isEmptyCat && !$isCurrentSelected ? 'opacity-65 hover:opacity-100' : '' }} transition-opacity">
                             <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 border-2 {{ $isCurrentSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200/80 group-hover:border-[#C0422A] shadow-xs group-hover:scale-105' }} transition-all">
                                 <div class="w-full h-full rounded-full overflow-hidden">
                                     <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
@@ -1159,6 +1140,9 @@
                                 </div>
                             </div>
                             <span class="category-name-label text-[11px] sm:text-xs {{ $isCurrentSelected ? 'font-black text-[#C0422A]' : 'font-semibold text-gray-700 group-hover:text-black' }} leading-tight text-center line-clamp-2 px-0.5">{{ $item['name'] }}</span>
+                            @if($itemCount > 0)
+                                <span class="text-[10px] font-medium text-gray-400 leading-none">{{ $itemCount }} {{ $itemCount === 1 ? 'pc' : 'pcs' }}</span>
+                            @endif
                         </a>
                     @endforeach
                     <div class="shrink-0 w-3 sm:w-5"></div>
@@ -1203,53 +1187,73 @@
                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                     >
                         <!-- Modal Header -->
-                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6 shrink-0">
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-5 shrink-0">
                             <div>
                                 <h3 class="text-lg sm:text-xl font-extrabold text-gray-900">All Categories</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Explore our complete collection by category</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Browse by heritage collection, style, and occasion</p>
                             </div>
-                            <button 
-                                type="button"
-                                @click="categoriesModalOpen = false"
-                                class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <a href="/#catalogue-section"
+                                   data-category="__all__"
+                                   @click="categoriesModalOpen = false"
+                                   class="category-pill-btn ajax-filter-link text-xs font-bold px-3.5 py-1.5 rounded-full border border-[#C0422A]/30 text-[#C0422A] hover:bg-[#C0422A] hover:text-white transition-colors">
+                                    All Barongs ({{ $totalApprovedCount }})
+                                </a>
+                                <button 
+                                    type="button"
+                                    @click="categoriesModalOpen = false"
+                                    class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Modal Body (Scrollable Grid of Circular Mini Pictures + Labels) -->
-                        <div class="overflow-y-auto no-scrollbar pr-1 grow" id="all-categories-modal-grid">
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 sm:gap-8 text-center py-2">
-                                @foreach($allCatItems as $item)
-                                    @php
-                                        $isModalSelected = $selectedCatParam && (
-                                            strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
-                                            strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
-                                            ($selectedCatName && (
-                                                strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
-                                                strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
-                                            ))
-                                        );
-                                    @endphp
-                                    <a href="/?category={{ urlencode($item['cat']) }}#catalogue-section" 
-                                       data-category="{{ $item['cat'] }}"
-                                       @click="categoriesModalOpen = false"
-                                       class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-2.5 hover:scale-105 transition-transform duration-200 cursor-pointer">
-                                        <div class="category-img-box relative w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isModalSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200 group-hover:border-[#C0422A] shadow-sm' }} transition-all shrink-0">
-                                            <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
-                                            <div class="category-active-badge {{ $isModalSelected ? '' : 'hidden' }}">
-                                                <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
-                                                <span class="absolute top-1 right-1 w-4.5 h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                                </span>
-                                            </div>
+                        <!-- Modal Body (Grouped Collection Sections) -->
+                        <div class="overflow-y-auto no-scrollbar pr-1 grow space-y-6" id="all-categories-modal-grid">
+                            @foreach($groupedModalCategories as $sectionTitle => $sectionItems)
+                                @if(count($sectionItems) > 0)
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-3.5">
+                                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-400">{{ $sectionTitle }}</h4>
+                                            <div class="h-px bg-gray-100 grow"></div>
                                         </div>
-                                        <span class="category-name-label text-xs {{ $isModalSelected ? 'font-black text-[#C0422A]' : 'font-semibold text-gray-800 group-hover:text-[#C0422A]' }} leading-tight line-clamp-2">{{ $item['name'] }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
+                                        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-5 sm:gap-6 text-center py-1">
+                                            @foreach($sectionItems as $item)
+                                                @php
+                                                    $mCount = (int) ($item['count'] ?? 0);
+                                                    $isModalSelected = $selectedCatParam && (
+                                                        strtolower(trim($item['cat'])) === strtolower(trim($selectedCatParam)) ||
+                                                        strtolower(trim($item['name'])) === strtolower(trim($selectedCatParam)) ||
+                                                        ($selectedCatName && (
+                                                            strtolower(trim($item['cat'])) === strtolower(trim($selectedCatName)) ||
+                                                            strtolower(trim($item['name'])) === strtolower(trim($selectedCatName))
+                                                        ))
+                                                    );
+                                                @endphp
+                                                <a href="/?category={{ urlencode($item['cat']) }}#catalogue-section" 
+                                                   data-category="{{ $item['cat'] }}"
+                                                   @click="categoriesModalOpen = false"
+                                                   class="category-pill-btn ajax-filter-link group flex flex-col items-center gap-1.5 hover:scale-105 transition-transform duration-200 cursor-pointer {{ $mCount === 0 && !$isModalSelected ? 'opacity-65 hover:opacity-100' : '' }}">
+                                                    <div class="category-img-box relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 border-2 {{ $isModalSelected ? 'border-[#C0422A] ring-4 ring-[#C0422A]/25 scale-105 shadow-md' : 'border-gray-200 group-hover:border-[#C0422A] shadow-sm' }} transition-all shrink-0">
+                                                        <img src="{{ $item['img'] }}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="{{ $item['name'] }}">
+                                                        <div class="category-active-badge {{ $isModalSelected ? '' : 'hidden' }}">
+                                                            <div class="absolute inset-0 bg-[#C0422A]/10 pointer-events-none"></div>
+                                                            <span class="absolute top-1 right-1 w-4.5 h-4.5 bg-[#C0422A] text-white rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <span class="category-name-label text-xs {{ $isModalSelected ? 'font-black text-[#C0422A]' : 'font-semibold text-gray-800 group-hover:text-[#C0422A]' }} leading-tight line-clamp-2">{{ $item['name'] }}</span>
+                                                    <span class="text-[10px] font-medium {{ $mCount > 0 ? 'text-gray-400' : 'text-gray-300' }}">{{ $mCount }} {{ $mCount === 1 ? 'pc' : 'pcs' }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
                         </div>
                     </div>
                 </div>
