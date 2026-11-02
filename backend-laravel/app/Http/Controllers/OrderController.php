@@ -542,7 +542,7 @@ class OrderController extends Controller
             $statusMsg = $statusMsgMap[$canonicalTarget] ?? "Your order status is now {$canonicalTarget}.";
         }
 
-        $this->sendNotification($order->customerId, $notifTitle, $statusMsg, 'order', '/orders', 'customer');
+        $this->sendNotification($order->customerId, $notifTitle, $statusMsg, 'order', '/orders/' . $order->id, 'customer');
 
         $customerUser = User::find($order->customerId);
         if ($customerUser && $customerUser->email) {
@@ -791,7 +791,7 @@ class OrderController extends Controller
             $order->sellerId,
             'Order Completed',
             "Customer has confirmed delivery for order #LB-OR-" . strtoupper(substr($order->id, -8)) . ". Status updated to Completed.",
-            'order', '/seller/orders', 'seller'
+            'order', "/seller/orders?order_id={$order->id}", 'seller'
         );
 
         return redirect()->back()->with('success', 'Thank you! Delivery confirmed and order marked as Completed. You can now rate your purchase.');
@@ -1211,7 +1211,7 @@ class OrderController extends Controller
             'Payment Proof Resubmitted',
             "Customer resubmitted payment for Order #" . substr($order->id, 0, 8) . ". Please verify in your wallet.",
             'order',
-            '/seller/orders',
+            "/seller/orders?order_id={$order->id}",
             'seller'
         );
 

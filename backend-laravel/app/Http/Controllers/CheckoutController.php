@@ -891,7 +891,7 @@ class CheckoutController extends Controller
                     'message'    => "Your request to cancel and refund ₱" . number_format($refundAmount, 2) . " has been submitted to the Admin. The funds will be sent to your {$refundMethod} number ({$refundMobile}) once verified.",
                     'type'       => 'refund_requested',
                     'isRead'     => false,
-                    'link'       => route('orders'),
+                    'link'       => route('orders.show', $order->id),
                     'createdAt'  => now(),
                 ]);
 
