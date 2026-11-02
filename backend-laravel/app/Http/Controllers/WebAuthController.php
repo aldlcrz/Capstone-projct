@@ -1268,7 +1268,7 @@ class WebAuthController extends Controller
 
     public function submitCommissionPayment(Request $request)
     {
-        abort(403, 'Commission payment proof submission by sellers is deprecated. Commission records are audited and updated directly by the Super Administrator.');
+        return app(DashboardController::class)->submitCommissionPayment($request);
     }
 
     public function sessionHeartbeat(Request $request)

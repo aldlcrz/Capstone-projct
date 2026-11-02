@@ -1158,7 +1158,92 @@ class DashboardController extends Controller
 
     public function submitCommissionPayment(Request $request)
     {
-        abort(403, 'Commission payment proof submission by sellers is deprecated. Commission records are audited and updated directly by the Super Administrator.');
+        $seller = $request->user();
+        if (!$seller || $seller->role !== 'seller') {
+            abort(403, 'Unauthorized. Only artisan sellers can remit platform commission.');
+        }
+
+        $request->validate([
+            'period'           => 'required|string',
+            'paymentMethod'    => 'required|string|in:GCash,Maya,Bank Transfer',
+            'referenceNumber'  => 'required|string|max:100',
+            'paymentProof'     => 'nullable|image|max:10240',
+            'notes'            => 'nullable|string|max:500',
+        ], [
+            'paymentMethod.required'   => 'Please select a remittance payment method (GCash or Maya).',
+            'referenceNumber.required' => 'Please enter the official transaction reference number from your receipt.',
+            'paymentProof.image'       => 'The payment proof must be an image file (JPG, PNG, WebP, etc.).',
+            'paymentProof.max'         => 'The payment proof must not exceed 10MB in file size.',
+        ]);
+
+        $period = $request->input('period', Carbon::now()->format('Y-m'));
+        $financialSummary = \App\Services\Financial\FinancialLedgerService::getSellerFinancialSummary($seller, $period);
+        $rate = $financialSummary['commission_rate'];
+        $cashSales = $financialSummary['cash_product_sales'];
+        $commissionDue = $financialSummary['commission_due'];
+
+        $existing = \App\Models\CommissionRecord::where('sellerId', $seller->id)
+            ->where('period', $period)
+            ->first();
+
+        $proofPath = $existing?->paymentProof ?? '';
+        if ($request->hasFile('paymentProof')) {
+            $file = $request->file('paymentProof');
+            $proofPath = $file->store('commission-proofs', 'public');
+        }
+
+        if (empty($proofPath)) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Please upload your receipt or proof of payment screenshot.',
+                    'errors'  => ['paymentProof' => ['Please upload your receipt or proof of payment screenshot.']]
+                ], 422);
+            }
+            return back()->withErrors(['paymentProof' => 'Please upload your receipt or proof of payment screenshot.'])->withInput();
+        }
+
+        $cleanRef = strtoupper(trim($request->referenceNumber));
+
+        $record = \App\Models\CommissionRecord::updateOrCreate(
+            ['sellerId' => $seller->id, 'period' => $period],
+            [
+                'totalSales'       => $cashSales,
+                'commissionRate'   => $rate,
+                'commissionAmount' => $commissionDue,
+                'status'           => 'verification_pending',
+                'paymentMethod'    => $request->paymentMethod,
+                'referenceNumber'  => $cleanRef,
+                'paymentProof'     => $proofPath,
+                'notes'            => $request->notes ? trim($request->notes) : null,
+            ]
+        );
+
+        // Notify Super Administrators
+        $superadmins = User::where('role', 'superadmin')->get();
+        $shopName = $seller->shopName ?: ($seller->name ?: 'Artisan');
+        foreach ($superadmins as $admin) {
+            \App\Models\Notification::create([
+                'id'         => (string) \Illuminate\Support\Str::uuid(),
+                'userId'     => $admin->id,
+                'targetRole' => 'superadmin',
+                'title'      => 'Commission Remittance Submitted',
+                'message'    => "Artisan {$shopName} submitted commission remittance of ₱" . number_format($commissionDue, 2) . " for {$period} (Ref: {$cleanRef}).",
+                'type'       => 'commission',
+                'link'       => route('superadmin.commissions', ['period' => $period]),
+                'isRead'     => false,
+                'createdAt'  => now(),
+            ]);
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Commission remittance submitted successfully! Awaiting Superadmin verification.',
+                'record'  => $record,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Commission remittance submitted successfully! Awaiting Super Administrator verification.');
     }
 
     public function sellerCustomers(Request $request)
